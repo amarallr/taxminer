@@ -1,5 +1,16 @@
 # TaxMiner — estado do projeto
 
+## Extração das notas iniciada; apresentação reformulada — 2026-11-10T20:40:00-03:00
+
+Por pedido do desenvolvedor, `work_0012` (Data P03) passa a `in_progress`:
+protótipo de extração das notas em `src/data/extract_financial_notes.R`
+(grupo ENET 412, camada de texto do PDF, segmentação por numeração), ainda
+sem testes automatizados nem Parquet. Primeira rodada em 20 pacotes reais:
+numeração completa em 15 (antes da correção de conjuntos múltiplos de notas),
+1 PDF sem camada de texto. README e `site/index.html` reformulados pelo
+`doit` de apresentação do projeto, aguardando revisão; nenhum indicador de
+aceite alterado.
+
 ## Coleta completa das DFP em andamento — 2026-11-10T20:00:00-03:00
 
 Pipeline da Fase 2 implementado (`src/collect/discover_financial_reports.R`,

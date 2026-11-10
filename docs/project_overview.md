@@ -23,12 +23,12 @@ citadas, nunca conclusão de infração.
 | Common P02 — Fundação | Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas | ✅ aprovado |
 | Common P03 — Arquitetura | Contratos por fonte, limiares de qualidade e dicionário de dados | ✅ aprovado |
 | Fase 1 — Soluções de Consulta | Fontes verificadas; decisões de coleta em aberto | ⏸️ suspensa |
-| Fase 2 — Notas explicativas | Coleta de todas as 14.015 DFP da CVM em andamento; ITR depois | ▶️ em andamento |
+| Fase 2 — Notas explicativas | Coleta das 14.015 DFP da CVM em andamento; extração das notas em desenvolvimento; ITR depois | ▶️ em andamento |
 | Fase 3 — Inteligência cruzada | Relações citadas entre as duas bases já aceitas | ⏸️ não iniciada |
 
 ## Itens de trabalho
 
-18 registrados: 8 implementados, 1 em andamento, 1 suspenso (bloqueado) e 8 não iniciados; 8 com
+18 registrados: 8 implementados, 2 em andamento, 1 suspenso (bloqueado) e 7 não iniciados; 8 com
 aceite humano. Nenhum foi liberado em release nem está em operação.
 
 | ID | Item | Implementação | Teste | Aceite |
@@ -49,7 +49,7 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0015 | Aceite humano da Fase 1 | não iniciado | não executado | pendente |
 | **Fase 2** | | | | |
 | work_0011 | Descobrir fontes e coletar relatórios | em andamento | aprovado | pendente |
-| work_0012 | Extrair notas e tabelas | não iniciado | não executado | pendente |
+| work_0012 | Extrair notas e tabelas | em andamento | não executado | pendente |
 | work_0013 | Busca independente de notas | não iniciado | não executado | pendente |
 | work_0016 | Aceite humano da Fase 2 | não iniciado | não executado | pendente |
 | **Fase 3** | | | | |

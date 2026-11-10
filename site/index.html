@@ -3,25 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Panorama do TaxMiner: escopo, roteiro das fases, itens de trabalho, riscos e próximos passos.">
-<title>TaxMiner — Panorama</title>
+<title>TaxMiner — Mineração e Inteligência de Documentos Tributários e Financeiros</title>
+<meta name="description" content="TaxMiner: projeto independente e de código aberto que transforma Soluções de Consulta e notas explicativas de demonstrações financeiras em conhecimento estruturado, pesquisável e verificável.">
+<meta name="keywords" content="Soluções de Consulta, notas explicativas, demonstrações financeiras, CVM, mineração de documentos, engenharia de dados, R, Parquet, pesquisa semântica">
+<link rel="canonical" href="https://amarallr.github.io/taxminer/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="TaxMiner — Mineração e Inteligência de Documentos Tributários e Financeiros">
+<meta property="og:description" content="Transformando documentos públicos em conhecimento estruturado, pesquisável e verificável. Projeto independente, não oficial da Receita Federal.">
+<meta property="og:url" content="https://amarallr.github.io/taxminer/">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-html { color-scheme: light; }
+html { color-scheme: light; scroll-behavior: smooth; }
 body { margin: 0; }
-/* Layout: one reading column; a phase rail, then ledger-style tables, like a case file. */
 :root {
   --bg: #f5f6f4;
   --surface: #ffffff;
   --ink: #18222b;
-  --muted: #5b6770;
+  --muted: #56626b;
   --line: #d9ddd8;
   --accent: #1f5f73;
   --accent-soft: #e2eef1;
   --ok: #2f7a46; --ok-soft: #e3f1e7;
-  --warn: #9a6400; --warn-soft: #f8edd6;
+  --warn: #8a5a00; --warn-soft: #f8edd6;
   --bad: #a43a2f; --bad-soft: #f6e2df;
-  --idle: #6d7780; --idle-soft: #eceeec;
+  --idle: #616b74; --idle-soft: #eceeec;
   --display: "Archivo", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
@@ -37,37 +43,61 @@ body { margin: 0; }
   --ok: #7cc893; --ok-soft: #1c3324; --warn: #e2b55a; --warn-soft: #3a2f17;
   --bad: #ee8f84; --bad-soft: #3d221f; --idle: #a2acb3; --idle-soft: #242d33; color-scheme: dark }
 
-body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
-.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 64px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 44px; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 16px; top: 12px; background: var(--surface); padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; z-index: 10; }
+.wrap { max-width: 1040px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main.wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 64px; padding-block: 40px 64px; }
+main.wrap > *, section > *, .card > *, details > .inner > * { min-width: 0; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
-h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 800; letter-spacing: -0.02em; }
-h2 { font-size: 21px; font-weight: 700; }
-h3 { font-size: 16px; font-weight: 700; }
-p { margin: 0; max-width: 68ch; }
+h1 { font-size: clamp(30px, 5.2vw, 48px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.12; }
+h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; max-width: 72ch; }
+ul { margin: 0; padding-left: 20px; }
 .eyebrow { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-.mono { font-family: var(--mono); font-size: 13px; }
-section { display: grid; gap: 16px; }
-.lede { font-size: 17px; color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 13.5px; }
+section { display: grid; gap: 20px; scroll-margin-top: 72px; }
+.section-head { display: grid; gap: 10px; }
+.lede { font-size: 18px; color: var(--muted); max-width: 64ch; }
+.note { font-size: 14px; color: var(--muted); }
+
+/* Navigation */
+.topbar { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; gap: 16px; min-height: 56px; }
+.brand { font: 800 18px var(--display); color: var(--ink); text-decoration: none; letter-spacing: -0.01em; white-space: nowrap; }
+.nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a { font-size: 14px; color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+.nav a:hover { color: var(--ink); background: var(--surface); }
+
+/* Hero */
+.hero { display: grid; gap: 18px; padding-top: 8px; }
+.hero .sub { font: 600 clamp(18px, 2.4vw, 22px)/1.4 var(--display); color: var(--accent); max-width: 40ch; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; padding: 10px 16px; border-radius: 6px; text-decoration: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.disclaimer { display: flex; gap: 10px; align-items: start; background: var(--warn-soft); color: var(--ink); border-radius: 6px; padding: 12px 14px; font-size: 14.5px; max-width: 80ch; }
+.disclaimer b { color: var(--warn); }
 .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); }
 .meta b { color: var(--ink); font-weight: 500; }
 
-.families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.family { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 6px; align-content: start; }
-.family code { font: 500 13px var(--mono); color: var(--accent); }
+/* Cards */
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.card p, .card li { font-size: 15px; color: var(--muted); }
+.card li + li { margin-top: 4px; }
+.card code, code { font: 500 13px var(--mono); color: var(--accent); }
+.card .kicker { font: 500 12px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 18px; }
+.split h4 { margin: 0 0 4px; font: 600 13px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink); }
 
-/* Phase rail */
-.rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
-.stage { padding: 16px 14px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); position: relative; }
-.stage:last-child { border-right: 0; }
-.stage::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--idle-soft); }
-.stage.done::before { background: var(--ok); }
-.stage.next::before { background: var(--accent); }
-.stage .num { font: 500 12px var(--mono); color: var(--muted); }
-.stage p { font-size: 13.5px; color: var(--muted); }
-.stage.next { background: var(--accent-soft); }
-
+/* Status pills */
 .pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px; white-space: nowrap; width: fit-content; }
 .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .ok { color: var(--ok); background: var(--ok-soft); }
@@ -76,178 +106,420 @@ section { display: grid; gap: 16px; }
 .idle { color: var(--idle); background: var(--idle-soft); }
 .acc { color: var(--accent); background: var(--accent-soft); }
 
-.tally { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 2px; }
+/* Architecture diagram */
+.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 28px; }
+.layer { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 12px; }
+.layer + .layer::before { content: ""; position: absolute; left: 50%; top: -28px; height: 28px; width: 2px; background: var(--line); transform: translateX(-1px); }
+.layer + .layer::after { content: ""; position: absolute; left: 50%; top: -9px; width: 10px; height: 10px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateX(-5px) rotate(45deg); }
+.layer-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.layer-head h3 { font-size: 18px; }
+.layer-head .pill { margin-left: auto; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; counter-reset: s; }
+.steps li { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; display: grid; gap: 2px; }
+.steps li b { font-weight: 600; color: var(--ink); }
+.steps li span { color: var(--muted); font-size: 13px; }
+.sources-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sources-row div { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; }
+.layer.result { background: var(--accent-soft); border-color: var(--accent); }
+.layer.result p { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13.5px; color: var(--muted); }
+
+/* Development */
+.rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.stage { padding: 16px 14px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); position: relative; }
+.stage:last-child { border-right: 0; }
+.stage::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--idle-soft); }
+.stage.done::before { background: var(--ok); }
+.stage.next::before { background: var(--accent); }
+.stage.held::before { background: var(--warn); }
+.stage .num { font: 500 12px var(--mono); color: var(--muted); }
+.stage p { font-size: 13.5px; color: var(--muted); }
+.stage.next { background: var(--accent-soft); }
+.tally { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 2px; }
 .tile .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .tile .l { font-size: 13px; color: var(--muted); }
-
-.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
-table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; }
+caption { text-align: left; padding: 10px 12px; font-size: 13px; color: var(--muted); caption-side: bottom; }
 th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-th { font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
-tr:last-child td { border-bottom: 0; }
+thead th { font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--bg); }
+tbody tr:last-child td { border-bottom: 0; }
 td.id { font-family: var(--mono); font-size: 12.5px; color: var(--muted); white-space: nowrap; }
-tr.group td { background: var(--bg); font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
-
-.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
-.list { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+tr.group th { background: var(--bg); font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.list { display: grid; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: start; }
 .item:last-child { border-bottom: 0; }
 .item .t { font-weight: 500; }
-.item .d { grid-column: 2; font-size: 13.5px; color: var(--muted); }
-.env { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.item .d { grid-column: 2; font-size: 14px; color: var(--muted); }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
+details > .inner { padding: 0 16px 16px; display: grid; gap: 12px; }
+.principles { counter-reset: p; list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.principles li { counter-increment: p; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 15px; }
+.principles li::before { content: counter(p); font: 700 15px/1.5 var(--display); color: var(--accent); }
+.env { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 .env div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; }
 .env span { font-size: 12.5px; color: var(--muted); }
-footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+.links { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.links a { display: grid; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; text-decoration: none; }
+.links a b { color: var(--ink); font-weight: 600; }
+.links a span { color: var(--muted); font-size: 13.5px; }
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--muted); font-size: 13.5px; }
 
-@media (max-width: 760px) {
-  .families, .cols { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 860px) {
+  .g3, .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rail { grid-template-columns: minmax(0, 1fr); }
   .stage { border-right: 0; border-bottom: 1px solid var(--line); }
   .stage:last-child { border-bottom: 0; }
-  .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 600px) {
+  .g2, .g3, .split, .sources-row { grid-template-columns: minmax(0, 1fr); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nav { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
-
 </head>
 <body>
-<div class="wrap">
-  <header style="display:grid; gap:14px">
-    <div class="eyebrow">Projeto independente · não oficial da Receita Federal</div>
-    <h1>TaxMiner</h1>
-    <p class="lede">Pesquisa sobre Soluções de Consulta públicas e notas explicativas de demonstrações financeiras, com relações entre as duas fontes tratadas sempre como hipóteses citadas, nunca como conclusão de infração.</p>
-    <div class="meta mono">
-      <span>Situação em <b>10/11/2026</b></span>
-      <span>Etapa <b>Collect P01 concluído</b></span>
-      <span>Repositório <b>amarallr/taxminer</b> (público, MIT)</span>
-      <span>CI <b style="color:var(--ok)">aprovado</b></span>
-    </div>
-  </header>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#inicio">TaxMiner</a>
+    <nav class="nav" aria-label="Seções da página">
+      <a href="#desafio">Desafio</a>
+      <a href="#solucao">Solução</a>
+      <a href="#arquitetura">Arquitetura</a>
+      <a href="#fontes">Fontes</a>
+      <a href="#aplicacoes">Aplicações</a>
+      <a href="#ia">IA</a>
+      <a href="#desenvolvimento">Desenvolvimento</a>
+      <a href="#qualidade">Qualidade</a>
+      <a href="#documentacao">Documentação</a>
+    </nav>
+  </div>
+</header>
 
-  <section>
-    <div class="eyebrow">Escopo</div>
-    <h2>Duas fontes independentes e uma camada de relações</h2>
-    <div class="families">
-      <div class="family"><code>tax_consultation_decisions</code><h3>Soluções de Consulta</h3><p class="mono" style="font-family:var(--body);font-size:13.5px;color:var(--muted)">Atos da RFB com texto original em português, tipo de documento preservado e ID estável por autoridade, tipo, número e ano.</p></div>
-      <div class="family"><code>financial_disclosures</code><h3>Notas explicativas</h3><p style="font-size:13.5px;color:var(--muted)">Relatório → nota → tabela, com CNPJ só quando verificado, escopo consolidado ou individual, unidades e página de origem.</p></div>
-      <div class="family"><code>document_relationships</code><h3>Relações entre fontes</h3><p style="font-size:13.5px;color:var(--muted)">Só sobre as duas bases aceitas. Cada vínculo tem citações dos dois lados, nível de evidência e revisão humana.</p></div>
+<main class="wrap" id="conteudo">
+
+  <!-- 1. Hero -->
+  <section class="hero" id="inicio" aria-labelledby="titulo">
+    <div class="eyebrow">Projeto independente · código aberto · licença MIT</div>
+    <h1 id="titulo">TaxMiner — Mineração e Inteligência de Documentos Tributários e Financeiros</h1>
+    <p class="sub">Transformando documentos públicos em conhecimento estruturado, pesquisável e verificável.</p>
+    <p class="lede">O TaxMiner coleta, organiza, processa e analisa documentos públicos de natureza tributária, contábil e financeira. Cada informação mantém o vínculo com o documento oficial de onde veio.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/amarallr/taxminer">Código no GitHub</a>
+      <a class="btn" href="https://github.com/amarallr/taxminer#readme">Documentação (README)</a>
+      <a class="btn" href="#desenvolvimento">Estágio atual</a>
+    </div>
+    <p class="disclaimer" role="note"><b aria-hidden="true">!</b><span><b>Não é um serviço oficial</b> da Receita Federal do Brasil nem da CVM, e não tem vinculação institucional com esses órgãos. O projeto está em desenvolvimento: nenhuma versão foi liberada para uso.</span></p>
+  </section>
+
+  <!-- 2. Desafio -->
+  <section id="desafio" aria-labelledby="h-desafio">
+    <div class="section-head">
+      <div class="eyebrow">O desafio</div>
+      <h2 id="h-desafio">Informação pública relevante, mas fragmentada</h2>
+      <p class="lede">Órgãos públicos e empresas divulgam grandes volumes de informação. Esse conhecimento, porém, fica disperso em plataformas, documentos, formatos e períodos diferentes, o que dificulta pesquisas, comparações, a identificação de padrões e o cruzamento de informações.</p>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Dispersão</h3><p>Interpretações tributárias e divulgações contábeis ficam em portais distintos, cada um com sua busca e sua própria cobertura histórica.</p></div>
+      <div class="card"><h3>Formatos difíceis</h3><p>Muito conteúdo está em PDF ou em pacotes XML/ZIP, com tabelas, cabeçalhos e numeração que dificultam a extração automática.</p></div>
+      <div class="card"><h3>Pesquisa histórica limitada</h3><p>Comparar um assunto entre anos, empresas ou unidades emissoras exige trabalho manual e repetitivo.</p></div>
+      <div class="card"><h3>Cruzamento trabalhoso</h3><p>Relacionar o que uma empresa divulga com a interpretação oficial da lei exige localizar e ler os dois lados, com citações corretas.</p></div>
     </div>
   </section>
 
-  <section>
-    <div class="eyebrow">Roteiro</div>
-    <h2>Onde o projeto está</h2>
+  <!-- 3. Solução -->
+  <section id="solucao" aria-labelledby="h-solucao">
+    <div class="section-head">
+      <div class="eyebrow">A solução proposta</div>
+      <h2 id="h-solucao">Engenharia de dados, processamento documental, pesquisa e IA</h2>
+      <p class="lede">O TaxMiner transforma documentos não estruturados ou semiestruturados em bases de conhecimento organizadas, rastreáveis e acessíveis, em três fases com aceite humano próprio.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><span class="kicker">Fase 1</span><h3>Soluções de Consulta</h3><p>Coleta, estruturação e pesquisa das interpretações tributárias publicadas pela Receita Federal.</p></div>
+      <div class="card"><span class="kicker">Fase 2</span><h3>Notas explicativas</h3><p>Coleta, estruturação e pesquisa das notas das demonstrações financeiras entregues à CVM, sem depender da Fase 1.</p></div>
+      <div class="card"><span class="kicker">Fase 3</span><h3>Inteligência cruzada</h3><p>Relações entre as duas bases, sempre como hipóteses com evidências e revisão humana, depois que ambas forem aceitas.</p></div>
+    </div>
+  </section>
+
+  <!-- 4. Arquitetura -->
+  <section id="arquitetura" aria-labelledby="h-arquitetura">
+    <div class="section-head">
+      <div class="eyebrow">Arquitetura</div>
+      <h2 id="h-arquitetura">Do documento público ao conhecimento verificável</h2>
+      <p class="lede">Três módulos encadeados e um componente compartilhado. Cada família documental tem esquema, proveniência, cobertura e qualidade próprios.</p>
+    </div>
+    <div class="legend" aria-label="Legenda da situação">
+      <span class="pill ok">implementado</span>
+      <span class="pill warn">em desenvolvimento</span>
+      <span class="pill idle">previsto</span>
+    </div>
+    <ol class="flow" aria-label="Fluxo da arquitetura do TaxMiner">
+      <li class="layer">
+        <div class="layer-head"><h3>Fontes documentais</h3><span class="pill ok">fontes verificadas</span></div>
+        <div class="sources-row">
+          <div><b>Soluções de Consulta</b><br><span class="note">Receita Federal · sistema Normas</span></div>
+          <div><b>Demonstrações financeiras e notas explicativas</b><br><span class="note">CVM · dados abertos e sistema RAD/ENET</span></div>
+        </div>
+      </li>
+      <li class="layer">
+        <div class="layer-head"><h3>TaxMiner Collect</h3><code>src/collect/</code><span class="pill ok">implementado para a CVM</span></div>
+        <ol class="steps">
+          <li><b>Descoberta</b><span>catálogo das entregas e verificação de termos</span></li>
+          <li><b>Aquisição</b><span>download espaçado, retomável, com novas tentativas</span></li>
+          <li><b>Integridade</b><span>SHA-256 do pacote e de cada arquivo</span></li>
+          <li><b>Proveniência</b><span>manifesto com URL, data e resultado</span></li>
+        </ol>
+      </li>
+      <li class="layer">
+        <div class="layer-head"><h3>TaxMiner Data</h3><code>src/data/</code><span class="pill warn">em desenvolvimento</span></div>
+        <ol class="steps">
+          <li><b>Extração</b><span>texto, metadados e notas do PDF original</span></li>
+          <li><b>Tratamento</b><span>números, títulos, páginas e escala monetária</span></li>
+          <li><b>Estruturação</b><span>relatório → nota → tabela, com IDs estáveis</span></li>
+          <li><b>Consolidação</b><span>histórico versionado em Parquet</span></li>
+        </ol>
+      </li>
+      <li class="layer">
+        <div class="layer-head"><h3>TaxMiner Intelligence</h3><code>src/intelligence/</code><span class="pill idle">previsto</span></div>
+        <ol class="steps">
+          <li><b>Pesquisa textual</b><span>filtros por empresa, período, tributo</span></li>
+          <li><b>Pesquisa semântica</b><span>trechos relevantes por significado</span></li>
+          <li><b>Relações documentais</b><span>hipóteses com evidências dos dois lados</span></li>
+          <li><b>Análise assistida</b><span>apoio de modelos de linguagem, com citações</span></li>
+        </ol>
+      </li>
+      <li class="layer result">
+        <div class="layer-head"><h3>Conhecimento verificável</h3></div>
+        <p>Resultados com fonte, página, evidência e revisão humana.</p>
+      </li>
+    </ol>
+    <div class="card">
+      <div class="layer-head"><h3>TaxMiner Common</h3><span class="pill ok">fundação implementada</span></div>
+      <p>Serviços compartilhados por todos os módulos: configuração do ambiente R (renv, snapshot explícito), validação automatizada no computador e no GitHub Actions, registros de gestão (itens, testes, aceites, riscos e decisões), testes com dados públicos ou sintéticos e regras de segurança, como áreas protegidas e nenhum segredo em logs. Logging estruturado de pipeline e <code>src/common/</code> serão criados quando houver código compartilhado.</p>
+    </div>
+  </section>
+
+  <!-- 5. Fontes -->
+  <section id="fontes" aria-labelledby="h-fontes">
+    <div class="section-head">
+      <div class="eyebrow">Fontes documentais</div>
+      <h2 id="h-fontes">Duas famílias de documentos no escopo inicial</h2>
+    </div>
+    <div class="grid g2">
+      <article class="card">
+        <code>tax_consultation_decisions</code>
+        <h3>Soluções de Consulta tributárias</h3>
+        <p>São respostas formais da Receita Federal a dúvidas de contribuintes sobre como aplicar a legislação tributária a um caso concreto. As emitidas pela Coordenação-Geral de Tributação (Cosit) vinculam a administração tributária, por isso orientam a interpretação oficial da lei.</p>
+        <div class="split">
+          <div><h4>Identificação</h4><p>Tipo de ato, unidade emissora, número, ano, data de publicação e ementa com assunto, conclusão e dispositivos legais.</p></div>
+          <div><h4>O que se preserva</h4><p>Autoridade, tipo documental original, número, ano e texto original em português.</p></div>
+          <div><h4>Disponível hoje</h4><p>Fontes verificadas: ementas e metadados acessíveis; o texto integral recusa acesso automatizado (HTTP 403), e o projeto não contorna esse bloqueio.</p></div>
+          <div><h4>Previsto</h4><p>Classificação por tributo, assunto, dispositivo legal e período, com pesquisa histórica.</p></div>
+        </div>
+      </article>
+      <article class="card">
+        <code>financial_disclosures</code>
+        <h3>Demonstrações financeiras e notas explicativas</h3>
+        <p>As demonstrações (balanço, resultado, fluxos de caixa, mutações do patrimônio e valor adicionado) mostram a posição e o desempenho da empresa. As notas explicativas detalham esses números: políticas contábeis, tributos, contingências, partes relacionadas e eventos subsequentes.</p>
+        <div class="split">
+          <div><h4>Origem</h4><p>Entregas DFP (anual) e ITR (trimestral) de companhias abertas à CVM. As notas vêm no pacote de cada entrega, como PDF anexado pela empresa.</p></div>
+          <div><h4>O que se preserva</h4><p>Empresa (CNPJ e código CVM verificados), período, versão, escopo contábil, unidade de medida e página de origem.</p></div>
+          <div><h4>Disponível hoje</h4><p>Catálogo de 49.908 entregas desde 2010; coleta das 14.015 DFP em andamento; extração das notas em desenvolvimento.</p></div>
+          <div><h4>Previsto</h4><p>Tabelas das notas, bases Parquet e pesquisa por empresa, período e nota para análises históricas, contábeis e tributárias.</p></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 6. Aplicações -->
+  <section id="aplicacoes" aria-labelledby="h-aplicacoes">
+    <div class="section-head">
+      <div class="eyebrow">Aplicações</div>
+      <h2 id="h-aplicacoes">O que poderá ser feito com o TaxMiner</h2>
+      <p class="note">Aplicações possíveis quando as funcionalidades previstas estiverem implementadas; nenhuma delas está disponível ainda.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Pesquisa tributária</h3><p>Localizar Soluções de Consulta sobre um tributo, uma operação ou um dispositivo legal.</p></div>
+      <div class="card"><h3>Análise contábil e financeira</h3><p>Pesquisar o que as empresas divulgam em notas explicativas, como contingências tributárias.</p></div>
+      <div class="card"><h3>Estudos históricos</h3><p>Comparar assuntos e divulgações ao longo de diferentes exercícios.</p></div>
+      <div class="card"><h3>Análise exploratória de riscos</h3><p>Identificar padrões e inconsistências aparentes que mereçam investigação adicional por um profissional.</p></div>
+      <div class="card"><h3>Pesquisa acadêmica</h3><p>Usar dados estruturados, documentados e rastreáveis em estudos.</p></div>
+      <div class="card"><h3>Inteligência documental</h3><p>Relacionar informações de fontes diferentes com evidências explícitas dos dois lados.</p></div>
+    </div>
+  </section>
+
+  <!-- 7. IA -->
+  <section id="ia" aria-labelledby="h-ia">
+    <div class="section-head">
+      <div class="eyebrow">Inteligência artificial</div>
+      <h2 id="h-ia">Inteligência artificial com rastreabilidade e responsabilidade</h2>
+      <p class="lede">Processamento de linguagem natural, pesquisa semântica e modelos de linguagem poderão ajudar a localizar trechos relevantes, agrupar assuntos e resumir documentos. A coleta, a extração e a pesquisa por palavras não dependem de IA, e o uso de serviços externos de IA exige revisão de privacidade e autorização própria.</p>
+    </div>
+    <ol class="principles" aria-label="Princípios de uso de IA">
+      <li>Toda informação relevante mantém vínculo com sua fonte original.</li>
+      <li>Respostas de IA não substituem documentos oficiais.</li>
+      <li>Relações identificadas entre documentos são hipóteses analíticas.</li>
+      <li>Semelhanças documentais não comprovam infrações.</li>
+      <li>Os resultados devem permitir revisão humana.</li>
+      <li>O sistema não produz conclusões jurídicas ou fiscais automáticas sem fundamento verificável.</li>
+      <li>Incertezas e limitações são explicitadas.</li>
+    </ol>
+  </section>
+
+  <!-- 8. Desenvolvimento -->
+  <section id="desenvolvimento" aria-labelledby="h-desenvolvimento">
+    <div class="section-head">
+      <div class="eyebrow">Desenvolvimento · situação em 10/11/2026</div>
+      <h2 id="h-desenvolvimento">Estágio real do projeto</h2>
+      <p class="lede">Implementação, teste, aceite humano, release e operação são acompanhados separadamente. Nenhum MVP foi concluído, liberado em release ou colocado em operação.</p>
+    </div>
     <div class="rail">
-      <div class="stage done"><span class="num">Common P02</span><h3>Fundação</h3><p>Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas.</p><span class="pill ok">aprovado</span></div>
-      <div class="stage done"><span class="num">Common P03</span><h3>Arquitetura</h3><p>Contratos por fonte, limiares de qualidade e dicionário de dados.</p><span class="pill ok">aprovado</span></div>
-      <div class="stage next"><span class="num">Fase 1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; amostra de até 100 atos, Parquet e busca no Shiny.</p><span class="pill acc">em andamento</span></div>
-      <div class="stage"><span class="num">Fase 2</span><h3>Notas explicativas</h3><p>Coleta, extração e busca próprias, sem depender da Fase 1.</p><span class="pill idle">não iniciada</span></div>
-      <div class="stage"><span class="num">Fase 3</span><h3>Inteligência cruzada</h3><p>Relações citadas entre as duas bases já aceitas.</p><span class="pill idle">não iniciada</span></div>
+      <div class="stage done"><span class="num">Common</span><h3>Fundação</h3><p>Ambiente R, renv, Git, GitHub, CI e áreas protegidas.</p><span class="pill ok">aceita</span></div>
+      <div class="stage done"><span class="num">Common</span><h3>Arquitetura</h3><p>Contratos por fonte, critérios de aceite e dicionário de dados.</p><span class="pill ok">aceita</span></div>
+      <div class="stage held"><span class="num">Fase 1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; coleta aguarda decisões do desenvolvedor.</p><span class="pill warn">suspensa</span></div>
+      <div class="stage next"><span class="num">Fase 2</span><h3>Notas explicativas</h3><p>Coleta das 14.015 DFP em execução; extração das notas em desenvolvimento.</p><span class="pill acc">em andamento</span></div>
+      <div class="stage"><span class="num">Fase 3</span><h3>Inteligência cruzada</h3><p>Depende do aceite das Fases 1 e 2.</p><span class="pill idle">não iniciada</span></div>
     </div>
-  </section>
 
-  <section>
-    <div class="eyebrow">Itens de trabalho · 18 registrados</div>
-    <h2>Implementação, teste e aceite de cada item</h2>
-    <div class="tally">
+    <div class="tally" aria-label="Itens de trabalho por situação de implementação">
       <div class="tile"><span class="n">8</span><span class="l">implementados</span></div>
-      <div class="tile"><span class="n">1</span><span class="l">em andamento</span></div>
-      <div class="tile"><span class="n">9</span><span class="l">não iniciados</span></div>
+      <div class="tile"><span class="n">2</span><span class="l">em andamento</span></div>
+      <div class="tile"><span class="n">1</span><span class="l">suspenso</span></div>
+      <div class="tile"><span class="n">7</span><span class="l">não iniciados</span></div>
       <div class="tile"><span class="n">8</span><span class="l">aceites humanos</span></div>
     </div>
-    <div class="table-box">
-      <table>
-        <thead><tr><th>ID</th><th>Item</th><th>Implementação</th><th>Teste</th><th>Aceite</th></tr></thead>
-        <tbody>
-          <tr class="group"><td colspan="5">Common · fundação e governança</td></tr>
-          <tr><td class="id">work_0001</td><td>Fundação local e exclusões protegidas</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0002</td><td>Arquitetura por fonte e critérios das fases</td><td><span class="pill ok">implementado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0003</td><td>Git e GitHub</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0004</td><td>Codex</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0005</td><td>Claude Code</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0006</td><td>Gemini CLI</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0007</td><td>GitHub Copilot</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr><td class="id">work_0018</td><td>Revisão de consistência do projeto</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
-          <tr class="group"><td colspan="5">Fase 1 · Soluções de Consulta</td></tr>
-          <tr><td class="id">work_0008</td><td>Descobrir fontes e coletar a amostra</td><td><span class="pill warn">em andamento</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0009</td><td>Extrair e consolidar</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0010</td><td>Busca independente</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0015</td><td>Aceite humano da Fase 1</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr class="group"><td colspan="5">Fase 2 · Notas explicativas</td></tr>
-          <tr><td class="id">work_0011</td><td>Descobrir fontes e coletar relatórios</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0012</td><td>Extrair notas e tabelas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0013</td><td>Busca independente de notas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0016</td><td>Aceite humano da Fase 2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr class="group"><td colspan="5">Fase 3 · Inteligência cruzada</td></tr>
-          <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-          <tr><td class="id">work_0017</td><td>Aceite humano da Fase 3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="font-size:13px;color:var(--muted)">Nenhum item foi liberado em release nem está em operação.</p>
-  </section>
 
-  <section class="cols">
-    <div style="display:grid;gap:16px;align-content:start">
-      <div class="eyebrow">Riscos abertos · 6 de 11</div>
-      <h2>O que pode atrapalhar</h2>
-      <div class="list">
-        <div class="item"><span class="pill bad">alto</span><span class="t">Texto integral recusado à automação</span><span class="d">O visualizador oficial respondeu 403; a API de busca não é documentada (risk_0011).</span></div>
-        <div class="item"><span class="pill bad">alto</span><span class="t">Cobertura das fontes</span><span class="d">Ementas acessíveis; termos de uso e completude histórica ainda em aberto (risk_0001).</span></div>
-        <div class="item"><span class="pill bad">alto</span><span class="t">Sincronização do OneDrive</span><span class="d">Exclusões das áreas protegidas não verificadas; checkout mantido no OneDrive por escolha (risk_0002).</span></div>
-        <div class="item"><span class="pill bad">alto</span><span class="t">Identificação de empresas</span><span class="d">CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005).</span></div>
-        <div class="item"><span class="pill warn">médio</span><span class="t">testthat compilado no R 4.5.3</span><span class="d">Aviso só local; o CI usa binário compatível (risk_0007).</span></div>
-        <div class="item"><span class="pill warn">médio</span><span class="t">ZIP histórico dos prompts</span><span class="d">Não tem as correções; os arquivos avulsos valem (risk_0006).</span></div>
+    <details>
+      <summary>Itens de trabalho (18): implementação, teste e aceite</summary>
+      <div class="inner">
+        <div class="table-box">
+          <table>
+            <caption>Fonte: docs/project_management/work_items.csv. Nenhum item foi liberado em release nem está em operação.</caption>
+            <thead><tr><th scope="col">ID</th><th scope="col">Item</th><th scope="col">Implementação</th><th scope="col">Teste</th><th scope="col">Aceite</th></tr></thead>
+            <tbody>
+              <tr class="group"><th scope="rowgroup" colspan="5">Common · fundação e governança</th></tr>
+              <tr><td class="id">work_0001</td><td>Fundação local e exclusões protegidas</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0002</td><td>Arquitetura por fonte e critérios das fases</td><td><span class="pill ok">implementado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0003</td><td>Git e GitHub</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0004</td><td>Codex</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0005</td><td>Claude Code</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0006</td><td>Gemini CLI</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0007</td><td>GitHub Copilot</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0018</td><td>Revisão de consistência do projeto</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 1 · Soluções de Consulta</th></tr>
+              <tr><td class="id">work_0008</td><td>Descobrir fontes e coletar a amostra</td><td><span class="pill warn">suspenso</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0009</td><td>Extrair e consolidar</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0010</td><td>Pesquisa independente</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0015</td><td>Aceite humano da Fase 1</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 2 · Notas explicativas</th></tr>
+              <tr><td class="id">work_0011</td><td>Descobrir fontes e coletar relatórios</td><td><span class="pill acc">em andamento</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0012</td><td>Extrair notas e tabelas</td><td><span class="pill acc">em andamento</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0013</td><td>Pesquisa independente de notas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0016</td><td>Aceite humano da Fase 2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 3 · Inteligência cruzada</th></tr>
+              <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0017</td><td>Aceite humano da Fase 3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <div class="grid g2">
+      <div style="display:grid;gap:12px;align-content:start">
+        <h3>Riscos abertos (8 de 13)</h3>
+        <div class="list">
+          <div class="item"><span class="pill bad">alto</span><span class="t">Notas só nos pacotes RAD/ENET</span><span class="d">Fora dos dados abertos; sem robots.txt nem licença declarada (risk_0012).</span></div>
+          <div class="item"><span class="pill bad">alto</span><span class="t">Texto integral das Soluções de Consulta</span><span class="d">Acesso automatizado recusado (403); API de busca não documentada (risk_0011).</span></div>
+          <div class="item"><span class="pill bad">alto</span><span class="t">Cobertura das fontes</span><span class="d">Termos de uso e completude histórica em aberto (risk_0001).</span></div>
+          <div class="item"><span class="pill bad">alto</span><span class="t">Sincronização do OneDrive</span><span class="d">Exclusões das áreas protegidas não verificadas; dados coletados ficam fora do OneDrive (risk_0002).</span></div>
+          <div class="item"><span class="pill bad">alto</span><span class="t">Identificação de empresas</span><span class="d">CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">Volume da coleta</span><span class="d">Acervo completo (~450 GB) maior que o disco; DFP primeiro, ITR depois (risk_0013).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">testthat compilado no R 4.5.3</span><span class="d">Aviso só local; o CI usa binário compatível (risk_0007).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">ZIP histórico dos prompts</span><span class="d">Não tem as correções; os arquivos avulsos valem (risk_0006).</span></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <h3>Próximos passos</h3>
+        <div class="list">
+          <div class="item"><span class="pill acc">1</span><span class="t">Concluir a coleta das DFP</span><span class="d">14.015 entregas de 2010 a 2026, com retomada automática; previsão de cerca de 7 dias.</span></div>
+          <div class="item"><span class="pill acc">2</span><span class="t">Extração das notas (Data P03)</span><span class="d">Validar a segmentação, gerar Parquet de relatórios e notas e medir a qualidade.</span></div>
+          <div class="item"><span class="pill acc">3</span><span class="t">Pesquisa de notas</span><span class="d">Área própria na interface Shiny local, com filtros e citação da página de origem.</span></div>
+          <div class="item"><span class="pill idle">—</span><span class="t">Fase 1</span><span class="d">Retoma quando o desenvolvedor decidir a estratégia de coleta (docs/feasibility.md).</span></div>
+        </div>
       </div>
     </div>
-    <div style="display:grid;gap:16px;align-content:start">
-      <div class="eyebrow">Próximos passos</div>
-      <h2>O que vem agora</h2>
-      <div class="list">
-        <div class="item"><span class="pill acc">1</span><span class="t">Decidir a estratégia de coleta</span><span class="d">Uso da API de busca do Normas, opção para o texto integral e estratos da amostra (docs/feasibility.md).</span></div>
-        <div class="item"><span class="pill acc">2</span><span class="t">Collect P02: amostra da Fase 1</span><span class="d">Até 100 ementas com manifesto, hash SHA-256 e resultado documento a documento.</span></div>
-        <div class="item"><span class="pill acc">3</span><span class="t">Extração, Parquet e busca</span><span class="d">Data P01/P02 e Intelligence P02, com Shiny local e citação da fonte oficial.</span></div>
-        <div class="item"><span class="pill idle">—</span><span class="t">Adiados por sua escolha</span><span class="d">Atualizar o R e tirar o projeto do OneDrive. Refatoração dos prompts fica para a versão 1.1.</span></div>
-      </div>
-    </div>
   </section>
 
-  <section>
-    <div class="eyebrow">Critérios de aceite das fases (aprovados)</div>
-    <h2>Como cada fase será medida</h2>
+  <!-- 9. Qualidade e segurança -->
+  <section id="qualidade" aria-labelledby="h-qualidade">
+    <div class="section-head">
+      <div class="eyebrow">Qualidade e segurança</div>
+      <h2 id="h-qualidade">Critérios medidos antes de qualquer aceite</h2>
+      <p class="lede">Uma fase só é considerada concluída com evidências medidas contra limiares aceitos e com aceite humano explícito.</p>
+    </div>
     <div class="table-box">
-      <table style="min-width:620px">
-        <thead><tr><th>Medida</th><th>Limiar</th></tr></thead>
+      <table style="min-width:560px">
+        <caption>Critérios de aceite das fases, aprovados em 10/11/2026 (docs/requirements.md).</caption>
+        <thead><tr><th scope="col">Medida</th><th scope="col">Limiar</th></tr></thead>
         <tbody>
           <tr><td>Contabilização da descoberta</td><td class="mono">100% com resultado final</td></tr>
           <tr><td>Integridade dos downloads</td><td class="mono">100% com SHA-256 e URL</td></tr>
           <tr><td>Cobertura dos campos extraídos</td><td class="mono">≥ 99%</td></tr>
           <tr><td>Reprodutibilidade</td><td class="mono">100% idêntico em duas execuções</td></tr>
-          <tr><td>Relevância da busca (30 consultas por base)</td><td class="mono">Precision@10 ≥ 0,90 · Recall@10 ≥ 0,80</td></tr>
+          <tr><td>Relevância da pesquisa (30 consultas por base)</td><td class="mono">Precision@10 ≥ 0,90 · Recall@10 ≥ 0,80</td></tr>
           <tr><td>Citações corretas</td><td class="mono">100%</td></tr>
-          <tr><td>Latência da busca local</td><td class="mono">p95 ≤ 2 s</td></tr>
+          <tr><td>Latência da pesquisa local</td><td class="mono">p95 ≤ 2 s</td></tr>
           <tr><td>Precisão das relações (≥ 50 vínculos revisados)</td><td class="mono">≥ 0,90</td></tr>
         </tbody>
       </table>
     </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Ambiente</div>
-    <h2>Ferramentas verificadas</h2>
-    <div class="env mono">
+    <div class="grid g3">
+      <div class="card"><h3>Reprodutibilidade</h3><p>Dependências bloqueadas com renv, validador automatizado no computador e no GitHub Actions, comandos retomáveis e manifestos com hash.</p></div>
+      <div class="card"><h3>Proteção de dados</h3><p>Somente fontes públicas; fixtures públicas ou sintéticas; dados pessoais de cadastros públicos não são publicados; credenciais nunca vão para logs.</p></div>
+      <div class="card"><h3>Governança</h3><p>Áreas protegidas inacessíveis aos agentes, acesso recusado nunca contornado, decisões e aceites registrados, commits e publicação somente com autorização.</p></div>
+    </div>
+    <div class="env mono" aria-label="Ambiente verificado">
       <div><b>R 4.5.1</b><span>RStudio 2024.04.0</span></div>
       <div><b>renv · testthat 3.3.2</b><span>snapshot explícito</span></div>
-      <div><b>Validação local</b><span>5 de 5 aprovadas</span></div>
+      <div><b>Validação</b><span>ambiente e coleta: testes aprovados</span></div>
       <div><b>GitHub Actions</b><span>restauração limpa aprovada</span></div>
       <div><b>Git 2.55 · gh 2.103</b><span>e-mail noreply</span></div>
       <div><b>Codex · Claude · Gemini · Copilot</b><span>testados no RStudio</span></div>
     </div>
   </section>
 
-  <footer>
-    Fonte: registros em <span class="mono">docs/project_management/</span> após o Collect P01 (10/11/2026). As pastas <span class="mono">restricted/</span> e <span class="mono">tmp/</span> são locais e nunca são lidas nem publicadas.
-  </footer>
-</div>
+  <!-- 10. Documentação -->
+  <section id="documentacao" aria-labelledby="h-documentacao">
+    <div class="section-head">
+      <div class="eyebrow">Documentação e código</div>
+      <h2 id="h-documentacao">Para ir mais fundo</h2>
+    </div>
+    <ul class="links">
+      <li><a href="https://github.com/amarallr/taxminer"><b>Repositório</b><span>Código-fonte, histórico e licença MIT</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer#readme"><b>README</b><span>Visão geral, instalação, execução e estrutura</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/architecture.md"><b>Arquitetura</b><span>Módulos, contratos e decisões aceitas</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/requirements.md"><b>Requisitos</b><span>Requisitos e critérios de aceite das fases</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/data_dictionary.md"><b>Dicionário de dados</b><span>Campos de cada família documental</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/data_sources.md"><b>Fontes da CVM</b><span>Verificação, catálogo e coleta</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/source_inventory.md"><b>Fontes da Receita Federal</b><span>Inventário das Soluções de Consulta</span></a></li>
+      <li><a href="https://github.com/amarallr/taxminer/blob/main/docs/project_management/project_status.md"><b>Estado do projeto</b><span>Registros de gestão e histórico</span></a></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>TaxMiner</b> é um projeto pessoal, independente e de código aberto, sob licença MIT. Não é um serviço oficial da Receita Federal do Brasil nem da CVM e não representa suas posições. Os resultados não substituem documentos oficiais nem constituem orientação jurídica, contábil ou fiscal.</p>
+    <p>Indicadores conforme <span class="mono">docs/project_management/</span> em 10/11/2026. Documentos de terceiros seguem os termos de cada fonte (dados abertos da CVM: ODbL).</p>
+  </div>
+</footer>
 </body>
 </html>
