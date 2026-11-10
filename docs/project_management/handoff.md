@@ -1,20 +1,19 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T17:32:29-03:00. Branch `main`; último commit `b0ed621`.
-Há alterações locais não commitadas (revisão de 2026-11-10; ver
-`review_update_plan.md`). O histórico completo de retomadas está em
-`handoff_history.md`.
+Atualizado: 2026-11-10T17:46:38-03:00. Branch `main`. O histórico completo de
+retomadas está em `handoff_history.md`; a revisão e sua execução, em
+`review_update_plan.md`.
 
 ## Estado atual
 
-- **Common P02 (setup):** `work_0001` e `work_0003` implementados, testados e
-  aprovados (`acc_0001`, `acc_0002`). Release `not_released`; operações
-  `not_started`.
+- **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
+  `acc_0002`). Release `not_released`; operações `not_started`.
+- **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e
+  dicionário aprovados (`acc_0003`); `req_0003` `accepted`.
 - **Assistentes (`work_0004`–`work_0007`):** testes isolados aprovados; smoke
   test integrado no terminal do RStudio ainda não executado; aceite pendente.
-- **Common P03 (`work_0002`):** arquitetura, requisitos e dicionário em
-  rascunho, com propostas concretas para as pendências da revisão anterior em
-  `docs/architecture.md`. `req_0003` continua `proposed`.
+- **Repositório:** licença MIT; CI `validate_environment` no GitHub Actions;
+  commits futuros com e-mail noreply (configuração local).
 - **MVPs (fases 1–3):** não iniciados. Nenhuma fonte foi coletada.
 
 ## Validação
@@ -23,26 +22,24 @@ Há alterações locais não commitadas (revisão de 2026-11-10; ver
 Rscript --vanilla scripts/validate_environment.R
 ```
 
-Último resultado: código 0, 5 verificações aprovadas (`test_0020`). O aviso de
-`testthat` compilado no R 4.5.3 permanece.
+O aviso de `testthat` compilado no R 4.5.3 permanece (R local 4.5.1, por
+escolha do desenvolvedor).
 
-## Decisões pendentes do desenvolvedor
+## Pendências
 
-1. Aceitar ou rejeitar `req_0003`, os limiares de `docs/requirements.md` e as
-   propostas de arquitetura.
-2. Escolher a licença do repositório público.
-3. Exceção `doit` (`risk_0010`): de preferência, mover `doit.txt` para fora de
-   `tmp/` e restaurar `Read(./tmp/**)` em `.claude/settings.json`.
-4. Autorizar o commit e o push das alterações locais.
-5. R 4.5.3+, destino do `renv` e checkout fora do OneDrive (ver plano).
+1. Desenvolvedor pode apagar `tmp/doit.txt`; o `doit` agora usa
+   `.claude/doit.txt` (ignorado pelo Git).
+2. Adiados por escolha do desenvolvedor: atualização do R e checkout fora do
+   OneDrive (`risk_0002`, `risk_0007`).
+3. Refatoração do texto repetido dos prompts: pacote 1.1.
 
 ## Próxima ação técnica
 
-Após a decisão 1: executar `prompts/collect_p01_official_source_discovery.txt`
-apenas para verificar fontes e termos de uso, sem coleta em massa.
+Executar `prompts/collect_p01_official_source_discovery.txt` apenas para
+verificar fontes públicas e termos de uso das Soluções de Consulta, sem coleta
+em massa. Requer autorização da etapa.
 
 ## Regras permanentes
 
-Nunca acessar `restricted/` nem `tmp/`, exceto a leitura de `tmp/doit.txt`
-definida em `AGENTS.md`. Não inferir aceites, não fabricar evidências, não
-fazer commit ou push sem autorização explícita.
+Nunca acessar `restricted/` nem `tmp/`. Não inferir aceites, não fabricar
+evidências, não fazer commit ou push sem autorização explícita.

@@ -37,3 +37,5 @@ __pycache__/
 /prompts/*.zip
 # Execution evidence may include workstation paths; retain locally.
 /reports/execution/
+# Local doit instructions; never versioned.
+/.claude/doit.txt

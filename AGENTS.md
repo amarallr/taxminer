@@ -11,10 +11,9 @@ separately. Never infer approval or fabricate evidence.
 - Never read, list, traverse, search, index, copy, modify, delete or transmit
   restricted/ or tmp/, including their contents and metadata. Never operate
   developer-owned independent repositories inside these paths.
-- Sole exception, authorized by the user: an assistant may read (only read) the
-  single file tmp/doit.txt when the user types `doit`, then follow its
-  instructions subject to every other rule in this file. Do not list, search or
-  access anything else under tmp/.
+- No exceptions. When the user types `doit`, read `.claude/doit.txt` (local,
+  ignored by Git, outside the protected paths) and follow its instructions
+  subject to every other rule in this file.
 - Use explicit file/directory allowlists. Never recursively scan the repository
   root, use unbounded globs, git add ., or package the root. Do not follow links
   into protected areas. Root inventories must be nonrecursive and omit protected

@@ -1,5 +1,14 @@
 # TaxMiner — estado do projeto
 
+## Recomendações autorizadas — 2026-11-10T17:46:38-03:00
+
+Executadas as recomendações autorizadas (`decision_0014`): `req_0003` e
+`work_0002` aprovados (`acc_0003`); licença MIT; `doit` movido para
+`.claude/doit.txt` com bloqueio de `tmp/` restaurado; diretório renv criado;
+noreply local; CI no GitHub Actions. Permanecem por escolha do desenvolvedor:
+R 4.5.1 e checkout no OneDrive. Próxima etapa técnica: Collect P01 (verificação
+de fontes, sem coleta em massa). Nenhum MVP iniciado.
+
 ## Revisão geral (`doit`) — 2026-11-10T17:32:29-03:00
 
 Revisão completa de prompts, arquitetura, setup e requisitos por Claude Code.

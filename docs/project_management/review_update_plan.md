@@ -78,3 +78,20 @@ por seção) e fiz buscas direcionadas. Não foram abertos: o ZIP histórico,
 Depois do item 1, iniciar a Fase 1 com `collect_p01_official_source_discovery.txt`:
 verificar fontes públicas e termos de uso das Soluções de Consulta, sem baixar
 documentos em massa, e registrar o resultado antes da coleta da amostra.
+
+## Execução após autorização — 2026-11-10T17:46:38-03:00
+
+O desenvolvedor autorizou todas as recomendações (`decision_0014`).
+
+| Prioridade | Resultado |
+|---:|---|
+| 1 | Aceito: `req_0003`, limiares e arquitetura (`acc_0003`). |
+| 2 | Licença MIT adicionada. |
+| 3 | `doit` lê `.claude/doit.txt`; `Read(./tmp/**)` restaurado. `tmp/doit.txt` ficou intacto: o desenvolvedor pode apagá-lo. |
+| 4 | Commit e push executados. |
+| 5 | Não executado por escolha do desenvolvedor (R continua 4.5.1). |
+| 6 | Diretório `%LOCALAPPDATA%/R/cache/renv` criado. |
+| 7 | Não executado por escolha do desenvolvedor (checkout continua no OneDrive). |
+| 8 | Mantido adiado para o pacote 1.1, conforme a própria recomendação. |
+| 9 | CI mínimo criado; resultado da primeira execução em `project_status.md`. |
+| 10 | E-mail noreply configurado no Git local; histórico não reescrito. |

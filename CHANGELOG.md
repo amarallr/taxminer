@@ -1,5 +1,12 @@
 # Changelog
 
+## Recomendações da revisão aplicadas — 2026-11-10
+
+- Aceitos `req_0003`, limiares e arquitetura (`acc_0003`).
+- Licença MIT; CI mínimo de validação no Windows.
+- `doit` passa a usar `.claude/doit.txt`; bloqueio de leitura de `tmp/` restaurado.
+- Diretório renv por usuário criado; e-mail noreply para commits futuros.
+
 ## Revisão geral do projeto — 2026-11-10
 
 - Prompts alinhados (títulos, fonte dupla, nomes en-US, fases e pós-MVP);

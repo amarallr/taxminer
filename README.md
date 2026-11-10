@@ -50,20 +50,23 @@ outra máquina ainda não foi validada.
 Não há fontes públicas verificadas, documentos coletados, Parquet ou produtos
 analíticos nesta etapa. Bibliotecas de aquisição, extração e Shiny serão
 adicionadas quando justificadas pelas próximas etapas. O repositório remoto
-é público; CI ainda não foi configurado. Logging e checkpoints de
+é público; o CI (`.github/workflows/validate_environment.yml`) restaura o
+`renv.lock` e roda o validador no Windows. Logging e checkpoints de
 pipeline aguardam operações reais.
 
 ## Segurança, Git e licença
 
-`restricted/` e `tmp/` são áreas protegidas inacessíveis aos agentes.
+`restricted/` e `tmp/` são áreas protegidas inacessíveis aos agentes. O atalho
+`doit` lê `.claude/doit.txt`, arquivo local ignorado pelo Git.
 `.gitignore` e `.renvignore` não substituem controle de acesso ou exclusão de
 sincronização. O desenvolvedor deve verificar as exclusões de nuvem localmente,
 sem expor conteúdos ou metadados dessas áreas.
 
 Nunca use `git add .` ou publique a raiz sem revisão. Adicione somente arquivos
 permitidos por caminhos explícitos. Commits seguem Conventional Commits;
-commits, remotos e publicação exigem autorização. Não há licença de distribuição
-definida; titularidade e licença ainda precisam de decisão humana. A visibilidade
+commits, remotos e publicação exigem autorização. O código está sob licença MIT
+(`LICENSE`); documentos coletados de terceiros seguem os termos de cada fonte e
+não são cobertos por ela. A visibilidade
 pública foi solicitada pelo usuário e registrada nos documentos de gestão.
 Consulte `CHANGELOG.md` e os registros de gestão.
 

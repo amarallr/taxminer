@@ -157,3 +157,20 @@ consistência em prompts, registros, arquitetura (como proposta) e setup; ver
 aceite de decision_0009 registrado em `acceptance_register.csv`. Licença,
 aceite de `req_0003`, instalação, mudança fora do projeto, commit e push
 continuam pendentes de decisão humana.
+
+## decision_0014 — 2026-11-10T17:46:38-03:00 — Recomendações da revisão autorizadas
+
+O desenvolvedor autorizou todas as recomendações de `review_update_plan.md` e
+respondeu explicitamente: aceita `req_0003`, os limiares de
+`docs/requirements.md` e as propostas de arquitetura (`acc_0003`); licença
+MIT; não mover o checkout do OneDrive agora; não atualizar o R agora.
+
+Executado: `LICENSE` MIT e campo em `DESCRIPTION`; `doit` passou a ler
+`.claude/doit.txt` (ignorado pelo Git) e `Read(./tmp/**)` foi restaurado,
+encerrando a exceção de `tmp/` (`risk_0010` mitigado; `tmp/doit.txt` não foi
+alterado e pode ser apagado pelo desenvolvedor); criado o diretório
+`%LOCALAPPDATA%/R/cache/renv`; e-mail noreply do GitHub configurado apenas no
+Git local para commits futuros (`risk_0009` mitigado; histórico não reescrito);
+CI mínimo em `.github/workflows/validate_environment.yml`, com permissão
+somente leitura, que revoga o adiamento de CI de decision_0004. Refatoração
+dos prompts segue adiada para o pacote 1.1, como recomendado.

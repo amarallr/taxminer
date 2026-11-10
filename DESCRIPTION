@@ -6,4 +6,5 @@ Description: Local development foundation for TaxMiner. This is a project
     dependency manifest, not an implemented R package or product release.
 Encoding: UTF-8
 Depends: R (>= 4.5.1)
+License: MIT (see LICENSE)
 Imports: renv, testthat

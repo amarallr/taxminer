@@ -53,3 +53,9 @@ the metric as insufficient evidence and do not claim the threshold passed.
 Developer review must confirm, revise, or reject these numbers before any MVP
 acceptance test is designed. No source collection or MVP implementation is
 authorized by these draft thresholds.
+
+## Acceptance — 2026-11-10T17:46:38-03:00
+
+The developer explicitly accepted `req_0003` and the quantitative thresholds
+above as the acceptance criteria for the MVP phases (`acc_0003`). The other
+requirements keep their own status in `requirements_register.csv`.

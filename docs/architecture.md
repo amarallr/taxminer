@@ -108,7 +108,8 @@ or requirements.
 
 ## Proposed resolutions of open review items — 2026-11-10
 
-Status: proposed by Claude Code during the project review; not accepted. They
+Status: proposed by Claude Code during the project review; accepted by the
+developer on 2026-11-10T17:46:38-03:00 (`acc_0003`). They
 close the three items from the review above so that `req_0003` can be decided.
 
 1. **ID fallback.** Primary key:
@@ -140,3 +141,10 @@ close the three items from the review above so that `req_0003` can be decided.
    P03/P06 prescribe) and contains presentation code only. Business logic stays
    in `src/`; each phase is a separate Shiny module that is enabled only when
    its dataset exists.
+
+## Acceptance — 2026-11-10T17:46:38-03:00
+
+The developer explicitly accepted this architecture, the proposed resolutions
+above and the thresholds in `docs/requirements.md` (`acc_0003`,
+`decision_0014`). Acceptance closes Common P03 planning; it does not authorize
+bulk collection, release, or any MVP acceptance.
