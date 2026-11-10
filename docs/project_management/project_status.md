@@ -1,5 +1,15 @@
 # TaxMiner — estado do projeto
 
+## Coleta completa das DFP em andamento — 2026-11-10T20:00:00-03:00
+
+Pipeline da Fase 2 implementado (`src/collect/discover_financial_reports.R`,
+`src/collect/download_financial_reports.R`,
+`scripts/collect_financial_reports.R`), com 27 testes sintéticos aprovados
+(`test_0033`) e teste real com 5 pacotes (`test_0034`). Coleta de todas as
+14.015 DFP (2010–2026) iniciada em processo próprio, com dados em
+`C:\TaxMinerData` (`decision_0022`). ITR (35.893 pacotes) aguarda mais
+armazenamento (`risk_0013`).
+
 ## Fase 2 iniciada (Fase 1 suspensa) — 2026-11-10T19:10:00-03:00
 
 Por decisão do desenvolvedor (`decision_0020`), a Fase 1 está suspensa

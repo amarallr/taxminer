@@ -89,3 +89,44 @@ downloaded once per year used.
    no license statement found on the download response).
 4. Why the ENET PDF is zero-padded to 16 MiB, and whether larger filings are
    truncated.
+
+## Full collection (authorized 2026-11-10)
+
+The developer asked to download everything available. The catalog built from
+all yearly index ZIPs (DFP 2010–2026, ITR 2011–2026; `itr_cia_aberta_2010.zip`
+returns 404) has **49,908 filing packages** from 1,230 companies:
+
+| Form | Packages | Resubmissions (`VERSAO` > 1) |
+|---|---:|---:|
+| DFP | 14,015 | 3,149 |
+| ITR | 35,893 | 4,412 |
+
+Measured packages range from 3.3 MB (DFP 2011) to 22 MB (DFP 2026), with 17–21 s
+of server time each. All forms would need about 450 GB and about 16 days at
+10 s between requests, more than the 163 GB free on the workstation. The
+developer chose **all DFP first** (about 110 GB, 4–5 days, newest periods
+first) in a local folder outside OneDrive; ITR waits for more storage.
+
+Command (resumable; reruns skip packages already downloaded):
+
+```powershell
+$env:TAXMINER_DATA_DIR = 'C:\TaxMinerData'
+Rscript --vanilla scripts/collect_financial_reports.R dfp 2010-2026 Inf
+```
+
+The script refuses a data folder inside OneDrive and stops when free space
+falls below 20 GB. Raw packages, the catalog and the manifest stay in the data
+folder and are never committed or published.
+
+Observed in the first packages:
+
+- **Older format:** a 2011 DFP and a 2018 ITR carry `{cd_cvm}{date}{seq}.dfp`
+  / `.itr` files instead of the `...v{n}.xml` file of recent filings. Data P03
+  must handle both layouts.
+- **Transient failures:** RAD sometimes returns HTTP 200 with the text "The
+  HTTP service ... is unavailable", or resets the connection mid-transfer
+  (truncated ZIP without a central directory). Both are retried with backoff
+  (30 s, 60 s); after three attempts the package is recorded as `failed` and
+  retried on the next run. A truncated or unreadable file never stays in the
+  raw store (it is moved to `quarantine/`).
+- The ENET-generated PDF is padded to a power of two (8 MiB, 16 MiB).

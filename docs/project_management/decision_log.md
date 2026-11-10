@@ -248,3 +248,15 @@ tem robots.txt nem licença declarada; o PDF gerado pelo ENET vem preenchido
 com zeros até 16 MiB. Detalhes em `docs/data_sources.md` e
 `config/financial_disclosure_sources.yml`; amostra proposta de até 20 entregas
 aguarda autorização. `risk_0012` aberto.
+
+## decision_0022 — 2026-11-10T20:00:00-03:00 — Coleta completa das DFP da CVM
+
+O desenvolvedor aceitou a amostra, o uso do RAD/ENET e o commit, e pediu para
+baixar tudo o que estiver disponível. Com o catálogo completo (49.908 pacotes,
+cerca de 450 GB) maior que o espaço livre (163 GB), o desenvolvedor escolheu
+baixar primeiro todas as DFP de 2010 a 2026 (14.015 pacotes, cerca de 110 GB),
+das mais recentes para as mais antigas, em `C:\TaxMinerData`, fora do OneDrive
+e do repositório. ITR fica para quando houver mais armazenamento. Pipeline em
+`src/collect/` e `scripts/collect_financial_reports.R`, retomável, com
+manifesto e SHA-256 por membro (`test_0033`, `test_0034`). A coleta roda em
+processo próprio na estação de trabalho. `risk_0013` aberto.

@@ -31,3 +31,5 @@ test_0029,work_0006,gemini_synthetic_smoke_rstudio_terminal,windows_rstudio_2024
 test_0030,work_0007,copilot_signin_and_synthetic_suggestion_acceptance,windows_rstudio_2024_04_desktop,2026-11-10T18:28:17-03:00,passed,reports/execution/copilot_acceptance_check.txt,8568dfa305e984e78ea2dd352b557b5bd6e4029e
 test_0031,work_0008,source_probe_normas_cvm,windows_rstudio_2024_04_integrated_terminal,2026-11-10T18:42:18-03:00,passed,docs/source_inventory.md,e303f9f
 test_0032,work_0011,source_probe_cvm_open_data_and_rad_filing,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:00:46-03:00,passed,docs/data_sources.md,76b1f81
+test_0033,work_0011,unit_financial_collection_synthetic_fixtures,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:58:00-03:00,passed,tests/testthat/test_financial_collection.R,47f190d
+test_0034,work_0011,live_trial_five_cvm_dfp_packages,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:57:00-03:00,passed,docs/data_sources.md,47f190d

@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T19:10:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-10T20:00:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -20,7 +20,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 - **Fase 2: iniciada** (`work_0011` `in_progress`). Collect P04 etapa 00
   concluída: `docs/data_sources.md`, `config/financial_disclosure_sources.yml`,
   `scripts/probe_financial_sources.R` (`test_0032`). Notas só nos pacotes
-  RAD/ENET (`risk_0012`). Fase 3 não iniciada.
+  RAD/ENET (`risk_0012`). Pipeline em `src/collect/` (`test_0033`, `test_0034`);
+  coleta de todas as 14.015 DFP em andamento em `C:\TaxMinerData`
+  (`decision_0022`). Fase 3 não iniciada.
 
 ## Validação
 
@@ -42,10 +44,11 @@ escolha do desenvolvedor).
 
 ## Próxima ação técnica
 
-Desenvolvedor autoriza (ou ajusta) a amostra da Fase 2 de até 20 pacotes de
-entrega da CVM (`docs/data_sources.md`) e confirma o uso do RAD/ENET sem
-licença declarada. Depois: Collect P04 etapas 01–02 (identidade, download e
-manifesto em `src/collect/`). Fase 1 retoma quando o desenvolvedor decidir os
+Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
+`manifest.csv`); se o processo parar, rodar de novo o comando de
+`docs/data_sources.md` (retoma de onde parou). Em paralelo: Data P03
+(extração das notas dos pacotes já baixados). ITR depende de mais
+armazenamento. Fase 1 retoma quando o desenvolvedor decidir os
 pontos de `docs/feasibility.md`.
 
 ## Regras permanentes

@@ -23,7 +23,7 @@ citadas, nunca conclusão de infração.
 | Common P02 — Fundação | Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas | ✅ aprovado |
 | Common P03 — Arquitetura | Contratos por fonte, limiares de qualidade e dicionário de dados | ✅ aprovado |
 | Fase 1 — Soluções de Consulta | Fontes verificadas; decisões de coleta em aberto | ⏸️ suspensa |
-| Fase 2 — Notas explicativas | Fontes da CVM verificadas; amostra de até 20 entregas aguarda autorização | ▶️ em andamento |
+| Fase 2 — Notas explicativas | Coleta de todas as 14.015 DFP da CVM em andamento; ITR depois | ▶️ em andamento |
 | Fase 3 — Inteligência cruzada | Relações citadas entre as duas bases já aceitas | ⏸️ não iniciada |
 
 ## Itens de trabalho
@@ -56,10 +56,11 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
 | work_0017 | Aceite humano da Fase 3 | não iniciado | não executado | pendente |
 
-## Riscos abertos (7 de 12)
+## Riscos abertos (8 de 13)
 
 | Impacto | Risco | Detalhe |
 |---|---|---|
+| médio | Volume da coleta | Acervo completo (~450 GB) maior que o disco; DFP primeiro, ITR depois (risk_0013). |
 | alto | Notas só nos pacotes RAD/ENET | Fora dos dados abertos ODbL; RAD sem robots.txt nem licença declarada; PDF gerado com preenchimento (risk_0012). |
 | alto | Texto integral recusado à automação | O visualizador oficial respondeu 403; a API de busca não é documentada (risk_0011). |
 | alto | Cobertura das fontes | Ementas acessíveis; termos de uso e completude histórica em aberto (risk_0001). |
@@ -70,12 +71,10 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 
 ## Próximos passos
 
-1. **Autorizar a amostra da Fase 2:** até 20 pacotes de entrega da CVM
-   (`docs/data_sources.md`), com uso do RAD/ENET.
-2. **Collect P04 etapas 01–02:** identidade dos relatórios, download com
-   manifesto e SHA-256 por membro do pacote.
-3. **Data P03 e busca de notas:** extração das notas, Parquet e área própria
-   no Shiny. A Fase 1 retoma com as decisões de `docs/feasibility.md`.
+1. **Concluir a coleta das DFP:** 14.015 pacotes, retomável, 4 a 5 dias.
+2. **Data P03:** extrair notas e tabelas dos pacotes baixados (formatos XML
+   recente e `.dfp`/`.itr` antigo).
+3. **Busca de notas:** Parquet e área própria no Shiny. A Fase 1 retoma com as decisões de `docs/feasibility.md`.
 
 Adiados por escolha do desenvolvedor: atualizar o R e tirar o projeto do
 OneDrive. A refatoração dos prompts fica para a versão 1.1.
