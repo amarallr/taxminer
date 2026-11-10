@@ -39,3 +39,5 @@ __pycache__/
 /reports/execution/
 # Local doit instructions; never versioned.
 /.claude/doit.txt
+# Source probe responses; retained locally.
+/reports/source_probes/

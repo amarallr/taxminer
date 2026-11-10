@@ -1,7 +1,7 @@
 # TaxMiner — panorama do projeto
 
 Projeto independente, não oficial da Receita Federal. Situação em 10/11/2026
-(após a conclusão dos assistentes). Repositório público `amarallr/taxminer`, licença MIT,
+(após o Collect P01). Repositório público `amarallr/taxminer`, licença MIT,
 CI aprovado. Fonte: registros em `docs/project_management/`.
 
 ## Escopo
@@ -22,14 +22,14 @@ citadas, nunca conclusão de infração.
 |---|---|---|
 | Common P02 — Fundação | Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas | ✅ aprovado |
 | Common P03 — Arquitetura | Contratos por fonte, limiares de qualidade e dicionário de dados | ✅ aprovado |
-| Fase 1 — Soluções de Consulta | Fontes, amostra de até 100 atos, Parquet e busca no Shiny | ▶️ próxima |
+| Fase 1 — Soluções de Consulta | Fontes verificadas; amostra de até 100 atos, Parquet e busca no Shiny | ▶️ em andamento |
 | Fase 2 — Notas explicativas | Coleta, extração e busca próprias, sem depender da Fase 1 | ⏸️ não iniciada |
 | Fase 3 — Inteligência cruzada | Relações citadas entre as duas bases já aceitas | ⏸️ não iniciada |
 
 ## Itens de trabalho
 
-18 registrados: 8 implementados e 10 não iniciados; 3 com aceite
-humano. Nenhum foi liberado em release nem está em operação.
+18 registrados: 8 implementados, 1 em andamento e 9 não iniciados; 8 com
+aceite humano. Nenhum foi liberado em release nem está em operação.
 
 | ID | Item | Implementação | Teste | Aceite |
 |---|---|---|---|---|
@@ -37,13 +37,13 @@ humano. Nenhum foi liberado em release nem está em operação.
 | work_0001 | Fundação local e exclusões protegidas | implementado | aprovado | aprovado |
 | work_0002 | Arquitetura por fonte e critérios das fases | implementado | não executado | aprovado |
 | work_0003 | Git e GitHub | implementado | aprovado | aprovado |
-| work_0004 | Codex | implementado | aprovado | pendente |
-| work_0005 | Claude Code | implementado | aprovado | pendente |
-| work_0006 | Gemini CLI | implementado | aprovado | pendente |
-| work_0007 | GitHub Copilot | implementado | aprovado | pendente |
-| work_0018 | Revisão de consistência do projeto | implementado | aprovado | pendente |
+| work_0004 | Codex | implementado | aprovado | aprovado |
+| work_0005 | Claude Code | implementado | aprovado | aprovado |
+| work_0006 | Gemini CLI | implementado | aprovado | aprovado |
+| work_0007 | GitHub Copilot | implementado | aprovado | aprovado |
+| work_0018 | Revisão de consistência do projeto | implementado | aprovado | aprovado |
 | **Fase 1** | | | | |
-| work_0008 | Descobrir fontes e coletar a amostra | não iniciado | não executado | pendente |
+| work_0008 | Descobrir fontes e coletar a amostra | em andamento | aprovado | pendente |
 | work_0009 | Extrair e consolidar | não iniciado | não executado | pendente |
 | work_0010 | Busca independente | não iniciado | não executado | pendente |
 | work_0015 | Aceite humano da Fase 1 | não iniciado | não executado | pendente |
@@ -56,11 +56,12 @@ humano. Nenhum foi liberado em release nem está em operação.
 | work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
 | work_0017 | Aceite humano da Fase 3 | não iniciado | não executado | pendente |
 
-## Riscos abertos (5 de 10)
+## Riscos abertos (6 de 11)
 
 | Impacto | Risco | Detalhe |
 |---|---|---|
-| alto | Fontes públicas não verificadas | Disponibilidade, termos de uso e cobertura histórica desconhecidos (risk_0001). |
+| alto | Texto integral recusado à automação | O visualizador oficial respondeu 403; a API de busca não é documentada (risk_0011). |
+| alto | Cobertura das fontes | Ementas acessíveis; termos de uso e completude histórica em aberto (risk_0001). |
 | alto | Sincronização do OneDrive | Exclusões das áreas protegidas não verificadas; checkout mantido no OneDrive por escolha (risk_0002). |
 | alto | Identificação de empresas | CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005). |
 | médio | testthat compilado no R 4.5.3 | Aviso só local; o CI usa binário compatível (risk_0007). |
@@ -68,10 +69,10 @@ humano. Nenhum foi liberado em release nem está em operação.
 
 ## Próximos passos
 
-1. **Collect P01:** verificar onde estão as Soluções de Consulta e os termos de
-   uso, sem coleta em massa. Precisa de autorização da etapa.
-2. **Amostra da Fase 1:** até 100 atos públicos com manifesto, hash SHA-256 e
-   resultado documento a documento.
+1. **Decidir a estratégia de coleta:** uso da API de busca do Normas, opção
+   para o texto integral e estratos da amostra (`docs/feasibility.md`).
+2. **Collect P02:** até 100 ementas com manifesto, hash SHA-256 e resultado
+   documento a documento.
 3. **Extração, Parquet e busca:** Data P01/P02 e Intelligence P02, com Shiny
    local e citação da fonte oficial.
 

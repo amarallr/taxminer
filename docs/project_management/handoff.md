@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T17:46:38-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-10T18:46:15-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -10,11 +10,13 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e
   dicionário aprovados (`acc_0003`); `req_0003` `accepted`.
-- **Assistentes (`work_0004`–`work_0007`):** implementados e testados no RStudio
-  (`test_0027`–`test_0030`); aceite humano pendente.
+- **Assistentes (`work_0004`–`work_0007`):** implementados, testados e aprovados
+  (`acc_0004`–`acc_0007`); revisão `work_0018` aprovada (`acc_0008`).
 - **Repositório:** licença MIT; CI `validate_environment` no GitHub Actions;
   commits futuros com e-mail noreply (configuração local).
-- **MVPs (fases 1–3):** não iniciados. Nenhuma fonte foi coletada.
+- **Fase 1:** Collect P01 executado (`work_0008` em andamento): fontes em
+  `docs/source_inventory.md`, estratégia em `docs/feasibility.md`. Nenhum
+  documento coletado. Fases 2 e 3 não iniciadas.
 
 ## Validação
 
@@ -36,9 +38,9 @@ escolha do desenvolvedor).
 
 ## Próxima ação técnica
 
-Executar `prompts/collect_p01_official_source_discovery.txt` apenas para
-verificar fontes públicas e termos de uso das Soluções de Consulta, sem coleta
-em massa. Requer autorização da etapa.
+Desenvolvedor decide os três pontos de `docs/feasibility.md` (uso da API de
+busca, opção de texto integral, amostra). Depois: Collect P02 para coletar a
+amostra de ementas, com nova autorização.
 
 ## Regras permanentes
 

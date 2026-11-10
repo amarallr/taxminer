@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Panorama do TaxMiner: escopo, roteiro das fases, itens de trabalho, riscos e próximos passos.">
+<title>TaxMiner — Panorama</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html { color-scheme: light; }
+body { margin: 0; }
+/* Layout: one reading column; a phase rail, then ledger-style tables, like a case file. */
+:root {
+  --bg: #f5f6f4;
+  --surface: #ffffff;
+  --ink: #18222b;
+  --muted: #5b6770;
+  --line: #d9ddd8;
+  --accent: #1f5f73;
+  --accent-soft: #e2eef1;
+  --ok: #2f7a46; --ok-soft: #e3f1e7;
+  --warn: #9a6400; --warn-soft: #f8edd6;
+  --bad: #a43a2f; --bad-soft: #f6e2df;
+  --idle: #6d7780; --idle-soft: #eceeec;
+  --display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12181d; --surface: #1a2228; --ink: #e6ebee; --muted: #9aa6ae; --line: #2c373f;
+  --accent: #7fc0d2; --accent-soft: #1d3540;
+  --ok: #7cc893; --ok-soft: #1c3324; --warn: #e2b55a; --warn-soft: #3a2f17;
+  --bad: #ee8f84; --bad-soft: #3d221f; --idle: #a2acb3; --idle-soft: #242d33; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12181d; --surface: #1a2228; --ink: #e6ebee; --muted: #9aa6ae; --line: #2c373f;
+  --accent: #7fc0d2; --accent-soft: #1d3540;
+  --ok: #7cc893; --ok-soft: #1c3324; --warn: #e2b55a; --warn-soft: #3a2f17;
+  --bad: #ee8f84; --bad-soft: #3d221f; --idle: #a2acb3; --idle-soft: #242d33; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 21px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 13px; }
+section { display: grid; gap: 16px; }
+.lede { font-size: 17px; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+
+.families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.family { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.family code { font: 500 13px var(--mono); color: var(--accent); }
+
+/* Phase rail */
+.rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.stage { padding: 16px 14px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); position: relative; }
+.stage:last-child { border-right: 0; }
+.stage::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--idle-soft); }
+.stage.done::before { background: var(--ok); }
+.stage.next::before { background: var(--accent); }
+.stage .num { font: 500 12px var(--mono); color: var(--muted); }
+.stage p { font-size: 13.5px; color: var(--muted); }
+.stage.next { background: var(--accent-soft); }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px; white-space: nowrap; width: fit-content; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ok { color: var(--ok); background: var(--ok-soft); }
+.warn { color: var(--warn); background: var(--warn-soft); }
+.bad { color: var(--bad); background: var(--bad-soft); }
+.idle { color: var(--idle); background: var(--idle-soft); }
+.acc { color: var(--accent); background: var(--accent-soft); }
+
+.tally { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 2px; }
+.tile .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.tile .l { font-size: 13px; color: var(--muted); }
+
+.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.id { font-family: var(--mono); font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+tr.group td { background: var(--bg); font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.list { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: start; }
+.item:last-child { border-bottom: 0; }
+.item .t { font-weight: 500; }
+.item .d { grid-column: 2; font-size: 13.5px; color: var(--muted); }
+.env { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.env div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; }
+.env span { font-size: 12.5px; color: var(--muted); }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 760px) {
+  .families, .cols { grid-template-columns: minmax(0, 1fr); }
+  .rail { grid-template-columns: minmax(0, 1fr); }
+  .stage { border-right: 0; border-bottom: 1px solid var(--line); }
+  .stage:last-child { border-bottom: 0; }
+  .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header style="display:grid; gap:14px">
+    <div class="eyebrow">Projeto independente · não oficial da Receita Federal</div>
+    <h1>TaxMiner</h1>
+    <p class="lede">Pesquisa sobre Soluções de Consulta públicas e notas explicativas de demonstrações financeiras, com relações entre as duas fontes tratadas sempre como hipóteses citadas, nunca como conclusão de infração.</p>
+    <div class="meta mono">
+      <span>Situação em <b>10/11/2026</b></span>
+      <span>Etapa <b>Collect P01 concluído</b></span>
+      <span>Repositório <b>amarallr/taxminer</b> (público, MIT)</span>
+      <span>CI <b style="color:var(--ok)">aprovado</b></span>
+    </div>
+  </header>
+
+  <section>
+    <div class="eyebrow">Escopo</div>
+    <h2>Duas fontes independentes e uma camada de relações</h2>
+    <div class="families">
+      <div class="family"><code>tax_consultation_decisions</code><h3>Soluções de Consulta</h3><p class="mono" style="font-family:var(--body);font-size:13.5px;color:var(--muted)">Atos da RFB com texto original em português, tipo de documento preservado e ID estável por autoridade, tipo, número e ano.</p></div>
+      <div class="family"><code>financial_disclosures</code><h3>Notas explicativas</h3><p style="font-size:13.5px;color:var(--muted)">Relatório → nota → tabela, com CNPJ só quando verificado, escopo consolidado ou individual, unidades e página de origem.</p></div>
+      <div class="family"><code>document_relationships</code><h3>Relações entre fontes</h3><p style="font-size:13.5px;color:var(--muted)">Só sobre as duas bases aceitas. Cada vínculo tem citações dos dois lados, nível de evidência e revisão humana.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Roteiro</div>
+    <h2>Onde o projeto está</h2>
+    <div class="rail">
+      <div class="stage done"><span class="num">Common P02</span><h3>Fundação</h3><p>Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas.</p><span class="pill ok">aprovado</span></div>
+      <div class="stage done"><span class="num">Common P03</span><h3>Arquitetura</h3><p>Contratos por fonte, limiares de qualidade e dicionário de dados.</p><span class="pill ok">aprovado</span></div>
+      <div class="stage next"><span class="num">Fase 1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; amostra de até 100 atos, Parquet e busca no Shiny.</p><span class="pill acc">em andamento</span></div>
+      <div class="stage"><span class="num">Fase 2</span><h3>Notas explicativas</h3><p>Coleta, extração e busca próprias, sem depender da Fase 1.</p><span class="pill idle">não iniciada</span></div>
+      <div class="stage"><span class="num">Fase 3</span><h3>Inteligência cruzada</h3><p>Relações citadas entre as duas bases já aceitas.</p><span class="pill idle">não iniciada</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Itens de trabalho · 18 registrados</div>
+    <h2>Implementação, teste e aceite de cada item</h2>
+    <div class="tally">
+      <div class="tile"><span class="n">8</span><span class="l">implementados</span></div>
+      <div class="tile"><span class="n">1</span><span class="l">em andamento</span></div>
+      <div class="tile"><span class="n">9</span><span class="l">não iniciados</span></div>
+      <div class="tile"><span class="n">8</span><span class="l">aceites humanos</span></div>
+    </div>
+    <div class="table-box">
+      <table>
+        <thead><tr><th>ID</th><th>Item</th><th>Implementação</th><th>Teste</th><th>Aceite</th></tr></thead>
+        <tbody>
+          <tr class="group"><td colspan="5">Common · fundação e governança</td></tr>
+          <tr><td class="id">work_0001</td><td>Fundação local e exclusões protegidas</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0002</td><td>Arquitetura por fonte e critérios das fases</td><td><span class="pill ok">implementado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0003</td><td>Git e GitHub</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0004</td><td>Codex</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0005</td><td>Claude Code</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0006</td><td>Gemini CLI</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0007</td><td>GitHub Copilot</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr><td class="id">work_0018</td><td>Revisão de consistência do projeto</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+          <tr class="group"><td colspan="5">Fase 1 · Soluções de Consulta</td></tr>
+          <tr><td class="id">work_0008</td><td>Descobrir fontes e coletar a amostra</td><td><span class="pill warn">em andamento</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0009</td><td>Extrair e consolidar</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0010</td><td>Busca independente</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0015</td><td>Aceite humano da Fase 1</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr class="group"><td colspan="5">Fase 2 · Notas explicativas</td></tr>
+          <tr><td class="id">work_0011</td><td>Descobrir fontes e coletar relatórios</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0012</td><td>Extrair notas e tabelas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0013</td><td>Busca independente de notas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0016</td><td>Aceite humano da Fase 2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr class="group"><td colspan="5">Fase 3 · Inteligência cruzada</td></tr>
+          <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+          <tr><td class="id">work_0017</td><td>Aceite humano da Fase 3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Nenhum item foi liberado em release nem está em operação.</p>
+  </section>
+
+  <section class="cols">
+    <div style="display:grid;gap:16px;align-content:start">
+      <div class="eyebrow">Riscos abertos · 6 de 11</div>
+      <h2>O que pode atrapalhar</h2>
+      <div class="list">
+        <div class="item"><span class="pill bad">alto</span><span class="t">Texto integral recusado à automação</span><span class="d">O visualizador oficial respondeu 403; a API de busca não é documentada (risk_0011).</span></div>
+        <div class="item"><span class="pill bad">alto</span><span class="t">Cobertura das fontes</span><span class="d">Ementas acessíveis; termos de uso e completude histórica ainda em aberto (risk_0001).</span></div>
+        <div class="item"><span class="pill bad">alto</span><span class="t">Sincronização do OneDrive</span><span class="d">Exclusões das áreas protegidas não verificadas; checkout mantido no OneDrive por escolha (risk_0002).</span></div>
+        <div class="item"><span class="pill bad">alto</span><span class="t">Identificação de empresas</span><span class="d">CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005).</span></div>
+        <div class="item"><span class="pill warn">médio</span><span class="t">testthat compilado no R 4.5.3</span><span class="d">Aviso só local; o CI usa binário compatível (risk_0007).</span></div>
+        <div class="item"><span class="pill warn">médio</span><span class="t">ZIP histórico dos prompts</span><span class="d">Não tem as correções; os arquivos avulsos valem (risk_0006).</span></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:16px;align-content:start">
+      <div class="eyebrow">Próximos passos</div>
+      <h2>O que vem agora</h2>
+      <div class="list">
+        <div class="item"><span class="pill acc">1</span><span class="t">Decidir a estratégia de coleta</span><span class="d">Uso da API de busca do Normas, opção para o texto integral e estratos da amostra (docs/feasibility.md).</span></div>
+        <div class="item"><span class="pill acc">2</span><span class="t">Collect P02: amostra da Fase 1</span><span class="d">Até 100 ementas com manifesto, hash SHA-256 e resultado documento a documento.</span></div>
+        <div class="item"><span class="pill acc">3</span><span class="t">Extração, Parquet e busca</span><span class="d">Data P01/P02 e Intelligence P02, com Shiny local e citação da fonte oficial.</span></div>
+        <div class="item"><span class="pill idle">—</span><span class="t">Adiados por sua escolha</span><span class="d">Atualizar o R e tirar o projeto do OneDrive. Refatoração dos prompts fica para a versão 1.1.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Critérios de aceite das fases (aprovados)</div>
+    <h2>Como cada fase será medida</h2>
+    <div class="table-box">
+      <table style="min-width:620px">
+        <thead><tr><th>Medida</th><th>Limiar</th></tr></thead>
+        <tbody>
+          <tr><td>Contabilização da descoberta</td><td class="mono">100% com resultado final</td></tr>
+          <tr><td>Integridade dos downloads</td><td class="mono">100% com SHA-256 e URL</td></tr>
+          <tr><td>Cobertura dos campos extraídos</td><td class="mono">≥ 99%</td></tr>
+          <tr><td>Reprodutibilidade</td><td class="mono">100% idêntico em duas execuções</td></tr>
+          <tr><td>Relevância da busca (30 consultas por base)</td><td class="mono">Precision@10 ≥ 0,90 · Recall@10 ≥ 0,80</td></tr>
+          <tr><td>Citações corretas</td><td class="mono">100%</td></tr>
+          <tr><td>Latência da busca local</td><td class="mono">p95 ≤ 2 s</td></tr>
+          <tr><td>Precisão das relações (≥ 50 vínculos revisados)</td><td class="mono">≥ 0,90</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Ambiente</div>
+    <h2>Ferramentas verificadas</h2>
+    <div class="env mono">
+      <div><b>R 4.5.1</b><span>RStudio 2024.04.0</span></div>
+      <div><b>renv · testthat 3.3.2</b><span>snapshot explícito</span></div>
+      <div><b>Validação local</b><span>5 de 5 aprovadas</span></div>
+      <div><b>GitHub Actions</b><span>restauração limpa aprovada</span></div>
+      <div><b>Git 2.55 · gh 2.103</b><span>e-mail noreply</span></div>
+      <div><b>Codex · Claude · Gemini · Copilot</b><span>testados no RStudio</span></div>
+    </div>
+  </section>
+
+  <footer>
+    Fonte: registros em <span class="mono">docs/project_management/</span> após o Collect P01 (10/11/2026). As pastas <span class="mono">restricted/</span> e <span class="mono">tmp/</span> são locais e nunca são lidas nem publicadas.
+  </footer>
+</div>
+</body>
+</html>

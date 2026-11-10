@@ -1,5 +1,12 @@
 # Changelog
 
+## Collect P01 e GitHub Pages — 2026-11-10
+
+- Fontes verificadas: `docs/source_inventory.md`, `docs/feasibility.md`,
+  `scripts/probe_sources.R` e fixture pública `tests/fixtures/normas_search_sample.json`.
+- Aceites `acc_0004`–`acc_0008` registrados.
+- Panorama publicado no GitHub Pages e linkado no README.
+
 ## Assistentes no RStudio — 2026-11-10
 
 - Smoke test sintético corrigido e ampliado ao Claude Code; Codex, Claude Code e

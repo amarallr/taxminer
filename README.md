@@ -39,6 +39,7 @@ isso pode exigir rede e acesso ao repositório CRAN. A restauração limpa em
 outra máquina ainda não foi validada.
 
 Panorama atual do projeto (escopo, roteiro, itens, riscos e próximos passos):
+[página no GitHub Pages](https://amarallr.github.io/taxminer/) ·
 [`docs/project_overview.md`](docs/project_overview.md).
 
 ## Estrutura

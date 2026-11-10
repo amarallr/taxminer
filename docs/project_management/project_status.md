@@ -1,5 +1,14 @@
 # TaxMiner — estado do projeto
 
+## Collect P01 executado — 2026-11-10T18:46:15-03:00
+
+Inventário (`docs/source_inventory.md`) e viabilidade (`docs/feasibility.md`)
+entregues; fixture pública em `tests/fixtures/normas_search_sample.json`.
+Ementas e metadados acessíveis; texto integral recusado a automação (403).
+`work_0008` em andamento (descoberta concluída, coleta não iniciada). Aceites
+`acc_0004`–`acc_0008` registrados. Próximo: decisões do desenvolvedor sobre a
+estratégia, depois Collect P02.
+
 ## Assistentes concluídos — 2026-11-10T18:28:17-03:00
 
 `work_0004`–`work_0007` implementados e testados no RStudio: Codex, Claude

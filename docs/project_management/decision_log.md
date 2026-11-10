@@ -195,3 +195,32 @@ o smoke test sintético corrigido passou ali para Codex, Claude Code e Gemini
 Copilot foi confirmado pelo desenvolvedor (login ativo e sugestão aceita com
 Tab; `test_0030`). Os quatro itens passam a `implemented`/`passed`; aceite
 humano continua `pending`. `risk_0003` e `risk_0008` mitigados.
+
+## decision_0017 — 2026-11-10T18:34:30-03:00 — Aceite dos assistentes e autorização do Collect P01
+
+O desenvolvedor aceitou explicitamente `work_0004`–`work_0007` e `work_0018`
+(`acc_0004`–`acc_0008`) e autorizou a execução de Collect P01
+(`work_0008`, descoberta de fontes oficiais). A autorização cobre
+investigação de fontes, termos de uso e cobertura, sem coleta em massa nem
+download de acervo; a coleta da amostra (Collect P02) exige nova autorização.
+
+## decision_0018 — 2026-11-10T18:46:15-03:00 — Resultado do Collect P01
+
+Fontes verificadas com requisições pequenas e espaçadas
+(`scripts/probe_sources.R`, `test_0031`). A busca do portal Normas fornece
+metadados e ementa de SC, SCI e SD por uma API interna não documentada (totais
+informados: SC 15.880; SCI 259; SD 374). O texto integral, servido pelo
+visualizador `normasinternet2`, recusou acesso automatizado (HTTP 403); não
+houve nova tentativa com outros cabeçalhos. Nenhum conjunto aberto de Soluções
+de Consulta foi localizado. CVM DFP/ITR disponíveis em ZIP anual sob ODbL.
+Estratégia proposta em `docs/feasibility.md`; Collect P02 aguarda decisões do
+desenvolvedor (uso da API de busca, opção de texto integral e amostra).
+`risk_0011` aberto.
+
+## decision_0019 — 2026-11-10T18:47:38-03:00 — Panorama no GitHub Pages
+
+A pedido do desenvolvedor, a página de panorama passa a ser publicada no
+GitHub Pages (`site/index.html`, workflow `.github/workflows/pages.yml`, com
+permissões mínimas `pages: write` e `id-token: write`) e o README aponta para
+https://amarallr.github.io/taxminer/. A página contém só dados de gestão já
+públicos no repositório; nenhum conteúdo de `restricted/` ou `tmp/`.
