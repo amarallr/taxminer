@@ -1,5 +1,19 @@
 # TaxMiner — estado do projeto
 
+## Sincronização de atualizações — 2026-11-10T17:10:29-03:00
+
+O usuário pediu executar todas as atualizações pendentes e sincronizá-las ao
+GitHub. Foram reconciliados README, guia GitHub, changelogs e Common P02 com a
+visibilidade pública atual; a chamada sintética do Gemini é registrada como
+funcional fora do RStudio, cuja integração continua pendente. Mudanças de
+ambiente, prompts e registros locais foram revisadas em allowlist explícita.
+
+Validação obrigatória repetida após as mudanças: `Rscript --vanilla
+scripts/validate_environment.R`, código 0, 5 verificações aprovadas. Permanecem
+avisos de locale de inicialização e pacote `testthat` compilado no R 4.5.3.
+Relatório: `reports/execution/environment_validation_20261110.txt`; registro
+`test_0019`.
+
 ## Visibilidade GitHub — 2026-11-10T17:07:00-03:00
 
 Por solicitação explícita do usuário, o repositório `amarallr/taxminer` foi

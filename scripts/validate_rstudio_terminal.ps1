@@ -8,9 +8,8 @@ $validation_report = 'reports/execution/rstudio_environment_validation.txt'
     "rstudio: $env:RSTUDIO"
     "term_program: $env:TERM_PROGRAM"
     'command: Rscript --vanilla scripts/validate_environment.R'
-    'LANG and explicit LC categories cleared in this child process only.'
+    'UTF-8 LC_CTYPE is normalized by validate_environment.R in the child R process only.'
 ) | Set-Content -LiteralPath $validation_report -Encoding UTF8
-Remove-Item Env:LANG,Env:LC_ALL,Env:LC_CTYPE,Env:LC_COLLATE,Env:LC_MONETARY,Env:LC_TIME,Env:LC_NUMERIC,Env:LC_MESSAGES -ErrorAction SilentlyContinue
 $ErrorActionPreference = 'Continue'
 & Rscript --vanilla scripts/validate_environment.R 2>&1 |
     ForEach-Object {

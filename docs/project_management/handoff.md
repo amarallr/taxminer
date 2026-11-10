@@ -1,5 +1,17 @@
 # Retomada do TaxMiner
 
+## Atualização geral e validação — 2026-11-10T17:10:29-03:00
+
+README, GitHub setup, changelogs e Common P02 foram reconciliados com a
+visibilidade pública. Gemini autenticou e respondeu a fixture sintético fora do
+RStudio; teste no terminal integrado segue pendente. Foram revisadas alterações
+locais explicitamente listadas, sem incluir arquivos fora da allowlist.
+
+Validação `Rscript --vanilla scripts/validate_environment.R`: código 0, PASS 5;
+avisos de inicialização de locale e pacote `testthat` compilado em R 4.5.3
+permanecem. Evidência e registro `test_0019` em
+`reports/execution/environment_validation_20261110.txt`.
+
 ## Visibilidade GitHub — 2026-11-10T17:07:00-03:00
 
 Atendendo ao pedido explícito, `amarallr/taxminer` agora é público. Confirmação

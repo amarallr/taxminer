@@ -1,4 +1,16 @@
+## 2026-11-10 — per-user environment and safe project relocation
+- Updated Common P01 and P02 with current TaxMiner organization: CLI tools per-user, GitHub CLI in user PATH, renv global state under `%LOCALAPPDATA%/R/cache/renv`, project library isolated, and no project-root copying or access to protected areas.
+- Corrected setup evidence after verifying `gh` 2.103.3 resolves from its per-user installation. Project relocation must use an explicit reviewed allowlist; old renv state is retained until restore and validation succeed.
 # Changelog
+
+## 2026-11-10 — autenticação Gemini e estado GitHub
+- Atualizado Common P02: chamada sintética do Gemini retornou o token fixture esperado; validação no terminal RStudio continua pendente.
+- O repositório remoto está público; visibilidade pública não define licença de distribuição.
+
+## 1.0 — 2026-11-10
+- Documented per-user installation for Codex, GitHub CLI, Gemini CLI and Gemini's Node runtime. Gemini launcher uses only a process-scoped PATH. Recorded Copilot synthetic completion and disabled project indexing inheritance in setup guidance.
+- Clarified in Common P02 that Gemini's launcher version check does not substitute for RStudio-terminal, authentication or synthetic-interaction verification.
+- Recorded user authorization for per-user PATH entries covering Codex, Gemini CLI, GitHub CLI, Node and npm; machine PATH remains unchanged.
 
 ## 1.0 — First baseline release
 - Declared the prompt collection version **1.0** (replacing prior draft-pack numbering).
@@ -26,3 +38,4 @@
 - Clarified Intelligence P02 responsibilities: independent financial-note search belongs to Phase 2; Intelligence P03 supplies Phase 3 cross-source research.
 - Retained the earlier two-phase changelog entry as explicitly superseded history.
 - The ZIP is an unchanged historical package; the corrected loose prompt files are the current working instructions.
+- Added current environment-review requirements to Common P01/P02: verify the actual renv target, treat OneDrive synchronization as unverified until local human review, preserve inherited-locale failures alongside controlled child-process reruns, and reconcile current tool paths while retaining historical checkpoints.

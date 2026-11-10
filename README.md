@@ -1,4 +1,4 @@
-﻿# TaxMiner
+# TaxMiner
 
 Projeto independente, não oficial da Receita Federal, para pesquisa sobre
 Soluções de Consulta públicas e notas explicativas de demonstrações financeiras.
@@ -16,7 +16,8 @@ Ambiente verificado: Windows, R 4.5.1 e RStudio 2024.04.0+735. Abra
 `taxminer.Rproj` no RStudio e use a raiz como diretório do terminal. O projeto
 desabilita restauração/salvamento de workspace, histórico e indexação de código.
 A validação no terminal integrado do RStudio passou nas cinco verificações;
-o aceite humano do setup permanece pendente.
+o aceite humano do setup Common P02 foi registrado. O smoke test integrado dos
+CLIs permanece pendente.
 
 Dependências desta etapa: `renv` e `testthat`, declaradas em `DESCRIPTION`;
 versões e dependências transitivas em `renv.lock`. O bootstrap usa somente
@@ -28,12 +29,12 @@ Rscript --vanilla scripts/setup_environment.R
 Rscript --vanilla scripts/validate_environment.R
 ```
 
-Se houver erro de locale no terminal Windows, o helper
-`source("scripts/validate_rstudio_terminal.R")`, executado no console R do
-RStudio, inicia a validação com limpeza das categorias regionais explicitadas
-em `scripts/validate_rstudio_terminal.ps1`, somente no processo filho.
-Não altere variáveis globais. Para restaurar em outro ambiente, inicialize os caminhos
-locais definidos em `.Rprofile` e execute `renv::restore(prompt = FALSE)`;
+No Windows, o próprio validador normaliza `LC_CTYPE` para UTF-8 somente no
+processo R de validação; avisos de inicialização sobre outras categorias de
+locale podem continuar aparecendo. Nenhuma variável global ou de usuário é
+alterada. O helper `source("scripts/validate_rstudio_terminal.R")` continua
+disponível no console R do RStudio. Para restaurar em outro ambiente, inicialize
+os caminhos locais definidos em `.Rprofile` e execute `renv::restore(prompt = FALSE)`;
 isso pode exigir rede e acesso ao repositório CRAN. A restauração limpa em
 outra máquina ainda não foi validada.
 
@@ -48,8 +49,9 @@ outra máquina ainda não foi validada.
 
 Não há fontes públicas verificadas, documentos coletados, Parquet ou produtos
 analíticos nesta etapa. Bibliotecas de aquisição, extração e Shiny serão
-adicionadas quando justificadas pelas próximas etapas. CI aguarda repositório
-remoto autorizado. Logging e checkpoints de pipeline aguardam operações reais.
+adicionadas quando justificadas pelas próximas etapas. O repositório remoto
+é público; CI ainda não foi configurado. Logging e checkpoints de
+pipeline aguardam operações reais.
 
 ## Segurança, Git e licença
 
@@ -61,9 +63,10 @@ sem expor conteúdos ou metadados dessas áreas.
 Nunca use `git add .` ou publique a raiz sem revisão. Adicione somente arquivos
 permitidos por caminhos explícitos. Commits seguem Conventional Commits;
 commits, remotos e publicação exigem autorização. Não há licença de distribuição
-definida; titularidade, visibilidade e eventual licença precisam de decisão
-humana antes de publicação. Consulte `CHANGELOG.md` e os registros de gestão.
+definida; titularidade e licença ainda precisam de decisão humana. A visibilidade
+pública foi solicitada pelo usuário e registrada nos documentos de gestão.
+Consulte `CHANGELOG.md` e os registros de gestão.
 
-O GitHub CLI portátil fica em `.local/github_cli/bin/gh.exe`, ignorado pelo Git.
+O GitHub CLI está instalado por usuário em `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`; esse diretório está no PATH do usuário. Consulte `docs/github_setup.md`.
 Autenticação existente verificada para `amarallr`; identidade local configurada
-e primeiro commit enviado ao repositório privado `amarallr/taxminer`. Consulte `docs/github_setup.md`.
+e repositório público `amarallr/taxminer`. Consulte `docs/github_setup.md`.

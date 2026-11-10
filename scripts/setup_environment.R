@@ -3,7 +3,7 @@ if (!file.exists("taxminer.Rproj") || !file.exists("DESCRIPTION")) {
   stop("Run this script from the TaxMiner project root.")
 }
 Sys.setenv(
-  RENV_PATHS_ROOT = file.path(getwd(), ".local", "renv"),
+  RENV_PATHS_ROOT = file.path(Sys.getenv("LOCALAPPDATA"), "R", "cache", "renv"),
   RENV_CONFIG_CACHE_ENABLED = "FALSE",
   RENV_CONFIG_SANDBOX_ENABLED = "FALSE",
   RENV_CONFIG_AUTO_SNAPSHOT = "FALSE",

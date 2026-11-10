@@ -1,0 +1,3 @@
+# No credentials are required for local setup or synthetic tests.
+# Optional future integrations must obtain secrets from an approved local store.
+# Never commit a real .Renviron file.
