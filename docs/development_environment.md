@@ -17,7 +17,7 @@ o comando detectado aponta para o alias do Windows, não valida um interpretador
 
 | tool | version | installation_status | authentication_status | rstudio_integration_mode | validation_status | evidence | blockers | next_action |
 |---|---|---|---|---|---|---|---|---|
-| git | 2.55.0.windows.4 | installed | not_applicable_local | IDE/terminal; sessão real não testada | blocked | git --version; git init -b main; git branch --show-current | identidade local/efetiva ausente; commit não autorizado | definir identidade local humana; validar commit quando autorizado |
+| git | 2.55.0.windows.4 | installed | verified_https_via_gh | commit/push testados no terminal do agente; IDE pendente | local_remote_passed_rstudio_pending | docs/github_setup.md | teste Git/CLI integrado nao confirmado; aceite pendente | revisar setup |
 | github_cli | 2.103.3 | installed_project_local | authenticated_amarallr | terminal planejado; caminho explicito | auth_passed_rstudio_pending | docs/github_setup.md | identidade Git/destino/commit e teste no terminal integrado pendentes | aguardar escolhas humanas; usar .local/github_cli/bin/gh.exe |
 | codex | 0.167.0 | installed | authenticated_chatgpt | terminal planejado; sessão atual funcional fora do teste RStudio | not_run_rstudio | codex --version; codex login status | sem smoke test no terminal integrado; avisos de acesso negado em armazenamento auxiliar externo | testar interação sintética no RStudio com os limites de acesso vigentes |
 | claude_code | unknown | not_found_on_path | unknown | terminal planejado | blocked | Get-Command claude não encontrou aplicativo | instalação/localização e autenticação pendentes | seguir documentação oficial; aprovar instalações fora do projeto |
@@ -209,3 +209,51 @@ Origin configurado como https://github.com/amarallr/taxminer.git.
 Commit e envio serão registrados após resultados reais; aceite do setup e
 MVPs continua pending. A tentativa adicional de teste GitHub no RStudio não
 gerou relatório; resultado não confirmado, sem alegação de teste aprovado.
+
+## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
+
+Autorização humana explícita: identidade Lucas Rodrigues Amaral
+<amaral.lr@gmail.com>, repositório privado, primeiro commit e envio.
+Identidade configurada somente neste Git local. Repositório criado e
+confirmado PRIVATE: https://github.com/amarallr/taxminer.
+Origin: https://github.com/amarallr/taxminer.git; branch main acompanha origin/main.
+Primeiro commit: 48cc18973133c3fe749b9e96607fc6c86cb0a3d7
+Mensagem: chore: initialize TaxMiner development foundation.
+
+45 arquivos regulares revisados; índice e árvore do commit conferidos contra
+lista explícita. Nenhum link ou submódulo; único commit raiz antes do envio;
+busca limitada de padrões sensíveis sem ocorrências. Push concluído e
+ls-remote confirmou o mesmo hash em refs/heads/main. Nova consulta confirmou
+PRIVATE e isEmpty false. Evidências em docs/github_setup.md e
+reports/execution/github_publication.txt. Arquivos de estação, bibliotecas,
+binários, relatórios de execução e ZIP histórico não foram incluídos.
+Nenhuma área protegida acessada. Nenhuma configuração global alterada.
+
+work_0003: implementação in_progress, testes locais/remotos passed, aceite
+pending, release not_released, operations not_started. A verificação Git/CLI
+no terminal integrado do RStudio continua não confirmada: a tentativa não
+gerou relatório. Isso não invalida o commit e envio verificados pelo terminal
+do agente. Setup geral e integrações opcionais continuam pendentes de revisão.
+Publicar código em repositório privado não equivale a release ou aceite de MVP.
+Não houve execução de pipeline; saúde operacional unknown.
+
+Painel Common: implementação not_started 4 / in_progress 3 / blocked 3;
+testes not_run 5 / passed 2 / blocked 3; aceite pending 10;
+release not_released 10; operations not_started 10. Collect/Data/Intelligence
+continuam respectivamente com 2/2/3 itens não iniciados, testes não executados,
+aceite pending, release not_released e operations not_started.
+
+Pendência estática: git diff --cached --check inicial apontou espaços finais
+no arquivo gerado renv/activate.R e linhas vazias finais em três registros.
+As linhas vazias dos registros foram corrigidas; o bootstrap gerado do renv
+foi preservado sem alteração. Não declarar essa checagem global aprovada.
+O teste R no RStudio permanece aprovado com 5 verificações e aviso de versão
+compilada do testthat. Aceite humano do setup não foi inferido da autorização
+para commit/envio.
+
+Próximas ações: (1) developer revisar setup e decidir as integrações opcionais;
+(2) codex/developer verificar o CLI no terminal integrado se requerido para
+fechamento do setup; (3) executar Common P03 após autorização da etapa.
+Este registro será incluído em um commit documental de acompanhamento, com
+hash final disponível em git log e evidência local após o envio.
+Os checkpoints anteriores abaixo são históricos.

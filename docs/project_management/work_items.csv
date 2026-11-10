@@ -1,7 +1,7 @@
 ﻿"work_item_id","module","requirement_id","title","type","priority","owner","dependencies","implementation_status","test_status","acceptance_status","release_status","operations_status","evidence_links","updated_at"
 "work_0001","common","req_0001","Configure local foundation and protected exclusions","setup","high","codex","","in_progress","passed","pending","not_released","not_started","docs/development_environment.md;reports/execution/rstudio_environment_validation.txt","2026-11-10T10:45:08-03:00"
 "work_0002","common","req_0003","Define source-specific architecture and phase criteria","architecture","high","codex","work_0001","not_started","not_run","pending","not_released","not_started","project_status.md","2026-11-10T10:19:51-03:00"
-"work_0003","common","req_0002","Verify Git and GitHub readiness","setup","high","codex","work_0001","blocked","blocked","pending","not_released","not_started","docs/github_setup.md;reports/execution/github_validation.txt","2026-11-10T10:51:56-03:00"
+"work_0003","common","req_0002","Verify Git and GitHub readiness","setup","high","codex","work_0001","in_progress","passed","pending","not_released","not_started","docs/github_setup.md;reports/execution/github_publication.txt","2026-11-10T11:02:28-03:00"
 "work_0004","common","req_0002","Verify Codex readiness","setup","high","codex","work_0001","in_progress","not_run","pending","not_released","not_started","docs/development_environment.md","2026-11-10T10:29:15-03:00"
 "work_0005","common","req_0002","Verify Claude Code readiness","setup","medium","codex","work_0001","blocked","blocked","pending","not_released","not_started","docs/development_environment.md","2026-11-10T10:29:15-03:00"
 "work_0006","common","req_0002","Verify Gemini CLI readiness","setup","medium","codex","work_0001","blocked","blocked","pending","not_released","not_started","docs/development_environment.md","2026-11-10T10:29:15-03:00"
@@ -16,5 +16,3 @@
 "work_0015","common","req_0011","Validate and request phase 1 human acceptance","milestone","high","developer","work_0010","not_started","not_run","pending","not_released","not_started","project_status.md","2026-11-10T10:19:51-03:00"
 "work_0016","common","req_0011","Validate and request phase 2 human acceptance","milestone","high","developer","work_0013","not_started","not_run","pending","not_released","not_started","project_status.md","2026-11-10T10:19:51-03:00"
 "work_0017","common","req_0011","Validate and request phase 3 human acceptance","milestone","high","developer","work_0014","not_started","not_run","pending","not_released","not_started","project_status.md","2026-11-10T10:19:51-03:00"
-
-

@@ -1,4 +1,4 @@
-# TaxMiner
+﻿# TaxMiner
 
 Projeto independente, não oficial da Receita Federal, para pesquisa sobre
 Soluções de Consulta públicas e notas explicativas de demonstrações financeiras.
@@ -65,5 +65,5 @@ definida; titularidade, visibilidade e eventual licença precisam de decisão
 humana antes de publicação. Consulte `CHANGELOG.md` e os registros de gestão.
 
 O GitHub CLI portátil fica em `.local/github_cli/bin/gh.exe`, ignorado pelo Git.
-Autenticação existente verificada para `amarallr`; identidade de commit e
-destino remoto continuam pendentes. Consulte `docs/github_setup.md`.
+Autenticação existente verificada para `amarallr`; identidade local configurada
+e primeiro commit enviado ao repositório privado `amarallr/taxminer`. Consulte `docs/github_setup.md`.

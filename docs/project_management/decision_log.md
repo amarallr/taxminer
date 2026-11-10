@@ -62,3 +62,13 @@ Origin configurado como https://github.com/amarallr/taxminer.git.
 Commit e envio serão registrados após resultados reais; aceite do setup e
 MVPs continua pending. A tentativa adicional de teste GitHub no RStudio não
 gerou relatório; resultado não confirmado, sem alegação de teste aprovado.
+
+## decision_0006 — 2026-11-10T11:02:28-03:00 — Commit e envio privados autorizados
+
+O usuário confirmou nome/e-mail de autoria, amarallr/taxminer privado e
+commit/envio. Identidade aplicada localmente; remoto criado e visibilidade
+privada confirmada antes e após o envio. Primeiro commit 48cc18973133c3fe749b9e96607fc6c86cb0a3d7
+contém somente os 45 arquivos revisados. Hash confirmado no remoto.
+Autorização de publicação não implica aceite do setup ou MVP; não foi criada
+release. Registros documentais de resultado seguem no mesmo escopo autorizado.
+Git/CLI no terminal integrado permanece não confirmado.

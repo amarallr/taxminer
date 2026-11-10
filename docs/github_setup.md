@@ -1,9 +1,58 @@
-# Configuração Git e GitHub
+﻿# Configuração Git e GitHub
+
+## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
+
+Autorização humana explícita: identidade Lucas Rodrigues Amaral
+<amaral.lr@gmail.com>, repositório privado, primeiro commit e envio.
+Identidade configurada somente neste Git local. Repositório criado e
+confirmado PRIVATE: https://github.com/amarallr/taxminer.
+Origin: https://github.com/amarallr/taxminer.git; branch main acompanha origin/main.
+Primeiro commit: 48cc18973133c3fe749b9e96607fc6c86cb0a3d7
+Mensagem: chore: initialize TaxMiner development foundation.
+
+45 arquivos regulares revisados; índice e árvore do commit conferidos contra
+lista explícita. Nenhum link ou submódulo; único commit raiz antes do envio;
+busca limitada de padrões sensíveis sem ocorrências. Push concluído e
+ls-remote confirmou o mesmo hash em refs/heads/main. Nova consulta confirmou
+PRIVATE e isEmpty false. Evidências em docs/github_setup.md e
+reports/execution/github_publication.txt. Arquivos de estação, bibliotecas,
+binários, relatórios de execução e ZIP histórico não foram incluídos.
+Nenhuma área protegida acessada. Nenhuma configuração global alterada.
+
+work_0003: implementação in_progress, testes locais/remotos passed, aceite
+pending, release not_released, operations not_started. A verificação Git/CLI
+no terminal integrado do RStudio continua não confirmada: a tentativa não
+gerou relatório. Isso não invalida o commit e envio verificados pelo terminal
+do agente. Setup geral e integrações opcionais continuam pendentes de revisão.
+Publicar código em repositório privado não equivale a release ou aceite de MVP.
+Não houve execução de pipeline; saúde operacional unknown.
+
+Painel Common: implementação not_started 4 / in_progress 3 / blocked 3;
+testes not_run 5 / passed 2 / blocked 3; aceite pending 10;
+release not_released 10; operations not_started 10. Collect/Data/Intelligence
+continuam respectivamente com 2/2/3 itens não iniciados, testes não executados,
+aceite pending, release not_released e operations not_started.
+
+Pendência estática: git diff --cached --check inicial apontou espaços finais
+no arquivo gerado renv/activate.R e linhas vazias finais em três registros.
+As linhas vazias dos registros foram corrigidas; o bootstrap gerado do renv
+foi preservado sem alteração. Não declarar essa checagem global aprovada.
+O teste R no RStudio permanece aprovado com 5 verificações e aviso de versão
+compilada do testthat. Aceite humano do setup não foi inferido da autorização
+para commit/envio.
+
+Próximas ações: (1) developer revisar setup e decidir as integrações opcionais;
+(2) codex/developer verificar o CLI no terminal integrado se requerido para
+fechamento do setup; (3) executar Common P03 após autorização da etapa.
+Este registro será incluído em um commit documental de acompanhamento, com
+hash final disponível em git log e evidência local após o envio.
+Os checkpoints anteriores abaixo são históricos.
+
 
 Common P02: preparação local executada em 2026-11-10. Identidade Git,
 primeiro commit, destino remoto e envio permanecem pendentes de decisões humanas.
 
-## Evidências verificadas
+## Histórico — evidências antes do primeiro commit
 
 - Git 2.55.0.windows.4 disponível; branch `main`, sem commit HEAD ou remoto.
 - Nenhum `user.name` ou `user.email` efetivo/local encontrado na consulta.
@@ -53,7 +102,7 @@ e o ZIP histórico ficam fora do primeiro commit. As regras de exclusão das
 áreas protegidas foram verificadas como texto, sem acessar essas áreas.
 Os registros mantêm as evidências locais por caminho relativo.
 
-## Decisões pendentes
+## Histórico — decisões que estavam pendentes
 
 1. Confirmar nome/e-mail de autoria; não deduzir identidade de commit a partir
    do perfil conectado sem escolha do desenvolvedor. A configuração será local.
