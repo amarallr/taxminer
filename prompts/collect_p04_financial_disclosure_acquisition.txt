@@ -2,7 +2,7 @@
 Prompt Pack: 1.0 | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
 
 ## C — CONTEXT
-The Collect module currently acquires official tax consultation decisions. Extend it with a separately configured pipeline for publicly disclosed company financial statements and explanatory notes. Sources may include CVM disclosures and company investor-relations portals, subject to verified access and licensing.
+The Collect module is planned to acquire official tax consultation decisions (Phase 1). Provide, independently of that pipeline, a separately configured pipeline for publicly disclosed company financial statements and explanatory notes. Sources may include CVM disclosures and company investor-relations portals, subject to verified access and licensing.
 
 ## O — OBJECTIVE
 Discover, retrieve and incrementally refresh historical public financial reports with reproducible provenance, lawful access, immutable originals, versioning, completeness metrics and resumable execution.

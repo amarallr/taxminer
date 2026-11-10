@@ -1,5 +1,17 @@
 # TaxMiner — estado do projeto
 
+## Revisão geral (`doit`) — 2026-11-10T17:32:29-03:00
+
+Revisão completa de prompts, arquitetura, setup e requisitos por Claude Code.
+Vinte achados e plano em `review_update_plan.md`. Executado: consistência dos
+16 prompts (títulos, fonte dupla, nomes en-US, dono da busca da Fase 2,
+prompts pós-MVP), vocabulário `approved`, novo `acceptance_register.csv`,
+handoff enxuto com histórico arquivado, propostas para as pendências de
+arquitetura, `.gitattributes`. Validação: código 0, PASS 5 (`test_0020`).
+`work_0018` implementado, aceite pendente. `req_0003` continua `proposed`.
+Nenhum MVP iniciado; nada commitado ou enviado. Novo risco alto `risk_0010`
+(exceção `doit` em `tmp/`).
+
 ## Sincronização de atualizações — 2026-11-10T17:10:29-03:00
 
 O usuário pediu executar todas as atualizações pendentes e sincronizá-las ao

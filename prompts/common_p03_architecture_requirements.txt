@@ -38,7 +38,7 @@ taxminer/
   src/intelligence/
   scripts/
   prompts/                    # flat, no subdirectories
-  data/raw/normas/
+  data/raw/legal_sources/
   data/raw/decisions_index/
   data/external/
   data/interim/
@@ -76,7 +76,7 @@ taxminer/
 ```
 - A estrutura e referencia, nao obrigacao de criar todos os arquivos e diretorios imediatamente. Manter nomes tecnicos em ingles, inclusive datasets e colunas (`consultation_decision_id`, `consultation_decision_type`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`, `consultation_decision_date`, `publication_date`, `tax_topic`, `summary_text`, `full_text`, `legal_basis`, `source_url`, `download_timestamp`, `document_hash`, `consultation_decision_status`).
 
-# P02 — Arquitetura, requisitos e planejamento
+# COMMON P03 — Arquitetura, requisitos e planejamento
 
 ## IDENTIDADE E ARQUITETURA OBRIGATORIAS — TAXMINER
 Nome oficial: TaxMiner. Repositorio sugerido: taxminer (confirmar disponibilidade e autorizacao antes de criar). Projeto independente, nao oficial da Receita Federal.
@@ -90,7 +90,7 @@ Para IA, distinguir recuperacao de evidencias de inferencias do modelo; registra
 Credenciais e acesso: conferir autenticacao quando necessaria, pedir ao desenvolvedor que execute login oficial no proprio terminal/navegador, nunca solicitar ou receber segredos no chat. Prosseguir em tarefas independentes caso o login esteja pendente.
 
 ## CONTEXT (CO-STAR)
-TaxMiner, plataforma RStudio modular de coleta, consolidacao historica e inteligencia sobre Solucoes de Consulta da Receita Federal, usando exclusivamente fontes publicas e procedimentos de acesso permitidos. Executar apos os prompts anteriores e inspecionar o estado real do repositorio.
+TaxMiner, plataforma RStudio modular de coleta, consolidacao historica e inteligencia sobre duas familias independentes de documentos publicos: Solucoes de Consulta da Receita Federal (`tax_consultation_decisions`) e notas explicativas de demonstracoes financeiras (`financial_disclosures`), usando exclusivamente fontes publicas e procedimentos de acesso permitidos. Executar apos os prompts anteriores e inspecionar o estado real do repositorio.
 ## OBJECTIVE
 Definir escopo funcional e nao funcional, riscos, modelo de dados e roadmap.
 ## STYLE
@@ -103,7 +103,7 @@ Desenvolvedor RStudio, engenheiro de dados e analista tributario.
 1. Levantar taxonomia de atos: Solucao de Consulta, Solucao de Divergencia, Solucao de Consulta Interna, vinculadas e classificacao fiscal; confirmar nomenclaturas e cobertura nas fontes, sem presumir equivalencia.
 2. Definir escopo como todo o acervo PUBLICAMENTE DISPONIVEL e verificavel, inclusive registros so com ementa; separar documentos integrais e referencias bibliograficas.
 3. Definir tres modulos com interfaces claras (TaxMiner Collect, TaxMiner Data e TaxMiner Intelligence), e desenhar arquitetura por camadas: discovery -> acquisition -> raw -> extraction -> normalization -> enrichment -> serving, com interfaces testaveis.
-4. Definir modelo de entidades ato, documento, fonte, versao, referencia_normativa, relacao_entre_atos, evento_coleta e erro.
+4. Definir modelo de entidades em en-US: `consultation_decisions` (ato), `decision_documents`, `decision_sources`, `decision_versions`, `legal_references`, `decision_relationships`, `collection_events` e `collection_errors`; manter o vocabulario original em portugues apenas como rotulo de origem.
 5. Definir estrategia de identificadores estaveis e deduplicacao entre fontes sem fundir atos diferentes.
 6. Registrar ADRs, requisitos de desempenho, limites eticos de coleta, recuperacao de falhas, versionamento de schema e criterios de aceite.
 ENTREGAS: docs/requirements.md, docs/architecture.md, docs/decisions/, docs/data_dictionary.md inicial, backlog priorizado.

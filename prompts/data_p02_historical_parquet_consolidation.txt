@@ -38,7 +38,7 @@ taxminer/
   src/intelligence/
   scripts/
   prompts/                    # flat, no subdirectories
-  data/raw/normas/
+  data/raw/legal_sources/
   data/raw/decisions_index/
   data/external/
   data/interim/
@@ -76,7 +76,7 @@ taxminer/
 ```
 - A estrutura e referencia, nao obrigacao de criar todos os arquivos e diretorios imediatamente. Manter nomes tecnicos em ingles, inclusive datasets e colunas (`consultation_decision_id`, `consultation_decision_type`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`, `consultation_decision_date`, `publication_date`, `tax_topic`, `summary_text`, `full_text`, `legal_basis`, `source_url`, `download_timestamp`, `document_hash`, `consultation_decision_status`).
 
-# P02 — Consolidacao historica em Parquet
+# DATA P02 — Consolidacao historica em Parquet
 
 ## IDENTIDADE E ARQUITETURA OBRIGATORIAS — TAXMINER
 Nome oficial: TaxMiner. Repositorio sugerido: taxminer (confirmar disponibilidade e autorizacao antes de criar). Projeto independente, nao oficial da Receita Federal.
@@ -90,7 +90,7 @@ Para IA, distinguir recuperacao de evidencias de inferencias do modelo; registra
 Credenciais e acesso: conferir autenticacao quando necessaria, pedir ao desenvolvedor que execute login oficial no proprio terminal/navegador, nunca solicitar ou receber segredos no chat. Prosseguir em tarefas independentes caso o login esteja pendente.
 
 ## CONTEXT (CO-STAR)
-TaxMiner, plataforma RStudio modular de coleta, consolidacao historica e inteligencia sobre Solucoes de Consulta da Receita Federal, usando exclusivamente fontes publicas e procedimentos de acesso permitidos. Executar apos os prompts anteriores e inspecionar o estado real do repositorio.
+TaxMiner, plataforma RStudio modular de coleta, consolidacao historica e inteligencia sobre duas familias independentes de documentos publicos: Solucoes de Consulta da Receita Federal (`tax_consultation_decisions`) e notas explicativas de demonstracoes financeiras (`financial_disclosures`), usando exclusivamente fontes publicas e procedimentos de acesso permitidos. Executar apos os prompts anteriores e inspecionar o estado real do repositorio.
 ## OBJECTIVE
 Consolidar registros em base historica temporal, desnormalizada para analise e com tabelas relacionais auxiliares.
 ## STYLE

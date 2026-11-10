@@ -1,7 +1,16 @@
+# Changelog
+
+## 2026-11-10 — consistency review
+- Aligned internal titles with file names (Common P02–P05 previously said P01–P04) and prefixed every title with its module.
+- Replaced the Portuguese directory `data/raw/normas/` with `data/raw/legal_sources/` and the Portuguese entity names in Common P03 with en-US names matching `docs/architecture.md`.
+- Updated the single-source CONTEXT paragraph of ten prompts to name both document families.
+- Common P01 now prescribes lowercase snake_case IDs (`req_0001`, `work_0001`, …) as used by the registers, and requires an `acceptance_register.csv` row for each `approved` acceptance.
+- Collect P04 no longer claims that consultation-decision acquisition already exists.
+- README: Intelligence P02 assigned to Phase 2 financial-note search; Collect P03 and Intelligence P01 listed as post-MVP; version labels explained; `tmp/doit.txt` exception referenced.
+
 ## 2026-11-10 — per-user environment and safe project relocation
 - Updated Common P01 and P02 with current TaxMiner organization: CLI tools per-user, GitHub CLI in user PATH, renv global state under `%LOCALAPPDATA%/R/cache/renv`, project library isolated, and no project-root copying or access to protected areas.
 - Corrected setup evidence after verifying `gh` 2.103.3 resolves from its per-user installation. Project relocation must use an explicit reviewed allowlist; old renv state is retained until restore and validation succeed.
-# Changelog
 
 ## 2026-11-10 — autenticação Gemini e estado GitHub
 - Atualizado Common P02: chamada sintética do Gemini retornou o token fixture esperado; validação no terminal RStudio continua pendente.

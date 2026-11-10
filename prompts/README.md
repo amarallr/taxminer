@@ -13,12 +13,18 @@
 1. `common_p01_lifecycle_management.txt` — initialize and maintain governance across all three phases.
 2. `common_p02_rstudio_project_setup.txt` and `common_p03_architecture_requirements.txt` — environment, security, source-specific architecture and independent acceptance gates.
 3. **MVP Phase 1 — Tax Consultation Decisions:** `collect_p01_official_source_discovery.txt`, `collect_p02_historical_download.txt`, `data_p01_text_metadata_extraction.txt`, `data_p02_historical_parquet_consolidation.txt`, `intelligence_p02_semantic_search_analytics.txt`, and `common_p06_prototype_delivery.txt`.
-4. **MVP Phase 2 — Financial Statement Notes:** `collect_p04_financial_disclosure_acquisition.txt`, `data_p03_financial_note_extraction.txt`, source-specific search and `common_p06_prototype_delivery.txt`.
+4. **MVP Phase 2 — Financial Statement Notes:** `collect_p04_financial_disclosure_acquisition.txt`, `data_p03_financial_note_extraction.txt`, `intelligence_p02_semantic_search_analytics.txt` (independent financial-note search only; no dependency on Phase 1 search) and `common_p06_prototype_delivery.txt`.
 5. **MVP Phase 3 — Cross-Source Intelligence:** `intelligence_p03_cross_source_analysis.txt` and `common_p06_prototype_delivery.txt`.
 6. `common_p04_testing_quality.txt` and `common_p05_documentation_release.txt` apply to each phase; run `common_p01_lifecycle_management.txt` after every gate and during operations.
+7. **Post-MVP (not part of any MVP gate):** `collect_p03_incremental_updates.txt` (incremental refresh after a phase's sample is accepted) and `intelligence_p01_legal_tax_enrichment.txt` (legal/tax enrichment after Phase 1 acceptance). Start only with explicit authorization.
+
+## Naming and version labels
+- File names are canonical: `group_pNN_objective.txt`. Internal titles repeat the module and number (for example `# COMMON P03`).
+- "Prompt Pack 1.0" / "TAXMINER 1.0" is the current pack version. "CONTRATO TRANSVERSAL TAXMINER V5" and "TaxMiner 3.0" inside Common P02 are historical labels of embedded template text, not separate versions.
+- Later sections in a prompt (the dual-source contract and the three-phase roadmap) prevail over earlier, conflicting single-source wording.
 
 ## Protected directories
-`restricted/` and `tmp/` are exclusively local legally protected areas. Codex/remote agents must not access or operate them. The developer may independently maintain **local-only** Git histories inside them, with no remotes; the main Git repository ignores both, and protected data or histories must never be pushed, synced or published. `.gitignore` is not by itself a sufficient safety boundary. Use public or synthetic data for development, tests and demonstrations.
+`restricted/` and `tmp/` are exclusively local legally protected areas. Codex/remote agents must not access or operate them. The developer may independently maintain **local-only** Git histories inside them, with no remotes; the main Git repository ignores both, and protected data or histories must never be pushed, synced or published. `.gitignore` is not by itself a sufficient safety boundary. Use public or synthetic data for development, tests and demonstrations. The only documented exception is in the repository `AGENTS.md`: a read-only instruction file, `tmp/doit.txt`, read when the developer types `doit`; it does not open any other part of `tmp/`.
 
 ## Acceptance and verification
 Implementation, testing, human acceptance, release and operations statuses are tracked separately. Phase 1, Phase 2, and Phase 3 MVP approvals are independent and distinct. No fabricated counts, tests, source availability or legal conclusions. Request authentication only when needed through official local flows; never ask for tokens/passwords in chat.

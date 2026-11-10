@@ -46,7 +46,7 @@ Maintain these files, when justified, under `docs/project_management/` (the flat
 - `risk_register.csv`: risk_id, description, likelihood, impact, mitigation, owner, status.
 - `decision_log.md`: dated architectural and operational decisions with rationale and consequences.
 - `handoff.md`: current state, last verified commit, last completed action, pending approvals, next reproducible command, blockers.
-Use stable IDs such as `REQ-0001`, `WORK-0001`, `TEST-0001`, `ACC-0001`, `REL-0001`, `RUN-0001`; do not renumber existing records. Keep timestamps ISO 8601 with timezone. Do not include confidential identifiers, sensitive paths, secret values, or legally protected metadata in these files.
+Use stable lowercase snake_case IDs such as `req_0001`, `work_0001`, `test_0001`, `acc_0001`, `rel_0001`, `run_0001`; do not renumber existing records. Acceptance decisions recorded as `approved` in `work_items.csv` must have a matching row in `acceptance_register.csv`. Keep timestamps ISO 8601 with timezone. Do not include confidential identifiers, sensitive paths, secret values, or legally protected metadata in these files.
 
 ### 03 — INDEPENDENT STATUS DIMENSIONS
 Track status separately per work item. Allowed values:

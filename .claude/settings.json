@@ -2,7 +2,6 @@
   "permissions": {
     "deny": [
       "Read(./restricted/**)",
-      "Read(./tmp/**)",
       "Edit(./restricted/**)",
       "Edit(./tmp/**)"
     ]

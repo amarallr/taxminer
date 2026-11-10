@@ -1,5 +1,16 @@
 # Changelog
 
+## Revisão geral do projeto — 2026-11-10
+
+- Prompts alinhados (títulos, fonte dupla, nomes en-US, fases e pós-MVP);
+  detalhes em `prompts/CHANGELOG.md`.
+- Registros: vocabulário `approved`, `acceptance_register.csv`, handoff enxuto
+  com `handoff_history.md`, `risk_0010`, `decision_0013`, `work_0018`, `test_0020`.
+- Arquitetura: propostas para fallback de IDs, identificadores de empresa,
+  nível de evidência das relações, armazenamento e local do Shiny.
+- Setup: `.gitattributes`; diagnóstico restrito às dependências declaradas.
+- Exceção `doit` documentada em `AGENTS.md`/`CLAUDE.md`.
+
 ## Repositório público — 2026-11-10
 
 - Tornada pública, por solicitação do usuário, a visibilidade de

@@ -105,3 +105,38 @@ normalized value; and define how confidence is calibrated for relationships.
 Coverage, relevance, citation-accuracy, and performance thresholds remain
 developer decisions. This review is not developer approval of the architecture
 or requirements.
+
+## Proposed resolutions of open review items — 2026-11-10
+
+Status: proposed by Claude Code during the project review; not accepted. They
+close the three items from the review above so that `req_0003` can be decided.
+
+1. **ID fallback.** Primary key:
+   `{family}:{issuing_authority_code}:{original_document_type_code}:{number}/{year}`.
+   When the number or year is absent, use
+   `{family}:{issuing_authority_code}:{original_document_type_code}:h{sha256_12}`,
+   where `sha256_12` is the first 12 hex characters of the SHA-256 of the
+   normalized canonical source URL plus the publication date. Record
+   `id_method = official | fallback`. A fallback ID is never merged with an
+   official ID automatically; promotion requires a recorded decision.
+2. **Company identifiers.** Store `company_identifier_scheme` (`cnpj`,
+   `cvm_code`, `name_only`), `company_identifier_original` exactly as published,
+   and `company_identifier_normalized` (CNPJ: 14 digits, check digits
+   validated). A match needs at least one verified identifier; `name_only`
+   matches stay `unresolved`. Keep the root CNPJ (8 digits) as a derived field
+   for group-level grouping only, never as identity.
+3. **Relationship confidence.** Phase 3 starts with deterministic rules only
+   (explicit citation of a legal act number or of a decision ID). Confidence is
+   a categorical `evidence_level` (`explicit_citation`, `shared_legal_basis`,
+   `topic_similarity`), not a probability. A numeric score is introduced only
+   after calibrating on the adjudicated set of at least 50 links defined in
+   `docs/requirements.md`.
+4. **Storage (proposal for the Phase 1 sample).** Parquet files written with
+   `arrow`, queried with `duckdb`; full-text search through DuckDB's `fts`
+   extension. Re-evaluate against the latency threshold before scaling. Adding
+   `arrow`, `duckdb`, `httr2`, `xml2`, `pdftools` and `shiny` to `DESCRIPTION`
+   happens only when the first code that uses each one is written.
+5. **Shiny location.** The single application lives in `prototype/` (as Common
+   P03/P06 prescribe) and contains presentation code only. Business logic stays
+   in `src/`; each phase is a separate Shiny module that is enabled only when
+   its dataset exists.

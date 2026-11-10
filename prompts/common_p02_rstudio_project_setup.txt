@@ -59,7 +59,7 @@ taxminer/
   src/intelligence/
   scripts/
   prompts/                    # flat, no subdirectories
-  data/raw/normas/
+  data/raw/legal_sources/
   data/raw/decisions_index/
   data/external/
   data/interim/
@@ -97,7 +97,7 @@ taxminer/
 ```
 - A estrutura e referencia, nao obrigacao de criar todos os arquivos e diretorios imediatamente. Manter nomes tecnicos em ingles, inclusive datasets e colunas (`consultation_decision_id`, `consultation_decision_type`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`, `consultation_decision_date`, `publication_date`, `tax_topic`, `summary_text`, `full_text`, `legal_basis`, `source_url`, `download_timestamp`, `document_hash`, `consultation_decision_status`).
 
-# P01 — CONFIGURACAO INICIAL DO TAXMINER
+# COMMON P02 — CONFIGURACAO INICIAL DO TAXMINER
 ## CONTEXT (CO-STAR)
 Projeto novo para coleta do acervo publico de Solucoes de Consulta, Solucoes de Divergencia e outros atos relacionados da Receita Federal, condicionado a verificacao do escopo no P02.
 ## OBJECTIVE

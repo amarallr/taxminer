@@ -142,3 +142,18 @@ alteração, confirmados branch `main`, quatro commits, nenhum caminho
 não-noreply. A visibilidade foi alterada com GitHub CLI e confirmada pela API
 como `public` / `private=false`. Alterações locais não commitadas não foram
 enviadas. Esta autorização não cobre iniciar MVP ou incluir conteúdo protegido.
+
+## decision_0013 — 2026-11-10T17:32:29-03:00 — Exceção `doit` e revisão geral
+
+O desenvolvedor pediu que, ao digitar `doit`, o assistente leia e execute
+`tmp/doit.txt`, e autorizou a exceção. `AGENTS.md` e `CLAUDE.md` passaram a
+permitir somente a leitura desse arquivo; o desenvolvedor removeu
+`Read(./tmp/**)` de `.claude/settings.json`. Risco registrado em `risk_0010`.
+
+A primeira instrução `doit` pediu revisão completa e execução das
+recomendações. Executadas apenas correções locais e reversíveis de
+consistência em prompts, registros, arquitetura (como proposta) e setup; ver
+`review_update_plan.md`. Valores `accepted` normalizados para `approved` e o
+aceite de decision_0009 registrado em `acceptance_register.csv`. Licença,
+aceite de `req_0003`, instalação, mudança fora do projeto, commit e push
+continuam pendentes de decisão humana.
