@@ -38,6 +38,9 @@ os caminhos locais definidos em `.Rprofile` e execute `renv::restore(prompt = FA
 isso pode exigir rede e acesso ao repositório CRAN. A restauração limpa em
 outra máquina ainda não foi validada.
 
+Panorama atual do projeto (escopo, roteiro, itens, riscos e próximos passos):
+[`docs/project_overview.md`](docs/project_overview.md).
+
 ## Estrutura
 
 - `scripts/`: diagnóstico, bootstrap e validação local.
