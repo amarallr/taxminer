@@ -1,5 +1,14 @@
 # TaxMiner — estado do projeto
 
+## Visibilidade GitHub — 2026-11-10T17:07:00-03:00
+
+Por solicitação explícita do usuário, o repositório `amarallr/taxminer` foi
+alterado de privado para público. GitHub API confirmou `private=false`,
+`visibility=public`, branch padrão `main`. A revisão prévia confirmou quatro
+commits e nenhum caminho protegido rastreado. Os metadados de autoria desses
+commits usam endereços que não são `noreply` e agora são públicos. Alterações
+locais preexistentes fora desta operação não foram incluídas ou enviadas.
+
 ## Critérios quantitativos propostos e smoke test — 2026-11-10T17:00:00-03:00
 
 Foram acrescentados limiares mensuráveis preliminares em

@@ -1,5 +1,13 @@
 # Retomada do TaxMiner
 
+## Visibilidade GitHub — 2026-11-10T17:07:00-03:00
+
+Atendendo ao pedido explícito, `amarallr/taxminer` agora é público. Confirmação
+da API: `private=false`, `visibility=public`, branch padrão `main`. Quatro
+commits existentes têm metadados de autoria com endereços não-noreply; esses
+dados ficaram visíveis. Nenhum caminho protegido estava rastreado. Alterações
+locais pendentes em outros arquivos não foram incluídas no envio.
+
 ## Critérios propostos e estado do RStudio — 2026-11-10T17:00:00-03:00
 
 `docs/requirements.md` agora contém propostas mensuráveis para cobertura,

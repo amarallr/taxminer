@@ -133,3 +133,12 @@ não critérios aceitos nem resultados observados. Não autorizam coleta ou MVP.
 Tentativa de iniciar o helper de smoke test pela automação da janela RStudio
 não produziu marcador de despacho nem relatório; execução não confirmada. O
 smoke test integrado continua pendente; usar a console RStudio manualmente.
+
+## decision_0012 — 2026-11-10T17:07:00-03:00 — Repositório tornado público
+
+O usuário pediu explicitamente tornar público `amarallr/taxminer`. Antes da
+alteração, confirmados branch `main`, quatro commits, nenhum caminho
+`restricted/` ou `tmp/` rastreado e quatro metadados de autor com endereços
+não-noreply. A visibilidade foi alterada com GitHub CLI e confirmada pela API
+como `public` / `private=false`. Alterações locais não commitadas não foram
+enviadas. Esta autorização não cobre iniciar MVP ou incluir conteúdo protegido.
