@@ -20,3 +20,6 @@ test_0018,work_0001,environment_smoke_inherited_locale_after_fix,windows_r_4_5_1
 test_0019,work_0001,environment_smoke_after_public_repo_update,windows_r_4_5_1_agent_terminal,2026-11-10T17:10:26-03:00,passed,reports/execution/environment_validation_20261110.txt,unknown
 test_0020,work_0001,environment_smoke_after_project_review,windows_r_4_5_1_agent_terminal,2026-11-10T17:32:29-03:00,passed,reports/execution/environment_validation_review_20261110.txt,unknown
 test_0021,work_0002,environment_smoke_after_recommendations,windows_r_4_5_1_agent_terminal,2026-11-10T17:48:59-03:00,passed,reports/execution/environment_validation_recommendations_20261110.txt,770980a397d86c35f9c78047c0edffa4185f0fd0
+test_0022,work_0001,ci_clean_restore_and_validation,github_actions_windows_latest_r_4_5_1,2026-11-10T20:51:26Z,failed,https://github.com/amarallr/taxminer/actions/runs/42899022889,79a3efd1b4daa6e651820368af493ca4afbbc9ca
+test_0023,work_0001,ci_clean_restore_and_validation_cran,github_actions_windows_latest_r_4_5_1,2026-11-10T20:54:59Z,failed,https://github.com/amarallr/taxminer/actions/runs/42899563323,unknown
+test_0024,work_0001,ci_clean_restore_and_validation_preinstalled_magrittr,github_actions_windows_latest_r_4_5_1,2026-11-10T20:58:23Z,passed,https://github.com/amarallr/taxminer/actions/runs/42900032089,unknown

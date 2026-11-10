@@ -22,7 +22,8 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 Rscript --vanilla scripts/validate_environment.R
 ```
 
-O aviso de `testthat` compilado no R 4.5.3 permanece (R local 4.5.1, por
+CI no GitHub Actions aprovado (`test_0024`), com restauração limpa do lock.
+O aviso de `testthat` compilado no R 4.5.3 permanece só localmente (R 4.5.1, por
 escolha do desenvolvedor).
 
 ## Pendências

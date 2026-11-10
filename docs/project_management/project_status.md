@@ -1,5 +1,13 @@
 # TaxMiner — estado do projeto
 
+## CI e restauração limpa — 2026-11-10T18:00:00-03:00
+
+CI `validate_environment` aprovado no GitHub Actions após correção do falso
+ciclo `magrittr`/`testthat` (`decision_0015`, `test_0022`–`test_0024`). Primeira
+evidência de restauração limpa do `renv.lock` em outra máquina. Localmente, o
+aviso de `testthat` compilado no R 4.5.3 continua (R 4.5.1 mantido por escolha
+do desenvolvedor).
+
 ## Recomendações autorizadas — 2026-11-10T17:46:38-03:00
 
 Executadas as recomendações autorizadas (`decision_0014`): `req_0003` e

@@ -174,3 +174,14 @@ Git local para commits futuros (`risk_0009` mitigado; histórico não reescrito)
 CI mínimo em `.github/workflows/validate_environment.yml`, com permissão
 somente leitura, que revoga o adiamento de CI de decision_0004. Refatoração
 dos prompts segue adiada para o pacote 1.1, como recomendado.
+
+## decision_0015 — 2026-11-10T18:00:00-03:00 — Correção do CI
+
+A primeira execução do CI falhou: `renv::restore()` acusou falso ciclo de
+dependência `magrittr` <-> `testthat` ao compilar `magrittr` 2.0.3 do código
+fonte (`test_0022`), também com o repositório CRAN (`test_0023`). O workflow
+passou a instalar antes o `magrittr` 2.0.3 travado, a partir do arquivo oficial
+do CRAN, e então restaura o lock. Resultado: restauração limpa e 5 verificações
+aprovadas em Windows com R 4.5.1, sem o aviso de `testthat` compilado em versão
+mais nova (`test_0024`). As tentativas foram feitas no branch temporário
+`ci_restore_fix`, integrado ao `main` por fast-forward e removido.
