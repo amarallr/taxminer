@@ -1,5 +1,15 @@
 # TaxMiner — estado do projeto
 
+## Fase 2 iniciada (Fase 1 suspensa) — 2026-11-10T19:10:00-03:00
+
+Por decisão do desenvolvedor (`decision_0020`), a Fase 1 está suspensa
+(`work_0008` `blocked`, sem perda do que foi feito) e a Fase 2 começou
+(`work_0011` `in_progress`). Collect P04, etapa 00: fontes da CVM verificadas
+(`docs/data_sources.md`, `config/financial_disclosure_sources.yml`,
+`test_0032`). Notas explicativas só nos pacotes de entrega do RAD/ENET, não nos
+ZIPs de dados abertos (`risk_0012`). Próximo: autorização da amostra de até 20
+entregas (etapa 02).
+
 ## Collect P01 executado — 2026-11-10T18:46:15-03:00
 
 Inventário (`docs/source_inventory.md`) e viabilidade (`docs/feasibility.md`)

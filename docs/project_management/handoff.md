@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T18:46:15-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-10T19:10:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -14,9 +14,13 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   (`acc_0004`–`acc_0007`); revisão `work_0018` aprovada (`acc_0008`).
 - **Repositório:** licença MIT; CI `validate_environment` no GitHub Actions;
   commits futuros com e-mail noreply (configuração local).
-- **Fase 1:** Collect P01 executado (`work_0008` em andamento): fontes em
-  `docs/source_inventory.md`, estratégia em `docs/feasibility.md`. Nenhum
-  documento coletado. Fases 2 e 3 não iniciadas.
+- **Fase 1: suspensa** por decisão do desenvolvedor (`decision_0020`).
+  `work_0008` `blocked`; Collect P01 concluído (`docs/source_inventory.md`,
+  `docs/feasibility.md`), três decisões em aberto. Nenhum documento coletado.
+- **Fase 2: iniciada** (`work_0011` `in_progress`). Collect P04 etapa 00
+  concluída: `docs/data_sources.md`, `config/financial_disclosure_sources.yml`,
+  `scripts/probe_financial_sources.R` (`test_0032`). Notas só nos pacotes
+  RAD/ENET (`risk_0012`). Fase 3 não iniciada.
 
 ## Validação
 
@@ -38,9 +42,11 @@ escolha do desenvolvedor).
 
 ## Próxima ação técnica
 
-Desenvolvedor decide os três pontos de `docs/feasibility.md` (uso da API de
-busca, opção de texto integral, amostra). Depois: Collect P02 para coletar a
-amostra de ementas, com nova autorização.
+Desenvolvedor autoriza (ou ajusta) a amostra da Fase 2 de até 20 pacotes de
+entrega da CVM (`docs/data_sources.md`) e confirma o uso do RAD/ENET sem
+licença declarada. Depois: Collect P04 etapas 01–02 (identidade, download e
+manifesto em `src/collect/`). Fase 1 retoma quando o desenvolvedor decidir os
+pontos de `docs/feasibility.md`.
 
 ## Regras permanentes
 

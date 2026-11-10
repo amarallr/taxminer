@@ -224,3 +224,27 @@ GitHub Pages (`site/index.html`, workflow `.github/workflows/pages.yml`, com
 permissões mínimas `pages: write` e `id-token: write`) e o README aponta para
 https://amarallr.github.io/taxminer/. A página contém só dados de gestão já
 públicos no repositório; nenhum conteúdo de `restricted/` ou `tmp/`.
+
+## decision_0020 — 2026-11-10T18:55:00-03:00 — Fase 1 suspensa; Fase 2 iniciada
+
+O desenvolvedor suspendeu por enquanto a Fase 1 e pediu o início da Fase 2.
+`work_0008` passa a `blocked` (suspensão por decisão do desenvolvedor; as três
+decisões de `docs/feasibility.md` continuam em aberto e nada foi descartado).
+`work_0011` passa a `in_progress` com Collect P04, etapa 00 (verificação de
+fontes). A Fase 2 não depende da Fase 1 (`docs/architecture.md`). A
+autorização foi tratada como equivalente à do Collect P01: verificação de
+fontes com requisições pequenas, sem download em massa; a coleta da amostra
+(etapa 02) exige nova autorização.
+
+## decision_0021 — 2026-11-10T19:10:00-03:00 — Resultado da verificação de fontes da Fase 2
+
+Fontes verificadas com `scripts/probe_financial_sources.R` (`test_0032`). Os
+ZIPs de dados abertos da CVM (DFP/ITR, ODbL) trazem índice de entregas e
+demonstrativos estruturados, mas não notas explicativas. As notas estão no
+pacote de cada entrega no RAD/ENET (`LINK_DOC`): um ZIP com XML que embute os
+PDFs anexados pela companhia, entre eles as demonstrações com notas, com
+camada de texto. Hashes estáveis por membro do pacote, não pelo ZIP. O RAD não
+tem robots.txt nem licença declarada; o PDF gerado pelo ENET vem preenchido
+com zeros até 16 MiB. Detalhes em `docs/data_sources.md` e
+`config/financial_disclosure_sources.yml`; amostra proposta de até 20 entregas
+aguarda autorização. `risk_0012` aberto.

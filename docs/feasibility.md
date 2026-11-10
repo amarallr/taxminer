@@ -3,6 +3,9 @@
 Based on the probe run of 2026-11-10 (`docs/source_inventory.md`). Status:
 proposed; the developer must approve the strategy before Collect P02.
 
+**Suspended on 2026-11-10** by the developer (`decision_0020`): Phase 2 goes
+first. The decisions below stay open; nothing here is withdrawn.
+
 ## Feasibility matrix
 
 | Source / content | Access | Volume (reported) | Format | Feasible for MVP Phase 1? |

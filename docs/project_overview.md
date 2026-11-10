@@ -1,7 +1,7 @@
 # TaxMiner — panorama do projeto
 
 Projeto independente, não oficial da Receita Federal. Situação em 10/11/2026
-(após o Collect P01). Repositório público `amarallr/taxminer`, licença MIT,
+(Fase 1 suspensa, Fase 2 iniciada). Repositório público `amarallr/taxminer`, licença MIT,
 CI aprovado. Fonte: registros em `docs/project_management/`.
 
 ## Escopo
@@ -22,13 +22,13 @@ citadas, nunca conclusão de infração.
 |---|---|---|
 | Common P02 — Fundação | Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas | ✅ aprovado |
 | Common P03 — Arquitetura | Contratos por fonte, limiares de qualidade e dicionário de dados | ✅ aprovado |
-| Fase 1 — Soluções de Consulta | Fontes verificadas; amostra de até 100 atos, Parquet e busca no Shiny | ▶️ em andamento |
-| Fase 2 — Notas explicativas | Coleta, extração e busca próprias, sem depender da Fase 1 | ⏸️ não iniciada |
+| Fase 1 — Soluções de Consulta | Fontes verificadas; decisões de coleta em aberto | ⏸️ suspensa |
+| Fase 2 — Notas explicativas | Fontes da CVM verificadas; amostra de até 20 entregas aguarda autorização | ▶️ em andamento |
 | Fase 3 — Inteligência cruzada | Relações citadas entre as duas bases já aceitas | ⏸️ não iniciada |
 
 ## Itens de trabalho
 
-18 registrados: 8 implementados, 1 em andamento e 9 não iniciados; 8 com
+18 registrados: 8 implementados, 1 em andamento, 1 suspenso (bloqueado) e 8 não iniciados; 8 com
 aceite humano. Nenhum foi liberado em release nem está em operação.
 
 | ID | Item | Implementação | Teste | Aceite |
@@ -43,12 +43,12 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0007 | GitHub Copilot | implementado | aprovado | aprovado |
 | work_0018 | Revisão de consistência do projeto | implementado | aprovado | aprovado |
 | **Fase 1** | | | | |
-| work_0008 | Descobrir fontes e coletar a amostra | em andamento | aprovado | pendente |
+| work_0008 | Descobrir fontes e coletar a amostra | suspenso | aprovado | pendente |
 | work_0009 | Extrair e consolidar | não iniciado | não executado | pendente |
 | work_0010 | Busca independente | não iniciado | não executado | pendente |
 | work_0015 | Aceite humano da Fase 1 | não iniciado | não executado | pendente |
 | **Fase 2** | | | | |
-| work_0011 | Descobrir fontes e coletar relatórios | não iniciado | não executado | pendente |
+| work_0011 | Descobrir fontes e coletar relatórios | em andamento | aprovado | pendente |
 | work_0012 | Extrair notas e tabelas | não iniciado | não executado | pendente |
 | work_0013 | Busca independente de notas | não iniciado | não executado | pendente |
 | work_0016 | Aceite humano da Fase 2 | não iniciado | não executado | pendente |
@@ -56,10 +56,11 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
 | work_0017 | Aceite humano da Fase 3 | não iniciado | não executado | pendente |
 
-## Riscos abertos (6 de 11)
+## Riscos abertos (7 de 12)
 
 | Impacto | Risco | Detalhe |
 |---|---|---|
+| alto | Notas só nos pacotes RAD/ENET | Fora dos dados abertos ODbL; RAD sem robots.txt nem licença declarada; PDF gerado com preenchimento (risk_0012). |
 | alto | Texto integral recusado à automação | O visualizador oficial respondeu 403; a API de busca não é documentada (risk_0011). |
 | alto | Cobertura das fontes | Ementas acessíveis; termos de uso e completude histórica em aberto (risk_0001). |
 | alto | Sincronização do OneDrive | Exclusões das áreas protegidas não verificadas; checkout mantido no OneDrive por escolha (risk_0002). |
@@ -69,12 +70,12 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 
 ## Próximos passos
 
-1. **Decidir a estratégia de coleta:** uso da API de busca do Normas, opção
-   para o texto integral e estratos da amostra (`docs/feasibility.md`).
-2. **Collect P02:** até 100 ementas com manifesto, hash SHA-256 e resultado
-   documento a documento.
-3. **Extração, Parquet e busca:** Data P01/P02 e Intelligence P02, com Shiny
-   local e citação da fonte oficial.
+1. **Autorizar a amostra da Fase 2:** até 20 pacotes de entrega da CVM
+   (`docs/data_sources.md`), com uso do RAD/ENET.
+2. **Collect P04 etapas 01–02:** identidade dos relatórios, download com
+   manifesto e SHA-256 por membro do pacote.
+3. **Data P03 e busca de notas:** extração das notas, Parquet e área própria
+   no Shiny. A Fase 1 retoma com as decisões de `docs/feasibility.md`.
 
 Adiados por escolha do desenvolvedor: atualizar o R e tirar o projeto do
 OneDrive. A refatoração dos prompts fica para a versão 1.1.

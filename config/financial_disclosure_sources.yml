@@ -1,0 +1,52 @@
+# Source registry for financial_disclosures (MVP Phase 2).
+# Verified by scripts/probe_financial_sources.R on 2026-11-10; see
+# docs/data_sources.md. Only verified patterns are listed.
+sources:
+  - source_id: cvm_open_data_dfp
+    authority: CVM
+    description: Yearly DFP index and structured annual statements
+    url_pattern: https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_{year}.zip
+    years_listed: [2010, 2026]
+    format: zip_of_csv
+    encoding: latin1
+    separator: ";"
+    license: ODbL
+    crawl_delay_seconds: 10
+    contains_notes: false
+    verified_at: "2026-11-10T19:00:46-03:00"
+  - source_id: cvm_open_data_itr
+    authority: CVM
+    description: Yearly ITR index and structured quarterly statements
+    url_pattern: https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_{year}.zip
+    format: zip_of_csv
+    encoding: latin1
+    separator: ";"
+    license: ODbL
+    crawl_delay_seconds: 10
+    contains_notes: false
+    verified_at: "2026-11-10T19:00:46-03:00"
+    notes: Listing verified; ZIP contents assumed to mirror DFP, not yet opened
+  - source_id: cvm_company_register
+    authority: CVM
+    description: Register of listed companies (CNPJ, CVM code, status)
+    url: https://dados.cvm.gov.br/dados/CIA_ABERTA/CAD/DADOS/cad_cia_aberta.csv
+    format: csv
+    encoding: latin1
+    separator: ";"
+    license: ODbL
+    crawl_delay_seconds: 10
+    personal_data: true
+    verified_at: "2026-11-10T19:00:46-03:00"
+  - source_id: cvm_rad_filing_document
+    authority: CVM
+    description: Filing package with XML statements and embedded PDF attachments, including explanatory notes
+    url_pattern: https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento={id_doc}
+    discovered_from: LINK_DOC column of the DFP/ITR index (http, redirects to https)
+    format: zip
+    declared_content_type: text/html
+    robots_txt: absent
+    license: unknown
+    crawl_delay_seconds: 10
+    contains_notes: true
+    stable_checksum: per_member
+    verified_at: "2026-11-10T19:00:46-03:00"
