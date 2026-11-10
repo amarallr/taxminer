@@ -29,3 +29,27 @@ No MVP work is authorized by this document.
 Testing, human acceptance, release, and operations are separate gates. A passed
 test does not imply acceptance or release. The current register remains the
 status authority; this draft does not change its proposed requirements.
+
+## Proposed quantitative thresholds for review
+
+These are draft acceptance thresholds, not observed results or accepted product
+criteria. They apply only to a declared, versioned public-source snapshot and
+adjudicated public/synthetic test sets. They do not promise completeness of an
+unbounded historical archive.
+
+| Measure | Proposed threshold | Measurement method |
+|---|---:|---|
+| Discovery accounting | 100% of discovered source entries receive a terminal outcome | Manifest counts downloaded, unavailable, out-of-scope, blocked, duplicate, and failed entries; no silent omissions. |
+| Acquisition integrity | 100% of downloaded files have a recorded SHA-256 and source URL | Recompute hashes from the public test corpus and compare with manifest. |
+| Extraction core-field coverage | ≥99% of applicable required fields on the adjudicated corpus | Publish per-field denominator and missing/uncertain counts; do not convert unknown into a value. |
+| Pipeline reproducibility | 100% identical stable IDs and normalized outputs across two runs on the same versioned input | Compare canonical outputs and manifests; document intentional timestamps separately. |
+| Search relevance | Precision@10 ≥0.90 and Recall@10 ≥0.80 per dataset | At least 30 independently adjudicated queries per dataset with a versioned relevance set; report confidence intervals and zero-result queries. |
+| Citation correctness | 100% of displayed results cite the correct source document; page citations must resolve to the cited page | Human review of every result in the fixed acceptance query set. |
+| Local search latency | p95 ≤2 seconds at declared benchmark size | Benchmark 100,000 decision records and 1,000,000 financial-note rows on a named machine profile; report cold and warm runs separately. |
+| Cross-source link precision | ≥0.90 precision at the proposed display threshold, with 100% cited evidence | Human-adjudicated set of at least 50 proposed links; unresolved links stay unaccepted and no misconduct labels are allowed. |
+
+If a corpus cannot support a denominator or minimum query/link count, report
+the metric as insufficient evidence and do not claim the threshold passed.
+Developer review must confirm, revise, or reject these numbers before any MVP
+acceptance test is designed. No source collection or MVP implementation is
+authorized by these draft thresholds.

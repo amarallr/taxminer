@@ -121,3 +121,15 @@ ano oficial, tipagem e proveniência dos identificadores de empresas, calibraç�
 de confiança das relações e limiares quantitativos de qualidade/desempenho.
 O usuário ainda precisa revisar e aceitar o requisito req_0003. Nenhum MVP foi
 iniciado e nenhum dado foi coletado.
+
+## decision_0011 — 2026-11-10T17:00:00-03:00 — Limiares quantitativos propostos
+
+Para responder ao pedido de executar o passo de critérios, foram incluídos em
+`docs/requirements.md` limiares mensuráveis para contabilização de descoberta,
+integridade, cobertura de campos, reprodutibilidade, relevância, citações,
+latência e precisão de relações. São propostas para revisão do desenvolvedor,
+não critérios aceitos nem resultados observados. Não autorizam coleta ou MVP.
+
+Tentativa de iniciar o helper de smoke test pela automação da janela RStudio
+não produziu marcador de despacho nem relatório; execução não confirmada. O
+smoke test integrado continua pendente; usar a console RStudio manualmente.

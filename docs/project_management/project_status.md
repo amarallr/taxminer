@@ -1,5 +1,21 @@
 # TaxMiner — estado do projeto
 
+## Critérios quantitativos propostos e smoke test — 2026-11-10T17:00:00-03:00
+
+Foram acrescentados limiares mensuráveis preliminares em
+`docs/requirements.md`: 100% de contabilização das descobertas e integridade
+SHA-256; cobertura de campos aplicáveis ≥99%; reprodutibilidade determinística
+100%; Precision@10 ≥0,90 e Recall@10 ≥0,80 em 30 consultas por domínio;
+citações corretas 100%; p95 de busca ≤2 s nos tamanhos de benchmark declarados;
+precisão de relações ≥0,90 e citações 100% em conjunto adjudicado mínimo de 50.
+Valores permanecem propostas; requerem revisão e aceite do desenvolvedor.
+
+Duas tentativas de disparo automatizado do helper na janela RStudio não
+produziram marcador nem relatório. Logo, nenhum smoke test integrado foi
+executado. O teste Gemini no terminal do agente continua sendo evidência fora
+do RStudio. Passo 1 reconciliado em `decision_0009`; passo 3 revisado em
+`decision_0010` e atualizado em `decision_0011`. Nenhum MVP iniciado.
+
 ## Revisão de arquitetura — 2026-11-10T16:50:00-03:00
 
 Revisados `docs/architecture.md`, `docs/requirements.md` e

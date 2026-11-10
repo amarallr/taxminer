@@ -89,7 +89,9 @@ a separate privacy review and authorization.
 - Select storage and query engines only after benchmarking representative
   public samples and validating required R packages.
 - Define quantitative coverage, search relevance, citation accuracy, and
-  performance thresholds with the developer before implementation.
+  performance thresholds with the developer before implementation. Draft
+  measurable thresholds for review are in `docs/requirements.md` and remain
+  unaccepted.
 - Decide company-identity evidence rules and human-review thresholds before
   financial matching or cross-source relationship work.
 

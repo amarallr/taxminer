@@ -1,5 +1,18 @@
 # Retomada do TaxMiner
 
+## Critérios propostos e estado do RStudio — 2026-11-10T17:00:00-03:00
+
+`docs/requirements.md` agora contém propostas mensuráveis para cobertura,
+integridade, extração, reprodutibilidade, relevância, citações, latência e
+relações cruzadas. Não são critérios aceitos; req_0003 e work_0002 seguem
+propostos/em andamento até revisão humana. Nenhum MVP ou coleta começou.
+
+O helper RStudio foi enviado duas vezes à janela aberta; não surgiu marcador
+de despacho nem relatório, portanto não houve execução confirmada. Execute na
+console do projeto: `source("scripts/smoke_test_agent_clis_rstudio.R")`.
+Depois confira `reports/execution/agent_cli_rstudio_smoke.txt` e atualize os
+registros somente com os resultados reais.
+
 ## Revisão de arquitetura — 2026-11-10T16:50:00-03:00
 
 Revisão técnica Codex concluída como feedback, sem aceite humano presumido.

@@ -2,6 +2,17 @@
 
 ## Configuração dos agentes — 2026-11-10
 
+Atualização desta rodada: o Gemini executou uma chamada sintética pelo launcher
+e retornou o token correto, demonstrando acesso funcional ao modelo nesta
+sessão. Isso é evidência de funcionalidade/autenticação efetiva naquele
+momento, embora não seja uma checagem independente do estado da conta. O teste
+não foi feito no RStudio.
+
+O helper de repetição integrada está em
+`scripts/smoke_test_agent_clis_rstudio.R`; execute-o na console RStudio com o
+projeto aberto. Duas tentativas de envio automatizado à janela não produziram
+marcador de despacho nem relatório. O teste integrado permanece não executado.
+
 Codex CLI 0.167.0 carregou `.codex/config.toml` com `--strict-config doctor`:
 `workspace-write` e `on-request`; o diagnóstico terminou com código 0, sem
 falhas de configuração, e confirmou sandbox de filesystem/rede restritos e
@@ -24,10 +35,10 @@ caminhos. Essa exclusão é aplicada apenas por ferramentas que respeitam o
 arquivo; não é isolamento contra shell, subprocessos ou outros serviços. Não
 foi configurada aprovação automática nem sandbox persistente do Gemini.
 
-Os três testes confirmam configuração/instruções no contexto dos CLIs, não
-isolamento técnico absoluto. Autenticação Gemini e interação funcional com
-arquivos sintéticos permanecem pendentes. Aceite humano, release e operações
-continuam pendentes para os três itens. Evidências: sessão desta revisão;
+As verificações confirmam configuração/instruções no contexto dos CLIs, não
+isolamento técnico absoluto. A chamada sintética do Gemini confirmou acesso
+funcional ao modelo nesta sessão; o smoke funcional no terminal RStudio segue
+pendente. Aceite humano, release e operações continuam pendentes para os três itens. Evidências: sessão desta revisão;
 nenhum conteúdo de `restricted/` ou `tmp/` foi acessado.
 
 ## Revisão atual — 2026-11-10T15:03:27-03:00
