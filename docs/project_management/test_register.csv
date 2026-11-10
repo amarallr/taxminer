@@ -1,0 +1,12 @@
+test_id,work_item_id,level,environment,execution_timestamp,result,evidence_path,code_commit
+test_0001,work_0001,environment_smoke,windows_r_4_5_1,unknown,failed,docs/development_environment.md,unknown
+test_0002,work_0001,environment_smoke,windows_r_4_5_1,2026-11-10T10:29:15-03:00,passed,reports/execution/environment_validation.txt,unknown
+test_0003,work_0001,setup_idempotence,windows_r_4_5_1,2026-11-10T10:28:56-03:00,passed,docs/development_environment.md,unknown
+test_0004,work_0003,static_configuration,windows_powershell_5_1,2026-11-10T10:28:56-03:00,passed,docs/development_environment.md,unknown
+test_0005,work_0001,environment_smoke,windows_r_4_5_1,unknown,failed,reports/execution/environment_validation.txt,unknown
+test_0006,work_0001,environment_smoke_clean_locale,windows_r_4_5_1,unknown,passed,reports/execution/environment_validation.txt,unknown
+test_0007,work_0001,rstudio_terminal_smoke,windows_r_4_5_1,2026-11-10T10:42:51-03:00,failed,reports/execution/rstudio_environment_validation_failed.txt,unknown
+test_0008,work_0001,rstudio_terminal_smoke_clean_locale,windows_r_4_5_1,2026-11-10T10:45:06-03:00,passed,reports/execution/rstudio_environment_validation.txt,unknown
+test_0009,work_0003,cli_installation_digest,windows_powershell_5_1,unknown,passed,docs/github_setup.md,unknown
+test_0010,work_0003,github_authentication,windows_powershell_5_1,unknown,passed,docs/github_setup.md,unknown
+test_0011,work_0003,publishable_allowlist_dry_run,windows_git_2_55_0,unknown,passed,docs/github_setup.md,unknown

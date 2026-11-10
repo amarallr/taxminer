@@ -1,0 +1,39 @@
+# Legally protected boundaries: never inspect or operate these directories.
+/restricted/
+/tmp/
+/.agents/
+/.codex/
+/.aws/
+/.local/
+/.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.env
+.env.*
+!.Renviron.example
+!.env.example
+*.pem
+*.key
+/data/raw/
+/data/external/
+/data/interim/
+/data/processed/
+/outputs/
+/logs/
+/checkpoints/
+/renv/library/
+/renv/staging/
+/renv/cache/
+/renv/local/
+node_modules/
+.venv/
+__pycache__/
+*.log
+*.tmp
+*.bak
+# Historical archive; current instructions are the reviewed loose files.
+/prompts/*.zip
+# Execution evidence may include workstation paths; retain locally.
+/reports/execution/

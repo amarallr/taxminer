@@ -1,0 +1,49 @@
+# TAXMINER — INTELLIGENCE P03 — CROSS-SOURCE ANALYSIS
+Prompt Pack: 1.0 | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
+
+## C — CONTEXT
+TaxMiner Intelligence must jointly research Receita Federal tax consultation decisions and companies’ published financial explanatory notes while preserving the different legal and evidentiary roles of each source.
+
+## O — OBJECTIVE
+Build explainable, cited cross-source search and comparison: legal topics, company disclosure trends, source-to-source links and analyst-reviewable hypotheses without automated allegations or unsupported legal conclusions.
+
+## S — STYLE
+Modular, incremental, reproducible, audit-ready R code. Use lowercase American English snake_case for all technical names; retain legally meaningful source-language content. Do not create empty placeholders or claim unexecuted work.
+
+## T — TONE
+Precise, skeptical of unverified sources, explicit about gaps and uncertainty.
+
+## A — AUDIENCE
+TaxMiner developer, Codex/RStudio contributors, reviewers and authorized approvers.
+
+## R — EXECUTION PLAN
+### 00 — Evidence model
+Model `document_relationships` with `relationship_id`, `source_document_id`, `target_document_id`, `relationship_type`, `tax_topic`, `matching_method`, `evidence_excerpt`, `source_page`, `confidence_score`, `review_status`, `reviewer`, `created_at`. A tax consultation decision is an administrative interpretation; a financial note is a company disclosure. Never infer legal compliance or noncompliance from topical similarity.
+### 01 — Unified search
+Extend keyword and structured search to both families; filters include `document_family`, `company_cnpj`, `company_name`, `reporting_period`, `report_type`, `statement_scope`, `tax_topic`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`. Results must expose original citation, document version, source page and extraction quality; distinguish direct quotes, normalized metadata and AI-generated commentary.
+### 02 — Cross-source linking
+Use auditable keyword/legal-reference extraction first; optional embeddings/RAG only after offline evaluation. Preserve exact textual evidence, source page, document URLs, retrieval dates and uncertainty. Implement `src/intelligence/link_consultation decisions_to_disclosures.R`, `src/intelligence/compare_company_disclosures.R`, `src/intelligence/analyze_disclosure_trends.R`. No fabricated link, case-law interpretation, CNPJ match, confidence score or source.
+### 03 — Comparisons and longitudinal analysis
+Compare notes across years, versions and companies, respecting reporting scope, changes in accounting policies, amendments and financial units. Highlight changes in text and disclosed figures as observations, not proof of wrongdoing. Explicitly disclose selection bias and incomplete coverage.
+### 04 — Prototype interface
+Add local Shiny `Cross-Source Research` view with two source families, company/year/topic filters, side-by-side source excerpts, original links, optional analyst review status, and clear labels for hypothesis vs verified source fact. Keep initial MVP bounded and separately track additional scope approval.
+### 05 — Evaluation and safety
+Test retrieval precision on public labeled examples, citation/page accuracy, false link rates, missing documents, contradictory disclosures and date/version handling. Never use confidential local data, upload protected documents to AI APIs or imply a tax audit determination.
+
+## DELIVERABLES AND ACCEPTANCE
+Public-data unified search and traceable relationship dataset, local prototype view, evaluation report with observed results, tests and human acceptance. Clearly separate source-derived facts from model inferences.
+
+## GOVERNANCE, SECURITY AND HANDOFF
+Read and update permitted `docs/project_management/` records from `common_p01_lifecycle_management.txt`; track implementation, tests, acceptance, release and operations separately. Use public or synthetic fixtures only. Never read, enumerate, traverse, modify, index or transmit `restricted/` or `tmp/`. The developer may use independent Git repositories locally for those directories, with no remotes; the main repo must ignore both and never push their contents or histories. Obtain explicit human acceptance; request authentication via official local flows only when necessary, never by asking for secrets in chat. Cite exact source URLs, document/page locations, extraction method, and timestamps for all claims.
+
+## RESPONSE FORMAT
+Present verified source availability; planned/changed files; implementation steps; commands actually run; measured counts and errors; test evidence; blockers; security and publication checks; updated governance statuses; next actions.
+
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

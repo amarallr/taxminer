@@ -1,0 +1,902 @@
+## CLASSIFICACAO E LOCALIZACAO DO PROMPT
+Arquivo canonico: `prompts/common_p02_rstudio_project_setup.txt`
+Escopo: COMUM
+Regra: todos os arquivos de prompts ficam diretamente em `prompts/`, sem subpastas; nao criar `prompts/common/`, `prompts/collect/`, `prompts/data/` ou `prompts/intelligence/`.
+
+
+## IDENTIDADE E ARQUITETURA OBRIGATORIAS — TAXMINER
+Nome oficial: TaxMiner. Repositorio sugerido: taxminer (confirmar disponibilidade e autorizacao antes de criar). Projeto independente, nao oficial da Receita Federal.
+Modulo principal desta etapa: Fundacao compartilhada.
+Arquitetura em tres modulos logicos, dentro de um unico repositorio inicialmente:
+- TaxMiner Collect: descoberta de fontes, coleta, download, manifestos, proveniencia, versoes, controle de requisicoes e retomada.
+- TaxMiner Data: extracao de HTML/PDF, OCR somente quando indispensavel, padronizacao, identificadores, deduplicacao, qualidade, dados temporais e armazenamento Parquet/DuckDB.
+- TaxMiner Intelligence: busca textual e semantica, embeddings opcionais, RAG com citacoes aos documentos oficiais, classificacao tematica, relacoes entre atos e identificacao de entendimentos.
+Separar src/collect/, src/data/, src/intelligence/ com contratos de entrada/saida versionados; usar configuracoes e utilitarios compartilhados sem acoplamento circular. A ausencia de um servico de IA nao deve impedir Collect e Data de funcionar.
+Para IA, distinguir recuperacao de evidencias de inferencias do modelo; registrar modelo, versao, parametros, custo e qualidade; nunca declarar automaticamente que entendimento foi revogado, superado ou vinculante sem evidencia oficial e revisao apropriada. Nenhum documento deve ser enviado a provedor externo sem avaliacao e autorizacao.
+Credenciais e acesso: conferir autenticacao quando necessaria, pedir ao desenvolvedor que execute login oficial no proprio terminal/navegador, nunca solicitar ou receber segredos no chat. Prosseguir em tarefas independentes caso o login esteja pendente.
+
+## CONTRATO TRANSVERSAL TAXMINER V5 — OBRIGATORIO E PREVALENTE
+
+Este contrato substitui instrucoes anteriores conflitantes, inclusive no modelo historico incorporado ao prompt de setup. Nao autoriza acesso de agentes a dados protegidos.
+
+### Identidade, modulos e idioma
+- Projeto: TaxMiner (projeto independente, nao oficial da Receita Federal). Modulos: TaxMiner Collect (document acquisition), TaxMiner Data (extraction, processing and consolidation) e TaxMiner Intelligence (semantic search and tax intelligence).
+- Todos os identificadores tecnicos DEVEM estar em American English (en-US): nomes de diretorios, arquivos, funcoes, variaveis, argumentos, colunas, tabelas, configuracoes, testes e comandos internos. Usar lowercase snake_case e apenas um underscore entre palavras; evitar abreviacoes ambiguas e sufixos de versao. Preservar nomes proprios oficiais e conteudo juridico original em portugues; manter mapeamento explicito de colunas de origem para campos em ingles. Preservar nomes convencionais case-sensitive como README.md, AGENTS.md, .Rprofile, .Renviron.example, CHANGELOG.md e renv.lock.
+- Prompts: exclusivamente arquivos diretamente em prompts/, SEM subpastas, usando group_pNN_objective.txt, com sequencia p01 independente em common, collect, data e intelligence.
+- Codigo: src/common/, src/collect/, src/data/, src/intelligence/; nomes funcionais verb_noun.R sem numeracao; scripts executaveis em scripts/run_collect.R, scripts/run_data.R, scripts/run_intelligence.R, scripts/run_pipeline.R. Testes test_functionality.R; configs topic.yml; documentacao topic.md. Nao criar arquivos vazios sem necessidade.
+
+### Diretorios protegidos e fronteiras de acesso
+- As pastas da raiz restricted/ e tmp/ sao PERMANENTES, LOCAIS e podem conter informacoes protegidas por sigilo legal. NUNCA publicar, sincronizar, fazer upload, espelhar, anexar a CI, incluir em artefatos, backups remotos ou enviar conteudo/nomes/metadados sensiveis a GitHub, Codex, ChatGPT, APIs, nuvem ou agentes remotos.
+- Agentes e automacoes deste projeto NAO PODEM abrir, listar, ler, percorrer, pesquisar, indexar, copiar, mover, renomear, modificar ou excluir conteudo de restricted/ e tmp/. Excluir explicitamente ambas de qualquer comando recursivo, glob, varredura, busca, inventario, compactacao, teste, coleta de contexto, limpeza ou refatoracao. Se uma tarefa exigir acesso, interromper essa parte e solicitar procedimento local humano autorizado, sem examinar o conteudo.
+- Versionamento Git LOCAL e permitido APENAS em repositorios Git INDEPENDENTES dentro de restricted/ e tmp/, administrados pelo desenvolvedor por procedimento local autorizado. Nao criar, inspecionar, inicializar ou operar esses repositorios automaticamente pelo Codex. NUNCA configurar remotes nesses repositorios. NUNCA enviar seus objetos ou historicos a qualquer remoto.
+- O repositorio Git principal taxminer/ pode ter GitHub remoto apenas para codigo e dados publicaveis. Seu .gitignore deve incluir /restricted/ e /tmp/; esses caminhos NUNCA podem ser rastreados no repositorio principal. Antes de qualquer push, verificar o indice e o historico a publicar sem inspecionar os diretorios protegidos. Se houver indicio de vazamento, bloquear o push e solicitar revisao humana.
+- .gitignore e ausencia de remote NAO garantem isolamento. Recomendar permissoes locais, armazenamento criptografado e exclusao de sincronizadores/backup remoto. A seguranca dos dados nao deve depender exclusivamente de hooks ou filtros Git. Nunca sugerir push de historico com dados protegidos, mesmo que arquivos tenham sido removidos em commits posteriores.
+- Nenhum codigo de pipeline, incluindo Intelligence/embeddings/RAG, pode ler restricted/ ou tmp/ por padrao. Usar exclusivamente documentos oficiais publicos e fixtures sinteticas. Qualquer futuro processamento sigiloso exige arquitetura e autorizacao de seguranca separadas, fora deste escopo.
+
+### Credenciais e operacao
+- Autenticacao sob demanda: checar necessidade no momento de uso; orientar o desenvolvedor a autenticar-se via fluxo oficial (por exemplo gh auth login, login do Codex), sem solicitar senhas, tokens, cookies, chaves ou MFA no chat. Credenciais em gerenciador seguro/ambiente local, nunca no repositorio, logs ou prompts. Continuar tarefas independentes se pendente.
+- Nao criar remoto, publicar, fazer push, alterar configuracao global, apagar dados ou instalar globalmente sem autorizacao especifica. Antes de publicar, revisar somente arquivos e historico do repositorio principal. Nunca usar git push --force.
+- Respeitar regras dos sites, rate limits, robots.txt quando aplicavel e bloqueios; nao contornar CAPTCHA/403. Coletar apenas acervo publico verificavel, preservar original, origem, hash e datas; distinguir metadados/ementa de documento integral.
+- Diferenciar IMPLEMENTADO, EXECUTADO e HOMOLOGADO, com evidencias e pendencias. Testes devem usar dados sinteticos ou publicos, nunca dados protegidos.
+
+### Estrutura canonica de diretorios
+```text
+taxminer/
+  .github/workflows/
+  config/
+  src/common/
+  src/collect/
+  src/data/
+  src/intelligence/
+  scripts/
+  prompts/                    # flat, no subdirectories
+  data/raw/normas/
+  data/raw/decisions_index/
+  data/external/
+  data/interim/
+  data/processed/collect/
+  data/processed/data/
+  data/processed/intelligence/
+  outputs/parquet/
+  outputs/csv/
+  outputs/indexes/
+  outputs/manifests/
+  checkpoints/collect/
+  checkpoints/data/
+  checkpoints/intelligence/
+  logs/collect/
+  logs/data/
+  logs/intelligence/
+  tests/testthat/
+  tests/fixtures/
+  docs/decisions/
+  reports/quality/
+  reports/historical_coverage/
+  reports/execution/
+  tools/
+  restricted/                 # local protected, inaccessible to agents
+  tmp/                        # local protected, inaccessible to agents
+  .gitignore
+  .Rprofile
+  .Renviron.example
+  AGENTS.md
+  README.md
+  CHANGELOG.md
+  LICENSE
+  renv.lock
+  taxminer.Rproj
+```
+- A estrutura e referencia, nao obrigacao de criar todos os arquivos e diretorios imediatamente. Manter nomes tecnicos em ingles, inclusive datasets e colunas (`consultation_decision_id`, `consultation_decision_type`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`, `consultation_decision_date`, `publication_date`, `tax_topic`, `summary_text`, `full_text`, `legal_basis`, `source_url`, `download_timestamp`, `document_hash`, `consultation_decision_status`).
+
+# P01 — CONFIGURACAO INICIAL DO TAXMINER
+## CONTEXT (CO-STAR)
+Projeto novo para coleta do acervo publico de Solucoes de Consulta, Solucoes de Divergencia e outros atos relacionados da Receita Federal, condicionado a verificacao do escopo no P02.
+## OBJECTIVE
+Configurar ambiente Windows/RStudio, Git/GitHub, renv, Codex, seguranca, testes, documentacao e checkpoints sem iniciar a coleta em massa.
+## STYLE / TONE / AUDIENCE / RESPONSE
+Tecnico, objetivo, colaborativo; desenvolvedor R e engenheiro de dados. Execute o diagnostico, solicite apenas autorizacoes e autenticacoes indispensaveis e entregue relatorio de configuracao.
+## ADAPTACAO DO MODELO ORIGINAL
+O texto abaixo e o modelo geral fornecido pelo desenvolvedor, adaptado para o TaxMiner. Nao acessar diretorios de projetos anteriores. A regra de confidencialidade e todas as demais boas praticas permanecem obrigatorias. Em conflito, as regras transversais deste projeto e as instrucoes locais de confidencialidade prevalecem. O projeto deve iniciar com dados publicos e nenhum dado sigiloso.
+
+## REGRAS TRANSVERSAIS OBRIGATORIAS
+- Executar no Windows/RStudio com R como linguagem principal; usar Python/SQL apenas quando tecnicamente justificado. Preferir renv, testthat, arrow, DuckDB, httr2, xml2 e pdftools conforme necessidade verificada.
+- Antes de alterar arquivos, inspecionar estado local, Git e instrucoes locais. Preservar integralmente diretorios confidenciais definidos localmente: nao abrir, percorrer, inventariar, copiar, indexar ou publicar. Excluir tais diretorios de operacoes recursivas. Nunca publicar instrucoes locais sensiveis ou dados fiscais protegidos.
+- CREDENCIAIS SOB DEMANDA: verificar a disponibilidade de acesso somente na etapa que o exige. Para GitHub, testar gh auth status e orientar gh auth login se preciso. Para Codex, verificar CLI e sessao; orientar login oficial se preciso. Para outros provedores, identificar fluxo oficial de autenticacao. NUNCA pedir senha, token, chave privada, codigo MFA ou cookie no chat, prompt ou log. O desenvolvedor deve autenticar-se diretamente no terminal/browser oficial ou gerenciador de segredos; usar variaveis de ambiente e arquivos locais ignorados pelo Git. Nao contornar MFA, CAPTCHA, controles de acesso, limites ou bloqueios. Se nao houver acesso, marcar PENDENTE e continuar somente etapas independentes.
+- Antes de criar repositorio remoto, publicar, fazer push, instalar ferramentas globalmente, excluir dados ou alterar configuracoes globais, pedir autorizacao especifica; nao repetir autorizacoes ja concedidas. Nunca fazer push --force.
+- Respeitar robots.txt quando aplicavel, termos de uso, limites de requisicoes e respostas 429/403; aplicar user-agent identificavel, intervalos, backoff e limites de concorrencia. Nao inferir permissao de raspagem em massa apenas porque paginas sao publicas. Em bloqueios, parar e documentar alternativa oficial.
+- Usar nomes snake_case, caminhos relativos, testes com fixtures sinteticas, manifestos, hashes SHA-256, logs sem segredos e checkpoints com validacao de versao/parametros.
+- Diferenciar IMPLEMENTADO (codigo criado), EXECUTADO (rodou com evidencias) e HOMOLOGADO (criterios de aceite verificados). Nunca declarar sucesso sem evidencias.
+- Registrar em cada etapa: escopo, decisoes, arquivos alterados, comandos, testes e resultados, pendencias, proxima etapa. Nao antecipar a implementacao de etapas posteriores sem necessidade.
+
+## MODELO BASE FORNECIDO PELO DESENVOLVEDOR (REFERENCIA HISTORICA; REGRAS CONFLITANTES SUBSTITUIDAS PELO CONTRATO V5)
+# PROMPT MESTRE — CONFIGURAÇÃO INICIAL DE PROJETOS RSTUDIO
+
+**Versão:** TaxMiner 3.0 — adaptado do modelo geral 1.1
+**Metodologia:** CO-STAR
+**Aplicação:** Qualquer projeto desenvolvido no RStudio
+**Tecnologias:** R, Git, GitHub, Python, SQL, Quarto, Codex e tecnologias complementares, conforme a necessidade.
+
+---
+
+## Regra local obrigatória de confidencialidade
+
+As instruções locais do projeto prevalecem sobre este modelo genérico. Preserve integralmente a pasta confidencial da raiz identificada nessas instruções: não a abra, percorra, altere, mova, renomeie ou exclua. Exclua-a explicitamente de buscas, inventários, operações recursivas, testes, reorganizações e limpezas. Nunca inclua a pasta ou seu conteudo no Git PRINCIPAL, no GitHub ou em servicos externos. Versionamento Git estritamente local em repositorios independentes e permitido conforme o CONTRATO V5; o agente nao deve operar esses repositorios.
+
+Não publique instruções locais ignoradas pelo Git nem copie dados, caminhos, identificadores, nomes ou resultados confidenciais para prompts, código, documentação, testes, logs ou descrições públicas. Qualquer AGENTS.md destinado ao repositório deve ser sanitizado e revisado separadamente das instruções locais.
+
+## Aplicação ao TaxMiner
+
+Este projeto utiliza exclusivamente `prompts/` como pasta plana de prompts. Não criar subpastas de prompts nem acessar projetos CVM anteriores.
+
+# 1. CONTEXTO (CONTEXT)
+
+Você é um arquiteto de software sênior, engenheiro de dados, especialista em R, engenharia de software, DevOps, segurança da informação e desenvolvimento assistido por inteligência artificial.
+
+Sua missão é configurar, estruturar e preparar um projeto profissional no RStudio, seguindo boas práticas de desenvolvimento, manutenção, versionamento, documentação, segurança, testes e reprodutibilidade.
+
+O projeto deverá ser organizado, modular, escalável, auditável e facilmente compreensível por desenvolvedores humanos e agentes de inteligência artificial.
+
+A configuração deverá funcionar em ambiente Windows, preferencialmente com integração ao GitHub e execução pelo terminal do RStudio.
+
+Adote os princípios de:
+
+- Engenharia de Software e SWEBOK.
+- Clean Code e separação de responsabilidades.
+- DRY (Don't Repeat Yourself).
+- KISS (Keep It Simple, Stupid).
+- SOLID, quando aplicável.
+- Desenvolvimento modular.
+- Reprodutibilidade científica.
+- Segurança desde a concepção (Security by Design).
+- Automação de tarefas repetitivas.
+- Integração contínua.
+- Documentação como código.
+- Desenvolvimento assistido por IA com supervisão humana.
+
+Evite complexidade desnecessária, dependências redundantes e estruturas excessivamente elaboradas para projetos pequenos.
+
+# 2. OBJETIVO (OBJECTIVE)
+
+Preparar automaticamente um ambiente completo de desenvolvimento no RStudio.
+
+A configuração deverá contemplar:
+
+1. Diagnóstico do ambiente local.
+2. Criação ou identificação do projeto RStudio.
+3. Organização padronizada de diretórios.
+4. Configuração de dependências.
+5. Integração com Git e GitHub.
+6. Configuração de segurança e sigilo.
+7. Estruturação modular do código.
+8. Configuração de testes automatizados.
+9. Configuração de logs e tratamento de erros.
+10. Implementação de checkpoints e retomada de processamento, quando aplicável.
+11. Criação de documentação técnica.
+12. Configuração de integração contínua.
+13. Preparação do ambiente para Codex e outros agentes de IA.
+14. Validação final da estrutura.
+15. Preparação para o desenvolvimento das funcionalidades do projeto.
+
+# 3. ESTILO (STYLE)
+
+Atue de maneira técnica, objetiva, organizada e proativa.
+
+Antes de executar alterações:
+
+- Inspecione o diretório atual.
+- Identifique arquivos e configurações existentes.
+- Preserve o código e os dados já existentes.
+- Identifique possíveis conflitos.
+- Evite sobrescrever arquivos sem necessidade.
+- Priorize soluções consolidadas e amplamente utilizadas.
+
+Sempre que possível, automatize as configurações utilizando scripts reproduzíveis.
+
+Não introduza ferramentas ou frameworks sem justificativa técnica.
+
+# 4. TOM (TONE)
+
+Profissional, técnico, preciso e colaborativo.
+
+Explique sucintamente as decisões arquiteturais relevantes.
+
+Não solicite confirmação para decisões técnicas simples, reversíveis e de baixo risco.
+
+Quando a ação não estiver autorizada, solicite autorização antes de excluir dados, publicar informações, alterar repositórios remotos existentes ou modificar configurações globais. Respeite autorizações já vigentes; não peça novamente para passos necessários já autorizados. Publicação de dados e artefatos requer autorização específica.
+
+# 5. PÚBLICO-ALVO (AUDIENCE)
+
+Desenvolvedores, engenheiros de dados, cientistas de dados, pesquisadores e profissionais que utilizam RStudio, GitHub e inteligência artificial no desenvolvimento de projetos.
+
+O projeto deverá ser compreensível por profissionais com diferentes níveis de experiência.
+
+# 6. RESPOSTA ESPERADA (RESPONSE)
+
+Execute as etapas descritas a seguir, respeitando a ordem lógica e as dependências entre elas.
+
+## ETAPA 01 — DIAGNÓSTICO DO AMBIENTE
+
+Verifique a disponibilidade e as versões de:
+
+- R e RStudio.
+- Git.
+- GitHub CLI (`gh`).
+- Rtools, quando necessário.
+- Python, quando necessário.
+- Quarto, quando necessário.
+- Node.js e npm, quando necessários.
+- Codex CLI, quando disponível.
+- Bibliotecas e ferramentas de desenvolvimento relevantes.
+
+Verifique também:
+
+- Diretório atual.
+- Existência de projeto `.Rproj`.
+- Existência de repositório Git.
+- Configuração de identidade do Git.
+- Configuração de autenticação no GitHub.
+- Existência de arquivos de configuração.
+- Possíveis conflitos de dependências.
+- Existência de dados sensíveis.
+
+Não instale ferramentas automaticamente sem verificar sua necessidade.
+
+Apresente um diagnóstico com os estados:
+
+- OK
+- ATENÇÃO
+- PENDENTE
+- NÃO APLICÁVEL
+
+## ETAPA 02 — CRIAÇÃO DO PROJETO RSTUDIO
+
+Caso ainda não exista um projeto RStudio:
+
+- Criar um arquivo `.Rproj`.
+- Configurar caminhos relativos.
+- Evitar dependência de diretórios absolutos.
+- Garantir que os scripts possam ser executados a partir da raiz do projeto.
+- Preferir o pacote `here` para resolução de caminhos.
+
+Caso o projeto já exista, preservar suas configurações e corrigir apenas problemas identificados.
+
+Não alterar automaticamente o diretório global de trabalho do usuário.
+
+## ETAPA 03 — ESTRUTURA PADRONIZADA DE DIRETÓRIOS
+
+Adotar inicialmente a seguinte estrutura, ajustando-a à complexidade real do projeto:
+
+```text
+projeto/
+│
+├── .github/
+│   └── workflows/
+│
+├── config/
+│
+├── data/
+│   ├── raw/
+│   ├── external/
+│   ├── interim/
+│   └── processed/
+│
+├── outputs/
+│
+├── restricted/
+│
+├── docs/
+│
+├── logs/
+│
+├── prompts/
+│
+├── reports/
+│
+├── scripts/
+│
+├── src/
+│   ├── core/
+│   ├── utils/
+│   └── modules/
+│
+├── tests/
+│   └── testthat/
+│
+├── checkpoints/
+│
+├── .gitignore
+├── .Rprofile
+├── .Renviron.example
+├── AGENTS.md
+├── README.md
+├── CHANGELOG.md
+├── LICENSE
+├── renv.lock
+└── projeto.Rproj
+```
+
+Regras:
+
+- `src/`: código-fonte reutilizável.
+- `scripts/`: scripts executáveis e orquestração.
+- `data/raw/`: dados originais, preservados.
+- `data/external/`: dados recebidos de fontes externas.
+- `data/interim/`: dados intermediários.
+- `data/processed/`: dados tratados.
+- `outputs/`: produtos finais.
+- `restricted/`: informações confidenciais, pessoais ou protegidas por sigilo.
+- `docs/`: documentação técnica.
+- `prompts/`: prompts de desenvolvimento.
+- `reports/`: relatórios e resultados analíticos.
+- `logs/`: registros de execução.
+- `checkpoints/`: estados intermediários recuperáveis.
+- `config/`: parâmetros de configuração.
+- `tests/`: testes automatizados.
+
+Não criar diretórios ou módulos sem finalidade identificável. Utilizar arquivos `.gitkeep` somente quando necessário para preservar diretórios vazios no Git.
+
+## ETAPA 04 — CONFIGURAÇÃO DO GIT E GITHUB
+
+Verificar se Git e GitHub CLI estão instalados e configurados.
+
+Se necessário, orientar a instalação e autenticação.
+
+Configurar o repositório local respeitando estas condições:
+
+1. Não executar `git init` caso já exista um repositório.
+2. Não sobrescrever configurações globais de identidade.
+3. Identificar a branch principal existente.
+4. Preferir `main` em repositórios novos.
+5. Verificar a existência de um repositório remoto.
+6. Não substituir o endereço remoto existente sem autorização.
+7. Verificar autenticação antes de qualquer publicação.
+
+Se o usuário informar o endereço do repositório GitHub, utilizá-lo.
+
+Se não informar, preparar o repositório local e solicitar o nome, proprietário e visibilidade desejados antes da criação remota.
+
+Configurar:
+
+- `.gitignore`
+- Branch principal.
+- Convenções de commits.
+- Política básica de branches.
+- Integração com GitHub.
+- Estrutura de GitHub Actions, quando apropriada.
+
+Utilizar preferencialmente Conventional Commits:
+
+```text
+feat: nova funcionalidade
+fix: correção de defeito
+docs: documentação
+refactor: refatoração
+test: testes
+chore: manutenção
+perf: otimização
+```
+
+Nunca executar `git push --force`, reescrever histórico remoto ou publicar código sem autorização explícita.
+
+## ETAPA 05 — SEGURANÇA E PROTEÇÃO DE DADOS
+
+Configurar `.gitignore` para impedir o versionamento de:
+
+- Credenciais.
+- Tokens.
+- Senhas.
+- Arquivos `.Renviron` locais.
+- Chaves privadas.
+- Dados protegidos por sigilo.
+- Dados pessoais não autorizados.
+- Dados brutos confidenciais.
+- Logs contendo informações sensíveis.
+- Arquivos temporários.
+- Checkpoints locais.
+- Grandes arquivos de processamento não destinados ao Git.
+
+Incluir, conforme aplicável:
+
+```gitignore
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+.Renviron
+.env
+.env.*
+
+!.Renviron.example
+!.env.example
+
+restricted/
+data/raw/
+data/interim/
+data/processed/
+outputs/
+
+logs/
+checkpoints/
+
+*.tmp
+*.log
+*.bak
+
+__pycache__/
+.venv/
+node_modules/
+```
+
+Ajustar as regras ao projeto, evitando excluir arquivos necessários à reprodução.
+
+Antes do primeiro commit, inspecionar arquivos rastreados e verificar se existem informações confidenciais.
+
+Não considerar `.gitignore` uma solução suficiente para arquivos sensíveis já versionados.
+
+Se forem encontrados segredos em histórico Git, interromper a publicação e apresentar um plano de contenção, incluindo revogação ou rotação de credenciais quando aplicável.
+
+Não copiar dados protegidos para serviços externos ou agentes remotos sem autorização.
+
+## ETAPA 06 — GERENCIAMENTO DE DEPENDÊNCIAS
+
+Utilizar preferencialmente `renv` para gerenciamento de dependências R.
+
+Quando apropriado:
+
+- Inicializar `renv`.
+- Identificar bibliotecas necessárias.
+- Registrar dependências no `renv.lock`.
+- Preparar restauração com `renv::restore()`.
+- Evitar instalar bibliotecas desnecessárias.
+- Garantir compatibilidade de versões.
+
+Para projetos com Python, utilizar um ambiente virtual e mecanismo de dependências apropriado.
+
+Para projetos com JavaScript, utilizar `package.json` e lockfile.
+
+Evitar instalação global de pacotes quando houver alternativa isolada.
+
+## ETAPA 07 — ARQUITETURA E MODULARIZAÇÃO
+
+Organizar o código por responsabilidades.
+
+Separar:
+
+- Entrada e leitura de dados.
+- Validação.
+- Transformação.
+- Regras de negócio.
+- Processamento.
+- Persistência.
+- Relatórios.
+- Visualizações.
+- Integrações externas.
+- Orquestração.
+
+Preferir funções pequenas, coesas, testáveis e reutilizáveis.
+
+Evitar:
+
+- Scripts monolíticos.
+- Duplicação de código.
+- Valores fixos espalhados pelo projeto.
+- Dependência excessiva de variáveis globais.
+- Efeitos colaterais inesperados.
+- Caminhos absolutos.
+- Uso desnecessário de `setwd()`.
+
+Utilizar nomes de arquivos e funções claros, preferencialmente em `snake_case`.
+
+Para dados tabulares, estabelecer convenções consistentes de nomes, tipos, chaves e datas.
+
+## ETAPA 08 — LOGS E TRATAMENTO DE ERROS
+
+Implementar mecanismos de logging compatíveis com a complexidade do projeto.
+
+Os logs deverão registrar, quando aplicável:
+
+- Data e hora.
+- Etapa.
+- Operação.
+- Arquivo processado.
+- Quantidade de registros.
+- Tempo de execução.
+- Resultado.
+- Erros e advertências.
+
+Adotar níveis:
+
+```text
+DEBUG
+INFO
+WARNING
+ERROR
+```
+
+Para processos longos, utilizar identificação de etapas:
+
+```text
+[ETAPA 01/08] Inicialização
+[ETAPA 02/08] Validação
+[ETAPA 03/08] Download
+[ETAPA 04/08] Importação
+[ETAPA 05/08] Transformação
+[ETAPA 06/08] Consolidação
+[ETAPA 07/08] Testes
+[ETAPA 08/08] Entrega
+```
+
+A quantidade e os nomes das etapas devem refletir o fluxo real.
+
+Não registrar senhas, tokens ou dados protegidos nos logs.
+
+## ETAPA 09 — CHECKPOINTS E RETOMADA
+
+Para processos demorados, implementar retomada de execução.
+
+Prever parâmetros equivalentes a:
+
+```r
+usar_checkpoints <- TRUE
+forcar_reprocessamento <- FALSE
+```
+
+Cada checkpoint deverá permitir verificar:
+
+- Etapa concluída.
+- Data e hora.
+- Versão do processamento.
+- Parâmetros utilizados.
+- Identificação dos dados de entrada.
+- Integridade dos resultados.
+
+Não reutilizar checkpoints incompatíveis com o código, os parâmetros ou os dados atuais.
+
+Utilizar gravação atômica quando possível.
+
+Para processos simples e rápidos, dispensar checkpoints desnecessários.
+
+## ETAPA 10 — TESTES AUTOMATIZADOS
+
+Utilizar preferencialmente `testthat` para projetos R.
+
+Preparar testes para:
+
+- Funções principais.
+- Validação de dados.
+- Tratamento de valores ausentes.
+- Tipos de dados.
+- Chaves únicas.
+- Regras de negócio.
+- Casos extremos.
+- Tratamento de erros.
+- Integridade de resultados.
+
+Criar dados sintéticos ou fixtures para testes.
+
+Nunca utilizar dados protegidos por sigilo em testes públicos.
+
+Garantir que os testes possam ser executados sem dependência de credenciais ou serviços internos, utilizando mocks quando apropriado.
+
+## ETAPA 11 — QUALIDADE DO CÓDIGO
+
+Configurar, quando aplicável:
+
+- `lintr` para análise estática.
+- `styler` para padronização.
+- `testthat` para testes.
+- `roxygen2` para documentação de funções, especialmente em pacotes R.
+
+Adotar convenções consistentes para:
+
+- Nomes de arquivos.
+- Nomes de funções.
+- Variáveis.
+- Comentários.
+- Documentação.
+- Tratamento de erros.
+- Organização de imports e dependências.
+
+Evitar reformatação indiscriminada de código existente.
+
+## ETAPA 12 — DOCUMENTAÇÃO
+
+Criar um `README.md` contendo:
+
+1. Nome do projeto.
+2. Objetivo.
+3. Contexto.
+4. Escopo.
+5. Arquitetura.
+6. Estrutura de diretórios.
+7. Pré-requisitos.
+8. Instalação.
+9. Configuração do ambiente.
+10. Dependências.
+11. Execução.
+12. Testes.
+13. Fontes de dados.
+14. Produtos gerados.
+15. Segurança.
+16. Limitações conhecidas.
+17. Licença.
+18. Histórico de versões.
+
+Criar também:
+
+- `CHANGELOG.md` para histórico de alterações.
+- `docs/architecture.md` para arquitetura, quando necessário.
+- `docs/data_dictionary.md` para dicionário de dados, quando necessário.
+- `docs/decisions/` para registros de decisões arquiteturais relevantes.
+
+Manter documentação sincronizada com o código.
+
+## ETAPA 13 — CONFIGURAÇÃO DO GITHUB ACTIONS
+
+Quando houver repositório GitHub e testes automatizados, preparar integração contínua.
+
+O workflow deverá:
+
+- Executar em pull requests.
+- Executar em alterações da branch principal.
+- Preparar o ambiente R.
+- Restaurar dependências.
+- Executar testes.
+- Executar verificações de qualidade pertinentes.
+- Informar falhas.
+
+Utilizar versões estáveis e confiáveis das Actions.
+
+Aplicar permissões mínimas ao `GITHUB_TOKEN`.
+
+Não disponibilizar credenciais sensíveis a workflows de código não confiável.
+
+Evitar workflows excessivamente caros ou demorados.
+
+## ETAPA 14 — PREPARAÇÃO PARA DESENVOLVIMENTO COM IA
+
+Criar `AGENTS.md` na raiz do projeto.
+
+O documento deverá orientar agentes como Codex sobre:
+
+- Objetivo do projeto.
+- Estrutura de diretórios.
+- Tecnologias.
+- Convenções de código.
+- Comandos de instalação.
+- Comandos de testes.
+- Regras de segurança.
+- Restrições de acesso a dados.
+- Política de documentação.
+- Procedimentos de validação.
+- Política de alterações em arquivos.
+- Restrições de publicação.
+
+Estabelecer as seguintes regras:
+
+1. Inspecionar o código antes de modificá-lo.
+2. Preservar funcionalidades existentes.
+3. Implementar alterações incrementais.
+4. Executar testes relevantes.
+5. Atualizar documentação afetada.
+6. Não publicar dados confidenciais.
+7. Não instalar dependências sem justificativa.
+8. Não executar comandos destrutivos sem autorização.
+9. Não afirmar que testes passaram sem executá-los.
+10. Informar limitações e pendências.
+11. Preferir mudanças pequenas e verificáveis.
+12. Não executar commits ou pushes automaticamente sem autorização.
+
+Armazenar todos os prompts diretamente em `prompts/`, sem subpastas, com prefixos `comum_`, `collect_`, `data_` e `intelligence_`.
+
+Não inserir credenciais, dados protegidos ou instruções internas sensíveis nos prompts destinados a repositórios públicos.
+
+## ETAPA 15 — CONFIGURAÇÃO E PARÂMETROS
+
+Centralizar parâmetros de execução em arquivos apropriados dentro de `config/`.
+
+Separar:
+
+- Configurações de ambiente.
+- Parâmetros de processamento.
+- Caminhos de entrada e saída.
+- Configurações de logging.
+- Configurações de integração.
+
+Credenciais deverão ser obtidas de variáveis de ambiente ou mecanismos seguros de gerenciamento de segredos.
+
+Criar `.Renviron.example` com nomes de variáveis e valores fictícios, sem credenciais reais.
+
+## ETAPA 16 — REPRODUTIBILIDADE E RASTREABILIDADE
+
+Quando aplicável, registrar:
+
+- Versão do projeto.
+- Versão do R.
+- Versões de dependências.
+- Data de execução.
+- Parâmetros.
+- Origem dos dados.
+- Identificação dos arquivos de entrada.
+- Quantidade de registros.
+- Identificação dos produtos.
+- Commit Git utilizado.
+
+Utilizar hashes ou manifestos para arquivos relevantes quando o custo for justificável.
+
+Para grandes volumes de dados, avaliar formatos como Parquet e ferramentas como Arrow, sem adicioná-los como dependências obrigatórias.
+
+## ETAPA 17 — LICENCIAMENTO E PUBLICAÇÃO
+
+Verificar se o projeto será:
+
+- Privado.
+- Interno.
+- Público.
+- Open source.
+
+Para projetos públicos, solicitar a escolha ou confirmação da licença.
+
+Não presumir que código corporativo, dados institucionais ou informações protegidas possam ser publicados.
+
+Não criar uma licença definitiva sem conhecer as condições de titularidade e distribuição.
+
+## ETAPA 18 — VALIDAÇÃO FINAL
+
+Após a configuração, verificar:
+
+- Projeto RStudio válido.
+- Diretórios essenciais existentes.
+- Git funcionando.
+- GitHub configurado, quando autorizado.
+- `.gitignore` adequado.
+- Dependências gerenciadas.
+- Documentação criada.
+- Testes executáveis.
+- Logs configurados.
+- Checkpoints configurados, quando necessários.
+- `AGENTS.md` criado.
+- Ausência de dados sensíveis entre arquivos preparados para publicação.
+- Workflow de CI sintaticamente válido, quando criado.
+
+Executar os testes possíveis.
+
+Não declarar sucesso em verificações que não foram efetivamente realizadas.
+
+## ETAPA 19 — RELATÓRIO FINAL
+
+Apresentar um relatório com:
+
+**A. Diagnóstico inicial**
+- Ferramentas encontradas.
+- Versões.
+- Problemas identificados.
+
+**B. Estrutura criada**
+- Diretórios.
+- Arquivos.
+- Configurações.
+
+**C. Integração GitHub**
+- Repositório local.
+- Repositório remoto.
+- Branch.
+- Estado da autenticação.
+- Estado da publicação.
+
+**D. Qualidade e segurança**
+- Testes executados.
+- Resultado das validações.
+- Verificações de segurança.
+- Pendências.
+
+**E. Próximos passos**
+- Comandos necessários.
+- Configurações pendentes.
+- Recomendações para iniciar o desenvolvimento.
+
+# 7. CRITÉRIOS DE ACEITE
+
+A configuração será considerada concluída quando:
+
+1. O projeto abrir corretamente no RStudio.
+2. A estrutura essencial estiver organizada.
+3. O código utilizar caminhos relativos.
+4. As dependências estiverem documentadas.
+5. O repositório Git estiver corretamente configurado.
+6. Não houver publicação indevida de informações sensíveis.
+7. Os testes iniciais estiverem funcionais.
+8. O README explicar como instalar e executar o projeto.
+9. O AGENTS.md orientar adequadamente os agentes de IA.
+10. O projeto estiver preparado para desenvolvimento incremental.
+
+Diferenciar claramente critérios concluídos, pendentes e não aplicáveis.
+
+# 8. INSTRUÇÃO FINAL
+
+Inicie pela inspeção do diretório atual.
+
+Identifique o que já existe antes de criar ou alterar arquivos.
+
+Adapte a configuração ao tamanho, finalidade e complexidade do projeto.
+
+Implemente automaticamente as configurações locais seguras e reversíveis.
+
+Para decisões que dependam de informações ainda não fornecidas, utilize padrões razoáveis quando não houver risco e solicite confirmação quando necessário.
+
+Não crie um novo repositório remoto, não publique código e não sobrescreva arquivos importantes sem autorização.
+
+Ao final, apresente o relatório de configuração, os testes realizados, as pendências e os próximos passos.
+
+**O objetivo é entregar um projeto RStudio profissional, seguro, modular, reprodutível, versionável e preparado para desenvolvimento humano e assistido por inteligência artificial.**
+
+## CHECKLIST V5 DE ACEITE ESPECIFICO
+- Conferir nomenclatura en-US em TODOS os arquivos e identificadores novos.
+- Confirmar que prompts/ continua plana e que a numeracao e independente por modulo.
+- Confirmar que restricted/ e tmp/ nao foram acessadas e que nenhuma referencia a seus conteudos foi gerada.
+- Confirmar que nao existe nenhum arquivo protegido rastreado no Git principal e que nenhuma operacao de publicacao ocorreu sem autorizacao.
+- Documentar quais testes foram executados de fato e suas evidencias.
+
+
+## TAXMINER 1.0 — MANDATORY DUAL-SOURCE CONTRACT
+TaxMiner has TWO first-class public document families: `tax_consultation_decisions` (Receita Federal Solucoes de Consulta as Tax Consultation Decisions; distinguish Solucoes de Divergencia and other administrative interpretive acts by original_document_type) and `financial_disclosures` (companies' published financial statements and explanatory notes). Maintain source-specific acquisition, schemas, processing, quality metrics, provenance, and independent acceptance; unify them through explicit typed document IDs and relationships. Financial statements are not tax consultation decisions and their notes are not legal authority. Preserve original Portuguese text, issuing organization, company, reporting scope, document dates, original units, page/table locations, revisions and source URLs. All NEW technical identifiers MUST be American English (`en-US`) snake_case. Never fabricate access, document counts, CNPJ matches, legal conclusions, citations, source relationships or test results.
+For financial disclosures, verify real public sources and access conditions first (e.g. CVM disclosure systems, company investor-relations websites); do not assume API endpoints or historical coverage. Model report -> note -> note section/table, and entity/company -> report, retaining consolidated vs separate statements, annual vs interim periods, comparative figures, units, restatements, filing/publication dates, and version lineage. Match CNPJ only with verified evidence; represent uncertainty explicitly. Any AI-inferred links between consultation decisions and company notes are hypotheses requiring citations and confidence/validation, NEVER findings of tax misconduct.
+`restricted/` and `tmp/` remain inaccessible to Codex/remote agents, exclusively local and never published or synchronized. Developer-only independent local Git history is permitted without remotes. The main remote-capable repository MUST exclude both paths and histories; review safe publishable content and commit history before remote operations. Authentication only just in time through official local flows, never secrets in prompts.
+
+### TAXMINER 1.0 SOURCE-READY SETUP
+Provision configuration stubs only when justified for `config/tax_consultation_decision_sources.yml` and `config/financial_disclosure_sources.yml`; keep separate raw/processed paths for `tax_consultation_decisions` and `financial_disclosures` and distinct Parquet output families. Include public-source fixtures and module entrypoints only when actually implemented. Do not create or inspect protected directories to verify their contents.
+
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.
+
+
+## MANDATORY MULTI-ASSISTANT DEVELOPMENT ENVIRONMENT — TAXMINER 1.0
+
+### Objective
+Configure and validate the use of Git, GitHub CLI, OpenAI Codex CLI, Anthropic Claude Code, Google Gemini CLI, and GitHub Copilot in the developer's Windows/RStudio workflow, as supported by the installed software and current provider documentation. Do not assume equivalent native RStudio support for all assistants. Never claim integration is functional without a successful local test.
+
+### Diagnostic and compatibility matrix
+1. Record the operating system, R/RStudio versions, terminal shell, PATH, Git, GitHub CLI, Node.js/runtime prerequisites and applicable extension support. Use official documentation to verify current installation commands and compatibility before suggesting changes.
+2. Check whether `git`, `gh`, `codex`, `claude`, and `gemini` are available; report detected versions when safely available. Check Copilot support separately in the developer's actual editor and account. Do not assume a `copilot` executable or an RStudio-native extension exists.
+3. Classify each integration as NOT_INSTALLED, INSTALLED, AUTHENTICATION_REQUIRED, READY, VERIFIED, BLOCKED, NOT_SUPPORTED, or NOT_REQUESTED. Distinguish a tool's availability from a verified RStudio workflow.
+4. Prefer the RStudio integrated terminal for supported CLIs. Where a feature requires another editor, such as VS Code, present that as an optional companion workflow and obtain approval before adding it. Do not silently replace RStudio.
+5. Install or update tools only after checking prerequisites, provenance, compatibility, user permissions and explicit authorization for system-wide changes. Do not automatically install unverified community plugins.
+
+### Just-in-time authentication
+- GitHub: inspect `gh auth status` when GitHub access is needed; direct the developer to the official `gh auth login` workflow if necessary.
+- Codex: verify CLI availability and use its current official interactive authentication workflow when needed.
+- Claude Code: verify CLI availability and use the current official Anthropic authentication workflow when needed.
+- Gemini CLI: verify CLI availability and use the current official Google authentication workflow when needed.
+- GitHub Copilot: verify subscription/entitlement and editor-specific official sign-in only when Copilot is to be enabled; distinguish GitHub authentication from Copilot availability.
+- Never request or display passwords, API keys, access tokens, session cookies, recovery codes or MFA secrets in chats, source files, prompts, logs or reports. Do not expose credentials in diagnostic output. Do not persist provider credentials in the Git repository.
+- A paid subscription, entitlement, API billing account or usage limit may be required for certain workflows. Mark any unavailable integration as pending without blocking independent project work.
+
+### Security and protected boundaries
+- `restricted/` and `tmp/` are local-only, legally protected, inaccessible boundaries for all AI assistants, IDE integrations, terminal agents, indexers, code search, context collectors, telemetry and synchronization tools. Never list, traverse, open, copy, summarize, transmit, index or modify their contents.
+- The main Git repository excludes `/restricted/` and `/tmp/`; any separate local Git repositories under those paths are managed only by the human developer, without remotes. Agents must not initialize, inspect or operate those repositories.
+- Apply provider-specific context exclusion, file access restrictions, sandbox permissions and confirmation settings where supported. Document residual risks: `.gitignore`, `.aiignore`-style files and local Git configuration are not sufficient security boundaries by themselves.
+- Disable automatic upload, remote indexing, cloud workspace synchronization and external execution for confidential material. Use only public or synthetic TaxMiner files in AI-assisted workflows.
+- Never grant an assistant broad filesystem access merely to complete setup or verification. Require explicit approval for network publication, push, installations, global configuration changes and destructive commands.
+
+### Validation tests and acceptance
+A. Confirm the RStudio integrated terminal resolves the supported CLI commands without exposing secrets.
+B. For each requested provider, perform a minimal non-confidential interaction (e.g., explain a synthetic R function or propose a test) using only a public/synthetic fixture and confirm results are usable in the project workflow.
+C. For GitHub Copilot, verify completion/chat functionality only in an officially supported installed editor. If native RStudio support is unavailable, record the limitation and offer a companion-editor workflow; do not report native integration as verified.
+D. Verify Git local commit on a harmless public fixture and check the remote target separately. Do not perform a push without explicit authorization.
+E. Verify configuration/documentation excludes protected paths from the main repository and planned AI operations without inspecting protected directories.
+F. Run an R `testthat` smoke test on a synthetic fixture; report command, exit status, evidence, timestamp and limitations.
+G. Produce `docs/development_environment.md` containing a capability matrix (tool, version, installation status, authentication status, RStudio integration mode, validation status, evidence, blockers, next action), with no secrets or sensitive local details.
+H. Report the setup milestone to `common_p01_lifecycle_management.txt` governance records, tracking installation, integration, testing and acceptance independently. A provider is not VERIFIED until its own test passes.
+
+### Assistant operating model
+- No mandatory dependency on a particular AI provider; Codex, Claude, Gemini and Copilot are optional development assistants, not production dependencies of Collect or Data.
+- Prefer a single source of truth for requirements, tests, decisions and work-item status. All assistants must follow repository `AGENTS.md` where applicable; for tools that do not automatically read it, supply equivalent non-confidential project instructions through their supported configuration mechanisms.
+- Avoid committing vendor-specific credential/configuration files; document only sanitized setup instructions.
+- Record which assistant generated a change when relevant to auditability, but evaluate every change through the same human review, tests, security checks and acceptance process.

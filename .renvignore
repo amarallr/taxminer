@@ -1,0 +1,14 @@
+/restricted/
+/tmp/
+/.git/
+/.agents/
+/.codex/
+/.aws/
+/.local/
+/prompts/
+/docs/
+/reports/
+/data/
+/outputs/
+/logs/
+/checkpoints/

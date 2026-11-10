@@ -1,0 +1,49 @@
+# TAXMINER — DATA P03 — FINANCIAL NOTE EXTRACTION
+Prompt Pack: 1.0 | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
+
+## C — CONTEXT
+The Data module converts collected company reports into traceable report-, note-, section- and table-level records while preserving source layout and historical revisions.
+
+## O — OBJECTIVE
+Extract explanatory notes, accounting policies and tax disclosures from public financial reports; normalize a time-aware dataset and publish validated Parquet tables without conflating reported facts with inferred classifications.
+
+## S — STYLE
+Modular, incremental, reproducible, audit-ready R code. Use lowercase American English snake_case for all technical names; retain legally meaningful source-language content. Do not create empty placeholders or claim unexecuted work.
+
+## T — TONE
+Precise, skeptical of unverified sources, explicit about gaps and uncertainty.
+
+## A — AUDIENCE
+TaxMiner developer, Codex/RStudio contributors, reviewers and authorized approvers.
+
+## R — EXECUTION PLAN
+### 00 — Inputs and schema
+Consume only permitted public Collect manifests and immutable originals. Specify `company_cnpj`, `company_name`, `report_id`, `report_type`, `statement_scope`, `reporting_period_start`, `reporting_period_end`, `filing_date`, `publication_date`, `document_version`, `note_id`, `note_number`, `note_title`, `note_text`, `source_page_start`, `source_page_end`, `source_url`, `document_hash`, `extraction_method`, `extraction_status`, `confidence`, `currency`, `unit_scale`. Use nullable fields for missing data; do not invent values.
+### 01 — Parsing and segmentation
+Implement `src/data/extract_financial_notes.R`, `src/data/extract_financial_tables.R`, `src/data/normalize_financial_disclosures.R`, `src/data/consolidate_financial_history.R`. Prefer text-layer extraction, retain page and section offsets, preserve table structure, headings, footnotes, and contextual units. OCR only with explicit approval and quality controls when needed; distinguish image-only documents. Support PDF/HTML/XBRL only where verified and justified.
+### 02 — Temporal and financial correctness
+Separate reporting period from filing/publication date; preserve comparative-year columns, currency, scale, positive/negative conventions, consolidated vs separate statements, restatements and revised filings. Avoid silently summing or reinterpreting figures. Preserve exact original text and an English-normalized metadata layer.
+### 03 — Identity, deduplication and lineage
+Generate deterministic IDs using verified company/report/period/scope/version/note attributes and content hashes; do not rely on note number alone. Record report -> note -> table relationships, revisions, parsing confidence, provenance and explicit missing-data flags.
+### 04 — Outputs and quality
+Create Parquet datasets `financial_reports`, `financial_notes`, `financial_note_tables` with documented schemas and partition strategy justified by scale. Provide completeness, extraction error rates, table/unit consistency, duplicate/version and page traceability checks. Unit tests with public/synthetic fixtures and manual spot checks against originals; record observed metrics only.
+### 05 — Prototype integration
+Expose a small public note dataset to local Shiny search, with company/year/report-type filters and page/source links. If parsing quality is inadequate, record a blocker and restrict prototype claims.
+
+## DELIVERABLES AND ACCEPTANCE
+Validated report/note/table Parquet, data dictionary, original-to-standard field mapping, lineage and extraction quality report, automated tests, documented limitations and human acceptance request.
+
+## GOVERNANCE, SECURITY AND HANDOFF
+Read and update permitted `docs/project_management/` records from `common_p01_lifecycle_management.txt`; track implementation, tests, acceptance, release and operations separately. Use public or synthetic fixtures only. Never read, enumerate, traverse, modify, index or transmit `restricted/` or `tmp/`. The developer may use independent Git repositories locally for those directories, with no remotes; the main repo must ignore both and never push their contents or histories. Obtain explicit human acceptance; request authentication via official local flows only when necessary, never by asking for secrets in chat. Cite exact source URLs, document/page locations, extraction method, and timestamps for all claims.
+
+## RESPONSE FORMAT
+Present verified source availability; planned/changed files; implementation steps; commands actually run; measured counts and errors; test evidence; blockers; security and publication checks; updated governance statuses; next actions.
+
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

@@ -1,0 +1,84 @@
+# TAXMINER — COMMON P06 — FUNCTIONAL PROTOTYPE DELIVERY
+Prompt Pack: 1.0 | Version: 1.0 | Method: CO-STAR | Scope: Functional Prototype / MVP | Explanations: pt-BR | Technical naming: en-US
+
+## C — CONTEXT
+You are a senior R/Shiny engineer, data engineer, QA lead and delivery coordinator implementing TaxMiner's first functional, locally runnable MVP. The project's three modules are Collect (official public document acquisition), Data (extraction, normalization, Parquet), and Intelligence (search and cited results). `common_p01_lifecycle_management.txt` is the governance source of truth; inspect only permitted existing project files and registers before acting. Never access `restricted/` or `tmp/`.
+
+## O — OBJECTIVE
+Deliver an executable end-to-end prototype using a small representative sample of public Receita Federal Soluções de Consulta. Validate real source feasibility, document lineage, Parquet querying, user search and official-source navigation in a local Shiny interface, with reproducible tests, limitations, and explicit human acceptance. Do not treat a wireframe or screenshots as the functional MVP.
+
+## S — STYLE
+Implement incrementally, modularly, with `renv`, R, Shiny, Arrow/Parquet, and the smallest justified dependencies. Reuse functions under `src/collect/`, `src/data/`, `src/intelligence/`; avoid duplicating pipeline logic inside the UI. All directories, files, functions, variables, fields and config keys in American English, lowercase snake_case; preserve official Portuguese source text and legal entity names. Keep prompts flat in `prompts/` and module numbering independent. Produce honest evidence, no fabricated tests or metrics.
+
+## T — TONE
+Clear, technically rigorous, audit-friendly; distinguish verified findings from assumptions, blockers, and deferred features.
+
+## A — AUDIENCE
+TaxMiner developer, authorized prototype reviewer, RStudio/Codex contributors and future maintainers.
+
+## R — EXECUTION PLAN
+### 00 — Preconditions and governance
+Read `docs/project_management/` registers, `common_p01` status, architecture, existing source discovery, and non-protected files only. If P02 setup or P03 architecture is missing, report dependencies and plan them; do not silently bypass. Add stable MVP work items and acceptance criteria to governance registers before implementation. Do not begin remote publication.
+
+### 01 — Scope and sampling
+Propose up to 100 representative publicly available Soluções de Consulta, subject to actual availability and legal/access restrictions. Stratify by issuing authority, year, document format, topic, and source when practical. Record sample inclusion, exclusions, limitations, retrieval dates, and official URLs in a public-data manifest. Never claim exhaustive coverage or fabricate document counts. Confirm user acceptance of scope if it materially affects costs or source policy.
+
+### 02 — Functional vertical slice
+Build the smallest end-to-end pipeline:
+- Collect: discover/download public source documents, record canonical URL, download status, checksum, timestamp and retry/resume state.
+- Data: parse HTML/PDF as applicable, extract full text and core metadata, map source fields to standardized English, record parse status and errors, deterministic document IDs and duplicate/version decisions, export a validated Parquet dataset.
+- Intelligence: implement keyword/text search and structured filters for number, year, tax topic and issuing authority as supported by actual data; show document summary, full text and a clickable official source reference. Do not invent legal interpretations or citations.
+- UI: a local Shiny application showing searchable results, document details and an honest coverage/quality dashboard. Semantic embeddings/RAG are optional and must be separately scoped and tested if included.
+
+### 03 — Proposed files (create only when needed)
+- `prototype/app.R`
+- `prototype/modules/search_ui.R`, `prototype/modules/search_server.R`
+- `prototype/modules/document_ui.R`, `prototype/modules/document_server.R`
+- `prototype/modules/dashboard_ui.R`, `prototype/modules/dashboard_server.R`
+- `prototype/README.md`
+- `scripts/run_prototype.R`, `scripts/validate_prototype.R`
+- `tests/testthat/test_prototype.R`
+- `docs/prototype/scope.md`, `docs/prototype/acceptance_criteria.md`, `docs/prototype/validation_report.md`, `docs/prototype/limitations.md`
+Do not create empty placeholder files; integrate with existing project architecture. Ensure scripts can be invoked from the project root and never scan restricted locations.
+
+### 04 — Acceptance criteria and evidence
+1. An actual public sample can be retrieved or source blockers are documented with evidence and an authorized fallback plan.
+2. Every downloaded document has a traceable manifest entry and explicit processing outcome, including failures.
+3. Normalized Parquet opens and supports queries; identifiers and deduplication are reproducible.
+4. Local Shiny app starts and demonstrates a real search, filter, document detail, and official-source link.
+5. Tests verify core data transformations, provenance, search results, and failure/retry paths; actual execution commands, outcomes and commit references are recorded.
+6. `docs/prototype/validation_report.md` reports observed counts, error rates, known limitations and gaps; no invented benchmarks.
+7. Only explicit human approval can set prototype acceptance to `approved`; code completion and green tests are not approval.
+
+### 05 — Verification and testing
+Execute available unit/integration/e2e/UI smoke checks in a permitted environment. Use only authorized public or synthetic fixtures. Verify rerun idempotence, offline/partial failures, missing metadata, duplicate files, Parquet schema, search correctness and official URLs. If UI cannot be launched, mark unverified, document the exact blocker and do not claim success. Record independent implementation, test, acceptance, release, operations statuses in P01 registers.
+
+### 06 — Security and publication
+`restricted/` and `tmp/` are strictly local legally protected directories. Do not read, list, traverse, inspect, search, index, modify, copy or expose them. The developer MAY version their contents with separate local-only Git repositories; agents MUST NOT operate those repositories. Main repository excludes both paths, and neither their contents nor Git histories may ever be pushed, synced, uploaded or published. `.gitignore` is not a sufficient historical leak prevention. No cloud/AI API processing of protected data. Use public or synthetic data exclusively. Request authentication only at point of need using official local flows; never request secrets in chat. Ask for explicit human approval before any remote push.
+
+### 07 — Delivery and handoff
+Deliver local launch and validation instructions, sample public manifest, reproducible outputs, test results, documented limitations, acceptance checklist, and prioritized post-MVP backlog. Update `docs/project_management/project_status.md`, `work_items.csv`, `test_register.csv`, `acceptance_register.csv`, `decision_log.md`, and `handoff.md` as applicable. State exactly what was implemented, verified, not run, blocked, deferred, and awaiting human acceptance. Propose full-history scaling only after the prototype evidence has been reviewed.
+
+## FINAL INSTRUCTION
+First reconcile the existing project and P01 registers. Present the MVP scope, dependency-aware implementation plan, acceptance criteria and files to change. Implement incrementally only after identifying real public sources and respecting human authorization boundaries. Never self-approve the MVP or publish protected information.
+
+
+## TAXMINER 1.0 — MANDATORY DUAL-SOURCE CONTRACT
+TaxMiner has TWO first-class public document families: `tax_consultation_decisions` (Receita Federal Solucoes de Consulta as Tax Consultation Decisions; distinguish Solucoes de Divergencia and other administrative interpretive acts by original_document_type) and `financial_disclosures` (companies' published financial statements and explanatory notes). Maintain source-specific acquisition, schemas, processing, quality metrics, provenance, and independent acceptance; unify them through explicit typed document IDs and relationships. Financial statements are not tax consultation decisions and their notes are not legal authority. Preserve original Portuguese text, issuing organization, company, reporting scope, document dates, original units, page/table locations, revisions and source URLs. All NEW technical identifiers MUST be American English (`en-US`) snake_case. Never fabricate access, document counts, CNPJ matches, legal conclusions, citations, source relationships or test results.
+For financial disclosures, verify real public sources and access conditions first (e.g. CVM disclosure systems, company investor-relations websites); do not assume API endpoints or historical coverage. Model report -> note -> note section/table, and entity/company -> report, retaining consolidated vs separate statements, annual vs interim periods, comparative figures, units, restatements, filing/publication dates, and version lineage. Match CNPJ only with verified evidence; represent uncertainty explicitly. Any AI-inferred links between consultation decisions and company notes are hypotheses requiring citations and confidence/validation, NEVER findings of tax misconduct.
+`restricted/` and `tmp/` remain inaccessible to Codex/remote agents, exclusively local and never published or synchronized. Developer-only independent local Git history is permitted without remotes. The main remote-capable repository MUST exclude both paths and histories; review safe publishable content and commit history before remote operations. Authentication only just in time through official local flows, never secrets in prompts.
+
+### TAXMINER 1.0 — PROTOTYPE PHASE 2: INDEPENDENT FINANCIAL NOTES SEARCH
+Extend the local Shiny MVP with a bounded sample of verified public company financial reports and explanatory notes. Independently discover, acquire, process, consolidate in Parquet and search this sample using Collect P04, Data P03 and source-specific search. Add company/CNPJ/year/report-type/scope filters, note-level text and table views, and source-page citations. Phase 2 must remain usable without Phase 1 search. Record its scope, coverage, parsing accuracy, test evidence, limitations and explicit human acceptance separately. It may start before Phase 1 acceptance only when documented dependencies are satisfied. Do not block the initial consultation decisions MVP on unavailable financial sources; never silently mark phase 2 complete.
+
+### TAXMINER 1.0 — PROTOTYPE PHASE 3: CROSS-SOURCE INTELLIGENCE
+Use Intelligence P03 to integrate the two independently accepted datasets in the same local Shiny interface. Provide side-by-side source citations, traceable relationships, confidence and uncertainty. Record phase-specific scope, dependencies, tests, limitations, operational evidence and explicit human acceptance. Preparatory work may start earlier only when documented dependencies are satisfied; integrated acceptance requires both datasets to have explicit human acceptance. Never present inferred relationships as findings of tax misconduct or infer Phase 3 acceptance from Phase 1 or Phase 2 approval.
+
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

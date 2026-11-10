@@ -1,0 +1,9 @@
+Package: taxminer
+Type: Project
+Title: Public Tax Consultation Decisions and Financial Notes Research
+Version: 0.0.0.9000
+Description: Local development foundation for TaxMiner. This is a project
+    dependency manifest, not an implemented R package or product release.
+Encoding: UTF-8
+Depends: R (>= 4.5.1)
+Imports: renv, testthat

@@ -1,0 +1,151 @@
+## CLASSIFICACAO E LOCALIZACAO DO PROMPT
+Arquivo canonico: `prompts/common_p04_testing_quality.txt`
+Escopo: COMUM
+Regra: todos os arquivos de prompts ficam diretamente em `prompts/`, sem subpastas; nao criar `prompts/common/`, `prompts/collect/`, `prompts/data/` ou `prompts/intelligence/`.
+
+## CONTRATO TRANSVERSAL TAXMINER V5 — OBRIGATORIO E PREVALENTE
+
+Este contrato substitui instrucoes anteriores conflitantes, inclusive no modelo historico incorporado ao prompt de setup. Nao autoriza acesso de agentes a dados protegidos.
+
+### Identidade, modulos e idioma
+- Projeto: TaxMiner (projeto independente, nao oficial da Receita Federal). Modulos: TaxMiner Collect (document acquisition), TaxMiner Data (extraction, processing and consolidation) e TaxMiner Intelligence (semantic search and tax intelligence).
+- Todos os identificadores tecnicos DEVEM estar em American English (en-US): nomes de diretorios, arquivos, funcoes, variaveis, argumentos, colunas, tabelas, configuracoes, testes e comandos internos. Usar lowercase snake_case e apenas um underscore entre palavras; evitar abreviacoes ambiguas e sufixos de versao. Preservar nomes proprios oficiais e conteudo juridico original em portugues; manter mapeamento explicito de colunas de origem para campos em ingles. Preservar nomes convencionais case-sensitive como README.md, AGENTS.md, .Rprofile, .Renviron.example, CHANGELOG.md e renv.lock.
+- Prompts: exclusivamente arquivos diretamente em prompts/, SEM subpastas, usando group_pNN_objective.txt, com sequencia p01 independente em common, collect, data e intelligence.
+- Codigo: src/common/, src/collect/, src/data/, src/intelligence/; nomes funcionais verb_noun.R sem numeracao; scripts executaveis em scripts/run_collect.R, scripts/run_data.R, scripts/run_intelligence.R, scripts/run_pipeline.R. Testes test_functionality.R; configs topic.yml; documentacao topic.md. Nao criar arquivos vazios sem necessidade.
+
+### Diretorios protegidos e fronteiras de acesso
+- As pastas da raiz restricted/ e tmp/ sao PERMANENTES, LOCAIS e podem conter informacoes protegidas por sigilo legal. NUNCA publicar, sincronizar, fazer upload, espelhar, anexar a CI, incluir em artefatos, backups remotos ou enviar conteudo/nomes/metadados sensiveis a GitHub, Codex, ChatGPT, APIs, nuvem ou agentes remotos.
+- Agentes e automacoes deste projeto NAO PODEM abrir, listar, ler, percorrer, pesquisar, indexar, copiar, mover, renomear, modificar ou excluir conteudo de restricted/ e tmp/. Excluir explicitamente ambas de qualquer comando recursivo, glob, varredura, busca, inventario, compactacao, teste, coleta de contexto, limpeza ou refatoracao. Se uma tarefa exigir acesso, interromper essa parte e solicitar procedimento local humano autorizado, sem examinar o conteudo.
+- Versionamento Git LOCAL e permitido APENAS em repositorios Git INDEPENDENTES dentro de restricted/ e tmp/, administrados pelo desenvolvedor por procedimento local autorizado. Nao criar, inspecionar, inicializar ou operar esses repositorios automaticamente pelo Codex. NUNCA configurar remotes nesses repositorios. NUNCA enviar seus objetos ou historicos a qualquer remoto.
+- O repositorio Git principal taxminer/ pode ter GitHub remoto apenas para codigo e dados publicaveis. Seu .gitignore deve incluir /restricted/ e /tmp/; esses caminhos NUNCA podem ser rastreados no repositorio principal. Antes de qualquer push, verificar o indice e o historico a publicar sem inspecionar os diretorios protegidos. Se houver indicio de vazamento, bloquear o push e solicitar revisao humana.
+- .gitignore e ausencia de remote NAO garantem isolamento. Recomendar permissoes locais, armazenamento criptografado e exclusao de sincronizadores/backup remoto. A seguranca dos dados nao deve depender exclusivamente de hooks ou filtros Git. Nunca sugerir push de historico com dados protegidos, mesmo que arquivos tenham sido removidos em commits posteriores.
+- Nenhum codigo de pipeline, incluindo Intelligence/embeddings/RAG, pode ler restricted/ ou tmp/ por padrao. Usar exclusivamente documentos oficiais publicos e fixtures sinteticas. Qualquer futuro processamento sigiloso exige arquitetura e autorizacao de seguranca separadas, fora deste escopo.
+
+### Credenciais e operacao
+- Autenticacao sob demanda: checar necessidade no momento de uso; orientar o desenvolvedor a autenticar-se via fluxo oficial (por exemplo gh auth login, login do Codex), sem solicitar senhas, tokens, cookies, chaves ou MFA no chat. Credenciais em gerenciador seguro/ambiente local, nunca no repositorio, logs ou prompts. Continuar tarefas independentes se pendente.
+- Nao criar remoto, publicar, fazer push, alterar configuracao global, apagar dados ou instalar globalmente sem autorizacao especifica. Antes de publicar, revisar somente arquivos e historico do repositorio principal. Nunca usar git push --force.
+- Respeitar regras dos sites, rate limits, robots.txt quando aplicavel e bloqueios; nao contornar CAPTCHA/403. Coletar apenas acervo publico verificavel, preservar original, origem, hash e datas; distinguir metadados/ementa de documento integral.
+- Diferenciar IMPLEMENTADO, EXECUTADO e HOMOLOGADO, com evidencias e pendencias. Testes devem usar dados sinteticos ou publicos, nunca dados protegidos.
+
+### Estrutura canonica de diretorios
+```text
+taxminer/
+  .github/workflows/
+  config/
+  src/common/
+  src/collect/
+  src/data/
+  src/intelligence/
+  scripts/
+  prompts/                    # flat, no subdirectories
+  data/raw/normas/
+  data/raw/decisions_index/
+  data/external/
+  data/interim/
+  data/processed/collect/
+  data/processed/data/
+  data/processed/intelligence/
+  outputs/parquet/
+  outputs/csv/
+  outputs/indexes/
+  outputs/manifests/
+  checkpoints/collect/
+  checkpoints/data/
+  checkpoints/intelligence/
+  logs/collect/
+  logs/data/
+  logs/intelligence/
+  tests/testthat/
+  tests/fixtures/
+  docs/decisions/
+  reports/quality/
+  reports/historical_coverage/
+  reports/execution/
+  tools/
+  restricted/                 # local protected, inaccessible to agents
+  tmp/                        # local protected, inaccessible to agents
+  .gitignore
+  .Rprofile
+  .Renviron.example
+  AGENTS.md
+  README.md
+  CHANGELOG.md
+  LICENSE
+  renv.lock
+  taxminer.Rproj
+```
+- A estrutura e referencia, nao obrigacao de criar todos os arquivos e diretorios imediatamente. Manter nomes tecnicos em ingles, inclusive datasets e colunas (`consultation_decision_id`, `consultation_decision_type`, `consultation_decision_number`, `consultation_decision_year`, `issuing_authority`, `consultation_decision_date`, `publication_date`, `tax_topic`, `summary_text`, `full_text`, `legal_basis`, `source_url`, `download_timestamp`, `document_hash`, `consultation_decision_status`).
+
+# P03 — Testes, validacao e qualidade
+
+## IDENTIDADE E ARQUITETURA OBRIGATORIAS — TAXMINER
+Nome oficial: TaxMiner. Repositorio sugerido: taxminer (confirmar disponibilidade e autorizacao antes de criar). Projeto independente, nao oficial da Receita Federal.
+Modulo principal desta etapa: Qualidade transversal.
+Arquitetura em tres modulos logicos, dentro de um unico repositorio inicialmente:
+- TaxMiner Collect: descoberta de fontes, coleta, download, manifestos, proveniencia, versoes, controle de requisicoes e retomada.
+- TaxMiner Data: extracao de HTML/PDF, OCR somente quando indispensavel, padronizacao, identificadores, deduplicacao, qualidade, dados temporais e armazenamento Parquet/DuckDB.
+- TaxMiner Intelligence: busca textual e semantica, embeddings opcionais, RAG com citacoes aos documentos oficiais, classificacao tematica, relacoes entre atos e identificacao de entendimentos.
+Separar src/collect/, src/data/, src/intelligence/ com contratos de entrada/saida versionados; usar configuracoes e utilitarios compartilhados sem acoplamento circular. A ausencia de um servico de IA nao deve impedir Collect e Data de funcionar.
+Para IA, distinguir recuperacao de evidencias de inferencias do modelo; registrar modelo, versao, parametros, custo e qualidade; nunca declarar automaticamente que entendimento foi revogado, superado ou vinculante sem evidencia oficial e revisao apropriada. Nenhum documento deve ser enviado a provedor externo sem avaliacao e autorizacao.
+Credenciais e acesso: conferir autenticacao quando necessaria, pedir ao desenvolvedor que execute login oficial no proprio terminal/navegador, nunca solicitar ou receber segredos no chat. Prosseguir em tarefas independentes caso o login esteja pendente.
+
+## CONTEXT (CO-STAR)
+TaxMiner, plataforma RStudio modular de coleta, consolidacao historica e inteligencia sobre Solucoes de Consulta da Receita Federal, usando exclusivamente fontes publicas e procedimentos de acesso permitidos. Executar apos os prompts anteriores e inspecionar o estado real do repositorio.
+## OBJECTIVE
+Homologar a confiabilidade tecnica e a cobertura empirica do acervo.
+## STYLE
+Modular, incremental, auditavel, reprodutivel e orientado a testes.
+## TONE
+Tecnico, direto e colaborativo.
+## AUDIENCE
+Desenvolvedor RStudio, engenheiro de dados e analista tributario.
+## RESPONSE — TAREFAS E ENTREGAS
+1. Criar testes unitarios, integracao mockada, contratos de schema e regressao de parsers.
+2. Construir amostra estratificada por ano, tipo, fonte e formato para verificacao humana.
+3. Medir cobertura de descoberta, sucesso de download, taxa de texto integral, preenchimento de campos, duplicatas, conflitos, links quebrados e taxa de erro.
+4. Comparar contagens com totais oficiais apenas quando publicados e comparaveis; documentar denominadores e limites.
+5. Testar resiliencia a 429, timeouts, HTML inesperado, PDF corrompido, interrupcao e retomada.
+6. Executar lintr/styler/testthat e verificacoes de segredos antes de qualquer publicacao.
+ENTREGAS: tests/, reports/quality_report.md, matriz de aceite com IMPLEMENTADO/EXECUTADO/HOMOLOGADO.
+ACEITE: falhas criticas resolvidas ou explicitamente aceitas pelo desenvolvedor.
+
+## REGRAS TRANSVERSAIS OBRIGATORIAS
+- Executar no Windows/RStudio com R como linguagem principal; usar Python/SQL apenas quando tecnicamente justificado. Preferir renv, testthat, arrow, DuckDB, httr2, xml2 e pdftools conforme necessidade verificada.
+- Antes de alterar arquivos, inspecionar estado local, Git e instrucoes locais. Preservar integralmente diretorios confidenciais definidos localmente: nao abrir, percorrer, inventariar, copiar, indexar ou publicar. Excluir tais diretorios de operacoes recursivas. Nunca publicar instrucoes locais sensiveis ou dados fiscais protegidos.
+- CREDENCIAIS SOB DEMANDA: verificar a disponibilidade de acesso somente na etapa que o exige. Para GitHub, testar gh auth status e orientar gh auth login se preciso. Para Codex, verificar CLI e sessao; orientar login oficial se preciso. Para outros provedores, identificar fluxo oficial de autenticacao. NUNCA pedir senha, token, chave privada, codigo MFA ou cookie no chat, prompt ou log. O desenvolvedor deve autenticar-se diretamente no terminal/browser oficial ou gerenciador de segredos; usar variaveis de ambiente e arquivos locais ignorados pelo Git. Nao contornar MFA, CAPTCHA, controles de acesso, limites ou bloqueios. Se nao houver acesso, marcar PENDENTE e continuar somente etapas independentes.
+- Antes de criar repositorio remoto, publicar, fazer push, instalar ferramentas globalmente, excluir dados ou alterar configuracoes globais, pedir autorizacao especifica; nao repetir autorizacoes ja concedidas. Nunca fazer push --force.
+- Respeitar robots.txt quando aplicavel, termos de uso, limites de requisicoes e respostas 429/403; aplicar user-agent identificavel, intervalos, backoff e limites de concorrencia. Nao inferir permissao de raspagem em massa apenas porque paginas sao publicas. Em bloqueios, parar e documentar alternativa oficial.
+- Usar nomes snake_case, caminhos relativos, testes com fixtures sinteticas, manifestos, hashes SHA-256, logs sem segredos e checkpoints com validacao de versao/parametros.
+- Diferenciar IMPLEMENTADO (codigo criado), EXECUTADO (rodou com evidencias) e HOMOLOGADO (criterios de aceite verificados). Nunca declarar sucesso sem evidencias.
+- Registrar em cada etapa: escopo, decisoes, arquivos alterados, comandos, testes e resultados, pendencias, proxima etapa. Nao antecipar a implementacao de etapas posteriores sem necessidade.
+
+## INSTRUCAO FINAL
+Inspecione o projeto, apresente plano curto, execute apenas o escopo desta etapa, valide o que puder e apresente evidencias, pendencias e o proximo prompt recomendado.
+
+## CHECKLIST V5 DE ACEITE ESPECIFICO
+- Conferir nomenclatura en-US em TODOS os arquivos e identificadores novos.
+- Confirmar que prompts/ continua plana e que a numeracao e independente por modulo.
+- Confirmar que restricted/ e tmp/ nao foram acessadas e que nenhuma referencia a seus conteudos foi gerada.
+- Confirmar que nao existe nenhum arquivo protegido rastreado no Git principal e que nenhuma operacao de publicacao ocorreu sem autorizacao.
+- Documentar quais testes foram executados de fato e suas evidencias.
+
+### PROTOTYPE TESTING AND ACCEPTANCE
+Include MVP unit, integration, end-to-end, and UI smoke tests. Test the public-source sample download manifest, deterministic file hashes, HTML/PDF extraction outcomes, English field mapping, duplicate handling, Parquet readability, filter/search correctness, and official URL provenance. Test no-data, partial failure, retries and recovery without accessing protected paths. Validate local Shiny launch and at least one representative user journey with documented reproducible commands and outcomes. Keep failures visible in `docs/project_management/test_register.csv` and defects in work items; record actual environment, time, commit and evidence. Human reviewer alone approves `docs/prototype/validation_report.md` against `docs/prototype/acceptance_criteria.md`; a passing test suite does not imply approval. Targets such as 100 documents are provisional and must be reconciled with public source availability.
+
+
+## TAXMINER 1.0 — MANDATORY DUAL-SOURCE CONTRACT
+TaxMiner has TWO first-class public document families: `tax_consultation_decisions` (Receita Federal Solucoes de Consulta as Tax Consultation Decisions; distinguish Solucoes de Divergencia and other administrative interpretive acts by original_document_type) and `financial_disclosures` (companies' published financial statements and explanatory notes). Maintain source-specific acquisition, schemas, processing, quality metrics, provenance, and independent acceptance; unify them through explicit typed document IDs and relationships. Financial statements are not tax consultation decisions and their notes are not legal authority. Preserve original Portuguese text, issuing organization, company, reporting scope, document dates, original units, page/table locations, revisions and source URLs. All NEW technical identifiers MUST be American English (`en-US`) snake_case. Never fabricate access, document counts, CNPJ matches, legal conclusions, citations, source relationships or test results.
+For financial disclosures, verify real public sources and access conditions first (e.g. CVM disclosure systems, company investor-relations websites); do not assume API endpoints or historical coverage. Model report -> note -> note section/table, and entity/company -> report, retaining consolidated vs separate statements, annual vs interim periods, comparative figures, units, restatements, filing/publication dates, and version lineage. Match CNPJ only with verified evidence; represent uncertainty explicitly. Any AI-inferred links between consultation decisions and company notes are hypotheses requiring citations and confidence/validation, NEVER findings of tax misconduct.
+`restricted/` and `tmp/` remain inaccessible to Codex/remote agents, exclusively local and never published or synchronized. Developer-only independent local Git history is permitted without remotes. The main remote-capable repository MUST exclude both paths and histories; review safe publishable content and commit history before remote operations. Authentication only just in time through official local flows, never secrets in prompts.
+
+### TAXMINER 1.0 — ADDITIONAL QUALITY GATES
+Test CVM/IR public source adapters using permitted fixtures; document format detection, parsing of multi-column notes/tables, page traceability, report vs note identity, periods and comparative columns, CNPJ matching, duplicate amended filings, scale/currency, missing metadata, and source version changes. Validate cross-source link evidence and false-positive rates with a reviewed public test set. Maintain independent acceptance evidence per document family.
+
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.
