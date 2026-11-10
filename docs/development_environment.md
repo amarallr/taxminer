@@ -1,5 +1,30 @@
 # Ambiente de desenvolvimento
 
+## Smoke test integrado no RStudio — 2026-11-10T18:28:17-03:00
+
+Esta sessão do Claude Code roda no terminal integrado do RStudio Desktop
+(cadeia de processos `rstudio.exe → rsession → winpty-agent → cmd → claude`;
+`RSTUDIO=1`, `RSTUDIO_CHILD_PROCESS_PANE=terminal`). Por isso o script
+`scripts/smoke_test_agent_clis_rstudio.ps1`, executado daqui, vale como teste
+no terminal integrado.
+
+O script foi corrigido: `codex exec` não aceita `--ask-for-approval`; o
+PowerShell 5.1 abortava ao receber stderr de programas nativos; o Codex lia
+stdin sem fim. Também passou a incluir o Claude Code
+(`claude -p --tools Read --permission-mode manual`). O Codex recusou o prompt
+que proibia shell, porque lê arquivos por comando; ele recebe agora um prompt que
+permite um único comando de leitura, dentro do sandbox `read-only`.
+
+Resultado em 18:24:12: Codex, Claude Code e Gemini com código 0 e token
+sintético correto; fixture removida (`test_0027`–`test_0029`). Falhas
+anteriores preservadas (`test_0025`, `test_0026`).
+
+Copilot: o desenvolvedor confirmou o painel Global Options > Copilot com login
+ativo e a aceitação, com Tab, de uma sugestão num script R sintético não salvo
+(`test_0030`, `reports/execution/copilot_acceptance_check.txt`).
+
+`work_0004`–`work_0007`: implementados e testados; aceite humano pendente.
+
 ## Configuração dos agentes — 2026-11-10
 
 Atualização desta rodada: o Gemini executou uma chamada sintética pelo launcher
@@ -134,12 +159,12 @@ o comando detectado aponta para o alias do Windows, não valida um interpretador
 |---|---|---|---|---|---|---|---|---|
 | git | 2.55.0.windows.4 | installed | verified_https_via_gh | terminal integrado verificado | passed | reports/execution/github_rstudio_validation.txt; docs/github_setup.md | aceite humano pendente | revisar setup |
 | github_cli | 2.103.3 | installed_per_user | authenticated_amarallr | terminal integrado verificado | passed | reports/execution/github_rstudio_validation.txt; `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe` | aceite humano pendente | usar `gh` pelo PATH do usuário |
-| codex | 0.167.0 | installed_per_user | authenticated_chatgpt | terminal atual do agente; RStudio não validado | partial | `C:/Users/01278575677/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe`; consulta `--version` | avisos de acesso negado em diretório temporário auxiliar; sem smoke test no terminal RStudio | decidir se é necessário testar no RStudio |
-| claude_code | unknown | not_found_on_path | unknown | terminal planejado | blocked | Get-Command claude não encontrou aplicativo | instalação/localização e autenticação pendentes | seguir documentação oficial; aprovar instalações fora do projeto |
-| gemini_cli | 0.67.0 | installed_per_user | unauthenticated_or_unknown | per-user launcher; RStudio terminal execution not yet verified | launcher_version_passed | `%LOCALAPPDATA%/Programs/TaxMiner/node-v26.13.0-win-x64`; `%LOCALAPPDATA%/Programs/TaxMiner/gemini_cli`; `scripts/run_gemini.ps1` | launcher returned 0.67.0; authentication and synthetic interaction pending | verify in RStudio terminal, then human-controlled official sign-in if required and synthetic smoke test |
-| github_copilot | RStudio 2024.04.0+735 | native_integration_functionally_observed | account panel not checked | RStudio Desktop native | synthetic_completion_observed | reports/execution/copilot_preferences_check.txt | acceptance pending; suggestion acceptance not recorded | keep global indexing disabled; project option Default inherits global setting |
+| codex | 0.167.0 | installed_per_user | authenticated_chatgpt | terminal integrado RStudio verificado | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0027) | aceite humano pendente | `codex exec` exige leitura por comando de shell; sandbox read-only |
+| claude_code | 2.1.322 | installed_per_user (`~/.local/bin/claude`) | authenticated | terminal integrado RStudio verificado | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0028) | aceite humano pendente | regras deny em `.claude/settings.json` |
+| gemini_cli | 0.67.0 | installed_per_user | authenticated | terminal integrado RStudio verificado via `scripts/run_gemini.ps1` | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0029) | aceite humano pendente | `.geminiignore` não é isolamento técnico |
+| github_copilot | RStudio 2024.04.0+735 | native_integration | signed_in (confirmado pelo desenvolvedor) | RStudio Desktop nativo | passed | reports/execution/copilot_acceptance_check.txt (test_0030); reports/execution/copilot_preferences_check.txt | aceite humano pendente | manter indexação global desligada |
 
-Todos os aceites das integrações permanecem `pending`. Não confundir ausência no
+Os aceites humanos das integrações permanecem `pending`. Não confundir ausência no
 PATH com prova de ausência em todo o computador. Não houve busca indiscriminada
 de instalações. O inventário de extensões VS Code retornou dados, mas também
 EPERM ao tentar criar seu diretório externo de logs; não habilitamos outro editor.

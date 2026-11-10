@@ -17,7 +17,7 @@ Ambiente verificado: Windows, R 4.5.1 e RStudio 2024.04.0+735. Abra
 desabilita restauração/salvamento de workspace, histórico e indexação de código.
 A validação no terminal integrado do RStudio passou nas cinco verificações;
 o aceite humano do setup Common P02 foi registrado. O smoke test integrado dos
-CLIs permanece pendente.
+CLIs (Codex, Claude Code e Gemini) passou no terminal integrado do RStudio.
 
 Dependências desta etapa: `renv` e `testthat`, declaradas em `DESCRIPTION`;
 versões e dependências transitivas em `renv.lock`. O bootstrap usa somente

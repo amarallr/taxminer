@@ -1,5 +1,13 @@
 # TaxMiner — estado do projeto
 
+## Assistentes concluídos — 2026-11-10T18:28:17-03:00
+
+`work_0004`–`work_0007` implementados e testados no RStudio: Codex, Claude
+Code e Gemini no terminal integrado (`test_0027`–`test_0029`); Copilot no
+editor, confirmado pelo desenvolvedor (`test_0030`). Aceite humano pendente.
+Common: 8 de 11 itens implementados; os 3 restantes são os aceites das fases.
+Riscos abertos: 5 de 10. Nenhum MVP iniciado.
+
 ## CI e restauração limpa — 2026-11-10T18:00:00-03:00
 
 CI `validate_environment` aprovado no GitHub Actions após correção do falso

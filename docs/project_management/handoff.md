@@ -10,8 +10,8 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e
   dicionário aprovados (`acc_0003`); `req_0003` `accepted`.
-- **Assistentes (`work_0004`–`work_0007`):** testes isolados aprovados; smoke
-  test integrado no terminal do RStudio ainda não executado; aceite pendente.
+- **Assistentes (`work_0004`–`work_0007`):** implementados e testados no RStudio
+  (`test_0027`–`test_0030`); aceite humano pendente.
 - **Repositório:** licença MIT; CI `validate_environment` no GitHub Actions;
   commits futuros com e-mail noreply (configuração local).
 - **MVPs (fases 1–3):** não iniciados. Nenhuma fonte foi coletada.

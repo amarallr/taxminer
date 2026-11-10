@@ -1,7 +1,7 @@
 # TaxMiner — panorama do projeto
 
-Projeto independente, não oficial da Receita Federal. Situação em 10/11/2026,
-commit `8568dfa` (`main`). Repositório público `amarallr/taxminer`, licença MIT,
+Projeto independente, não oficial da Receita Federal. Situação em 10/11/2026
+(após a conclusão dos assistentes). Repositório público `amarallr/taxminer`, licença MIT,
 CI aprovado. Fonte: registros em `docs/project_management/`.
 
 ## Escopo
@@ -28,7 +28,7 @@ citadas, nunca conclusão de infração.
 
 ## Itens de trabalho
 
-18 registrados: 5 implementados, 4 em andamento, 9 não iniciados; 3 com aceite
+18 registrados: 8 implementados e 10 não iniciados; 3 com aceite
 humano. Nenhum foi liberado em release nem está em operação.
 
 | ID | Item | Implementação | Teste | Aceite |
@@ -37,10 +37,10 @@ humano. Nenhum foi liberado em release nem está em operação.
 | work_0001 | Fundação local e exclusões protegidas | implementado | aprovado | aprovado |
 | work_0002 | Arquitetura por fonte e critérios das fases | implementado | não executado | aprovado |
 | work_0003 | Git e GitHub | implementado | aprovado | aprovado |
-| work_0004 | Codex | em andamento | aprovado | pendente |
-| work_0005 | Claude Code | em andamento | aprovado | pendente |
-| work_0006 | Gemini CLI | em andamento | aprovado | pendente |
-| work_0007 | GitHub Copilot | em andamento | aprovado | pendente |
+| work_0004 | Codex | implementado | aprovado | pendente |
+| work_0005 | Claude Code | implementado | aprovado | pendente |
+| work_0006 | Gemini CLI | implementado | aprovado | pendente |
+| work_0007 | GitHub Copilot | implementado | aprovado | pendente |
 | work_0018 | Revisão de consistência do projeto | implementado | aprovado | pendente |
 | **Fase 1** | | | | |
 | work_0008 | Descobrir fontes e coletar a amostra | não iniciado | não executado | pendente |
@@ -56,7 +56,7 @@ humano. Nenhum foi liberado em release nem está em operação.
 | work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
 | work_0017 | Aceite humano da Fase 3 | não iniciado | não executado | pendente |
 
-## Riscos abertos (7 de 10)
+## Riscos abertos (5 de 10)
 
 | Impacto | Risco | Detalhe |
 |---|---|---|
@@ -64,7 +64,6 @@ humano. Nenhum foi liberado em release nem está em operação.
 | alto | Sincronização do OneDrive | Exclusões das áreas protegidas não verificadas; checkout mantido no OneDrive por escolha (risk_0002). |
 | alto | Identificação de empresas | CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005). |
 | médio | testthat compilado no R 4.5.3 | Aviso só local; o CI usa binário compatível (risk_0007). |
-| médio | Assistentes parcialmente verificados | Smoke test integrado no RStudio pendente (risk_0003, risk_0008). |
 | médio | ZIP histórico dos prompts | Não tem as correções; os arquivos avulsos valem (risk_0006). |
 
 ## Próximos passos
@@ -98,7 +97,7 @@ Detalhes em `docs/requirements.md`.
 
 R 4.5.1 · RStudio 2024.04.0 · renv com snapshot explícito · testthat 3.3.2 ·
 validação local 5/5 · GitHub Actions com restauração limpa aprovada ·
-Git 2.55 · gh 2.103 · Codex, Claude Code, Gemini CLI e Copilot no RStudio.
+Git 2.55 · gh 2.103 · Codex, Claude Code, Gemini CLI e Copilot testados no RStudio.
 
 As pastas `restricted/` e `tmp/` são locais e nunca são lidas nem publicadas.
 Este panorama é um retrato do momento; o estado vigente está em

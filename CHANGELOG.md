@@ -1,5 +1,12 @@
 # Changelog
 
+## Assistentes no RStudio — 2026-11-10
+
+- Smoke test sintético corrigido e ampliado ao Claude Code; Codex, Claude Code e
+  Gemini aprovados no terminal integrado do RStudio.
+- Copilot com login ativo e sugestão aceita, confirmados pelo desenvolvedor.
+- `work_0004`–`work_0007` implementados; aceite humano pendente.
+
 ## Recomendações da revisão aplicadas — 2026-11-10
 
 - Aceitos `req_0003`, limiares e arquitetura (`acc_0003`).

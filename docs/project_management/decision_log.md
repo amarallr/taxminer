@@ -185,3 +185,13 @@ do CRAN, e então restaura o lock. Resultado: restauração limpa e 5 verificaç
 aprovadas em Windows com R 4.5.1, sem o aviso de `testthat` compilado em versão
 mais nova (`test_0024`). As tentativas foram feitas no branch temporário
 `ci_restore_fix`, integrado ao `main` por fast-forward e removido.
+
+## decision_0016 — 2026-11-10T18:28:17-03:00 — Assistentes concluídos (work_0004–work_0007)
+
+Instrução `doit`: finalizar a implementação de `work_0004` a `work_0007`.
+Constatado que a sessão do Claude Code roda no terminal integrado do RStudio;
+o smoke test sintético corrigido passou ali para Codex, Claude Code e Gemini
+(`test_0027`–`test_0029`), com as falhas intermediárias preservadas. O
+Copilot foi confirmado pelo desenvolvedor (login ativo e sugestão aceita com
+Tab; `test_0030`). Os quatro itens passam a `implemented`/`passed`; aceite
+humano continua `pending`. `risk_0003` e `risk_0008` mitigados.
