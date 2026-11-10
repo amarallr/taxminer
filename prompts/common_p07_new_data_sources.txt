@@ -1,0 +1,210 @@
+# TAXMINER — COMMON P07 — NEW DATA SOURCES: CVM INVESTMENT FUND REPORTS (FIDC/FII)
+Prompt Pack: 1.0 (addendum) | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
+Reference implementation: a developer-owned R pipeline for CVM fund reports (read-only input;
+its location is kept outside this pack)
+Target repository: https://github.com/amarallr/taxminer
+Baseline commits at authoring time (2026-11-10): reference 595991b; target 7c0d8be. Re-read both
+before acting; if either moved, report the new SHAs and re-run stage 00.
+
+## C — CONTEXT
+TaxMiner is an independent, non-official research project on public Receita Federal Solucoes
+de Consulta (`tax_consultation_decisions`) and company financial notes
+(`financial_disclosures`), with three independent MVP gates. Current state (verify in
+`docs/project_management/project_status.md`, `work_items.csv` and `handoff.md`): Phase 1 is
+suspended (`decision_0020`); Phase 2 is in progress (`work_0011`) and a long-running DFP
+collection is executing from `src/collect/` into `TAXMINER_DATA_DIR` (`decision_0022`,
+`risk_0013`). TaxMiner's R code uses base R plus `renv`/`testthat` only, en-US snake_case
+names, `docs/project_management/` registers and explicit human acceptance per work item.
+
+TaxMiner is adding new public data sources. The reference implementation (the "source") is a
+tested R 4.5.1 pipeline over CVM open data for investment funds: FIDC monthly reports
+(configuration P04, download P05_01, temporal consolidation per layout P06_01, evidence-based
+acceptance P07) and FII monthly reports (P05_02, P06_02), plus shared contracts (P02:
+contained destination paths, validated atomic writes with rollback, recoverable RDS,
+SHA-256 and code/transformation signatures, attempt registry, execution policy that
+separates checkpoint reuse from download refresh) and environment checks (P03). Its names,
+messages and docs are in pt-BR; its prompts are CO-STAR with requirement IDs `PNN[_SS]-RF/RNF/TST-NNN`.
+Prefer the source's prompt pack 1.1 (revised traceability) when present; otherwise use the
+`IDs to reconcile` method described in stage 00.
+
+Important differences: FIDC/FII fund reports are NOT within any current TaxMiner MVP scope;
+the reference repository has no LICENSE file while TaxMiner is MIT; the source depends on
+`data.table`, `httr2`, `digest`, `jsonlite`, `dotenv` (and optional `arrow`); its CI runs on
+Windows and Linux, TaxMiner's on Windows; its tests use `p02_testar.R`, TaxMiner's use
+`scripts/validate_environment.R` and `tests/testthat/test_*.R`; in the source, `tmp/` holds
+local instructions, while in TaxMiner `tmp/` is a protected area.
+
+## O — OBJECTIVE
+Add new data sources to TaxMiner, reusing what the reference implementation proves, in a governed, traceable and
+reversible way, without changing the source repository, without disturbing the running DFP
+collection, and without expanding TaxMiner's scope unless the developer explicitly decides so.
+Two independent value streams must be evaluated and decided separately:
+1. **Shared reliability primitives** (from P02/P05_01/P07) that may strengthen
+   `src/common/` and the Phase 2 `financial_disclosures` pipeline.
+2. **A new, independent source family** for CVM fund monthly reports (proposed technical
+   name `investment_fund_reports`, with `fidc_monthly_reports` and `fii_monthly_reports`),
+   which would be an optional module outside the three MVP gates, with its own requirements,
+   tests and human acceptance gate.
+
+## S — STYLE
+Incremental, auditable, smallest reviewable change per stage. Re-implement or adapt code
+under TaxMiner conventions (en-US lowercase snake_case for files, functions, columns created
+by TaxMiner, IDs and statuses); preserve CVM source field names and Portuguese source text as
+published. Every incorporated function carries a header comment with provenance:
+`origin: reference_pipeline@<sha> <path>::<function> (<source requirement IDs>)`.
+Never copy code blindly: compare with what TaxMiner already has (e.g. per-member SHA-256 and
+resumable manifest in `src/collect/download_financial_reports.R`) and adopt only what is
+better, documented and tested. No empty placeholders, no claims of unexecuted work.
+
+## T — TONE
+Precise, skeptical, explicit about gaps, conflicts and uncertainty. Ask for decisions at gates;
+never infer approval.
+
+## A — AUDIENCE
+TaxMiner developer (also the owner of the source repository), reviewers, and the AI agents
+(Codex, Claude Code, Gemini) that will execute later stages.
+
+## R — EXECUTION PLAN
+Execute only the stage the developer authorized. Stop at every gate.
+
+### 00 — Read-only inventory and gap analysis (no code changes)
+- Clone or fetch the source repository read-only into a location OUTSIDE the TaxMiner
+  checkout and outside `restricted/`/`tmp/` of both projects (for example a sibling folder or
+  the session workspace). Never place it inside TaxMiner, never add it as a remote, submodule
+  or subtree at this stage.
+- Use explicit allowlists of public tracked files only: `README.md`, `CHANGELOG.md`,
+  `renv.lock`, `prompts/*.txt`, `prompts/README.md`, `docs/*.md`, `docs/references/cvm/*.csv`,
+  `src/{orchestration,utils,validation,configuration,download,consolidation,acceptance}/*`
+  (tracked files only), `tests/testthat/*.R`, `.github/workflows/testes.yml`. Never read or
+  request ignored/private paths of the source (`restricted/`, `data/restricted/`, `tmp/`,
+  `src/consolidation/private/`, `locais/`, `data/`, `outputs/`, `config/`, `logs/`, local
+  `AGENTS.md`) — the FIDC movements products and their code are private and out of scope.
+- Run the source suite read-only in that external location if dependencies are available
+  (`Rscript --vanilla src/utils/p02_testar.R todas`); record the actual result or why it was
+  not run. Do not install packages without authorization.
+- Produce `docs/integration/new_data_sources_gap_analysis.md` with:
+  a) inventory of source modules, public functions, requirement and test IDs, and the
+     traceability gaps (IDs in prompts without code markers and vice versa);
+  b) capability comparison table: source primitive vs. TaxMiner equivalent (exists / partial
+     / missing), with benefit, risk and test evidence for each;
+  c) proposed name mapping pt-BR -> en-US (e.g. `validar_destino` -> `validate_contained_path`,
+     `gravar_validado_atomico` -> `write_validated_atomic`, `recuperar_rollback` ->
+     `recover_from_rollback`, `ler_rds_recuperavel` -> `read_rds_recoverable`,
+     `calcular_hash_assinatura` -> `compute_signature_hash`, `assinatura_codigo` ->
+     `code_signature`, `registrar_tentativa` -> `record_attempt`,
+     `resolver_politica_execucao` -> `resolve_execution_policy`, `validar_zip_fidc` ->
+     `validate_zip_archive`, `transportar_http` -> `http_transport`); final names are decided
+     at gate 01;
+  d) proposed ID mapping: each adopted source requirement/test becomes a TaxMiner
+     `req_NNNN`/`test_NNNN` with an `origin_id` note (e.g. `P02-RF-002`); never reuse IDs;
+  e) dependency delta versus TaxMiner `DESCRIPTION`/`renv.lock`, with a base-R alternative
+     and justification for each package;
+  f) directory mapping: source `data/data_fidc|data_fii`, `outputs/fidc|fii` ->
+     TaxMiner `TAXMINER_DATA_DIR`/`raw|interim|processed/investment_fund_reports/{fidc,fii}`
+     (outside the repository and OneDrive), configuration in
+     `config/investment_fund_report_sources.yml`;
+  g) conflicts and risks (scope, license, naming, CI matrix, `tmp/` semantics, interaction
+     with the running DFP collection, CVM terms/rate limits for `/dados/FIDC` and `/dados/FII`).
+- Governance: add a work item (next free `work_NNNN`, module `common`, type `review`,
+  status `in_progress`), and, if needed, risks; update `project_status.md` and `handoff.md`.
+
+### 01 — Decision gate (STOP and ask)
+Present in pt-BR, concisely, the decisions the developer must take, each with a recommendation:
+1. **Scope:** (A) primitives only; (B) primitives + optional `investment_fund_reports`
+   module outside the three MVP gates; (C) no incorporation (reference only).
+   Recommendation: A now; B only after Phase 2 collection is stable.
+2. **Licensing:** confirm that the owner relicenses the incorporated source code under MIT,
+   or adds a LICENSE to the source repository first. Without confirmation, do not copy code
+   (re-implementation from requirements only, with attribution).
+3. **History:** provenance by commit SHA in headers, `CHANGELOG.md` and `decision_log.md`
+   (recommended) versus importing Git history (subtree/merge). Do not import history
+   without explicit approval, because it would bring pt-BR paths and naming into TaxMiner.
+4. **Dependencies:** approve or reject each package from the stage 00 delta.
+5. **Names and IDs:** approve the mapping tables.
+6. **Timing:** whether changes touching `src/collect/` wait until the DFP collection
+   finishes or reaches a developer-chosen checkpoint (recommended: wait; new primitives may
+   be added in `src/common/` without changing collect behavior).
+Record the answers as the next `decision_NNNN` in `decision_log.md`, with timestamp, and
+update the work item. No further stage starts without this record.
+
+### 02 — Shared primitives in `src/common/` (only if 01 approved A or B)
+- Implement the approved primitives in `src/common/` (e.g. `src/common/safe_io.R`,
+  `src/common/signatures.R`, `src/common/execution_policy.R`), with en-US names, provenance
+  headers, no side effects on `source()`, no network, relative and contained paths.
+- Port the relevant source tests to `tests/testthat/test_common_*.R` using synthetic
+  fixtures only (interruption, rollback, corrupted RDS, path traversal, signature changes,
+  policy combinations). Keep the source TST IDs in test descriptions as `origin`.
+- Do not change `src/collect/` behavior in this stage. Adoption by the Phase 2 pipeline is a
+  separate, later work item with its own tests and authorization.
+- Validate with `Rscript --vanilla scripts/validate_environment.R` and the new tests; record
+  `test_NNNN` entries with the real result and commit.
+
+### 03 — Optional `investment_fund_reports` module (only if 01 approved B)
+- Add requirements (`req_NNNN`, module `collect`/`data`) and work items for FIDC and FII
+  separately, outside the three MVP gates, each with its own human acceptance item.
+- Re-verify CVM sources before any code: dataset pages, `/dados/FIDC/DOC/INF_MENSAL/` and
+  `/dados/FII/DOC/INF_MENSAL/` listings, metadata/dictionaries, license, robots.txt and
+  crawl delay. Record verified patterns with `verified_at` in
+  `config/investment_fund_report_sources.yml` and `docs/data_sources.md`. Never invent APIs or
+  claim full history.
+- Collect: adapters in `src/collect/` (`discover_fund_reports.R`, `download_fund_reports.R`)
+  reusing `src/common/` primitives; separate namespaces per family; independent of
+  `financial_disclosures` and `tax_consultation_decisions` (no shared tables, no joins).
+- Data: temporal consolidation per official table/layout in `src/data/`
+  (`consolidate_fund_reports.R`), preserving original values as text, source lineage
+  (`zip_hash`, `source_file`, `source_line`), all versions and repeated keys diagnosed but not
+  dropped or summed; Parquet only if `arrow` was approved.
+- Excluded: FIDC movements (private in the source), flat/detail/cedente products, any
+  cross-source relationship with company filings (that would require a Phase 3 decision).
+- Tests with synthetic fixtures; real downloads only after an explicit, separate
+  authorization for a bounded sample, run outside OneDrive in `TAXMINER_DATA_DIR`.
+
+### 04 — Acceptance evidence pattern
+Evaluate the source P07 approach (evidence bound to code, configuration, input and output
+signatures; stale or tampered evidence rejected) as an aid for `test_register.csv` and
+`acceptance_register.csv`. Automated evidence can support but never replace human acceptance.
+Adopt only if approved at gate 01.
+
+### 05 — Documentation, governance, CI and handoff
+Update, in the same change set as the code they describe: `docs/architecture.md`
+(new domain or common contracts), `docs/data_dictionary.md`, `docs/data_sources.md`,
+`docs/source_inventory.md` (if B), `README.md`, `CHANGELOG.md` (with source SHA and
+attribution), `prompts/README.md` (register this prompt and any new module prompts, e.g.
+`collect_p05_fund_report_acquisition.txt`, `data_p04_fund_report_consolidation.txt`, written in
+the pack's CO-STAR format), `docs/project_overview.md` and the registers
+(`requirements_register.csv`, `work_items.csv`, `test_register.csv`, `risk_register.csv`,
+`acceptance_register.csv`, `decision_log.md`), `project_status.md` and `handoff.md`.
+CI: keep the Windows job green; propose (do not impose) a Linux job if ported tests need it.
+Commits: Conventional Commits, explicit path allowlists, never `git add .`, only with
+authorization; no push without authorization.
+
+## DELIVERABLES AND ACCEPTANCE
+- Stage 00: gap analysis document with all seven sections; source suite result or reason;
+  governance updated. Accepted when the developer approves the document.
+- Stage 01: decision record with every item answered.
+- Stage 02/03/04: code, synthetic tests, validation output, provenance headers, registers.
+  Accepted only by explicit human acceptance per work item; implementation, test, acceptance,
+  release and operations statuses tracked separately.
+- Invariants checked at every stage: source repository unchanged; running DFP collection not
+  interrupted or altered; no file from private/protected source paths; no data or raw files in
+  Git; TaxMiner validation passes; no unapproved dependency in `DESCRIPTION`/`renv.lock`.
+
+## GOVERNANCE, SECURITY AND HANDOFF
+Follow `AGENTS.md` and `common_p01_lifecycle_management.txt`. Never read, enumerate, traverse,
+modify, index or transmit `restricted/` or `tmp/` of either repository. Use public or
+synthetic fixtures only. Request authentication only through official local flows, never
+secrets in chat. Do not run another assistant or delegate unless the user asks. Cite exact
+source URLs, commit SHAs, file paths and timestamps for every claim.
+
+## RESPONSE FORMAT
+pt-BR explanation, en-US identifiers. Report: stage executed; source and target SHAs;
+files read (allowlist) and changed; commands actually run with exit codes; findings and
+mapping tables (stage 00); decisions requested or recorded; test evidence; risks and
+blockers; invariant checks; updated governance statuses; next action awaiting authorization.
+
+## MANDATORY THREE-PHASE MVP ROADMAP (PROMPT PACK 1.0)
+The three MVP phases (tax consultation decisions; independent financial notes; cross-source
+intelligence) and their independent human gates remain unchanged. Anything incorporated from
+the new data sources is either a shared `common` capability or an optional, separately accepted
+source family; it never alters, delays or counts toward an MVP gate, and it never produces
+findings of misconduct. Protected `restricted/` and `tmp/` stay inaccessible.

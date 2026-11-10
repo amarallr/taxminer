@@ -1,5 +1,24 @@
 # TaxMiner — estado do projeto
 
+## Novas fontes de dados (Common P07): etapa 00 e gate 01 — 2026-11-10T21:50:00-03:00
+
+Começou a adição de novas fontes de dados: relatórios mensais de fundos FIDC e
+FII da CVM, a partir de uma implementação de referência do desenvolvedor
+(`595991b`), lida em clone externo e somente leitura.
+
+- **Inventário e lacunas:** `docs/integration/new_data_sources_gap_analysis.md`.
+- **Prompt:** `prompts/common_p07_new_data_sources.txt`.
+- **Suíte da referência:** 7 de 9 arquivos executados, 295/295 expectativas aprovadas.
+  P03 e P07 não rodaram por falta de `dotenv`, que não foi instalado.
+- **Gate 01 decidido** (`decision_0023`):
+  - agora, rotinas comuns em `src/common/` só com R base;
+  - a família `investment_fund_reports` vem depois que a coleta da Fase 2 estiver estável;
+  - sem cópia de código;
+  - sem mudança em `src/collect/` durante a coleta.
+- **Andamento:** `work_0019` está `in_progress`. A etapa 02 não começou.
+- **Riscos:** `risk_0014` e `risk_0015`.
+- **Coleta das DFP:** intacta (pid 7068).
+
 ## Extração das notas iniciada; apresentação reformulada — 2026-11-10T20:40:00-03:00
 
 Por pedido do desenvolvedor, `work_0012` (Data P03) passa a `in_progress`:

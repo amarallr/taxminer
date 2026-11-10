@@ -17,6 +17,7 @@
 5. **MVP Phase 3 — Cross-Source Intelligence:** `intelligence_p03_cross_source_analysis.txt` and `common_p06_prototype_delivery.txt`.
 6. `common_p04_testing_quality.txt` and `common_p05_documentation_release.txt` apply to each phase; run `common_p01_lifecycle_management.txt` after every gate and during operations.
 7. **Post-MVP (not part of any MVP gate):** `collect_p03_incremental_updates.txt` (incremental refresh after a phase's sample is accepted) and `intelligence_p01_legal_tax_enrichment.txt` (legal/tax enrichment after Phase 1 acceptance). Start only with explicit authorization.
+8. **New data sources (addendum, outside the MVP gates):** `common_p07_new_data_sources.txt` covers shared reliability primitives and the optional CVM `investment_fund_reports` family (FIDC/FII). It never counts toward an MVP gate. Each stage needs its own authorization (`decision_0023`).
 
 ## Naming and version labels
 - File names are canonical: `group_pNN_objective.txt`. Internal titles repeat the module and number (for example `# COMMON P03`).

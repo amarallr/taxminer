@@ -260,3 +260,26 @@ e do repositório. ITR fica para quando houver mais armazenamento. Pipeline em
 `src/collect/` e `scripts/collect_financial_reports.R`, retomável, com
 manifesto e SHA-256 por membro (`test_0033`, `test_0034`). A coleta roda em
 processo próprio na estação de trabalho. `risk_0013` aberto.
+
+## decision_0023 — 2026-11-10T21:50:00-03:00 — Gate 01 do Common P07: novas fontes de dados
+
+O desenvolvedor aceitou as seis recomendações do gate 01
+(`docs/integration/new_data_sources_gap_analysis.md`) e autorizou o commit da etapa 00.
+A incorporação passa a ser tratada só como **adição de novas fontes de dados ao TaxMiner**,
+sem citar o nome do projeto de origem. O prompt foi salvo como
+`prompts/common_p07_new_data_sources.txt`.
+
+1. **Escopo.**
+   - Agora: opção A, rotinas comuns de confiabilidade em `src/common/`, como base para as
+     novas fontes.
+   - Depois que a coleta da Fase 2 estiver estável: opção B, família opcional
+     `investment_fund_reports` (FIDC/FII), fora das três fases do MVP.
+2. **Licença:** nenhum código é copiado. A implementação será refeita a partir dos
+   requisitos.
+3. **Histórico:** sem importar o histórico Git; a proveniência fica registrada por SHA da
+   implementação de referência (`595991b`).
+4. **Dependências:** nenhum pacote novo; as rotinas usam só R base.
+5. **Nomes e IDs:** aprovados os mapeamentos das seções c e d.
+6. **Momento:** `src/collect/` não muda enquanto a coleta das DFP estiver rodando.
+
+Por ora, nada além deste registro: a etapa 02 não começou.

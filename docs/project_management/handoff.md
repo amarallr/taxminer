@@ -23,6 +23,15 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   RAD/ENET (`risk_0012`). Pipeline em `src/collect/` (`test_0033`, `test_0034`);
   coleta de todas as 14.015 DFP em andamento em `C:\TaxMinerData`
   (`decision_0022`). Fase 3 não iniciada.
+- **Novas fontes de dados (Common P07, `work_0019`):** fundos FIDC e FII da CVM.
+  - Etapa 00 concluída (`docs/integration/new_data_sources_gap_analysis.md`).
+  - Gate 01 decidido (`decision_0023`): primeiro as rotinas comuns em `src/common/`; a
+    família `investment_fund_reports` só depois que a coleta da Fase 2 estiver estável.
+  - Nenhum código incorporado. A etapa 02 aguarda nova autorização.
+  - Riscos `risk_0014` e `risk_0015`.
+- **Data P03 (`work_0012`):** `src/data/extract_financial_notes.R` não
+  commitado. A última correção (`prefer_consistent_style`) ainda não foi
+  revalidada.
 
 ## Validação
 
