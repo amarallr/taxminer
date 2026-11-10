@@ -1,4 +1,192 @@
-﻿# Retomada do TaxMiner
+# Retomada do TaxMiner
+
+## Revisão de arquitetura — 2026-11-10T16:50:00-03:00
+
+Revisão técnica Codex concluída como feedback, sem aceite humano presumido.
+Contratos e separação de domínios estão coerentes para planejamento. Antes da
+implementação, definir fallback de IDs sem número/ano, esquema e proveniência
+de identificadores de empresa, calibração de confiança e limiares quantitativos
+de cobertura, relevância, citação e desempenho. `work_0002` continua em
+andamento; requisitos e aceite seguem pendentes. Nenhum MVP foi iniciado.
+
+## Atualização — aceite P02, smoke test e arquitetura — 2026-11-10T16:30:00-03:00
+
+O usuário aceitou Common P02. `work_0001` e `work_0003` foram registrados com
+aceite `accepted`; os estados de release e operação permanecem separados e
+inalterados. Nenhum MVP foi iniciado.
+
+Gemini leu um fixture sintético pelo launcher em terminal do agente e retornou
+`BLUE-ORCHID-731`, código 0; fixture removido. O terminal integrado do RStudio
+não foi validado: a janela está aberta, porém falta canal autorizado de envio
+de comando à console/terminal do IDE. Não representar o teste fora do RStudio
+como evidência de integração RStudio.
+
+Criadas propostas `docs/architecture.md`, `docs/requirements.md` e
+`docs/data_dictionary.md`. `work_0002` implementation `in_progress`, teste
+`not_run`, aceite `pending`; `req_0003` permanece `proposed` até revisão.
+Próxima ação: desenvolvedor executar/revisar smoke test integrado via console
+RStudio; revisar arquitetura e critérios. Coleta e MVP seguem não iniciados.
+
+## Atualização — configurações dos agentes — 2026-11-10T16:30:00-03:00
+
+Codex 0.167.0 validado com `--strict-config doctor --summary`: carregou
+`.codex/config.toml`, sandbox de filesystem/rede restritos, política OnRequest,
+código 0; alertas de Defender e Dev Drive permanecem sem ação.
+Claude Code 2.1.322: primeiro `doctor` apontou `Write(path)` incompatível; regras
+removidas e revalidação terminou com código 0 sem avisos sobre Read/Edit.
+Gemini CLI 0.67.0 respondeu ao prompt sintético com `--approval-mode plan`, sem
+ferramentas: confirmou que `GEMINI.md` foi carregado e resumiu corretamente a
+proibição para `restricted/` e `tmp/`, código 0.
+
+work_0004–work_0006: teste `passed`; implementação `in_progress`; aceite
+`pending`; release `not_released`; operações `not_started`. Ainda pendem
+autenticação Gemini e interação sintética no terminal integrado do RStudio.
+As regras de instrução/exclusão não constituem barreira contra shell,
+subprocessos ou ferramentas externas. Não houve acesso às áreas protegidas,
+instalação, autenticação, mudança global, commit ou push.
+
+## Atualização — correção locale Windows — 2026-11-10T15:48:33-03:00
+
+O validador agora ajusta `LC_CTYPE` somente dentro do próprio processo R se o
+Windows iniciou com locale `C`. O comando documentado direto foi executado com
+as variáveis de ambiente herdadas intactas: 5 verificações aprovadas, código 0.
+Avisos de inicialização de locale restante e de compilação do testthat continuam
+no relatório. O helper PowerShell do RStudio não limpa mais variáveis. Evidência:
+`reports/execution/locale_validation_fix.txt`; registro `test_0018`.
+
+Aceite do setup permanece pendente. Próximo passo local opcional: repetir o
+helper no terminal integrado da janela RStudio já aberta e revisar os avisos;
+nenhum login, instalação, commit ou push faz parte dessa validação.
+
+## Checkpoint vigente — revisão do ambiente — 2026-11-10T15:03:27-03:00
+
+Branch `main`; HEAD no início da revisão:
+`a259a1e35088bb2a497b4775031d5782bf76611d`. Common P02 permanece tecnicamente
+implementado e pendente de aceite humano. Documentação atualizada em
+`docs/development_environment.md`, `docs/github_setup.md`, README e changelog.
+
+Diagnóstico: R 4.5.1; RStudio 2024.04.0+735; Git 2.55.0; gh 2.103.3; Codex
+0.167.0; Gemini 0.67.0; Node 26.13.0; npm 11.20.0. Caminhos por usuário
+existem e as quatro entradas CLI esperadas constam do PATH do usuário sem
+duplicatas. A execução de validação herdando locale falhou às 15:03:00; a
+repetição com variáveis regionais limpas somente no processo filho passou às
+15:03:25, 5/5, mantendo o aviso testthat compilado no R 4.5.3. Testes `0016` e
+`0017`, evidências locais em `reports/execution/`.
+
+Limitações abertas: o estado global renv aponta para `%LOCALAPPDATA%/R/cache/renv`,
+mas o destino não existe; restauração limpa nesse destino não foi verificada.
+Checkout sob OneDrive e exclusões de sincronização não verificadas. Não mover ou
+limpar estado sem plano e validação. Assistentes continuam com estados próprios;
+não foram executados nesta revisão. Nenhum acesso protegido, instalação,
+autenticação, alteração persistente, commit ou push ocorreu.
+
+Próxima ação reproduzível, da raiz, usando o helper que limpa locale somente no
+processo filho: `source("scripts/validate_rstudio_terminal.R")` no console R do
+projeto aberto. Depois, desenvolvedor revisa a documentação e decide aceite ou
+rejeição explícita do setup. Common P03 permanece sem autorização/início; não
+inferir aprovação humana.
+
+## Atualização Copilot — confirmações recentes do usuário
+
+Indexação global desligada; opção “Index project files with GitHub Copilot”
+em “Default” no projeto, herdando o estado global desligado. O usuário confirmou
+uma sugestão visível em teste sintético. work_0007: implementation in_progress,
+test passed, acceptance pending, release not_released, operations not_started.
+Tela de licença/autenticação GitHub e aceitação da sugestão não verificadas.
+`EnableCodeIndexing: No` em taxminer.Rproj é configuração separada. Evidência:
+reports/execution/copilot_preferences_check.txt. Esta atualização supera o
+checkpoint Copilot histórico abaixo; demais estados do projeto não mudaram.
+
+## Atualização de ferramentas CLI
+
+Estado vigente: GitHub CLI 2.103.3 instalado por usuário em `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`; diretório no PATH do usuário e `gh --version` passou. Menções à cópia .local/ abaixo são históricas.
+
+Auditoria: Codex, Gemini, GitHub CLI e Node/npm resolvem via PATH do usuário;
+`npm config get prefix` aponta para `%LOCALAPPDATA%/Programs/TaxMiner`.
+PATH de sistema sem entradas Codex/TaxMiner. Versões verificadas em novo
+processo: Codex 0.167.0, Gemini 0.67.0, gh 2.103.3, Node 26.13.0, npm 11.20.0.
+Reiniciar terminal RStudio. Pendem smoke tests sintéticos Gemini/Codex no IDE e
+checagem de autenticação gh após relocação.
+
+A pasta `.local/` não deve conter ferramentas, bibliotecas ou caches. `scripts/run_gemini.ps1 --version` retornou
+0.67.0 em execução autorizada. Ainda faltam teste no terminal integrado do
+RStudio, autenticação Gemini e interação sintética; não inferir disponibilidade
+funcional completa. GitHub CLI 2.103.3 e Codex
+permanece instalado por usuário. Usuário decidiu manter os locais atuais.
+
+## Copilot solicitado — 2026-11-10T11:14:35-03:00
+
+O usuário pediu Copilot; seu adiamento anterior está revogado. work_0007 volta
+a in_progress, teste blocked, aceite pending; demais estados inalterados.
+RStudio instalado 2024.04.0+735 tem integração nativa. Consultadas documentação
+Posit e fontes oficiais dessa versão para distinguir preferências do projeto.
+Consulta somente de dois indicadores globais no RStudio retornou TRUE para
+copilot_enabled e copilot_indexing_enabled em 2026-11-10T11:13:40-0300.
+Evidência: reports/execution/copilot_preferences_check.txt. Nenhum conteúdo
+de credenciais ou arquivo protegido foi consultado. Estado efetivo do projeto,
+licença, autenticação Copilot e sugestões ainda não verificados.
+
+Tentativa inicial de abrir opções abortou sem enviar teclas por título da
+janela alterado pela branch; repetida na mesma janela taxminer - main - RStudio.
+Comando de abertura das opções enviado; nenhuma preferência foi modificada
+pelo agente. Não foi iniciado teste de sugestões nem novo login.
+
+Pendências necessárias: desativar indexação e conferir override do projeto;
+usuário confirmar que manterá fechados todos os documentos protegidos e usará
+apenas arquivos públicos/sintéticos; revisar conta/acesso Copilot no painel;
+login oficial humano somente se solicitado pelo painel; testar fixture sintética.
+A confirmação de escopo foi solicitada e ainda não recebida. Preferências
+globais TRUE não provam autenticação nem vazamento. Nenhuma evidência de
+conteúdo protegido foi buscada. Não inferir que .gitignore isola Copilot.
+Regra aplicável: AGENTS.md proíbe habilitar indexação sem exclusões verificadas.
+Common P02 exige evidência própria de ativação, autenticação, teste e aceite.
+O fechamento do P02 deve incluir a revisão Copilot agora solicitada; P03 não iniciado.
+Fonte: https://docs.posit.co/ide/user/ide/guide/tools/copilot.html
+
+
+## Revisão técnica do Common P02 — 2026-11-10T11:09:17-03:00
+
+Fundação local implementada e testes do ambiente R aprovados: 5 verificações
+no RStudio, com aviso conhecido de testthat compilado no R 4.5.3 versus R 4.5.1.
+Git/GitHub agora também verificados no terminal integrado da janela original:
+Git 2.55.0.windows.4; CLI portátil 2.103.3; conta amarallr ativa, estado success.
+Execução real: 2026-11-10T11:08:34-03:00 a 2026-11-10T11:08:35-03:00.
+Evidência: reports/execution/github_rstudio_validation.txt.
+A ausência anterior de relatório foi causada por um parêntese extra no helper R
+local; sintaxe corrigida e conferida antes da repetição. Sem nova instância IDE.
+
+Git local main e remoto privado https://github.com/amarallr/taxminer já
+configurados; último commit publicado verificado antes desta revisão:
+a259a1e35088bb2a497b4775031d5782bf76611d.
+Os registros desta revisão são alterações locais ainda não commitadas/enviadas.
+Não houve instalação global, novo login, acesso protegido ou coleta.
+
+Escopo desta revisão: manter Claude Code, Gemini CLI e Copilot adiados como
+assistentes opcionais, sem instalar/ativar. Seus itens conservam estados
+blocked/blocked e aceite pending, com adiamento explícito; não representam
+bloqueio da fundação R/Git. Codex está funcional nesta sessão; smoke test de
+outra sessão de assistente no RStudio não executado e adiado. Nenhum outro
+assistente foi iniciado. Nenhum estado VERIFIED foi atribuído a essas opções.
+
+work_0001 e work_0003: implemented / passed / pending / not_released /
+not_started. Setup tecnicamente apresentado para aceite, sem homologação
+inferida. Common: implementação implemented 2, in_progress 1, blocked 3,
+not_started 4; testes passed 2, blocked 3, not_run 5; aceite pending 10;
+release not_released 10; operations not_started 10. Demais módulos inalterados.
+
+Limites para revisão humana: exclusões de sincronização e controles de acesso
+locais precisam de verificação humana; restauração limpa em outra máquina não
+foi validada; aviso de versão do testthat permanece; checagem global de espaços
+finais tem ocorrência conhecida no bootstrap gerado do renv. Nenhum release,
+MVP ou operação de pipeline aprovado/executado; saúde operacional unknown.
+
+Próximas ações: (1) developer aceitar ou rejeitar explicitamente o setup com
+estes limites e adiamentos; (2) após esse aceite e autorização de etapa,
+executar Common P03; (3) reavaliar integrações opcionais quando necessárias.
+Common P03 não foi iniciado. Regra de aceite: AGENTS.md exige Never infer
+approval; Common P01, Gate D, exige aprovação explícita de reviewer humano.
+Os checkpoints anteriores abaixo são históricos.
+
 
 ## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
 
@@ -203,3 +391,7 @@ horários individuais não capturados. Nenhum código ou configuração persiste
 foi alterado. Execução no terminal do agente; abertura e terminal integrado do
 RStudio continuam não verificados. Setup em andamento; aceite pending;
 release not_released; operations not_started. Estados dos MVPs inalterados.
+
+## Tentativa de smoke test integrado RStudio — 2026-11-10T16:50:00-03:00
+
+Foi preparado e enviado à janela RStudio um helper de leitura sintética para Gemini/Codex. O relatório `reports/execution/agent_cli_rstudio_smoke.txt` não foi criado; a execução não está confirmada e o smoke test integrado permanece pendente. O smoke do Gemini executado fora do RStudio não comprova essa integração. Nenhum MVP foi iniciado.

@@ -1,5 +1,18 @@
 # Registro de decisões
 
+## Revisão documental — 2026-11-10T15:03:27-03:00
+
+Revistos os caminhos por usuário, as entradas de PATH, dependências locais,
+pastas de preparação permitidas e evidências de validação. Corrigidas as
+orientações vigentes que ainda apontavam para o antigo caminho `.local/` e
+para ausência de remoto. Registrados o locale herdado que faz a validação
+direta falhar, a repetição aprovada com locale limpo apenas no processo filho,
+a ausência do diretório global renv configurado e a localização do checkout
+sob OneDrive com sincronização ainda desconhecida. Os detalhes e limites estão
+em `docs/development_environment.md`. Não houve mudança de configuração,
+instalação, autenticação, publicação ou aceite. O estado do setup continua
+pendente de decisão explícita do desenvolvedor.
+
 ## decision_0001 — 2026-11-10T10:19:51-03:00 — Governança mínima local
 
 Fonte: o usuário autorizou a criação dos registros após receber o diagnóstico inicial. Criar somente project_status.md, requirements_register.csv, work_items.csv, risk_register.csv, decision_log.md e handoff.md nesta etapa. Registros de testes, aceite, release e operação serão criados quando houver eventos reais. Não iniciar setup, coleta ou implementação nesta autorização.
@@ -72,3 +85,39 @@ contém somente os 45 arquivos revisados. Hash confirmado no remoto.
 Autorização de publicação não implica aceite do setup ou MVP; não foi criada
 release. Registros documentais de resultado seguem no mesmo escopo autorizado.
 Git/CLI no terminal integrado permanece não confirmado.
+
+## decision_0007 — 2026-11-10T11:09:17-03:00 — Revisão técnica P02 e adiamentos
+
+Usuário autorizou executar o fechamento técnico limitado do P02 antes de
+reavaliar saldo para P03. Git/CLI/autenticação passaram no terminal integrado,
+com evidência real em reports/execution/github_rstudio_validation.txt.
+Claude/Gemini/Copilot e teste de nova sessão Codex no IDE ficam adiados;
+não executar outro assistente nem tratá-los como dependências da fundação.
+Itens opcionais mantêm estados reais e aceite pendente. Fundação e Git/GitHub
+implementados/testados; encerramento P02 depende de aceite humano explícito
+sobre limites descritos na revisão. Não houve novo commit, push ou P03.
+
+## decision_0008 — 2026-11-10T11:14:35-03:00 — Copilot solicitado explicitamente
+
+Solicitação do usuário revoga adiamento Copilot. Compatibilidade confirmada;
+preferências globais enabled/indexing TRUE lidas sem alteração. A ativação
+efetiva e teste dependem da revisão de escopo e indexação, conta/licença e
+login humano sob demanda. Claude e Gemini continuam adiados. Não houve
+execução de outro assistente, commit, envio ou aceite nesta revisão.
+
+## decision_0009 — 2026-11-10T16:30:00-03:00 — Aceite do setup P02
+
+O usuário confirmou explicitamente o aceite do Common P02. O registro foi
+aplicado a work_0001 (fundação) e work_0003 (Git/GitHub); release e operações
+continuam separados e pendentes. Este aceite não cobre integrações opcionais,
+arquitetura P03 ou qualquer MVP. Nenhum MVP foi iniciado.
+
+## decision_0010 — 2026-11-10T16:50:00-03:00 — Revisão técnica da arquitetura
+
+Revisados os rascunhos de arquitetura, requisitos e dicionário de dados a
+pedido do usuário. A separação dos domínios é adequada para planejamento.
+Pendências recomendadas antes da implementação: fallback para IDs sem número/
+ano oficial, tipagem e proveniência dos identificadores de empresas, calibração
+de confiança das relações e limiares quantitativos de qualidade/desempenho.
+O usuário ainda precisa revisar e aceitar o requisito req_0003. Nenhum MVP foi
+iniciado e nenhum dado foi coletado.
