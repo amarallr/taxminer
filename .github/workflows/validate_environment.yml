@@ -21,9 +21,12 @@ jobs:
         with:
           r-version: "4.5.1"
           use-public-rspm: false
+      # renv reports a false magrittr <-> testthat cycle when magrittr 2.0.3 is
+      # built from source; install the locked version directly first.
+      - name: Preinstall locked magrittr
+        run: |
+          Rscript -e "lib <- renv::paths[['library']](); dir.create(lib, recursive = TRUE, showWarnings = FALSE); urls <- c('https://cloud.r-project.org/src/contrib/Archive/magrittr/magrittr_2.0.3.tar.gz', 'https://cloud.r-project.org/src/contrib/magrittr_2.0.3.tar.gz'); ok <- FALSE; for (u in urls) { ok <- tryCatch({ install.packages(u, repos = NULL, type = 'source', lib = lib); TRUE }, warning = function(w) FALSE, error = function(e) FALSE); if (ok) break }; stopifnot(ok, packageVersion('magrittr', lib.loc = lib) == '2.0.3')"
       - name: Restore locked dependencies
-        env:
-          RENV_CONFIG_INSTALL_VERBOSE: "TRUE"
         run: Rscript -e "renv::restore(prompt = FALSE)"
       - name: Validate environment
         run: Rscript --vanilla scripts/validate_environment.R
