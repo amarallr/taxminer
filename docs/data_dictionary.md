@@ -47,6 +47,28 @@ are never collapsed based on text similarity alone.
 Company, filing, report version, note, table, and page relationships must remain
 traceable. Notes cannot depend on the consultation-decision schema or search.
 
+## `investment_fund_reports` (Phase 4, `decision_0024`)
+
+Conceptual contract; the column inventory per subfamily, table and layout comes
+from Data P04 step 00 (CVM `META/` dictionaries) and is not yet verified.
+
+| Field | Meaning |
+|---|---|
+| `fund_report_row_id` | Stable row identity: `{family}:{dataset}:{table_name}:{zip_sha256_12}:{source_line}`. |
+| `family` | `fii`, `fidc`, `fip` or `fiagro`. |
+| `dataset` / `table_name` / `layout_version` | CVM dataset (for example `INF_MENSAL`), official table file name, and layout version inferred from the dictionaries and headers. |
+| `reference_period` | Period exactly as published (`DT_COMPTC` or equivalent). |
+| `fund_cnpj_original` / `fund_cnpj_normalized` | Fund CNPJ as published and normalized to 14 digits with check digits validated; invalid values stay unresolved. |
+| `administrator_cnpj_original` | Administrator identifier when the table publishes it. |
+| CVM source columns | Kept with their published names; values kept as text (`value_original`); typed values only with documented conversion. |
+| `zip_sha256` / `source_file` / `source_line` | File-level lineage. |
+| `source_url` / `listing_last_modified` / `retrieved_at` | Retrieval provenance; republished files are separate versions. |
+| `quality_issue` | Repeated key, resubmission, invalid CNPJ, missing mandatory field or unexpected column; rows are never dropped or summed. |
+
+Fund reports cannot depend on the consultation-decision or financial-note
+schemas or search, and are not consumed by `document_relationships` unless a
+later decision extends Phase 3.
+
 ## `document_relationships`
 
 | Field | Meaning |

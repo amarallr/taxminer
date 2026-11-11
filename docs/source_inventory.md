@@ -63,3 +63,23 @@ has an ementa (2,458 characters), so old acts carry metadata and ementa.
 | License | ODbL, as shown on the dataset pages (web search; text to be confirmed in Collect P04). |
 | Files | One ZIP per year, `dfp_cia_aberta_2010.zip` … `dfp_cia_aberta_2026.zip`, 8–13 MB each, last updated 2026-11-08. ITR follows the same layout. |
 | Open question | Whether explanatory notes are in the ZIP files or only in the linked filing documents. Not checked; no ZIP was downloaded. |
+
+## `investment_fund_reports` — CVM (handoff to Collect P05, `decision_0024`)
+
+Listing check: 2026-11-10T22:20 -03:00, 15 directory listings, 10 s between requests, all HTTP
+200, no file downloaded. Details are in `docs/data_sources.md` and
+`config/investment_fund_report_sources.yml`.
+
+| Subfamily | Official listings | Observed coverage |
+|---|---|---|
+| `fii` | `https://dados.cvm.gov.br/dados/FII/DOC/` (`INF_MENSAL`, `INF_TRIMESTRAL`, `INF_ANUAL`, `DFIN`) | yearly files 2016–2026 |
+| `fidc` | `https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/` | monthly 202501–202610 plus `HIST/` |
+| `fip` | `https://dados.cvm.gov.br/dados/FIP/DOC/` (`INF_TRIMESTRAL`, `INF_QUADRIMESTRAL`) | yearly 2010–2023 and 2024–2026 |
+| `fiagro` | `https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/` | monthly 202505–202610 |
+
+Open questions for Collect P05 step 00:
+
+- dataset licenses (ODbL to be confirmed per dataset page);
+- `META/` dictionaries and table layouts;
+- the content and first period of the FIDC `HIST/` folder;
+- the republication cadence of recent files.

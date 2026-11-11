@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 — investment fund reports as a new source family (decision_0024)
+- Added `investment_fund_reports` (FII, FIDC, FIP, FIAGRO) as a first-class source family and MVP Phase 4, independent of Phases 1–3.
+- New prompts: `collect_p05_investment_fund_report_acquisition.txt` and `data_p04_investment_fund_report_consolidation.txt`.
+- The mandatory roadmap block in every prompt now lists four phases and the new technical family name; Common P01, Common P06 and Intelligence P02 describe Phase 4 explicitly.
+- `common_p07_new_data_sources.txt` (new data sources addendum, `decision_0023`) now governs shared primitives and the acceptance-evidence pattern; its optional-module wording is superseded.
+
 ## 2026-11-10 — consistency review
 - Aligned internal titles with file names (Common P02–P05 previously said P01–P04) and prefixed every title with its module.
 - Replaced the Portuguese directory `data/raw/normas/` with `data/raw/legal_sources/` and the Portuguese entity names in Common P03 with en-US names matching `docs/architecture.md`.

@@ -29,12 +29,14 @@ separately. Never infer approval or fabricate evidence.
   preserve source Portuguese text and typed original document classifications.
 - Logical modules are src/common/, src/collect/, src/data/, src/intelligence/.
   Create modules when there is real code. Keep prompts/ flat.
-- tax_consultation_decisions and financial_disclosures have independent schemas,
-  provenance, coverage and quality. financial_notes search must work independently.
+- tax_consultation_decisions, financial_disclosures and investment_fund_reports
+  (fii, fidc, fip, fiagro) have independent schemas, provenance, coverage and
+  quality. financial_notes and fund report search must work independently.
   document_relationships express cited hypotheses, never automatic misconduct.
-- Three MVP phases: consultation decisions; independent financial notes; then
-  cross-source intelligence over two explicitly accepted datasets. Each has its
-  own human acceptance gate. Use one local Shiny interface with independent areas.
+- Four MVP phases: consultation decisions; independent financial notes;
+  cross-source intelligence over the two datasets of phases 1 and 2; and
+  independent investment fund reports. Each has its own human acceptance gate.
+  Use one local Shiny interface with independent areas.
 - Dependencies are explicit in DESCRIPTION. Use renv snapshot type explicit,
   never implicit root dependency discovery. Bootstrap offline from installed
   packages with Rscript --vanilla scripts/setup_environment.R. Restore a locked

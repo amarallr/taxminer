@@ -130,3 +130,37 @@ Observed in the first packages:
   retried on the next run. A truncated or unreadable file never stays in the
   raw store (it is moved to `quarantine/`).
 - The ENET-generated PDF is padded to a power of two (8 MiB, 16 MiB).
+
+# Investment fund report sources (Collect P05, preliminary listing check)
+
+- **Family:** `investment_fund_reports` (MVP Phase 4, `decision_0024`).
+- **Check:** on 2026-11-10T22:20-03:00, 15 GET requests were made to the CVM open-data
+  directory listings (`https://dados.cvm.gov.br/dados/`) with a generic user agent and 10 s
+  between requests. All returned HTTP 200.
+- **Downloads:** none. No data file was downloaded and no ZIP was opened.
+- **Not yet verified:** dataset pages, licenses, `META/` dictionaries, contents and layouts.
+  Collect P05 step 00 must check them before any acquisition. The portal's `robots.txt`
+  (`Crawl-Delay: 10`, `/dados/` allowed) was verified for Phase 2 and applies to the same host.
+- **Registry:** the machine-readable registry is `config/investment_fund_report_sources.yml`.
+
+| Subfamily | Listing | Files observed |
+|---|---|---|
+| `fii` | `FII/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fii_{year}.zip`, 2016–2026; `META/` present |
+| `fii` | `FII/DOC/INF_TRIMESTRAL/DADOS/` | `inf_trimestral_fii_{year}.zip`, 2016–2026 |
+| `fii` | `FII/DOC/INF_ANUAL/DADOS/` | `inf_anual_fii_{year}.zip`, 2016–2026 |
+| `fii` | `FII/DOC/DFIN/DADOS/` | `dfin_fii_{year}.csv`, 2016–2026 (index of financial statements) |
+| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fidc_{yyyymm}.zip`, 202501–202610; older periods under `HIST/` (not opened) |
+| `fip` | `FIP/DOC/INF_TRIMESTRAL/DADOS/` | `inf_trimestral_fip_{year}.csv`, 2010–2023 |
+| `fip` | `FIP/DOC/INF_QUADRIMESTRAL/DADOS/` | `inf_quadrimestral_fip_{year}.csv`, 2024–2026 |
+| `fiagro` | `FIAGRO/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fiagro_{yyyymm}.zip`, 202505–202610; `META/` present |
+
+**Notes.**
+
+- The most recent files are republished as periods are filed. Collection must track each file
+  by its content hash, not by its name.
+- The FIP change from quarterly to four-monthly reports is a layout and cadence break.
+- The portal also lists other fund-related folders (`FI/`, `FIE/`, `ADM_FII/`). They are out of
+  scope unless the developer decides otherwise.
+- Raw files will live under
+  `TAXMINER_DATA_DIR/raw/investment_fund_reports/{fii,fidc,fip,fiagro}/`, outside the
+  repository and OneDrive.

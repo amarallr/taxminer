@@ -283,3 +283,35 @@ sem citar o nome do projeto de origem. O prompt foi salvo como
 6. **Momento:** `src/collect/` não muda enquanto a coleta das DFP estiver rodando.
 
 Por ora, nada além deste registro: a etapa 02 não começou.
+
+## decision_0024 — 2026-11-10T22:30:00-03:00 — Fundos de investimento como nova família de fontes
+
+O desenvolvedor decidiu que os relatórios de fundos de investimento da CVM entram no TaxMiner
+como fonte de dados, no mesmo nível das Soluções de Consulta e das notas explicativas.
+
+**Escopo da nova família.**
+
+- **Nome técnico:** família `investment_fund_reports`.
+- **Subfamílias:** `fii`, `fidc`, `fip` e `fiagro`.
+- **Esquema e governança próprios:** esquema, proveniência, cobertura e qualidade são
+  independentes das demais famílias.
+- **Nova fase do MVP:** a Fase 4 tem aceite humano próprio e não depende das Fases 1 a 3.
+  - Requisitos: `req_0012` (coleta), `req_0013` (consolidação) e `req_0014` (busca).
+  - Work items: `work_0020` a `work_0023`.
+  - `req_0011` passa a valer para quatro fases.
+
+**O que não muda.**
+
+- A Fase 3 continua restrita às duas bases das Fases 1 e 2. Estender as relações entre fontes
+  aos fundos exigirá decisão própria.
+- `decision_0023` continua valendo para as rotinas comuns, com estes ajustes:
+  - item 1: a família de fundos deixa de ser opcional e fora do MVP e passa a ser a Fase 4.
+    O momento de início continua o mesmo: só depois que a coleta da Fase 2 estiver estável,
+    com nova autorização;
+  - item 5: os IDs `req_0012`–`req_0014` passam para os requisitos dos fundos. Os requisitos
+    das rotinas comuns receberão os próximos IDs livres na etapa 02.
+
+**Fontes.** Listagens da CVM verificadas em 2026-11-10T22:20-03:00; os detalhes estão em
+`docs/data_sources.md` e `config/investment_fund_report_sources.yml`.
+
+**Limites.** Nenhuma coleta, código ou dependência foi autorizado por esta decisão.

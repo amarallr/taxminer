@@ -1,5 +1,19 @@
 # Changelog
 
+## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10
+
+- Nova família `investment_fund_reports` (FII, FIDC, FIP e FIAGRO) com aceite próprio
+  (`decision_0024`). Requisitos `req_0012`–`req_0014`; work items `work_0020`–`work_0023`.
+- Listagens da CVM verificadas: `docs/data_sources.md`, `docs/source_inventory.md` e
+  `config/investment_fund_report_sources.yml`.
+- Novos prompts `collect_p05_investment_fund_report_acquisition.txt` e
+  `data_p04_investment_fund_report_consolidation.txt`. O roteiro de todos os prompts passa a ter
+  quatro fases.
+- Arquitetura, requisitos, dicionário de dados, `AGENTS.md`, README, panorama e site
+  atualizados.
+- Análise de novas fontes de dados (`docs/integration/new_data_sources_gap_analysis.md`,
+  `decision_0023`).
+
 ## Collect P01 e GitHub Pages — 2026-11-10
 
 - Fontes verificadas: `docs/source_inventory.md`, `docs/feasibility.md`,

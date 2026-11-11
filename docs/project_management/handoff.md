@@ -23,7 +23,16 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   RAD/ENET (`risk_0012`). Pipeline em `src/collect/` (`test_0033`, `test_0034`);
   coleta de todas as 14.015 DFP em andamento em `C:\TaxMinerData`
   (`decision_0022`). Fase 3 não iniciada.
-- **Novas fontes de dados (Common P07, `work_0019`):** fundos FIDC e FII da CVM.
+- **Fase 4: fundos de investimento** (`decision_0024`): família
+  `investment_fund_reports` (FII, FIDC, FIP, FIAGRO), independente das outras
+  fases.
+  - Listagens da CVM verificadas (`docs/data_sources.md`,
+    `config/investment_fund_report_sources.yml`).
+  - Prompts `collect_p05_investment_fund_report_acquisition.txt` e
+    `data_p04_investment_fund_report_consolidation.txt`.
+  - `work_0020`–`work_0023` não iniciados. A coleta só começa depois que as DFP
+    estiverem estáveis e houver nova autorização.
+- **Novas fontes de dados (Common P07, `work_0019`):** rotinas comuns para as fontes novas.
   - Etapa 00 concluída (`docs/integration/new_data_sources_gap_analysis.md`).
   - Gate 01 decidido (`decision_0023`): primeiro as rotinas comuns em `src/common/`; a
     família `investment_fund_reports` só depois que a coleta da Fase 2 estiver estável.

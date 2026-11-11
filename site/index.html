@@ -118,14 +118,15 @@ section { display: grid; gap: 20px; scroll-margin-top: 72px; }
 .steps li { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; display: grid; gap: 2px; }
 .steps li b { font-weight: 600; color: var(--ink); }
 .steps li span { color: var(--muted); font-size: 13px; }
-.sources-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sources-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.g2 > .wide { grid-column: 1 / -1; }
 .sources-row div { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; }
 .layer.result { background: var(--accent-soft); border-color: var(--accent); }
 .layer.result p { color: var(--ink); }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13.5px; color: var(--muted); }
 
 /* Development */
-.rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .stage { padding: 16px 14px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); position: relative; }
 .stage:last-child { border-right: 0; }
 .stage::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--idle-soft); }
@@ -239,12 +240,13 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
     <div class="section-head">
       <div class="eyebrow">A solução proposta</div>
       <h2 id="h-solucao">Engenharia de dados, processamento documental, pesquisa e IA</h2>
-      <p class="lede">O TaxMiner transforma documentos não estruturados ou semiestruturados em bases de conhecimento organizadas, rastreáveis e acessíveis, em três fases com aceite humano próprio.</p>
+      <p class="lede">O TaxMiner transforma documentos não estruturados ou semiestruturados em bases de conhecimento organizadas, rastreáveis e acessíveis, em quatro fases com aceite humano próprio.</p>
     </div>
-    <div class="grid g3">
+    <div class="grid g2">
       <div class="card"><span class="kicker">Fase 1</span><h3>Soluções de Consulta</h3><p>Coleta, estruturação e pesquisa das interpretações tributárias publicadas pela Receita Federal.</p></div>
       <div class="card"><span class="kicker">Fase 2</span><h3>Notas explicativas</h3><p>Coleta, estruturação e pesquisa das notas das demonstrações financeiras entregues à CVM, sem depender da Fase 1.</p></div>
       <div class="card"><span class="kicker">Fase 3</span><h3>Inteligência cruzada</h3><p>Relações entre as duas bases, sempre como hipóteses com evidências e revisão humana, depois que ambas forem aceitas.</p></div>
+      <div class="card"><span class="kicker">Fase 4</span><h3>Fundos de investimento</h3><p>Coleta, consolidação e pesquisa dos informes de FII, FIDC, FIP e FIAGRO publicados pela CVM, sem depender das outras fases.</p></div>
     </div>
   </section>
 
@@ -266,6 +268,7 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
         <div class="sources-row">
           <div><b>Soluções de Consulta</b><br><span class="note">Receita Federal · sistema Normas</span></div>
           <div><b>Demonstrações financeiras e notas explicativas</b><br><span class="note">CVM · dados abertos e sistema RAD/ENET</span></div>
+          <div><b>Informes de fundos de investimento</b><br><span class="note">CVM · dados abertos (FII, FIDC, FIP, FIAGRO)</span></div>
         </div>
       </li>
       <li class="layer">
@@ -310,7 +313,7 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
   <section id="fontes" aria-labelledby="h-fontes">
     <div class="section-head">
       <div class="eyebrow">Fontes documentais</div>
-      <h2 id="h-fontes">Duas famílias de documentos no escopo inicial</h2>
+      <h2 id="h-fontes">Três famílias de documentos no escopo</h2>
     </div>
     <div class="grid g2">
       <article class="card">
@@ -333,6 +336,17 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
           <div><h4>O que se preserva</h4><p>Empresa (CNPJ e código CVM verificados), período, versão, escopo contábil, unidade de medida e página de origem.</p></div>
           <div><h4>Disponível hoje</h4><p>Catálogo de 49.908 entregas desde 2010; coleta das 14.015 DFP em andamento; extração das notas em desenvolvimento.</p></div>
           <div><h4>Previsto</h4><p>Tabelas das notas, bases Parquet e pesquisa por empresa, período e nota para análises históricas, contábeis e tributárias.</p></div>
+        </div>
+      </article>
+      <article class="card wide">
+        <code>investment_fund_reports</code>
+        <h3>Informes de fundos de investimento</h3>
+        <p>Informes periódicos que os fundos entregam à CVM: FII (fundos imobiliários), FIDC (direitos creditórios), FIP (participações) e FIAGRO (cadeias agroindustriais). Cada subfamília tem tabelas oficiais próprias, com layouts que mudam ao longo do tempo.</p>
+        <div class="split">
+          <div><h4>Origem</h4><p>Portal de dados abertos da CVM: arquivos ZIP e CSV mensais, trimestrais, quadrimestrais e anuais, por subfamília.</p></div>
+          <div><h4>O que se preserva</h4><p>Subfamília, conjunto e tabela oficiais, versão do layout, período, CNPJ do fundo, valores originais e linhagem até o arquivo e a linha.</p></div>
+          <div><h4>Disponível hoje</h4><p>Listagens das quatro subfamílias verificadas em 10/11/2026; coleta ainda não autorizada.</p></div>
+          <div><h4>Previsto</h4><p>Bases consolidadas por tabela e layout e pesquisa por subfamília, fundo, administrador e período.</p></div>
         </div>
       </article>
     </div>
@@ -386,13 +400,14 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
       <div class="stage held"><span class="num">Fase 1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; coleta aguarda decisões do desenvolvedor.</p><span class="pill warn">suspensa</span></div>
       <div class="stage next"><span class="num">Fase 2</span><h3>Notas explicativas</h3><p>Coleta das 14.015 DFP em execução; extração das notas em desenvolvimento.</p><span class="pill acc">em andamento</span></div>
       <div class="stage"><span class="num">Fase 3</span><h3>Inteligência cruzada</h3><p>Depende do aceite das Fases 1 e 2.</p><span class="pill idle">não iniciada</span></div>
+      <div class="stage"><span class="num">Fase 4</span><h3>Fundos de investimento</h3><p>Listagens da CVM verificadas; coleta ainda não autorizada.</p><span class="pill idle">planejada</span></div>
     </div>
 
     <div class="tally" aria-label="Itens de trabalho por situação de implementação">
       <div class="tile"><span class="n">8</span><span class="l">implementados</span></div>
-      <div class="tile"><span class="n">2</span><span class="l">em andamento</span></div>
+      <div class="tile"><span class="n">3</span><span class="l">em andamento</span></div>
       <div class="tile"><span class="n">1</span><span class="l">suspenso</span></div>
-      <div class="tile"><span class="n">7</span><span class="l">não iniciados</span></div>
+      <div class="tile"><span class="n">11</span><span class="l">não iniciados</span></div>
       <div class="tile"><span class="n">8</span><span class="l">aceites humanos</span></div>
     </div>
 
@@ -413,6 +428,7 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
               <tr><td class="id">work_0006</td><td>Gemini CLI</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
               <tr><td class="id">work_0007</td><td>GitHub Copilot</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
               <tr><td class="id">work_0018</td><td>Revisão de consistência do projeto</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
+              <tr><td class="id">work_0019</td><td>Novas fontes: inventário e lacunas</td><td><span class="pill acc">em andamento</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr class="group"><th scope="rowgroup" colspan="5">Fase 1 · Soluções de Consulta</th></tr>
               <tr><td class="id">work_0008</td><td>Descobrir fontes e coletar a amostra</td><td><span class="pill warn">suspenso</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0009</td><td>Extrair e consolidar</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
@@ -426,6 +442,11 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
               <tr class="group"><th scope="rowgroup" colspan="5">Fase 3 · Inteligência cruzada</th></tr>
               <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0017</td><td>Aceite humano da Fase 3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 4 · Fundos de investimento</th></tr>
+              <tr><td class="id">work_0020</td><td>Verificar fontes e coletar amostra</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0021</td><td>Consolidar informes por família e layout</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0022</td><td>Pesquisa independente de fundos</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0023</td><td>Aceite humano da Fase 4</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -434,13 +455,15 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
 
     <div class="grid g2">
       <div style="display:grid;gap:12px;align-content:start">
-        <h3>Riscos abertos (8 de 13)</h3>
+        <h3>Riscos abertos (10 de 15)</h3>
         <div class="list">
           <div class="item"><span class="pill bad">alto</span><span class="t">Notas só nos pacotes RAD/ENET</span><span class="d">Fora dos dados abertos; sem robots.txt nem licença declarada (risk_0012).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Texto integral das Soluções de Consulta</span><span class="d">Acesso automatizado recusado (403); API de busca não documentada (risk_0011).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Cobertura das fontes</span><span class="d">Termos de uso e completude histórica em aberto (risk_0001).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Sincronização do OneDrive</span><span class="d">Exclusões das áreas protegidas não verificadas; dados coletados ficam fora do OneDrive (risk_0002).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Identificação de empresas</span><span class="d">CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">Escopo das novas fontes</span><span class="d">Fundos (Fase 4) disputam atenção com a Fase 2; nada muda na coleta em andamento (risk_0015).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">Licença da implementação de referência</span><span class="d">Sem licença declarada; nenhum código copiado, só reimplementação (risk_0014).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">Volume da coleta</span><span class="d">Acervo completo (~450 GB) maior que o disco; DFP primeiro, ITR depois (risk_0013).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">testthat compilado no R 4.5.3</span><span class="d">Aviso só local; o CI usa binário compatível (risk_0007).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">ZIP histórico dos prompts</span><span class="d">Não tem as correções; os arquivos avulsos valem (risk_0006).</span></div>

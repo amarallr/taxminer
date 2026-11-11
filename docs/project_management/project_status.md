@@ -1,5 +1,24 @@
 # TaxMiner — estado do projeto
 
+## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10T22:30:00-03:00
+
+Por decisão do desenvolvedor (`decision_0024`), os informes de fundos da CVM
+(FII, FIDC, FIP e FIAGRO) passam a ser a família `investment_fund_reports`. Ela
+fica no mesmo nível das Soluções de Consulta e das notas explicativas e é a
+Fase 4 do MVP, independente das Fases 1 a 3.
+
+- **Registros:**
+  - requisitos `req_0012`–`req_0014`;
+  - work items `work_0020`–`work_0023`, todos `not_started`;
+  - `req_0011` passa a valer para quatro fases.
+- **Fontes:** as listagens da CVM das quatro subfamílias foram verificadas
+  (15 requisições, todas HTTP 200, nenhum arquivo baixado).
+- **Documentação atualizada:**
+  - arquitetura, requisitos, dicionário de dados, fontes, `AGENTS.md`, README,
+    panorama e site;
+  - todos os prompts, mais os novos `collect_p05` e `data_p04`.
+- **Ainda não autorizado:** coleta, código e dependências.
+
 ## Novas fontes de dados (Common P07): etapa 00 e gate 01 — 2026-11-10T21:50:00-03:00
 
 Começou a adição de novas fontes de dados: relatórios mensais de fundos FIDC e

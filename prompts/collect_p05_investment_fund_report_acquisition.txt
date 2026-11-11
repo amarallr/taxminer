@@ -1,0 +1,99 @@
+# TAXMINER — COLLECT P05 — INVESTMENT FUND REPORT ACQUISITION (FII, FIDC, FIP, FIAGRO)
+Prompt Pack: 1.0 (addendum, decision_0024) | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
+
+## C — CONTEXT
+TaxMiner treats CVM investment fund reports as a first-class source family, `investment_fund_reports`, alongside `tax_consultation_decisions` and `financial_disclosures` (MVP Phase 4, `req_0012`). Four subfamilies are in scope: `fii` (real estate), `fidc` (receivables), `fip` (private equity) and `fiagro` (agribusiness). The CVM open-data portal (https://dados.cvm.gov.br/dados/, ODbL, Crawl-Delay 10) publishes them as static yearly or monthly ZIP/CSV files. Listings were verified on 2026-11-10 (`docs/data_sources.md`):
+- `FII/DOC/{INF_MENSAL,INF_TRIMESTRAL,INF_ANUAL}`: yearly ZIPs since 2016;
+- `FII/DOC/DFIN`: yearly CSV index;
+- `FIDC/DOC/INF_MENSAL`: monthly ZIPs, older years under `HIST/`;
+- `FIP/DOC/INF_TRIMESTRAL`: yearly CSV 2010–2023;
+- `FIP/DOC/INF_QUADRIMESTRAL`: yearly CSV since 2024;
+- `FIAGRO/DOC/INF_MENSAL`: monthly ZIPs since 2025-05.
+Reuse the shared reliability primitives from `common_p07_new_data_sources.txt` (`src/common/`) once they are implemented.
+
+## O — OBJECTIVE
+Discover, retrieve and incrementally refresh the published fund report files for each subfamily, independently of the other source families. Each run must provide:
+- reproducible provenance and lawful access;
+- immutable originals with per-member SHA-256;
+- versioning and coverage metrics;
+- resumable execution.
+
+## S — STYLE
+Modular, incremental, reproducible, audit-ready R code (base R plus approved dependencies). Use lowercase American English snake_case for technical names; keep CVM file, table and field names exactly as published. Keep a separate namespace and manifest per subfamily. Do not create empty placeholders or claim unexecuted work.
+
+## T — TONE
+Precise, skeptical of unverified sources, explicit about gaps and uncertainty.
+
+## A — AUDIENCE
+TaxMiner developer, Codex/Claude Code/RStudio contributors, reviewers and authorized approvers.
+
+## R — EXECUTION PLAN
+### 00 — Source verification and coverage
+Re-verify each subfamily:
+- dataset pages and listings, and the `META/` dictionaries;
+- license, robots.txt and crawl delay;
+- file naming, first and last available periods, and update cadence;
+- layout changes over time.
+Record verified patterns with `verified_at` in `config/investment_fund_report_sources.yml` and `docs/data_sources.md`. Never invent APIs or claim full history. Stop on 403/429.
+### 01 — Source identity and discovery
+Define these fields:
+- `source_id` (`cvm:{family}:{dataset}:{file_name}`), `family`, `dataset`, `reference_period`;
+- `file_name`, `source_url`, `last_modified` and `size` (taken from the listing);
+- `file_format` and `download_outcome`.
+Account for these cases:
+- files republished under the same name: track them by content hash and listing timestamp;
+- the FIDC `HIST/` folder;
+- the FIP change from quarterly to four-monthly reports.
+### 02 — Download and manifest
+Implement `src/collect/discover_fund_reports.R` and `src/collect/download_fund_reports.R` with:
+- polite throttling (at least 10 s) and timeouts;
+- retry/backoff only for timeouts and 5xx, and an immediate stop on 403/429;
+- ZIP signature and member checks (count and size limits, unsafe or duplicate names);
+- per-member SHA-256 and an append-only manifest.
+Keep raw bytes immutable under `TAXMINER_DATA_DIR/raw/investment_fund_reports/{fii,fidc,fip,fiagro}/`, outside the repository and OneDrive.
+### 03 — Historical and incremental
+Support bounded historical backfills and incremental refresh with checkpoints and idempotent reruns. Re-check the most recent periods on each refresh, because the CVM republishes those files. Do not infer completeness from download counts.
+### 04 — Integration and tests
+- Keep `tax_consultation_decisions` and `financial_disclosures` acquisition unaffected.
+- Do not change `src/collect/` behaviour used by a running collection without authorization.
+- Provide synthetic fixtures for listings, republished files, truncated ZIPs, unsafe member names, HTTP errors and resumability.
+- Acquire a small verified public sample only after explicit authorization.
+
+## DELIVERABLES AND ACCEPTANCE
+- Source registry and config.
+- Manifest.
+- Verified public sample.
+- Incremental pipeline.
+- Evidence-based coverage and failures per subfamily.
+- Test commands and results.
+- Handoff.
+The FII financial statements listed in `DFIN` are documents. They are out of the first sample unless the developer decides otherwise.
+
+## GOVERNANCE, SECURITY AND HANDOFF
+- Read and update the permitted `docs/project_management/` records from `common_p01_lifecycle_management.txt`.
+- Track implementation, tests, acceptance, release and operations separately.
+- Use public or synthetic fixtures only.
+- Never read, enumerate, traverse, modify, index or transmit `restricted/` or `tmp/`.
+- Obtain explicit human acceptance.
+- Cite exact source URLs, file names, hashes and timestamps for all claims.
+
+## RESPONSE FORMAT
+Present, in this order:
+- verified source availability;
+- planned and changed files;
+- implementation steps;
+- commands actually run;
+- measured counts and errors per subfamily;
+- test evidence;
+- blockers;
+- updated governance statuses;
+- next actions.
+
+## MANDATORY FOUR-PHASE MVP ROADMAP (PROMPT PACK 1.0; PHASE 4 ADDED BY decision_0024)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+- **MVP Phase 4 — Investment Fund Reports:** independently discover, acquire, consolidate in Parquet, and search public CVM fund reports for FII, FIDC, FIP and FIAGRO (`investment_fund_reports`); provide family/fund CNPJ/administrator/period filters, source-file citations, tests, and explicit human acceptance. Phase 4 must be usable without Phases 1–3; Phase 3 does not consume fund data unless a later decision extends it.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `investment_fund_reports` (subfamilies `fii`, `fidc`, `fip`, `fiagro`) for CVM fund reports; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

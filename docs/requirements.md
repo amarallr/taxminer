@@ -16,7 +16,10 @@ No MVP work is authorized by this document.
 | req_0008 | Process `financial_notes` independently | Preserve report/note/table hierarchy, company evidence, period, scope, units, pages, revisions, queryable output, and uncertainty. |
 | req_0009 | Search financial notes independently | Search works without Phase 1; validated company/CNPJ, period, and note filters with source-page citations. |
 | req_0010 | Evidence-based `document_relationships` | Both datasets accepted; cited links include traceability, confidence, uncertainty, tests, and human review; no misconduct findings. |
-| req_0011 | Three independent MVP acceptance gates | Each phase has reproducible tests, operational evidence, limitations, explicit human acceptance, and distinct implementation/test/acceptance/release/operations states. |
+| req_0011 | Independent MVP acceptance gates (four phases, `decision_0024`) | Each phase has reproducible tests, operational evidence, limitations, explicit human acceptance, and distinct implementation/test/acceptance/release/operations states. |
+| req_0012 | Acquire public `investment_fund_reports` independently (FII, FIDC, FIP, FIAGRO) | Verify CVM open-data sources, terms and crawl delay per family; record per-file outcomes, hashes, versions, coverage and manifest; no dependency on other families. |
+| req_0013 | Consolidate `investment_fund_reports` independently | Consolidate per family, table and layout over time; preserve source values and lineage (ZIP hash, file, line); diagnose repeated keys and versions without dropping or summing. |
+| req_0014 | Search investment fund reports independently | Local Shiny search works without Phases 1–3; family, fund CNPJ, administrator and period filters with source-file citations. |
 
 ## Phase gates
 
@@ -25,6 +28,9 @@ No MVP work is authorized by this document.
 - **Phase 2:** req_0007 → req_0008 → req_0009. Financial-note search remains
   independently usable without Phase 1.
 - **Phase 3:** req_0010 only after explicit acceptance of Phases 1 and 2.
+- **Phase 4:** req_0012 → req_0013 → req_0014 (`investment_fund_reports`: FII,
+  FIDC, FIP, FIAGRO). It does not depend on Phases 1–3. Phase 3 does not consume
+  fund data unless a later decision extends it.
 
 Testing, human acceptance, release, and operations are separate gates. A passed
 test does not imply acceptance or release. The current register remains the

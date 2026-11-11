@@ -2,8 +2,9 @@
 
 ## Scope and status
 
-This document defines the proposed architecture for the three independent
-product phases. It is architecture work only: it does not authorize source
+This document defines the proposed architecture for the independent product
+phases: three original phases plus Phase 4, investment fund reports, added by
+`decision_0024`. It is architecture work only: it does not authorize source
 discovery, data acquisition, MVP implementation, external model processing, or
 release. Requirements and phase criteria remain subject to developer review.
 
@@ -53,10 +54,38 @@ table hierarchy, page, original unit/value, normalized value when justified,
 and parser uncertainty. Company matching is evidence-backed; unresolved or
 ambiguous matches remain unresolved rather than being forced.
 
+### Investment fund reports
+
+The `investment_fund_reports` domain (`decision_0024`) is independent of
+decisions and financial disclosures. It covers four CVM fund families, each a
+separate namespace with its own manifest, schema versions, coverage and quality:
+
+| Family | CVM open-data datasets (verified 2026-11-10) |
+|---|---|
+| `fii` (real estate funds) | `INF_MENSAL`, `INF_TRIMESTRAL`, `INF_ANUAL` (yearly ZIPs since 2016), `DFIN` (yearly CSV index of financial statements) |
+| `fidc` (receivables funds) | `INF_MENSAL` (monthly ZIPs, older years under `HIST/`) |
+| `fip` (private equity funds) | `INF_TRIMESTRAL` (yearly CSV 2010–2023), `INF_QUADRIMESTRAL` (yearly CSV since 2024) |
+| `fiagro` (agribusiness funds) | `INF_MENSAL` (monthly ZIPs since 2025-05) |
+
+Conceptual entities: `funds`, `fund_reports`, `fund_report_files`,
+`fund_report_tables`, `fund_report_rows`, `fund_collection_events` and
+`fund_quality_issues`. Each consolidated row keeps:
+
+- the family, dataset, official table name and layout version;
+- the reference period, the fund CNPJ (original and normalized) and the
+  administrator identifier when published;
+- the original values as text;
+- lineage: `zip_sha256`, `source_file` and `source_line`.
+
+Repeated keys and resubmitted versions are diagnosed and kept, never dropped or
+summed. The FII financial statements listed in `DFIN` are documents, not
+tables; reading them is a later decision, not part of the first Phase 4 sample.
+
 ### Cross-source relationships
 
 `document_relationships` is a separate, optional intelligence domain that may
-consume only the two independently accepted datasets. Every relationship is a
+consume only the two independently accepted datasets of Phases 1 and 2.
+Extending it to `investment_fund_reports` requires a later, recorded decision. Every relationship is a
 cited hypothesis with typed source and target IDs, relationship type, evidence
 spans/pages, confidence, uncertainty, method/version, and human review state.
 It does not state or infer misconduct, liability, or legal effect.
@@ -68,6 +97,9 @@ It does not state or infer misconduct, liability, or legal effect.
 2. Phase 2 independently collects and processes financial disclosures and
    searches financial notes without requiring Phase 1 search.
 3. Phase 3 integrates both accepted datasets through cited hypotheses.
+4. Phase 4 independently collects, consolidates and searches CVM investment
+   fund reports (FII, FIDC, FIP, FIAGRO). It has no dependency on Phases 1–3
+   (`decision_0024`).
 
 Each phase has separate implementation, testing, human acceptance, release,
 and operations states. No downstream phase starts until its prerequisites and

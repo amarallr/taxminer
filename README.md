@@ -32,7 +32,7 @@ rastreáveis e acessíveis.
 |---|---|
 | **O que é** | Um conjunto de pipelines em R e uma interface local de pesquisa (prevista) sobre documentos públicos. |
 | **Para quem** | Desenvolvedores, profissionais de dados, pesquisadores, contadores, auditores, tributaristas e analistas financeiros e de riscos. |
-| **Escopo inicial** | Soluções de Consulta da Receita Federal e notas explicativas das demonstrações financeiras entregues à CVM. |
+| **Escopo** | Soluções de Consulta da Receita Federal, notas explicativas das demonstrações financeiras entregues à CVM e informes de fundos de investimento da CVM (FII, FIDC, FIP e FIAGRO). |
 | **Princípio central** | Toda informação mantém o vínculo com o documento oficial de origem: URL, data de obtenção, hash e página. |
 | **Estágio** | Em desenvolvimento. Nenhum MVP foi concluído ou liberado; veja a [seção 11](#11-estado-atual-do-desenvolvimento). |
 
@@ -58,7 +58,7 @@ rastreáveis e acessíveis.
    oficiais, em formatos analíticos abertos (Parquet).
 3. Oferecer pesquisa textual e, depois, semântica, com citação da fonte e da
    página em cada resultado.
-4. Apoiar análises que relacionem as duas fontes, sempre como hipóteses com
+4. Apoiar análises que relacionem as fontes, sempre como hipóteses com
    evidências e sujeitas a revisão humana.
 5. Medir qualidade com critérios explícitos (cobertura, reprodutibilidade,
    relevância e citações) antes de declarar qualquer fase concluída.
@@ -125,6 +125,34 @@ tributárias sobre o que as empresas divulgam.
 
 Detalhes em [`docs/data_sources.md`](docs/data_sources.md).
 
+### 5.3 Informes de fundos de investimento (`investment_fund_reports`)
+
+**O que são.** Informes periódicos que os fundos entregam à CVM, divididos em
+quatro subfamílias:
+
+- **FII**, fundos imobiliários: informes mensal, trimestral e anual, mais o
+  índice de demonstrações financeiras;
+- **FIDC**, fundos de direitos creditórios: informe mensal;
+- **FIP**, fundos de participações: informe trimestral até 2023 e
+  quadrimestral desde 2024;
+- **FIAGRO**, fundos das cadeias agroindustriais: informe mensal desde 2025.
+
+**Por que a CVM.** Os informes são publicados como arquivos ZIP e CSV no portal
+de dados abertos da CVM. As listagens das quatro subfamílias foram verificadas
+em 10/11/2026 (`decision_0024`). Licenças, dicionários e conteúdo ainda serão
+verificados na Collect P05.
+
+**Dificuldades.** Os layouts das tabelas mudam ao longo do tempo. Os arquivos
+recentes são republicados. Há chaves repetidas e reenvios, e no FIP a
+periodicidade mudou.
+
+**O que se preserva.** Subfamília, conjunto e tabela oficiais, versão do layout,
+período de referência, CNPJ do fundo (original e normalizado), valores
+originais como texto e a linhagem até o arquivo, o hash e a linha.
+
+**Potencial (previsto).** Pesquisa e análise histórica dos fundos, como fonte
+independente: não depende das Soluções de Consulta nem das notas explicativas.
+
 ## 6. Arquitetura e módulos
 
 O código fica em um único repositório, com módulos lógicos em `src/`. Cada
@@ -165,13 +193,15 @@ TaxMiner Intelligence  pesquisa textual → pesquisa semântica →
 Conhecimento verificável: resultados com fonte, página, evidência e revisão humana
 ```
 
-O projeto está organizado em três fases, cada uma com seu próprio aceite humano:
+O projeto está organizado em quatro fases, cada uma com seu próprio aceite humano:
 
 1. **Fase 1 — Soluções de Consulta:** coleta, processamento e pesquisa própria.
 2. **Fase 2 — Notas explicativas:** coleta, processamento e pesquisa própria,
    sem depender da Fase 1.
 3. **Fase 3 — Inteligência cruzada:** relações citadas entre as duas bases,
    somente depois que ambas forem aceitas.
+4. **Fase 4 — Fundos de investimento:** coleta, consolidação e pesquisa
+   própria dos informes de FII, FIDC, FIP e FIAGRO, sem depender das outras fases.
 
 ## 8. Funcionalidades previstas
 
@@ -189,6 +219,8 @@ foram implementados.
 - Pesquisa de Soluções de Consulta por tributo, assunto e dispositivo legal.
 - Pesquisa semântica e recuperação de trechos com citação.
 - Relações entre as duas fontes como hipóteses com evidências e revisão humana.
+- Bases de informes de fundos (FII, FIDC, FIP, FIAGRO) consolidadas por tabela e layout, com linhagem até o arquivo e a linha.
+- Pesquisa de fundos por família, CNPJ do fundo, administrador e período.
 - Interface Shiny local com uma área por fase.
 
 ## 9. Aplicações práticas
@@ -241,9 +273,10 @@ acompanhados separadamente.
 | Fase 1 — Soluções de Consulta | **Suspensa** por decisão do desenvolvedor, com as fontes já verificadas. |
 | Fase 2 — Notas explicativas | **Em andamento:** fontes verificadas; pipeline de coleta implementado e testado; coleta das 14.015 entregas DFP (2010–2026) em execução; extração das notas em desenvolvimento. |
 | Fase 3 — Inteligência cruzada | Não iniciada. |
+| Fase 4 — Fundos de investimento | **Planejada** (`decision_0024`): listagens da CVM verificadas; coleta não autorizada. |
 
-Itens de trabalho: 18 registrados, sendo 8 implementados, 2 em andamento,
-1 suspenso e 7 não iniciados. Há 8 aceites humanos. **Nenhum MVP foi
+Itens de trabalho: 23 registrados, sendo 8 implementados, 3 em andamento,
+1 suspenso e 11 não iniciados. Há 8 aceites humanos. **Nenhum MVP foi
 concluído, liberado em release ou colocado em operação.** Riscos e próximos
 passos estão em [`project_status.md`](docs/project_management/project_status.md),
 [`handoff.md`](docs/project_management/handoff.md) e no

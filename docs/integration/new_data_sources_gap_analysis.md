@@ -1,4 +1,10 @@
-# Novas fontes de dados: fundos de investimento da CVM (FIDC/FII) — inventário e análise de lacunas (Common P07, etapa 00)
+# Novas fontes de dados: fundos de investimento da CVM (FII, FIDC, FIP, FIAGRO) — inventário e análise de lacunas (Common P07, etapa 00)
+
+> **Atualização (`decision_0024`, 2026-11-10):** os fundos de investimento (FII, FIDC, FIP e
+> FIAGRO) passaram a ser a família `investment_fund_reports` e a Fase 4 do MVP, com aceite
+> próprio. Onde este documento fala em "opção B", "família opcional" ou "fora dos MVPs", vale
+> a Fase 4. A implementação de referência cobre só FIDC e FII; FIP e FIAGRO serão
+> implementados a partir das fontes da CVM. Listagens verificadas em `docs/data_sources.md`.
 
 - **Prompt:** `prompts/common_p07_new_data_sources.txt` (etapa 00, somente leitura).
 - **Work item:** `work_0019`. **Riscos:** `risk_0014`, `risk_0015`.
@@ -159,13 +165,13 @@ recebe o próximo ID livre, com a nota `origin_id`. Os próximos livres no momen
 
 | Proposta | Descrição | `origin_id` |
 |---|---|---|
-| `req_0012` (common) | Gravação validada com rollback e caminhos contidos | P02-RF-002, P02-RF-003, P02-RF-008, P02-FUN-001/006/007/008 |
-| `req_0013` (common) | Assinaturas de código, configuração e transformação | P02-FUN-002/009/012, P07-RF-004 |
-| `req_0014` (common) | Política de execução e registro de tentativas | P02-RF-006, P02-FUN-003/013 |
+| `req_0015` (common, proposto) | Gravação validada com rollback e caminhos contidos | P02-RF-002, P02-RF-003, P02-RF-008, P02-FUN-001/006/007/008 |
+| `req_0016` (common, proposto) | Assinaturas de código, configuração e transformação | P02-FUN-002/009/012, P07-RF-004 |
+| `req_0017` (common, proposto) | Política de execução e registro de tentativas | P02-RF-006, P02-FUN-003/013 |
 | `test_0035` | Testes sintéticos de `src/common/` | P02-TST-001/003/004/011/012/013 |
-| (só na opção B) | Requisitos FIDC e FII por família | P04, P05_01, P05_02, P06_01, P06_02 (reconciliação da seção a) |
+| `req_0012`–`req_0014` (registrados, `decision_0024`) | Coleta, consolidação e busca de `investment_fund_reports` (FII, FIDC, FIP, FIAGRO) | P04, P05_01, P05_02, P06_01, P06_02 para FIDC e FII; FIP e FIAGRO sem código de referência |
 
-Os IDs da opção B só serão numerados depois do gate.
+Atualização (`decision_0024`): `req_0012`–`req_0014` foram usados pelos requisitos dos fundos. Os requisitos das rotinas comuns recebem os próximos IDs livres na etapa 02 (hoje `req_0015`–`req_0017`).
 
 ## e) Dependências: delta e alternativas em base R
 
@@ -183,14 +189,14 @@ Hoje o `DESCRIPTION` do TaxMiner tem `Imports: renv, testthat`.
 
 Com a opção A, a incorporação **não exige nenhum pacote novo**.
 
-## f) Mapeamento de diretórios (só na opção B)
+## f) Mapeamento de diretórios (Fase 4, `decision_0024`)
 
 | Origem | TaxMiner (fora do repositório e do OneDrive) |
 |---|---|
 | `data/data_fidc/originais` | `TAXMINER_DATA_DIR/raw/investment_fund_reports/fidc/` |
 | `data/data_fii/...` | `TAXMINER_DATA_DIR/raw/investment_fund_reports/fii/` |
 | `data/data_fidc/extraidos/<unidade>/<hash>` | `TAXMINER_DATA_DIR/interim/investment_fund_reports/fidc/<unit>/<sha256>/` |
-| `outputs/fidc`, `outputs/fii` | `TAXMINER_DATA_DIR/processed/investment_fund_reports/{fidc,fii}/` |
+| `outputs/fidc`, `outputs/fii` | `TAXMINER_DATA_DIR/processed/investment_fund_reports/{fii,fidc,fip,fiagro}/` |
 | `config/` (ignorado na origem) | `config/investment_fund_report_sources.yml` (versionado, sem segredos) |
 | `logs/` | Log e manifesto em `TAXMINER_DATA_DIR/...`; evidência em `reports/execution/` só se for aprovada |
 

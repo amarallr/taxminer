@@ -1,0 +1,89 @@
+# TAXMINER — DATA P04 — INVESTMENT FUND REPORT CONSOLIDATION (FII, FIDC, FIP, FIAGRO)
+Prompt Pack: 1.0 (addendum, decision_0024) | Method: CO-STAR | Technical naming: en-US | Explanations: pt-BR
+
+## C — CONTEXT
+Collect P05 stores immutable CVM fund report files per subfamily (`fii`, `fidc`, `fip`, `fiagro`), with a manifest and per-member SHA-256.
+- Each dataset contains several official tables: one CSV per table and period, `;`-separated, Latin-1.
+- The table layouts change over time.
+- MVP Phase 4 (`req_0013`, `req_0014`) needs consolidated, queryable and traceable tables.
+- These tables are independent of `tax_consultation_decisions` and `financial_disclosures`.
+
+## O — OBJECTIVE
+Consolidate each subfamily's official tables over time into versioned, queryable outputs. The outputs must:
+- preserve original values and full lineage;
+- carry a diagnosis of quality issues;
+- feed an independent fund report search.
+
+## S — STYLE
+- Write deterministic, reproducible R code.
+- Use lowercase American English snake_case for columns that TaxMiner creates; keep CVM table and field names as published.
+- No silent coercion: keep original values as text next to typed values, and add typed values only when typing is justified.
+- No empty placeholders or claims of unexecuted work.
+
+## T — TONE
+Precise, skeptical, explicit about uncertainty and layout changes.
+
+## A — AUDIENCE
+TaxMiner developer, contributors, reviewers and authorized approvers.
+
+## R — EXECUTION PLAN
+### 00 — Layout inventory
+From the `META/` dictionaries and the stored files, inventory per subfamily the tables, columns and types, and how they change by period. Record the inventory in `docs/data_dictionary.md`.
+### 01 — Reading and standardization
+Implement `src/data/consolidate_fund_reports.R`:
+- read each member with an explicit encoding and separator;
+- map columns per layout version;
+- keep original values as text;
+- add these columns:
+  - `family`, `dataset`, `table_name`, `layout_version`, `reference_period`;
+  - `fund_cnpj_original`, and `fund_cnpj_normalized` (14 digits, check digits validated);
+  - `zip_sha256`, `source_file`, `source_line`.
+### 02 — Quality and keys
+- Diagnose repeated keys, resubmitted versions, invalid CNPJs, empty mandatory fields and unexpected columns.
+- Keep all rows; never drop or sum duplicates.
+- Write quality issues as records (`fund_quality_issues`).
+### 03 — Outputs
+- Write per-family, per-table outputs under `TAXMINER_DATA_DIR/processed/investment_fund_reports/{family}/`.
+- Use Parquet only after `arrow` is approved; until then, use a documented interim format.
+- Record schema versions, row counts and hashes.
+- Make runs resumable by input hash.
+### 04 — Tests
+- Add synthetic fixtures for layout changes, encoding, repeated keys, versions, invalid CNPJs and interrupted runs.
+- Keep the other families unaffected.
+
+## DELIVERABLES AND ACCEPTANCE
+- Layout inventory.
+- Consolidation code.
+- Quality report.
+- Outputs with lineage.
+- Tests and their results.
+- Handoff.
+Acceptance of Phase 4 requires explicit human sign-off and is never inferred from another phase.
+
+## GOVERNANCE, SECURITY AND HANDOFF
+- Follow `common_p01_lifecycle_management.txt`.
+- Track implementation, tests, acceptance, release and operations separately.
+- Use public or synthetic fixtures only.
+- Never read, enumerate, traverse, modify, index or transmit `restricted/` or `tmp/`.
+- No data or raw files in Git.
+
+## RESPONSE FORMAT
+Present, in this order:
+- layouts found;
+- changed files;
+- commands actually run;
+- counts per family and table;
+- quality issues;
+- test evidence;
+- blockers;
+- governance statuses;
+- next actions.
+
+## MANDATORY FOUR-PHASE MVP ROADMAP (PROMPT PACK 1.0; PHASE 4 ADDED BY decision_0024)
+- **MVP Phase 1 — Tax Consultation Decisions:** independently discover, acquire, process, consolidate in Parquet, and search public RFB Solucoes de Consulta; provide a working local Shiny search, original document references, tests, and explicit human acceptance.
+- **MVP Phase 2 — Financial Statement Notes:** independently discover, acquire, process, consolidate in Parquet, and search public explanatory notes from companies' financial statements; provide company/CNPJ/period/note filters, source references, tests, and explicit human acceptance. Phase 2 must be usable without Phase 1 search.
+- **MVP Phase 3 — Cross-Source Intelligence:** integrate searches and evidence-based relationships across the two accepted datasets; support side-by-side source citations, confidence/uncertainty, traceability, tests, and explicit human acceptance. No automatic findings of misconduct.
+- **MVP Phase 4 — Investment Fund Reports:** independently discover, acquire, consolidate in Parquet, and search public CVM fund reports for FII, FIDC, FIP and FIAGRO (`investment_fund_reports`); provide family/fund CNPJ/administrator/period filters, source-file citations, tests, and explicit human acceptance. Phase 4 must be usable without Phases 1–3; Phase 3 does not consume fund data unless a later decision extends it.
+Track implementation, testing, human acceptance, release and operational health separately FOR EACH phase. A phase may start before the previous phase's acceptance only when documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
+Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `investment_fund_reports` (subfamilies `fii`, `fidc`, `fip`, `fiagro`) for CVM fund reports; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
+Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

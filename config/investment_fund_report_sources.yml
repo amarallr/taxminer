@@ -1,0 +1,53 @@
+# Source registry for investment_fund_reports (MVP Phase 4, decision_0024).
+# Directory listings checked on 2026-11-10; dataset pages, licenses, META
+# dictionaries and file contents are NOT yet verified (Collect P05 step 00).
+# See docs/data_sources.md. Only observed patterns are listed.
+defaults:
+  authority: CVM
+  base_url: https://dados.cvm.gov.br/dados/
+  crawl_delay_seconds: 10
+  license: unverified  # portal datasets are usually ODbL; confirm per dataset page
+  listing_checked_at: "2026-11-10T22:20:00-03:00"
+sources:
+  - source_id: cvm_fii_inf_mensal
+    family: fii
+    url_pattern: https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_{year}.zip
+    periods_listed: [2016, 2026]
+    format: zip
+  - source_id: cvm_fii_inf_trimestral
+    family: fii
+    url_pattern: https://dados.cvm.gov.br/dados/FII/DOC/INF_TRIMESTRAL/DADOS/inf_trimestral_fii_{year}.zip
+    periods_listed: [2016, 2026]
+    format: zip
+  - source_id: cvm_fii_inf_anual
+    family: fii
+    url_pattern: https://dados.cvm.gov.br/dados/FII/DOC/INF_ANUAL/DADOS/inf_anual_fii_{year}.zip
+    periods_listed: [2016, 2026]
+    format: zip
+  - source_id: cvm_fii_dfin
+    family: fii
+    url_pattern: https://dados.cvm.gov.br/dados/FII/DOC/DFIN/DADOS/dfin_fii_{year}.csv
+    periods_listed: [2016, 2026]
+    format: csv
+    notes: Index of FII financial statements (documents); outside the first sample
+  - source_id: cvm_fidc_inf_mensal
+    family: fidc
+    url_pattern: https://dados.cvm.gov.br/dados/FIDC/DOC/INF_MENSAL/DADOS/inf_mensal_fidc_{yyyymm}.zip
+    periods_listed: ["202501", "202610"]
+    format: zip
+    notes: Older periods under DADOS/HIST/ (listing not opened)
+  - source_id: cvm_fip_inf_trimestral
+    family: fip
+    url_pattern: https://dados.cvm.gov.br/dados/FIP/DOC/INF_TRIMESTRAL/DADOS/inf_trimestral_fip_{year}.csv
+    periods_listed: [2010, 2023]
+    format: csv
+  - source_id: cvm_fip_inf_quadrimestral
+    family: fip
+    url_pattern: https://dados.cvm.gov.br/dados/FIP/DOC/INF_QUADRIMESTRAL/DADOS/inf_quadrimestral_fip_{year}.csv
+    periods_listed: [2024, 2026]
+    format: csv
+  - source_id: cvm_fiagro_inf_mensal
+    family: fiagro
+    url_pattern: https://dados.cvm.gov.br/dados/FIAGRO/DOC/INF_MENSAL/DADOS/inf_mensal_fiagro_{yyyymm}.zip
+    periods_listed: ["202505", "202610"]
+    format: zip
