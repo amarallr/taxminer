@@ -569,6 +569,16 @@ body { font-family: var(--tm-sans); -webkit-font-smoothing: antialiased; }
 .navbar .nav-link { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 500;
                     padding: 8px 12px !important; border-bottom: 2px solid transparent; }
 .navbar .nav-link.active { border-bottom-color: #fff; }
+/* Published page: the tabs are plain "li > a" (Shiny's JS adds .nav-link only
+   in the app), so the same look is set on that markup. */
+.navbar .navbar-nav > li > a { display: block; color: rgba(255,255,255,.75); text-decoration: none; font-size: .7rem;
+                               text-transform: uppercase; letter-spacing: .08em; font-weight: 500; padding: 8px 12px;
+                               border-bottom: 2px solid transparent; }
+/* Bootstrap 5 marks the clicked link (a.active) but leaves the initial li.active. */
+.navbar .navbar-nav > li > a:hover, .navbar .navbar-nav > li > a.active,
+.navbar .navbar-nav:not(:has(> li > a.active)) > li.active > a { color: #fff; }
+.navbar .navbar-nav > li > a.active,
+.navbar .navbar-nav:not(:has(> li > a.active)) > li.active > a { border-bottom-color: #fff; }
 
 /* Titles and labels. */
 .tm-dash-head { border-bottom: 1px solid var(--tm-navy); }

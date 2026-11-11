@@ -1,5 +1,13 @@
 # Changelog
 
+## Ajustes após a 1.0 — 2026-11-11
+
+- Série completa do fundo: tabela montada como texto, coluna a coluna, em vez de um objeto por
+  célula. Num FIDC com 165 períodos e cerca de 80 campos, a montagem cai de 23,6 s para 0,45 s,
+  com a mesma formatação (teste de equivalência e de tempo em `test_fund_reports_search.R`).
+- Painel publicado: as abas do topo recebem o mesmo estilo do app (caixa alta pequena, sublinhado
+  só na aba ativa); no HTML estático elas não têm a classe `nav-link` que o Shiny adiciona no app.
+
 ## Estilo executivo, PL nas listas e ordenação por PL — 2026-11-11
 
 - Listas de fundos (Fundos, FIDC, FII, FIP, FIAGRO) ganham as colunas PL (mês de referência do tipo;

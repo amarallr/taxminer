@@ -248,3 +248,25 @@ test_that("placeholder fund names are shown as missing and sorted last", {
                   fund_cnpj = "1", period_count = 1L)
   expect_equal(sort_directory(r, "name")$fund_name[1:2], c("a fundo", "B FUNDO"))
 })
+
+test_that("the full series table formats values like the card and stays fast", {
+  x <- c(NA, "", "0", "12", "1234", "-1234567.5", "1.234,56", "007", "-05", "abc", "1e5", "1.234", "S")
+  for (field in c("TAB_I_VL_ATIVO", "CNPJ_FUNDO")) {
+    one <- lapply(x, display_value, field = field)
+    all <- display_values(x, field)
+    expect_identical(all$text, vapply(one, `[[`, "", "text"))
+    expect_identical(all$num, vapply(one, `[[`, TRUE, "num"))
+  }
+  r <- data.frame(citation = c("CVM <a&b>", "CVM 2"), source_url = c("https://x/1.zip", NA),
+                  reference_period = c("2013", NA), layout_version = "v1", TAB_I_VL_ATIVO = c("1234.5", ""),
+                  stringsAsFactors = FALSE)
+  h <- as.character(wide_table(r))
+  expect_match(h, '<td class="tm-cite" title="CVM &lt;a&amp;b&gt;"><a href="https://x/1.zip"', fixed = TRUE)
+  expect_match(h, '<td class="tm-cite" title="CVM 2">CVM 2</td>', fixed = TRUE)
+  expect_match(h, "<td>2013</td>", fixed = TRUE)
+  expect_match(h, '<td class="tm-num">1.234,5</td>', fixed = TRUE)
+  expect_match(h, "<td>—</td>", fixed = TRUE)
+  big <- r[rep(1:2, 100), ]
+  big[paste0("TAB_I_VL_", 1:80)] <- "123456.78"
+  expect_lt(system.time(wide_table(big))[["elapsed"]], 5)
+})

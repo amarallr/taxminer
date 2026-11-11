@@ -28,6 +28,28 @@ display_value <- function(v, field = "") {
   list(text = text, num = TRUE)
 }
 
+# Vectorised display_value for one column (same rules): text and numeric flag.
+display_values <- function(v, field = "") {
+  v <- trimws(as.character(v))
+  empty <- is.na(v) | !nzchar(v)
+  text <- ifelse(empty, "—", v)
+  num <- rep(FALSE, length(v))
+  if (grepl(fund_code_fields, toupper(field))) return(list(text = text, num = num))
+  ok <- !empty
+  masked <- ok & grepl("^-?[0-9]{1,3}([.][0-9]{3})*(,[0-9]+)?$", v) & grepl("[.,]", v)
+  plain <- ok & !masked & grepl("^-?[0-9]+([.][0-9]+)?$", v) & !grepl("^-?0[0-9]", v)
+  num[masked | plain] <- TRUE
+  if (any(plain)) {
+    p <- v[plain]
+    neg <- startsWith(p, "-")
+    p <- sub("^-", "", p)
+    int <- gsub("(?<=[0-9])(?=([0-9]{3})+$)", ".", sub("[.].*$", "", p), perl = TRUE)
+    dec <- ifelse(grepl(".", p, fixed = TRUE), paste0(",", sub("^[^.]*[.]", "", p)), "")
+    text[plain] <- paste0(ifelse(neg, "-", ""), int, dec)
+  }
+  list(text = text, num = num)
+}
+
 value_cell <- function(v, field) {
   d <- display_value(v, field)
   shiny::tags$td(class = if (d$num) "tm-num", d$text)
@@ -241,24 +263,30 @@ wide_table <- function(r, descriptions = NULL, table_name = NULL) {
   shown <- r[, setdiff(names(r), c("source_url", "zip_sha256", "source_file", "source_line",
                                    "fund_cnpj_normalized")), drop = FALSE]
   labels <- field_labels(names(shown), descriptions, table_name)
-  shiny::tags$table(
-    class = "tm-wide",
-    shiny::tags$thead(shiny::tags$tr(lapply(seq_len(nrow(labels)), function(k) {
-      shiny::tags$th(`data-tip` = labels$label[k], labels$field[k])
-    }))),
-    shiny::tags$tbody(lapply(seq_len(nrow(shown)), function(i) {
-      shiny::tags$tr(lapply(names(shown), function(n) {
-        v <- shown[[n]][i]
-        # Citation on one line (full text on hover); period and layout are
-        # identifiers, not quantities, so no thousands separator.
-        if (n == "citation" && !is.na(r$source_url[i])) {
-          shiny::tags$td(class = "tm-cite", title = v,
-                         shiny::tags$a(href = r$source_url[i], target = "_blank", rel = "noopener", v))
-        } else if (n == "citation") shiny::tags$td(class = "tm-cite", title = v, v)
-        else if (n %in% c("reference_period", "layout_version")) shiny::tags$td(if (is.na(v)) "" else as.character(v))
-        else value_cell(v, n)
-      }))
-    })))
+  # Built as text column by column: a tag object per cell took ~25 s for a
+  # FIDC with 165 periods and ~80 fields.
+  cells <- lapply(names(shown), function(n) {
+    v <- shown[[n]]
+    if (n == "citation") {
+      t <- escape_html(v)
+      url <- if (is.null(r$source_url)) rep(NA_character_, length(v)) else r$source_url
+      # Citation on one line, full text on hover.
+      ifelse(is.na(url), sprintf('<td class="tm-cite" title="%s">%s</td>', t, t),
+             sprintf('<td class="tm-cite" title="%s"><a href="%s" target="_blank" rel="noopener">%s</a></td>',
+                     t, escape_html(url), t))
+    } else if (n %in% c("reference_period", "layout_version")) {
+      # Identifiers, not quantities: no thousands separator.
+      sprintf("<td>%s</td>", escape_html(v))
+    } else {
+      d <- display_values(v, n)
+      sprintf("<td%s>%s</td>", ifelse(d$num, ' class="tm-num"', ""), escape_html(d$text))
+    }
+  })
+  body <- if (nrow(shown)) paste0("<tr>", do.call(paste0, cells), "</tr>", collapse = "") else ""
+  head <- paste0(sprintf('<th data-tip="%s">%s</th>', escape_html(labels$label), escape_html(labels$field)),
+                 collapse = "")
+  htmltools::HTML(sprintf('<table class="tm-wide"><thead><tr>%s</tr></thead><tbody>%s</tbody></table>',
+                          head, body))
 }
 
 row_periods <- function(r) {
