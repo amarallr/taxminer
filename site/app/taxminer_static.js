@@ -158,6 +158,9 @@
           var ns = byEntity[f[F.entity]] || [];
           f.search = fold([f[F.name], f[F.admin]].concat(ns.map(function (n) { return n[2]; })).join(' ')) + ' ' +
                      f[F.key] + ' ' + (f[F.adminCnpj] || '').replace(/\D/g, '');
+          // Folded once here, not on every filter, sort or page change.
+          f.nameKey = fold(f[F.name]); f.adminKey = fold(f[F.admin]);
+          f.adminDigits = (f[F.adminCnpj] || '').replace(/\D/g, '');
         });
         d.byEntity = byEntity;
         window.TM_FUNDS_META = d.meta;
@@ -181,7 +184,9 @@
     this.el = el; this.family = el.attr('data-family') || '';
     this.families = this.family ? [this.family] : ['fidc', 'fii', 'fip', 'fiagro'];
     this.sort = {by: 'pl', dec: true}; this.page = 0; this.selected = null;
-    this.reset = function () { this.sort = {by: 'pl', dec: true}; this.page = 0; this.update(); };  // new filters: largest funds first
+    // New filters: largest funds first, and the first result is shown.
+    this.reset = function () { this.sort = {by: 'pl', dec: true}; this.page = 0; this.selected = null; this.update(); };
+    el.data('tm-tab', this);
   }
   FundTab.prototype.render = function (d) {
     var t = this, fam = t.family, meta = d.meta;
@@ -223,33 +228,40 @@
       box.find('[data-pane-body]').attr('hidden', true).filter('[data-pane-body="' + k + '"]').removeAttr('hidden');
     });
     t.d = d; t.update();
+    if (t.el.data('tm-open')) t.open(t.el.data('tm-open'));
+  };
+  // Show one fund: its CNPJ in the fund search, no administrator filter.
+  FundTab.prototype.open = function (cnpj) {
+    this.el.removeData('tm-open');
+    this.el.find('.tm-q').val(cnpj); this.el.find('.tm-qa').val('');
+    this.reset();
   };
   FundTab.prototype.update = function () {
     var t = this, d = t.d, q = fold(t.el.find('.tm-q').val()), qa = fold(t.el.find('.tm-qa').val());
     var qd = (t.el.find('.tm-q').val() || '').replace(/\D/g, ''), qad = (t.el.find('.tm-qa').val() || '').replace(/\D/g, '');
     var fams = t.family ? [t.family] : t.el.find('.tm-filter-family input:checked').map(function () { return this.value; }).get();
     var words = q ? q.split(' ') : [], awords = qa ? qa.split(' ') : [];
-    var rows = d.funds.filter(function (f) {
-      if (fams.indexOf(f[F.family]) < 0) return false;
-      if (words.length && !(qd.length >= 4 && f[F.key].indexOf(qd) === 0) &&
-          !words.every(function (w) { return f.search.indexOf(w) >= 0; })) return false;
-      if (awords.length) {
-        var a = fold(f[F.admin]);
-        if (!(qad.length >= 4 && (f[F.adminCnpj] || '').replace(/\D/g, '').indexOf(qad) === 0) &&
-            !awords.every(function (w) { return a.indexOf(w) >= 0; })) return false;
-      }
-      return true;
-    });
     var s = t.sort, dir = s.dec ? -1 : 1;
-    function val(f) {
-      return s.by === 'name' ? fold(f[F.name]) : s.by === 'period' ? f[F.last] : s.by === 'count' ? f[F.count] : s.by === 'share' ? f[F.share] : f[F.pl];
+    // A page change reuses the filtered, sorted list; only the slice is redrawn.
+    var key = [fams.join(','), q, qd, qa, qad, s.by, s.dec].join('|');
+    var rows = t.rowsKey === key ? t.rows : null;
+    if (!rows) {
+      rows = d.funds.filter(function (f) {
+        if (fams.indexOf(f[F.family]) < 0) return false;
+        if (words.length && !(qd.length >= 4 && f[F.key].indexOf(qd) === 0) &&
+            !words.every(function (w) { return f.search.indexOf(w) >= 0; })) return false;
+        if (awords.length && !(qad.length >= 4 && f.adminDigits.indexOf(qad) === 0) &&
+            !awords.every(function (w) { return f.adminKey.indexOf(w) >= 0; })) return false;
+        return true;
+      });
+      var col = s.by === 'name' ? 'nameKey' : s.by === 'period' ? F.last : s.by === 'count' ? F.count : s.by === 'share' ? F.share : F.pl;
+      rows.sort(function (a, b) {
+        var x = a[col], y = b[col];
+        if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+        return (x < y ? -1 : x > y ? 1 : 0) * dir;
+      });
+      t.rows = rows; t.rowsKey = key;
     }
-    rows.sort(function (a, b) {
-      var x = val(a), y = val(b);
-      if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
-      return (x < y ? -1 : x > y ? 1 : 0) * dir;
-    });
-    t.rows = rows;
     var pages = Math.max(1, Math.ceil(rows.length / PAGE)); t.page = Math.min(Math.max(0, t.page), pages - 1);
     var slice = rows.slice(t.page * PAGE, (t.page + 1) * PAGE);
     var head = SORTS.map(function (c) {
@@ -339,4 +351,14 @@
     pane.find('.tm-static-funds').each(function () { activate($(this)); });
   });
   $(function () { $('.tab-pane.active .tm-static-funds').each(function () { activate($(this)); }); });
+  // Double click on a fund in the Panorama: open its family tab filtered by
+  // its CNPJ (applied when the tab is built, if it is not built yet).
+  $(document).on('tm:open-fund', function (e, f) {
+    var fam = String(f.family).toLowerCase(), el = $('.tm-static-funds[data-family="' + fam + '"]');
+    var link = $('.navbar a[data-value="' + fam.toUpperCase() + '"]');
+    if (!el.length || !link.length) return;
+    var tab = el.data('tm-tab');
+    if (tab && tab.d) tab.open(f.cnpj); else el.data('tm-open', f.cnpj);
+    link.tab('show');
+  });
 })(jQuery);

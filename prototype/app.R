@@ -70,6 +70,7 @@ ui <- bslib::page_navbar(
     shiny::div(class = "tm-page", shiny::div(
       class = "tm-hero tm-about",
       shiny::div(class = "tm-eyebrow", "Sobre o TaxMiner"),
+      version_label(repo),
       shiny::h1("Pesquisa em fontes públicas"),
       shiny::p(class = "tm-lede",
                "Dados públicos da CVM (dados.cvm.gov.br, licença ODbL), com valores como publicados.",

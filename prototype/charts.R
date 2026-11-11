@@ -135,20 +135,26 @@ bar_list <- function(labels, values, value_text, colors = "#2a78d6", sub = NULL,
   colors <- rep_len(colors, length(values))
   # A missing key leaves that row not clickable.
   pick <- if (is.null(keys)) rep(FALSE, length(values)) else !is.na(keys)
-  rows <- lapply(seq_along(values), function(i) {
-    w <- if (top > 0 && !is.na(values[i])) max(0.4, 100 * values[i] / top) else 0
-    shiny::div(
-      class = paste("tm-bar-row", if (pick[i]) "tm-pick", if (identical(keys[i], selected)) "tm-selected"),
-      `data-key` = if (pick[i]) keys[i], `data-input` = if (pick[i]) input,
-      `data-tip` = if (!is.null(tips)) tips[i],
-      if (!is.null(rank)) shiny::span(class = "tm-bar-rank", rank[i]),
-      shiny::div(class = "tm-bar-label", shiny::div(class = "tm-bar-name", labels[i]),
-                 if (!is.null(sub)) shiny::div(class = "tm-bar-sub", sub[i])),
-      shiny::div(class = "tm-bar-track",
-                 shiny::div(class = "tm-bar", style = sprintf("width:%.2f%%;background:%s", w, colors[i]))),
-      shiny::div(class = "tm-bar-value", value_text[i]))
-  })
-  shiny::div(class = "tm-bars", rows)
+  n <- length(values)
+  if (!n) return(shiny::div(class = "tm-bars"))
+  # Built as text in one pass (hundreds of rows for a large administrator; a
+  # tag object per row took about a second). Same markup as the tag version.
+  esc <- function(x) htmltools::htmlEscape(as.character(x), attribute = TRUE)
+  w <- ifelse(top > 0 & !is.na(values), pmax(0.4, 100 * values / top), 0)
+  sel <- if (is.null(selected) || is.null(keys)) rep(FALSE, n) else !is.na(keys) & keys == selected
+  cls <- paste0("tm-bar-row", ifelse(pick, " tm-pick", ""), ifelse(sel, " tm-selected", ""))
+  attrs <- paste0(' class="', cls, '"',
+                  ifelse(pick, paste0(' data-key="', esc(keys), '"'), ""),
+                  if (!is.null(input)) ifelse(pick, paste0(' data-input="', esc(input), '"'), "") else "",
+                  if (!is.null(tips)) paste0(' data-tip="', esc(tips), '"') else "")
+  html <- paste0(
+    "<div", attrs, ">",
+    if (!is.null(rank)) paste0('<span class="tm-bar-rank">', esc(rank), "</span>") else "",
+    '<div class="tm-bar-label"><div class="tm-bar-name">', esc(labels), "</div>",
+    if (!is.null(sub)) paste0('<div class="tm-bar-sub">', esc(sub), "</div>") else "", "</div>",
+    '<div class="tm-bar-track"><div class="tm-bar" style="', sprintf("width:%.2f%%;background:%s", w, esc(colors)),
+    '"></div></div><div class="tm-bar-value">', esc(value_text), "</div></div>", collapse = "")
+  shiny::div(class = "tm-bars", htmltools::HTML(html))
 }
 
 # One 100% bar split by category, with a legend that carries the numbers.

@@ -1,7 +1,7 @@
 /* TaxMiner — Panorama with cross-filtering (req_0019, work_0030).
    One source of truth (the state below) and one data model (fund x month
    facts from src/intelligence/panorama_data.R); every component — KPIs,
-   composition bar, family panels and the two Top-20 rankings — is computed
+   composition bar, family panels and the two Top-30 rankings — is computed
    from the same filtered rows on every change, so they never disagree.
 
    Filter propagation:
@@ -13,7 +13,7 @@
        administrator ranking ignores the administrator selection, the fund
        ranking ignores the fund selection, the family panels ignore the family
        filter. Selected items are highlighted and stay visible (pinned) even
-       when they fall outside a recalculated Top 20.
+       when they fall outside a recalculated Top 30.
      - The administrator of a fund is the one reported in the month shown
        (historical link), never the current one retroacted.
    Same file in the local app (data under panorama-data/) and on the published
@@ -109,7 +109,10 @@
       if (x.pl == null) return 1; if (y.pl == null) return -1;
       return y.pl - x.pl || x.fund - y.fund;
     });
-    list.forEach(function (r, i) { r.rank = i + 1; });
+    // Share of the filtered total (same base as the administrator ranking).
+    var total = sum(list, 'pl');
+    list.forEach(function (r, i) { r.rank = i + 1; r.share = total > 0 && r.pl != null ? r.pl / total : null; });
+    list.total = total;
     return list;
   }
 
@@ -164,7 +167,7 @@
 (function () {
   'use strict';
   if (typeof window === 'undefined' || !window.jQuery) return;
-  var $ = window.jQuery, E = window.TMPanorama, TOP = 20;
+  var $ = window.jQuery, E = window.TMPanorama, TOP = 30;
   var MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
   function num(v, d) { return v.toLocaleString('pt-BR', {minimumFractionDigits: d, maximumFractionDigits: d}); }
@@ -319,7 +322,7 @@
       }).join('') + '</div>' +
       '<div class="tm-dash-rank"><div class="tm-dash-card"><div class="tm-dash-card-head">' + TOP + ' maiores administradores' +
       '<span class="tm-head-note">clique filtra o painel · Ctrl+clique soma</span></div><div class="tm-rank-list tm-admin-list"></div></div>' +
-      '<div class="tm-dash-card"><div class="tm-dash-card-head">' + TOP + ' maiores fundos<span class="tm-head-note">cor = tipo · clique filtra · Ctrl+clique soma</span></div>' +
+      '<div class="tm-dash-card"><div class="tm-dash-card-head">' + TOP + ' maiores fundos<span class="tm-head-note">cor = tipo · clique filtra · Ctrl+clique soma · duplo clique abre o fundo</span></div>' +
       '<div class="tm-rank-list tm-fund-list"></div></div></div>');
     var toggle = function (list, v, add) {
       var i = list.indexOf(v);
@@ -350,6 +353,14 @@
       e.preventDefault();
       p.state.funds = toggle(p.state.funds, +$(this).attr('data-fund'), e.ctrlKey || e.metaKey);
       p.update();
+      // Second click of a double click: open the fund in its family tab,
+      // filtered by its CNPJ. Detected on the click itself because each click
+      // redraws the list; the two toggles cancel out, so the Panorama keeps
+      // its state.
+      if (e.type === 'click' && e.detail === 2) {
+        var f = p.index.funds[+$(this).attr('data-fund')];
+        if (f) $(document).trigger('tm:open-fund', [{family: f[0], cnpj: f[1], name: f[2]}]);
+      }
     });
     p.el.on('click', '.tm-chip-x', function (e) {
       e.preventDefault();
@@ -542,10 +553,13 @@
     var missingFunds = st.funds.filter(function (fi) { return !fr.some(function (x) { return x.fund === fi; }); });
     var fundItem = function (r) {
       var f = ix.funds[r.fund];
-      return {key: r.fund, rank: r.rank, label: f[2], value: r.pl, color: ix.colors[r.family], text: fmtBRL(r.pl),
+      return {key: r.fund, rank: r.rank, label: f[2], value: r.pl, color: ix.colors[r.family],
+              text: fmtBRL(r.pl) + (r.share != null ? ' · ' + fmtPct(r.share, 1, false) : ''),
               sub: r.family.toUpperCase() + ' · ' + f[1], selected: st.funds.indexOf(r.fund) >= 0,
               tip: f[2] + '\n' + r.family.toUpperCase() + ' · ' + f[1] + '\nAdministrador em ' + monthLabel(r.month) + ': ' + adminName(r.admin) +
-                   '\nPL ' + fmtBRL(r.pl) + (r.carried ? ' (último informe trimestral)' : '') + '\nClique para filtrar; Ctrl+clique para somar'};
+                   '\nPL ' + fmtBRL(r.pl) + (r.carried ? ' (último informe trimestral)' : '') +
+                   (r.share != null ? '\nParticipação ' + fmtPct(r.share, 2, false) + ' do patrimônio filtrado' : '') +
+                   '\nClique para filtrar; Ctrl+clique para somar; duplo clique abre o fundo'};
     };
     p.el.find('.tm-fund-list').html(
       (fr.length ? '<div class="tm-bars">' + bars(ft.head.map(fundItem), {kind: 'fund'}) + '</div>' :
@@ -567,5 +581,20 @@
       $(window).on('resize', function () { clearTimeout(timer); timer = setTimeout(function () { p.drawCharts(); }, 150); });
       $(document).on('shown.bs.tab', function () { p.drawCharts(); });
     });
+    // Local app (Shiny): a fund opened from the Panorama goes to its family tab
+    // with the fund filter set to its CNPJ and the administrator filter cleared;
+    // the search then selects that fund. The published page has its own
+    // handler (taxminer_static.js).
+    if (window.Shiny && !$('.tm-static-funds').length) {
+      $(document).on('tm:open-fund', function (e, f) {
+        var fam = String(f.family).toLowerCase(), tab = $('.navbar a[data-value="' + fam.toUpperCase() + '"]');
+        var q = $('#funds_' + fam + '-fund_query')[0], a = $('#funds_' + fam + '-administrator')[0];
+        if (!tab.length || !q || !q.selectize) return;
+        if (a && a.selectize) a.selectize.clear(true);
+        q.selectize.addOption({value: f.cnpj, label: f.cnpj + ' — ' + f.name});
+        q.selectize.setValue([f.cnpj]);
+        tab.tab('show');
+      });
+    }
   });
 })();

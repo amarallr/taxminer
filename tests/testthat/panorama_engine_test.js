@@ -51,6 +51,10 @@ assert.ok(Math.abs(k1.change - (320 - 10) / 10) < 1e-9);
 // KPI total equals the sum of the fund ranking under the same filters.
 var fr1 = E.fundRanking(E.filterRows(rows, s1, ['funds']));
 assert.strictEqual(fr1.reduce(function (s, r) { return s + r.pl; }, 0), k1.pl);
+// Fund shares are over the same filtered total and add up to 1.
+assert.strictEqual(fr1.total, k1.pl);
+assert.ok(Math.abs(fr1.reduce(function (s, r) { return s + r.share; }, 0) - 1) < 1e-9);
+assert.ok(Math.abs(fr1[0].share - fr1[0].pl / k1.pl) < 1e-12);
 // The administrator ranking ignores its own selection (others stay visible).
 var ar1 = E.adminRanking(E.filterRows(rows, s1, ['admins']));
 assert.deepStrictEqual(ar1.map(function (a) { return a.admin; }), [1, 0]);

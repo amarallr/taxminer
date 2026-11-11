@@ -65,6 +65,7 @@ about_area <- shiny::div(
   class = "tm-page",
   shiny::div(class = "tm-hero tm-about",
              shiny::div(class = "tm-eyebrow", "Sobre este painel"),
+             version_label(".", generated),
              shiny::h1("Versão publicada do painel de fundos"),
              shiny::p(class = "tm-lede",
                       sprintf("Gerado em %s a partir dos informes públicos da CVM", generated),

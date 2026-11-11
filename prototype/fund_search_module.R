@@ -11,6 +11,38 @@ format_count <- function(x) formatC(x, format = "d", big.mark = ".", decimal.mar
 # Fields holding identifiers or codes: shown exactly as published.
 fund_code_fields <- "CNPJ|CPF|CEP|ISIN|TEL|FONE|FAX|^CD_|_CD_|^COD|_COD|^ID_|_ID$|^ANO|_ANO$|^NR_PROC|VERSAO|^TP_|CODIGO"
 
+# CPF as 000.000.000-00 when the check digits are right (numeric values that
+# lost leading zeros are padded); anything else is returned as published.
+format_cpf <- function(x) {
+  out <- ifelse(is.na(x), NA_character_, trimws(x))
+  d <- gsub("[.[:space:]-]", "", out)
+  short <- !is.na(d) & grepl("^[0-9]{9,10}$", d)
+  d[short] <- paste0(strrep("0", 11L - nchar(d[short])), d[short])
+  ok <- !is.na(d) & grepl("^[0-9]{11}$", d) & !grepl("^(.)\\1{10}$", d)
+  ok[ok] <- vapply(d[ok], function(v) {
+    n <- utf8ToInt(v) - 48L
+    dv <- function(k) { r <- (sum(n[seq_len(k)] * seq(k + 1L, 2L)) * 10L) %% 11L; if (r == 10L) 0L else r }
+    dv(9L) == n[10] && dv(10L) == n[11]
+  }, logical(1), USE.NAMES = FALSE)
+  out[ok] <- sprintf("%s.%s.%s-%s", substr(d[ok], 1, 3), substr(d[ok], 4, 6), substr(d[ok], 7, 9), substr(d[ok], 10, 11))
+  out
+}
+
+# CNPJ and CPF fields of the reports shown with their masks. Fields named for
+# both (e.g. CPF/CNPJ of a cedente) take CPF when the value is a valid CPF.
+format_tax_id <- function(x, field) {
+  f <- toupper(field)
+  has_cnpj <- grepl("CNPJ", f); has_cpf <- grepl("CPF", f)
+  if (!has_cnpj && !has_cpf) return(x)
+  if (!has_cnpj) return(format_cpf(x))
+  cnpj <- format_cnpj(x)
+  if (!has_cpf) return(cnpj)
+  cpf <- format_cpf(x)
+  digits <- gsub("[^0-9]", "", ifelse(is.na(x), "", x))
+  use_cpf <- !is.na(cpf) & nchar(digits) <= 11L & grepl("^[0-9]{3}[.][0-9]{3}[.][0-9]{3}-[0-9]{2}$", cpf)
+  ifelse(use_cpf, cpf, cnpj)
+}
+
 # Display of published values (presentation only; stored values unchanged):
 # plain numbers get "." for thousands and "," for decimals, keeping the
 # published decimal places; values already in that format pass through.
@@ -18,7 +50,7 @@ fund_code_fields <- "CNPJ|CPF|CEP|ISIN|TEL|FONE|FAX|^CD_|_CD_|^COD|_COD|^ID_|_ID
 display_value <- function(v, field = "") {
   if (is.na(v) || !nzchar(trimws(v))) return(list(text = "—", num = FALSE))
   v <- trimws(v)
-  if (grepl(fund_code_fields, toupper(field))) return(list(text = v, num = FALSE))
+  if (grepl(fund_code_fields, toupper(field))) return(list(text = format_tax_id(v, field), num = FALSE))
   if (grepl("^-?[0-9]{1,3}([.][0-9]{3})*(,[0-9]+)?$", v) && grepl("[.,]", v))
     return(list(text = v, num = TRUE))
   if (!grepl("^-?[0-9]+([.][0-9]+)?$", v) || grepl("^-?0[0-9]", v)) return(list(text = v, num = FALSE))
@@ -34,7 +66,10 @@ display_values <- function(v, field = "") {
   empty <- is.na(v) | !nzchar(v)
   text <- ifelse(empty, "—", v)
   num <- rep(FALSE, length(v))
-  if (grepl(fund_code_fields, toupper(field))) return(list(text = text, num = num))
+  if (grepl(fund_code_fields, toupper(field))) {
+    text[!empty] <- format_tax_id(v[!empty], field)
+    return(list(text = text, num = num))
+  }
   ok <- !empty
   masked <- ok & grepl("^-?[0-9]{1,3}([.][0-9]{3})*(,[0-9]+)?$", v) & grepl("[.,]", v)
   plain <- ok & !masked & grepl("^-?[0-9]+([.][0-9]+)?$", v) & !grepl("^-?0[0-9]", v)
@@ -259,34 +294,40 @@ report_card <- function(r, descriptions = NULL, table_name = NULL) {
     shiny::tags$tbody(body)), hidden = sum(!filled))
 }
 
+# Full series, transposed like a financial statement: one line per CVM field
+# with the same labels as the Ficha (dictionary description; italic when the
+# dictionary has none; field code on hover), one column per report row, most
+# recent period first. Each column header is the period, linked to the CVM
+# file, with the full citation on hover. Fields empty in every row are left
+# out (counted in `hidden`). Built as text: a tag object per cell took ~25 s
+# for a FIDC with 165 periods and ~80 fields.
 wide_table <- function(r, descriptions = NULL, table_name = NULL) {
-  shown <- r[, setdiff(names(r), c("source_url", "zip_sha256", "source_file", "source_line",
-                                   "fund_cnpj_normalized")), drop = FALSE]
-  labels <- field_labels(names(shown), descriptions, table_name)
-  # Built as text column by column: a tag object per cell took ~25 s for a
-  # FIDC with 165 periods and ~80 fields.
-  cells <- lapply(names(shown), function(n) {
-    v <- shown[[n]]
-    if (n == "citation") {
-      t <- escape_html(v)
-      url <- if (is.null(r$source_url)) rep(NA_character_, length(v)) else r$source_url
-      # Citation on one line, full text on hover.
-      ifelse(is.na(url), sprintf('<td class="tm-cite" title="%s">%s</td>', t, t),
-             sprintf('<td class="tm-cite" title="%s"><a href="%s" target="_blank" rel="noopener">%s</a></td>',
-                     t, escape_html(url), t))
-    } else if (n %in% c("reference_period", "layout_version")) {
-      # Identifiers, not quantities: no thousands separator.
-      sprintf("<td>%s</td>", escape_html(v))
-    } else {
-      d <- display_values(v, n)
-      sprintf("<td%s>%s</td>", ifelse(d$num, ' class="tm-num"', ""), escape_html(d$text))
-    }
-  })
-  body <- if (nrow(shown)) paste0("<tr>", do.call(paste0, cells), "</tr>", collapse = "") else ""
-  head <- paste0(sprintf('<th data-tip="%s">%s</th>', escape_html(labels$label), escape_html(labels$field)),
-                 collapse = "")
-  htmltools::HTML(sprintf('<table class="tm-wide"><thead><tr>%s</tr></thead><tbody>%s</tbody></table>',
-                          head, body))
+  fields <- setdiff(names(r), c("citation", "source_url", "zip_sha256", "source_file", "source_line",
+                                "fund_cnpj_normalized", "reference_period", "layout_version"))
+  if (nrow(r)) r <- r[order(row_periods(r), decreasing = TRUE, method = "radix"), , drop = FALSE]
+  filled <- vapply(fields, function(f) any(!is.na(r[[f]]) & nzchar(trimws(r[[f]]))), logical(1))
+  labels <- field_labels(fields[filled], descriptions, table_name)
+  period <- if (nrow(r)) row_periods(r) else character()
+  period <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+  cite <- if (is.null(r$citation)) rep("", nrow(r)) else escape_html(r$citation)
+  url <- if (is.null(r$source_url)) rep(NA_character_, nrow(r)) else r$source_url
+  head <- paste0(ifelse(is.na(url),
+                        sprintf('<th class="tm-col-period" title="%s">%s</th>', cite, escape_html(period)),
+                        sprintf('<th class="tm-col-period" title="%s"><a href="%s" target="_blank" rel="noopener">%s</a></th>',
+                                cite, escape_html(url), escape_html(period))), collapse = "")
+  body <- vapply(seq_len(nrow(labels)), function(k) {
+    f <- labels$field[k]
+    d <- display_values(r[[f]], f)
+    tip <- sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
+                   if (labels$derived[k]) " (sem descrição no dicionário)" else "")
+    paste0('<tr><th class="', if (labels$derived[k]) "tm-field tm-derived" else "tm-field", '" data-tip="',
+           escape_html(tip), '">', escape_html(labels$label[k]), "</th>",
+           paste0("<td", ifelse(d$num, ' class="tm-num"', ""), ">", escape_html(d$text), "</td>", collapse = ""),
+           "</tr>")
+  }, character(1))
+  structure(htmltools::HTML(sprintf(
+    '<table class="tm-wide tm-series"><thead><tr><th class="tm-field">Campo</th>%s</tr></thead><tbody>%s</tbody></table>',
+    head, paste0(body, collapse = ""))), hidden = sum(!filled))
 }
 
 row_periods <- function(r) {
@@ -364,8 +405,9 @@ fund_search_ui <- function(id, family = NULL) {
 # Everything the fund areas read, loaded once and shared by every tab.
 fund_search_data <- function(root, directory = load_fund_directory(root), rules = load_entity_rules(),
                              master = load_entity_master(root, directory, rules)) {
+  urls <- fund_source_urls(root)
   list(directory = annotate_directory_entities(directory), master = master, rules = rules,
-       tables = fund_tables(root), urls = fund_source_urls(root),
+       tables = fund_tables(root), urls = urls, report_rows = fund_rows_cache(root, urls),
        descriptions = fund_field_descriptions(root))
 }
 
@@ -408,6 +450,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
     master <- data$master
     tables <- data$tables
     urls <- data$urls
+    report_rows <- if (is.null(data$report_rows)) fund_rows_cache(root, urls) else data$report_rows
     descriptions <- data$descriptions
     scope <- if (is.null(families)) unname(fund_family_labels) else families
     in_scope <- directory[directory$family %in% scope, , drop = FALSE]
@@ -567,9 +610,8 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
       shiny::req(input$table)
       s <- selected()
       shiny::req(input$table %in% tables$table_name[tables$family == s$family])
-      tryCatch(fund_report_rows(root, s$family, input$table, s$cnpj,
-                                period_from = input$period_from, period_to = input$period_to,
-                                urls = urls),
+      tryCatch(report_rows(s$family, input$table, s$cnpj,
+                           period_from = input$period_from, period_to = input$period_to),
                error = function(e) structure(data.frame(), error = conditionMessage(e)))
     })
 
@@ -604,7 +646,15 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
     output$rows <- shiny::renderUI({
       r <- rows()
       if (nrow(r) == 0L) return(shiny::div(class = "tm-empty", "Sem linhas nesta tabela para o fundo."))
-      wide_table(r, descriptions, input$table)
+      tab <- wide_table(r, descriptions, input$table)
+      hidden <- attr(tab, "hidden")
+      shiny::tagList(
+        shiny::div(class = "tm-caption", paste(c(
+          "Períodos do mais recente ao mais antigo; passe o mouse no período para ver a citação da fonte.",
+          if (hidden == 1) "1 campo vazio em todos os períodos oculto."
+          else if (hidden > 1) sprintf("%s campos vazios em todos os períodos ocultos.", format_count(hidden))),
+          collapse = " ")),
+        tab)
     })
   })
 }

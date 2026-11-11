@@ -13,6 +13,7 @@ fund_analytics_context <- function(root, directory = load_fund_directory(root), 
   admins <- fund_administrators(directory, master)
   list(m = m, series = series, complete = complete, overview = family_overview(series, complete),
        snapshot = snapshot, admins = admins, ranking = administrator_ranking(snapshot, admins),
+       admin_idx = admin_index(m, snapshot, admins),
        fund_pl = fund_net_assets(m, snapshot),
        market_change = market_change(m, complete), issues = attr(metrics, "issues"),
        future_rows = attr(m, "future_rows"), today = today)
@@ -46,6 +47,19 @@ method_note <- function(ctx) {
                      "Administradores agrupados pelo CNPJ. O FIP não publica administrador e fica fora."),
       shiny::tags$li("Em alguns informes FIAGRO o campo de administrador traz o nome do fundo, com o CNPJ do ",
                      "administrador correto; nesses casos o nome vem dos demais informes desse CNPJ.")))
+}
+
+# Version and build time shown under "Sobre" (app and published page): the
+# VERSION file at the project root and when the page was generated (export
+# time for the published page, start time for the local app), as
+# "v.1.0.1 · 2026-11-11 15:42". Nothing is shown when VERSION is missing.
+version_label <- function(repo = ".", generated = Sys.time()) {
+  f <- file.path(repo, "VERSION")
+  v <- if (file.exists(f)) trimws(readLines(f, n = 1L, warn = FALSE, encoding = "UTF-8")) else ""
+  if (!length(v) || !nzchar(v)) return(NULL)
+  when <- if (inherits(generated, "POSIXt")) format(generated, "%Y-%m-%d %H:%M") else as.character(generated)
+  shiny::div(class = "tm-version", title = "Versão e data/hora de geração desta página",
+             paste0("v.", v, " · ", when))
 }
 
 # Panorama: one landscape screen, no page scrolling (grid in taxminer.css,
@@ -163,8 +177,10 @@ admin_kpis_ui <- function(r, families) {
 admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, top = NULL) {
   a <- r[r$key == key, ]
   admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
+  idx <- ctx$admin_idx
   if (is.null(month)) {
-    f <- snapshot_funds(ctx$snapshot, admins, families, administrator = key)
+    f <- if (is.null(idx)) snapshot_funds(ctx$snapshot, admins, families, administrator = key)
+         else admin_snapshot_funds(idx, families, key)
     f$carried <- FALSE
     title <- sprintf("Fundos no mês de referência (%s)", format_int(nrow(f)))
     if (!is.null(top) && nrow(f) > top) {
@@ -174,7 +190,8 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
     note <- "clique em um mês do gráfico para ver os fundos daquela competência"
     total <- a$net_assets
   } else {
-    f <- administrator_month_funds(ctx$m, admins, key, month)
+    f <- if (is.null(idx)) administrator_month_funds(ctx$m, admins, key, month)
+         else admin_month_funds(ctx$m, idx, ctx$admins, families, key, month)
     title <- sprintf("Fundos em %s (%s) · %s", month_label(month), format_int(nrow(f)),
                      format_brl(sum(f$net_assets, na.rm = TRUE)))
     note <- if (any(f$carried)) "* valor repetido do último informe" else NULL
@@ -203,10 +220,13 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
 admin_detail_ui <- function(ctx, r, key, families, month_input = NULL, funds = NULL, data_file = NULL, top = NULL) {
   a <- r[r$key == key, ]
   admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
-  sf <- snapshot_funds(ctx$snapshot, admins, families, administrator = a$key)
+  idx <- ctx$admin_idx
+  sf <- if (is.null(idx)) snapshot_funds(ctx$snapshot, admins, families, administrator = a$key)
+        else admin_snapshot_funds(idx, families, a$key)
   by_family <- tapply(sf$net_assets, factor(sf$family, levels = fund_family_order), sum, na.rm = TRUE)
   by_family <- by_family[!is.na(by_family) & by_family > 0]
-  s <- administrator_series(ctx$m, admins, a$key, ctx$complete)
+  s <- if (is.null(idx)) administrator_series(ctx$m, admins, a$key, ctx$complete)
+       else admin_series(ctx$m, idx, families, a$key, ctx$complete)
   if (is.null(funds)) funds <- admin_funds_ui(ctx, r, key, families, top = top)
   bslib::card(
     class = "tm-section tm-detail tm-pane tm-admin-detail",

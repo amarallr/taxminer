@@ -699,4 +699,48 @@ table.tm-wide tbody tr:hover, table.tm-card-table tbody tr:hover { background: #
 table.tm-wide thead th { position: sticky; top: 0; z-index: 1; }
 table.tm-wide td.tm-cite { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 table.tm-wide td.tm-cite a { color: var(--tm-accent); white-space: nowrap; font-weight: 400; }
+/* Série completa transposta: field labels fixed on the left while the
+   periods scroll sideways; period headers fixed on top. */
+table.tm-series { border-collapse: separate; border-spacing: 0; }
+table.tm-series th.tm-field { position: sticky; left: 0; z-index: 2; background: #fff; min-width: 220px; max-width: 300px;
+                              white-space: normal; text-align: left; font-size: .64rem; font-weight: 400;
+                              color: var(--tm-muted); text-transform: none; letter-spacing: 0;
+                              border-right: 1px solid var(--tm-rule); }
+table.tm-series thead th.tm-field { z-index: 3; font-size: .56rem; text-transform: uppercase; letter-spacing: .1em;
+                                    font-weight: 600; }
+table.tm-series th.tm-field.tm-derived { font-style: italic; }
+table.tm-series th.tm-col-period { text-align: right; white-space: nowrap; letter-spacing: .04em; }
+table.tm-series th.tm-col-period a { color: var(--tm-navy); font-weight: 600; text-decoration: none; }
+table.tm-series th.tm-col-period a:hover { color: var(--tm-accent); text-decoration: underline; }
+table.tm-series tbody tr:hover th.tm-field { background: #f7f9fc; }
 table.tm-timeline td:first-child, .tm-names-table td:first-child { font-weight: 500; color: var(--tm-ink); }
+/* Version under "Sobre": small, muted, tabular. */
+.tm-version { font-size: .66rem; color: var(--tm-muted); letter-spacing: .06em; font-variant-numeric: tabular-nums; margin: 2px 0 4px; }
+/* Pager (Anterior / Página n de m / Próxima): small uppercase links, quiet
+   page count, hairline rule above; same in the app and the published page. */
+.tm-pager, .card-footer.tm-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 5px 10px; background: #fff; border-top: 1px solid var(--tm-rule); font-size: .58rem; line-height: 1.4; }
+.tm-pager a, .tm-pager .action-button { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+  color: var(--tm-navy); text-decoration: none; padding: 2px 0; }
+.tm-pager a:hover, .tm-pager .action-button:hover { color: var(--tm-accent); text-decoration: none; }
+.tm-pager .tm-muted, .tm-pager span { font-style: normal; color: var(--tm-muted); letter-spacing: .06em; font-size: .58rem;
+  text-transform: uppercase; font-variant-numeric: tabular-nums; }
+/* Série completa transposta: text values wrap inside a bounded column;
+   numbers stay on one line. */
+table.tm-series td { white-space: normal; min-width: 92px; max-width: 200px; overflow-wrap: anywhere; vertical-align: top; }
+table.tm-series td.tm-num { white-space: nowrap; max-width: none; }
+table.tm-series thead th { background: #fff; }
+table.tm-series tbody th.tm-field { vertical-align: top; }
+/* Narrower period columns (developer request 2026-11-11): smaller type and
+   padding, text wraps at 70px; numbers stay whole, as published. The
+   scrolling tab has no top padding so the sticky header row leaves no gap. */
+.tm-detail-body > .tabbable > .tab-content:has(table.tm-series) { padding-top: 0; }
+table.tm-series thead th { top: 0; }
+table.tm-series td, table.tm-series th.tm-col-period { font-size: .6rem; padding: 3px 4px; min-width: 0; }
+table.tm-series td { max-width: 70px; }
+table.tm-series td.tm-num { max-width: none; letter-spacing: -.01em; }
+table.tm-series th.tm-col-period { letter-spacing: 0; }
+table.tm-series th.tm-field { min-width: 180px; max-width: 220px; padding: 3px 8px; }
+/* Cell values 30% smaller (developer request 2026-11-11): .6rem -> .42rem. */
+table.tm-series td { font-size: .42rem; line-height: 1.35; max-width: 52px; }
+table.tm-series td.tm-num { max-width: none; }

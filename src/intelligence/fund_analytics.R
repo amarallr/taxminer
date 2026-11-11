@@ -274,6 +274,45 @@ administrator_month_funds <- function(m, admins, administrator, month) {
   d
 }
 
+# Index for the Administradores area, built once per context: the
+# administrator key of every metrics row and the snapshot already joined to
+# the administrators. The admin_* queries below then only subset (no merge
+# per click); they return the same rows as snapshot_funds(),
+# administrator_series() and administrator_month_funds().
+admin_index <- function(m, snapshot, admins) {
+  fund <- paste(admins$family, admins$fund_cnpj)
+  key <- administrator_key(admins$administrator_cnpj, admins$administrator_name)
+  list(m_key = key[match(paste(m$family, m$fund_cnpj), fund)], fund = fund,
+       snapshot = snapshot_funds(snapshot, admins))
+}
+
+admin_snapshot_funds <- function(idx, families, administrator) {
+  s <- idx$snapshot[idx$snapshot$family %in% families & idx$snapshot$key %in% administrator, , drop = FALSE]
+  rownames(s) <- NULL
+  s
+}
+
+admin_series <- function(m, idx, families, administrator, complete) {
+  sel <- which(idx$m_key %in% administrator & m$family %in% families & m$month <= max(unname(complete)))
+  if (!length(sel)) return(data.frame(month = character(), net_assets = numeric(), funds = integer()))
+  d <- m[sel, c("month", "net_assets", "fund_cnpj"), drop = FALSE]
+  out <- data.frame(month = sort(unique(d$month)))
+  out$net_assets <- as.numeric(tapply(d$net_assets, d$month, sum, na.rm = TRUE)[out$month])
+  out$funds <- as.integer(tapply(d$fund_cnpj, d$month, length)[out$month])
+  out
+}
+
+admin_month_funds <- function(m, idx, admins, families, administrator, month) {
+  sel <- which(m$month == month & idx$m_key %in% administrator & m$family %in% families)
+  d <- m[sel, c("family", "fund_cnpj", "month", "net_assets", "carried"), drop = FALSE]
+  d$fund_name <- admins$fund_name[match(paste(d$family, d$fund_cnpj), idx$fund)]
+  # Same order as the merge-based version: by fund, then largest first.
+  d <- d[order(d$family, d$fund_cnpj, method = "radix"), , drop = FALSE]
+  d <- d[order(d$net_assets, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  rownames(d) <- NULL
+  d
+}
+
 # Values in reais, abbreviated the way Brazilian reports write them.
 format_brl <- function(x, digits = 1) {
   vapply(x, function(v) {

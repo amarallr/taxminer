@@ -244,6 +244,9 @@ test_that("the Administradores area ranks, filters by family and shows the picke
   admins <- fund_administrators(directory)
   ctx <- list(m = mm, series = series, complete = complete, snapshot = snapshot, admins = admins,
               ranking = administrator_ranking(snapshot, admins))
+  # Same screens through the old queries and through the precomputed index.
+  for (fast in c(FALSE, TRUE)) {
+  if (fast) ctx$admin_idx <- admin_index(mm, snapshot, admins)
   shiny::testServer(fund_admin_server, args = list(ctx = ctx), {
     session$setInputs(family = c("fii", "fidc", "fiagro"))
     expect_equal(ranking()$administrator_name, c("ADM DOIS", "ADM UM"))
@@ -264,6 +267,13 @@ test_that("the Administradores area ranks, filters by family and shows the picke
     expect_equal(ranking()$administrator_name, "ADM UM")
     expect_equal(attr(ranking(), "total"), 100)
   })
+  }
+  idx <- admin_index(mm, snapshot, admins); um <- entity_key("administrator", "11111111000111")
+  fam <- c("fii", "fidc", "fiagro")
+  expect_equal(admin_series(mm, idx, fam, um, complete), administrator_series(mm, admins, um, complete), ignore_attr = TRUE)
+  expect_equal(admin_month_funds(mm, idx, admins, fam, um, "2025-06")$fund_name,
+               administrator_month_funds(mm, admins, um, "2025-06")$fund_name)
+  expect_equal(admin_snapshot_funds(idx, "fidc", um)$fund_cnpj, "E")
 })
 
 # --- Panorama (cross-filtering) -------------------------------------------------
@@ -374,4 +384,14 @@ test_that("fund lists take the PL of the reference month and the share of the fa
   expect_match(html, "75,00%", fixed = TRUE)
   expect_match(html, "R$ 300", fixed = TRUE)
   expect_equal(format_share(c(0.00001, 0, NA)), c("< 0,01%", "0,00%", "—"))
+})
+
+test_that("the Sobre tab shows the version from the VERSION file", {
+  dir <- withr::local_tempdir()
+  expect_null(version_label(dir))
+  writeLines("1.2.3", file.path(dir, "VERSION"))
+  at <- as.POSIXct("2026-11-11 15:42:59", tz = "UTC")
+  expect_match(as.character(version_label(dir, at)), ">v.1.2.3 · 2026-11-11 15:42</div>", fixed = TRUE)
+  expect_match(as.character(version_label(dir, "2026-01-02 03:04")), ">v.1.2.3 · 2026-01-02 03:04<", fixed = TRUE)
+  expect_match(readLines(testthat::test_path("..", "..", "VERSION"), n = 1L), "^[0-9]+[.][0-9]+[.][0-9]+$")
 })

@@ -1,5 +1,37 @@
 # Changelog
 
+## Navegação mais rápida — 2026-11-11
+
+- Administradores (app local): índice administrador × fundo calculado uma vez na carga; trocar de
+  administrador caiu de ~3,1 s para ~0,5–0,8 s e o clique num mês de ~1,0 s para ~0,2 s. As listas
+  de barras são montadas como texto num só passo (mesma marcação). Resultados idênticos aos anteriores
+  (conferido nos dados reais e em teste).
+- Fichas (app local): cada tabela é aberta uma vez por sessão e as últimas 40 consultas de fundo ficam
+  em memória; reabrir um fundo ou voltar a uma tabela já vista não lê o parquet de novo.
+- Painel publicado: nomes normalizados uma vez na carga e lista filtrada/ordenada reaproveitada na troca
+  de página; ordenar caiu de ~180 ms para ~40 ms e "próxima página" de ~250 ms para ~30 ms.
+
+## Versão na aba Sobre e Panorama com 30 maiores — 2026-11-11
+
+- Aba Sobre (app e painel publicado): versão e data/hora de geração da página logo abaixo do
+  título, no formato `v.1.0.1 · aaaa-mm-dd hh:mm`. A versão vem do arquivo `VERSION` na raiz.
+- Panorama: os rankings passam a mostrar os 30 maiores administradores e os 30 maiores fundos;
+  a lista de fundos mostra o % de cada fundo no patrimônio filtrado (mesma base dos administradores).
+- Ficha e série completa: campos de CNPJ e CPF com máscara (00.000.000/0000-00 e 000.000.000-00)
+  quando os dígitos verificadores conferem; nos campos "CPF ou CNPJ" do cedente, o tipo é reconhecido
+  pelo valor. Valor inválido aparece como publicado, sem máscara, para não disfarçar erro da fonte.
+- Panorama: duplo clique num fundo abre a aba do tipo (FIDC, FII, FIP, FIAGRO) já filtrada pelo CNPJ
+  do fundo e com o fundo aberto, no app e no painel publicado; o filtro de administrador é limpo e o
+  estado do Panorama não muda.
+- Série completa transposta, como um demonstrativo: uma linha por campo com os mesmos rótulos da
+  Ficha (descrição do dicionário; itálico sem descrição; código CVM na dica), uma coluna por
+  competência do mais recente ao mais antigo, com link e citação da fonte no cabeçalho; rótulos fixos
+  à esquerda e cabeçalho fixo no alto; campos vazios em todos os períodos ocultos; colunas estreitas
+  (valores em fonte 30% menor, espaçamento reduzido, texto quebrando em 52 px, números completos
+  como publicados).
+- Rodapé de paginação (Anterior / Página / Próxima) menor, em caixa alta, com filete acima, no app e
+  no painel publicado.
+
 ## Ajustes após a 1.0 — 2026-11-11
 
 - Série completa do fundo: tabela montada como texto, coluna a coluna, em vez de um objeto por

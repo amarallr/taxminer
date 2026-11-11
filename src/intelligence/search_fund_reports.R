@@ -298,11 +298,36 @@ fund_tables <- function(root, family = NULL) {
   out
 }
 
+# Remembers the datasets opened and the last `size` fund queries, so reopening
+# a fund, or going back to a table already seen, costs no new parquet scan.
+# The processed data does not change while the app runs.
+fund_rows_cache <- function(root, urls, size = 40L) {
+  datasets <- new.env(parent = emptyenv())
+  results <- new.env(parent = emptyenv())
+  order <- character()
+  function(family, table_name, cnpj, period_from = NULL, period_to = NULL) {
+    key <- paste(family, table_name, cnpj, paste(period_from, collapse = ","),
+                 paste(period_to, collapse = ","), sep = "|")
+    if (!is.null(results[[key]])) return(results[[key]])
+    dkey <- paste(family, table_name, sep = "/")
+    if (is.null(datasets[[dkey]])) assign(dkey, open_fund_table(root, family, table_name), envir = datasets)
+    r <- fund_report_rows(root, family, table_name, cnpj, period_from, period_to,
+                          urls = urls, ds = datasets[[dkey]])
+    assign(key, r, envir = results)
+    order <<- c(setdiff(order, key), key)
+    if (length(order) > size) {
+      rm(list = order[1L], envir = results)
+      order <<- order[-1L]
+    }
+    r
+  }
+}
+
 # Rows of one table for one fund, original values plus a citation of the CVM
 # file (dataset, stored file hash, member and line) and its official URL.
 fund_report_rows <- function(root, family, table_name, cnpj, period_from = NULL,
-                             period_to = NULL, drop_empty = TRUE, urls = fund_source_urls(root)) {
-  ds <- open_fund_table(root, family, table_name)
+                             period_to = NULL, drop_empty = TRUE, urls = fund_source_urls(root),
+                             ds = open_fund_table(root, family, table_name)) {
   query <- toupper(gsub("[^0-9A-Za-z]", "", cnpj))
   column <- if (!is.na(normalize_cnpj(query))) "fund_cnpj_normalized" else "fund_cnpj_original"
   filter <- arrow::Expression$create("equal", arrow::Expression$field_ref(column),

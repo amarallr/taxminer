@@ -140,6 +140,17 @@ test_that("report rows keep original values, drop empty columns and cite the sou
   expect_equal(nrow(fund_report_rows(root, "fii", "inf_mensal_fii_ativo_passivo", "99999999000191")), 0L)
 })
 
+test_that("the rows cache returns the same rows and forgets the oldest query", {
+  cached <- fund_rows_cache(root, fund_source_urls(root), size = 1L)
+  direct <- fund_report_rows(root, "fii", "inf_mensal_fii_ativo_passivo", "00.332.266/0001-31")
+  expect_identical(cached("fii", "inf_mensal_fii_ativo_passivo", "00.332.266/0001-31"), direct)
+  expect_identical(cached("fii", "inf_mensal_fii_ativo_passivo", "00.332.266/0001-31"), direct)
+  march <- cached("fii", "inf_mensal_fii_ativo_passivo", "00332266000131", period_from = "2026-03")
+  expect_equal(march$Valor_Ativo, "0,00")
+  expect_identical(cached("fii", "inf_mensal_fii_ativo_passivo", "00.332.266/0001-31"), direct)
+  expect_equal(environment(cached)$order, "fii|inf_mensal_fii_ativo_passivo|00.332.266/0001-31||")
+})
+
 test_that("the directory cache is reused and rebuilt when a registry table changes", {
   paths <- fund_search_paths(root)
   expect_true(file.exists(paths$directory))
@@ -257,16 +268,35 @@ test_that("the full series table formats values like the card and stays fast", {
     expect_identical(all$text, vapply(one, `[[`, "", "text"))
     expect_identical(all$num, vapply(one, `[[`, TRUE, "num"))
   }
+  # Transposed: one line per field (Ficha labels), one column per period,
+  # most recent first; fields empty in every period are hidden.
   r <- data.frame(citation = c("CVM <a&b>", "CVM 2"), source_url = c("https://x/1.zip", NA),
-                  reference_period = c("2013", NA), layout_version = "v1", TAB_I_VL_ATIVO = c("1234.5", ""),
-                  stringsAsFactors = FALSE)
-  h <- as.character(wide_table(r))
-  expect_match(h, '<td class="tm-cite" title="CVM &lt;a&amp;b&gt;"><a href="https://x/1.zip"', fixed = TRUE)
-  expect_match(h, '<td class="tm-cite" title="CVM 2">CVM 2</td>', fixed = TRUE)
-  expect_match(h, "<td>2013</td>", fixed = TRUE)
-  expect_match(h, '<td class="tm-num">1.234,5</td>', fixed = TRUE)
-  expect_match(h, "<td>—</td>", fixed = TRUE)
+                  DT_COMPTC = c("2013-01-31", "2013-02-28"), reference_period = "2013", layout_version = "v1",
+                  TAB_I_VL_ATIVO = c("1234.5", ""), TAB_I_VL_VAZIO = NA_character_, stringsAsFactors = FALSE)
+  tab <- wide_table(r)
+  h <- as.character(tab)
+  # Same label as the Ficha for the field.
+  expect_match(h, paste0('<th class="tm-field tm-derived" data-tip="', field_labels("TAB_I_VL_ATIVO")$label,
+                         "\nCampo CVM: TAB_I_VL_ATIVO (sem descrição no dicionário)\">",
+                         field_labels("TAB_I_VL_ATIVO")$label, "</th>"), fixed = TRUE)
+  expect_equal(attr(tab, "hidden"), 1L)
+  expect_false(grepl("TAB_I_VL_VAZIO\\b[^\"]*</th>", h))
+  expect_match(h, '<th class="tm-col-period" title="CVM 2">2013-02</th><th class="tm-col-period" title="CVM &lt;a&amp;b&gt;"><a href="https://x/1.zip"', fixed = TRUE)
+  expect_match(h, '<td>—</td><td class="tm-num">1.234,5</td></tr>', fixed = TRUE)
+  expect_false(grepl("reference_period|layout_version|>2013<", h))
   big <- r[rep(1:2, 100), ]
   big[paste0("TAB_I_VL_", 1:80)] <- "123456.78"
   expect_lt(system.time(wide_table(big))[["elapsed"]], 5)
+})
+
+test_that("CNPJ and CPF fields are shown with their masks only when valid", {
+  expect_equal(format_cpf(c("52998224725", "529.982.247-25", "12345678900", "11111111111", NA, "abc")),
+               c("529.982.247-25", "529.982.247-25", "12345678900", "11111111111", NA, "abc"))
+  mixed <- "TAB_I2B1_CPF_CNPJ_CEDENTE_1"
+  expect_equal(format_tax_id(c("11222333000181", "9195235000150", "52998224725", "11222333000180"), mixed),
+               c("11.222.333/0001-81", "09.195.235/0001-50", "529.982.247-25", "11222333000180"))
+  expect_equal(format_tax_id("52998224725", "CPF_GESTOR"), "529.982.247-25")
+  expect_equal(format_tax_id("11222333000181", "VL_ATIVO"), "11222333000181")
+  expect_equal(display_value("11222333000181", "CNPJ_ADMIN")$text, "11.222.333/0001-81")
+  expect_equal(display_values(c("11222333000181", "", NA), "CNPJ_ADMIN")$text, c("11.222.333/0001-81", "—", "—"))
 })
