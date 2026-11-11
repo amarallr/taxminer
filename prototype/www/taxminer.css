@@ -218,3 +218,132 @@ svg.tm-chart { width: 100%; height: auto; display: block; overflow: visible; }
                 column-gap: 40px; }
 .tm-method li { margin-bottom: 4px; break-inside: avoid; }
 
+
+/* Compact density: wider page, smaller type (base 13 px from the theme). */
+.navbar { padding-top: 2px; padding-bottom: 2px; }
+.navbar .navbar-brand { font-size: 1.15rem; }
+.navbar .nav-link { font-size: .82rem; }
+.tm-page { max-width: 2200px; padding: 4px 14px 28px; }
+.tm-hero { padding: 10px 2px 8px; margin-bottom: 10px; }
+.tm-hero h1 { font-size: 1.3rem; margin: 1px 0 2px; }
+.tm-eyebrow { font-size: .66rem; }
+.tm-lede { font-size: .8rem; max-width: 980px; }
+.tm-kpis { margin-bottom: 8px; }
+.tm-kpi { padding: 6px 2px 2px; border-top-width: 2px; }
+.tm-kpi-value { font-size: 1.2rem; }
+.tm-kpi-label { font-size: .64rem; margin-top: 2px; }
+.tm-kpi-note, .tm-kpi .tm-change { font-size: .7rem; }
+.tm-kpis-sm .tm-kpi-value { font-size: 1.05rem; }
+.card-header { font-size: .8rem; padding: 7px 12px; }
+.card-body { padding: 10px 12px; }
+.tm-card-title { font-size: .95rem; }
+.tm-section { margin-bottom: 12px; }
+.tm-subhead { font-size: .64rem; margin: 10px 0 4px; }
+.tm-caption, .tm-footnote { font-size: .7rem; }
+.control-label, .form-label { font-size: .66rem; }
+.selectize-input, .form-control, .form-select { font-size: .8rem; min-height: 0; padding-top: 4px; padding-bottom: 4px; }
+.selectize-dropdown { font-size: .8rem; }
+.btn { font-size: .8rem; padding: 5px 10px; }
+.form-group { margin-bottom: 10px; }
+.bslib-sidebar-layout .sidebar-title { font-size: 1rem; }
+.bslib-sidebar-layout > .sidebar > .sidebar-content { padding: 10px 14px; }
+
+table.tm-results, table.tm-card-table, table.tm-wide, .tm-page table.shiny-table { font-size: .76rem; }
+table.tm-results th, table.tm-card-table thead th, table.tm-wide th { padding: 6px 9px; }
+table.tm-results td, table.tm-card-table td, table.tm-wide td { padding: 5px 9px; }
+.tm-id, .tm-admin { font-size: .68rem; }
+table.tm-results td.tm-mono { font-size: .7rem; }
+table.tm-card-table tbody th.tm-field { font-size: .72rem; padding: 5px 9px; }
+table.tm-card-table thead th { font-size: .7rem; }
+.tm-tag { font-size: .6rem; }
+
+.tm-detail .card-header { padding: 10px 14px 8px; }
+.tm-detail-title { font-size: 1.15rem; margin: 2px 0 4px; }
+.tm-detail-meta { font-size: .76rem; gap: 4px 20px; }
+.nav-underline { margin: 4px 0 8px; font-size: .8rem; }
+
+.tm-bar-row { padding: 4px 4px; gap: 8px; }
+.tm-bar-name { font-size: .76rem; }
+.tm-bar-sub { font-size: .66rem; }
+.tm-bar-value { font-size: .72rem; }
+.tm-bar, .tm-bar-track { height: 11px; }
+.tm-share-track { height: 16px; }
+.tm-legend { font-size: .74rem; gap: 4px 22px; margin-top: 8px; }
+.tm-family { padding: 10px 12px 6px; margin-bottom: 12px; }
+.tm-family-head { font-size: .74rem; }
+.tm-family-figures { margin: 4px 0 2px; }
+.tm-big { font-size: 1.3rem; white-space: nowrap; }
+.tm-family-side { font-size: .72rem; line-height: 1.4; }
+.tm-change { font-size: .74rem; }
+.tm-tooltip { font-size: .72rem; }
+.tm-method ul { font-size: .7rem; columns: 3 360px; }
+.tm-toolbar { margin-bottom: 6px; }
+@media (min-width: 1200px) {
+  .tm-pane { height: calc(100vh - 205px); min-height: 480px; }
+}
+
+.tm-family-side, .tm-change { white-space: nowrap; }
+.tm-family-figures .tm-change-sub { display: inline; }
+
+/* Panorama: one landscape screen, no scrollbars. The nav panel is a fill
+   container (page_navbar fillable = "Panorama"); rows take their content
+   height and the charts and rankings share what is left. */
+.tm-dash { display: grid; gap: 8px; min-height: 0; min-width: 0; overflow: hidden;
+           grid-template-columns: minmax(0, 1fr);
+           grid-template-rows: auto auto auto minmax(0, 1.2fr) minmax(0, 1fr); }
+.html-fill-container > .tm-dash { flex: 1 1 auto; }
+.tm-dash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+                border-bottom: 1px solid var(--tm-rule); padding-bottom: 4px; min-width: 0; }
+.tm-dash-head h1 { display: inline; font-family: Georgia, "Times New Roman", serif; font-weight: 400;
+                   font-size: 1.2rem; color: var(--tm-navy); margin: 0 0 0 10px; }
+.tm-dash-meta { color: var(--tm-muted); font-size: .72rem; text-align: right; white-space: nowrap;
+                overflow: hidden; text-overflow: ellipsis; }
+.tm-dash-meta .tm-link { margin: 0 0 0 12px; font-size: .72rem; }
+.tm-dash-kpis { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr 1.3fr; gap: 16px; min-width: 0; }
+.tm-dash-kpis .tm-kpi { padding-top: 4px; }
+.tm-dash-kpis .tm-kpi-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tm-dash-share { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 12px;
+                 min-width: 0; }
+.tm-dash-share .tm-legend { margin-top: 4px; }
+.tm-dash-label { font-size: .64rem; text-transform: uppercase; letter-spacing: .1em; color: var(--tm-muted);
+                 font-weight: 600; }
+.tm-dash-families { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-height: 0; }
+.tm-dash .tm-family { display: flex; flex-direction: column; min-height: 0; min-width: 0; margin: 0;
+                      border: 1px solid var(--tm-rule); border-radius: 2px; padding: 8px 10px 4px; }
+.tm-dash .tm-family-figures { margin: 2px 0 0; }
+.tm-chart-box { flex: 1 1 auto; min-height: 0; display: flex; }
+.tm-chart-box svg.tm-chart { width: 100%; height: 100%; }
+.tm-family-month[data-tip] { cursor: help; }
+.tm-dash-rank { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-height: 0; }
+.tm-dash-card { border: 1px solid var(--tm-rule); border-radius: 2px; padding: 6px 10px; min-height: 0;
+                min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.tm-dash-card-head { font-weight: 600; color: var(--tm-navy); font-size: .78rem; display: flex; gap: 10px;
+                     align-items: baseline; padding-bottom: 2px; }
+.tm-dash-card .tm-bars { flex: 1 1 auto; min-height: 0; overflow: hidden; justify-content: space-around; }
+.tm-dash .tm-bar-row { padding: 2px 4px; }
+.tm-about + .tm-method, .tm-page > .tm-method { max-width: 1200px; }
+/* Narrow or short windows: normal page flow. */
+@media (max-width: 1099px), (max-height: 619px) {
+  .tm-dash { overflow: visible; grid-template-rows: none; }
+  .tm-dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tm-dash-families, .tm-dash-rank { grid-template-columns: minmax(0, 1fr); }
+  .tm-chart-box { height: 170px; flex: none; }
+  .tm-dash-head { display: block; } .tm-dash-meta { text-align: left; white-space: normal; }
+}
+
+/* Dual chart: dashed neutral line on the right-hand axis, with its key. */
+.tm-chart .tm-line-2 { stroke-width: 1.5; stroke-dasharray: 5 4; }
+.tm-chart .tm-axis-2 { fill: #5b6573; }
+.tm-chart-key { display: flex; align-items: center; gap: 6px; font-size: .66rem; color: var(--tm-muted);
+                margin: 4px 0 0; white-space: nowrap; overflow: hidden; }
+.tm-key-line { display: inline-block; width: 18px; border-top: 2px solid; }
+.tm-key-line.tm-key-dash { border-top-style: dashed; border-top-width: 1.5px; margin-left: 10px; }
+/* Charts take their natural height (width-driven); rankings get the rest. */
+.tm-dash { grid-template-rows: auto auto auto auto minmax(0, 1fr); }
+.tm-dash .tm-chart-box { flex: none; display: block; }
+.tm-dash .tm-chart-box svg.tm-chart { height: auto; }
+.tm-dash-card .tm-bars { justify-content: flex-start; gap: 2px; }
+
+/* Plain KPI row (same in the app and the static export). */
+.tm-kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 8px; }
+@media (max-width: 767px) { .tm-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

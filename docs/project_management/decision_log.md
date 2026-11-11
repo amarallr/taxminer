@@ -503,3 +503,21 @@ decidido:
   por gráfico, eixo de valor a partir de zero, dica ao passar o mouse, variação com seta e
   texto (nunca só cor). Rentabilidade e dividendos ficam fora até a unidade dos campos ser
   confirmada.
+
+## decision_0035 — 2026-11-11T09:02:13-03:00 — Publicação do painel e Panorama em uma tela
+
+Pedidos do desenvolvedor: "quero que publique também o app, e adicione um link no readme e na
+pagina do projeto"; "a página inicial do app (panorama) não pode apresentar barra de rolagem";
+nos gráficos por família, "uma nova linha tracejada" com o número de fundos "no eixo Y à
+direita". Ficou decidido:
+
+- Publicação estática no GitHub Pages já existente (`site/app/`, mesmo `pages.yml`), gerada por
+  `scripts/export_static_dashboard.R`: Panorama, Administradores (40 maiores com detalhe) e
+  Sobre, só com dados públicos agregados da CVM (ODbL), sem servidor, sem conta nova e sem
+  pacote novo. A busca nos informes de cada fundo fica no app local. A página informa que não é
+  serviço oficial da Receita Federal nem da CVM.
+- Panorama em uma tela paisagem (grade de altura fixa, rankings com os 6 maiores, metodologia
+  na aba Sobre); conferido sem barras de rolagem em 1366×768, 1440×900 e 1920×1080.
+- Eixo duplo por pedido explícito: patrimônio em linha cheia na cor da família (eixo esquerdo)
+  e número de fundos em linha tracejada neutra (eixo direito, marcas alinhadas à grade), com
+  legenda em cada painel.

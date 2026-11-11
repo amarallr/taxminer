@@ -1,5 +1,12 @@
 # Changelog
 
+## Painel publicado e Panorama em uma tela — 2026-11-11
+
+- Painel de fundos publicado em https://amarallr.github.io/taxminer/app/ (versão estática gerada
+  por `scripts/export_static_dashboard.R`); links no README e na página do projeto.
+- Panorama cabe em uma tela, sem barras de rolagem; séries por família com o número de fundos
+  (linha tracejada, eixo direito). Fontes menores e página mais larga em todo o app.
+
 ## Painel analítico dos fundos — 2026-11-11
 
 - Tabela derivada de métricas por fundo e período (`src/data/build_fund_metrics.R`): patrimônio

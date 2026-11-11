@@ -18,37 +18,17 @@ fund_ready <- file.exists(fund_processed_paths(fund_root)$index)
 # Derived metrics are rebuilt only when the consolidated tables change.
 fund_ctx <- if (fund_ready) fund_analytics_context(fund_root) else NULL
 
-# Shared behaviour: hover tooltips for every element with `data-tip`, and
-# clickable rows (`.tm-pick`) that send their `data-key` to `data-input`.
-app_script <- shiny::tags$script(shiny::HTML("
-$(function() {
-  var tip = $('<div>').addClass('tm-tooltip').attr('role', 'tooltip').appendTo('body');
-  $(document).on('mouseenter', '[data-tip]', function() { tip.text($(this).attr('data-tip')).show(); })
-    .on('mousemove', '[data-tip]', function(e) {
-      var w = tip.outerWidth(), x = e.pageX + 14;
-      if (x + w > $(window).scrollLeft() + $(window).width() - 8) x = e.pageX - w - 14;
-      tip.css({left: x, top: e.pageY + 14});
-    })
-    .on('mouseleave', '[data-tip]', function() { tip.hide(); })
-    .on('click', '.tm-pick[data-key]', function() {
-      $(this).siblings('.tm-selected').removeClass('tm-selected');
-      $(this).addClass('tm-selected');
-      Shiny.setInputValue($(this).attr('data-input'), $(this).attr('data-key'), {priority: 'event'});
-    });
-});"))
+# Tooltips and clickable rows (prototype/charts.R).
+app_script <- tm_app_script()
 
-theme <- bslib::bs_theme(
-  version = 5, bg = "#ffffff", fg = "#1c2430", primary = "#0b1f3a", secondary = "#5b6573",
-  base_font = bslib::font_collection("Segoe UI", "Helvetica Neue", "Arial", "sans-serif"),
-  heading_font = bslib::font_collection("Georgia", "Times New Roman", "serif"),
-  "border-radius" = "2px")
+theme <- tm_theme()
 
 unavailable <- function(text) {
   shiny::div(class = "tm-page", shiny::div(class = "alert alert-warning mt-4", text))
 }
 
 ui <- bslib::page_navbar(
-  title = "TaxMiner", fillable = FALSE, fluid = TRUE,
+  title = "TaxMiner", fillable = "Panorama", fluid = TRUE,
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script),
@@ -75,7 +55,8 @@ ui <- bslib::page_navbar(
       shiny::p(class = "tm-lede",
                "Dados públicos da CVM (dados.cvm.gov.br, licença ODbL), com valores como publicados.",
                "Os resultados são material de pesquisa, não conclusões fiscais. As Fases 1.1",
-               "(Soluções de Consulta) e 1.2 (notas explicativas) ainda não têm área de busca.")))))
+               "(Soluções de Consulta) e 1.2 (notas explicativas) ainda não têm área de busca.")),
+      if (fund_ready) method_note(fund_ctx))))
 
 server <- function(input, output, session) {
   if (fund_ready) {

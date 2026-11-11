@@ -1,5 +1,13 @@
 # TaxMiner — estado do projeto
 
+## Painel publicado — 2026-11-11T09:02:13-03:00
+
+- **Publicação (`decision_0035`):** https://amarallr.github.io/taxminer/app/ (Panorama,
+  Administradores, Sobre), gerada por `scripts/export_static_dashboard.R`.
+- **Panorama** em uma tela, sem barras de rolagem; número de fundos no eixo direito.
+- **Incremento 4 (`work_0026`):** fonte das demonstrações verificada; consolidação escrita, ainda
+  não executada nem testada.
+
 ## Painel analítico dos fundos — 2026-11-11T08:26:24-03:00
 
 - **Painel (`work_0027`, `decision_0034`):** abas Panorama, Fundos (com Perfil) e

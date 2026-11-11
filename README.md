@@ -3,6 +3,7 @@
 **Transformando documentos públicos em conhecimento estruturado, pesquisável e verificável.**
 
 [Página do projeto](https://amarallr.github.io/taxminer/) ·
+[Painel de fundos (app publicado)](https://amarallr.github.io/taxminer/app/) ·
 [Arquitetura](docs/architecture.md) ·
 [Requisitos](docs/requirements.md) ·
 [Estado atual](docs/project_management/project_status.md) ·
@@ -302,6 +303,10 @@ passos estão em [`project_status.md`](docs/project_management/project_status.md
   validador no Windows (`.github/workflows/validate_environment.yml`).
 - **Página do projeto:** GitHub Pages publicado a partir de `site/`
   (`.github/workflows/pages.yml`).
+- **Painel publicado:** [https://amarallr.github.io/taxminer/app/](https://amarallr.github.io/taxminer/app/), versão estática das áreas Panorama e
+  Administradores do app, gerada por `scripts/export_static_dashboard.R` em `site/app/` a
+  partir de dados públicos agregados da CVM (ODbL). A busca completa nos informes roda no
+  app local (`scripts/run_prototype.R`).
 
 ## 13. Instalação e configuração
 
@@ -394,6 +399,7 @@ Dados coletados, intermediários e processados nunca são versionados
 ## 17. Documentação complementar
 
 - [Página do projeto (GitHub Pages)](https://amarallr.github.io/taxminer/)
+- [Painel de fundos publicado](https://amarallr.github.io/taxminer/app/)
 - [Panorama do projeto](docs/project_overview.md)
 - [Arquitetura](docs/architecture.md) · [Requisitos e critérios de aceite](docs/requirements.md) · [Dicionário de dados](docs/data_dictionary.md)
 - Fontes: [Soluções de Consulta](docs/source_inventory.md) · [Viabilidade da Fase 1.1](docs/feasibility.md) · [CVM](docs/data_sources.md)

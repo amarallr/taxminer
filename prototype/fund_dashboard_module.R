@@ -52,13 +52,16 @@ family_panel <- function(ctx, family) {
   color <- fund_family_colors[[family]]
   tips <- sprintf("%s\nPL %s\n%s fundos", month_label(d$month), format_brl(d$net_assets), format_int(d$funds))
   pending <- o$latest_month > o$month
-  bslib::card(
+  shiny::div(
     class = "tm-family",
     shiny::div(class = "tm-family-head",
                shiny::span(class = "tm-swatch", style = sprintf("background:%s", color)),
                shiny::span(class = "tm-family-code", toupper(family)),
                shiny::span(class = "tm-family-name", fund_family_names[[family]]),
-               shiny::span(class = "tm-family-month", month_label(o$month))),
+               shiny::span(class = "tm-family-month",
+                           `data-tip` = if (pending) sprintf("Último mês completo.\n%s ainda em entrega (não exibido).",
+                                                             month_label(o$latest_month)),
+                           month_label(o$month), if (pending) " ⓘ")),
     shiny::div(class = "tm-family-figures",
                shiny::div(shiny::div(class = "tm-big", format_brl(o$net_assets)),
                           change_badge(o$net_assets_change)),
@@ -69,77 +72,71 @@ family_panel <- function(ctx, family) {
                                                                       if (o$funds_change > 0) "+" else "",
                                                                       format_int(o$funds_change)))),
                           shiny::div(if (is.na(o$quotaholders)) shiny::span(class = "tm-muted-sm", "cotistas não publicados")
-                                     else shiny::tagList(shiny::strong(axis_int(o$quotaholders)), " posições de cotistas")))),
-    svg_line_chart(d$month, d$net_assets, color, tips = tips,
-                   label = sprintf("Patrimônio líquido %s por mês", toupper(family))),
-    if (pending) shiny::div(class = "tm-caption", sprintf("%s em entrega (não exibido).", month_label(o$latest_month))))
+                                     else shiny::tagList(shiny::strong(axis_int(o$quotaholders)), " cotistas")))),
+    chart_key(color, "Patrimônio líquido (eixo esq.)", "Fundos (eixo dir.)"),
+    shiny::div(class = "tm-chart-box",
+               svg_line_chart(d$month, d$net_assets, color, tips = tips, width = 360, height = 150,
+                              values2 = d$funds,
+                              label = sprintf("Patrimônio líquido e número de fundos %s por mês", toupper(family)))))
 }
 
-fund_overview_ui <- function(id, ctx) {
+# Panorama: one landscape screen, no scrolling (grid in taxminer.css,
+# `.tm-dash`). Rankings show the top 6; the methodology is in the Sobre tab.
+fund_overview_ui <- function(id, ctx, top = 6L) {
   s <- ctx$snapshot
   r <- ctx$ranking
   o <- ctx$overview
   total <- sum(s$net_assets, na.rm = TRUE)
-  top_funds <- utils::head(snapshot_funds(s, ctx$admins), 10)
-  top_admins <- utils::head(r, 10)
+  top_funds <- utils::head(snapshot_funds(s, ctx$admins), top)
+  top_admins <- utils::head(r, top)
   months <- unique(month_label(ctx$complete[fund_family_order[fund_family_order %in% names(ctx$complete)]]))
   shiny::div(
-    class = "tm-page",
-    shiny::div(class = "tm-hero",
-               shiny::div(class = "tm-eyebrow", "Fase 1.3 · Panorama"),
-               shiny::h1("Fundos estruturados no Brasil"),
-               shiny::p(class = "tm-lede",
-                        sprintf("FII, FIDC, FIP e FIAGRO pelos informes à CVM. Referência: %s (último mês completo de cada família).",
-                                paste(months, collapse = " / ")))),
-    bslib::layout_columns(
-      col_widths = c(3, 2, 2, 2, 3), class = "tm-kpis",
-      kpi("Patrimônio líquido", format_brl(total), change_badge(ctx$market_change)),
-      kpi("Fundos", format_int(nrow(s)), "com informe no mês de referência"),
-      kpi("Posições de cotistas", axis_int(sum(s$quotaholders, na.rm = TRUE)), "FII, FIDC e FIAGRO; FIP não publica desde 2017"),
-      kpi("Administradores", format_int(nrow(r)), "FII, FIDC e FIAGRO"),
-      kpi("Concentração (HHI)", format_int(round(attr(r, "hhi"))),
-          sprintf("%s · 5 maiores: %s", hhi_label(attr(r, "hhi")), format_pct(r$cumulative_share[min(5, nrow(r))], sign = FALSE)))),
-    bslib::card(
-      class = "tm-section",
-      bslib::card_header("Composição do patrimônio líquido por família"),
-      bslib::card_body(share_bar(o$net_assets, fund_family_colors[o$family],
-                                 paste(toupper(o$family), "·", fund_family_names[o$family]),
-                                 format_brl(o$net_assets)))),
-    shiny::div(class = "tm-subhead", "Patrimônio líquido por família, mês a mês"),
-    do.call(bslib::layout_columns, c(
-      list(col_widths = bslib::breakpoints(sm = 12, lg = c(6, 6)), class = "tm-families"),
-      lapply(o$family, function(f) family_panel(ctx, f)))),
-    bslib::layout_columns(
-      col_widths = bslib::breakpoints(sm = 12, xl = c(6, 6)),
-      bslib::card(
-        class = "tm-section",
-        bslib::card_header(shiny::div(class = "tm-card-head",
-                                      shiny::span("Maiores administradores por patrimônio"),
-                                      shiny::span(class = "tm-head-note",
-                                                  sprintf("HHI %s · %s", format_int(round(attr(r, "hhi"))),
-                                                          hhi_label(attr(r, "hhi")))))),
-        bslib::card_body(
-          bar_list(top_admins$administrator_name, top_admins$net_assets,
-                   sprintf("%s · %s", format_brl(top_admins$net_assets), format_pct(top_admins$share, sign = FALSE)),
-                   colors = "#0b1f3a", rank = top_admins$rank,
-                   sub = sprintf("%s fundos · %s", format_int(top_admins$funds), top_admins$families),
-                   tips = sprintf("%s\nParticipação %s · acumulada %s", top_admins$administrator_name,
-                                  format_pct(top_admins$share, sign = FALSE),
-                                  format_pct(top_admins$cumulative_share, sign = FALSE))),
-          shiny::div(class = "tm-caption", "Detalhe e série de cada administrador na aba Administradores."))),
-      bslib::card(
-        class = "tm-section",
-        bslib::card_header("Maiores fundos por patrimônio líquido"),
-        bslib::card_body(
-          bar_list(display_name(top_funds$fund_name), top_funds$net_assets, format_brl(top_funds$net_assets),
-                   colors = unname(fund_family_colors[top_funds$family]), rank = seq_len(nrow(top_funds)),
-                   sub = sprintf("%s · %s · %s", toupper(top_funds$family), top_funds$fund_cnpj,
-                                 ifelse(is.na(top_funds$administrator_name), "administrador não publicado",
-                                        top_funds$administrator_name)),
-                   tips = sprintf("%s\n%s · referência %s", display_name(top_funds$fund_name),
-                                  format_brl(top_funds$net_assets), month_label(substr(top_funds$period, 1, 7)))),
-          shiny::div(class = "tm-caption", "Cor = família. Busque o fundo na aba Fundos para ler os informes.")))),
-    method_note(ctx))
+    class = "tm-dash",
+    shiny::div(class = "tm-dash-head",
+               shiny::div(shiny::span(class = "tm-eyebrow", "Panorama · Fase 1.3"),
+                          shiny::h1("Fundos estruturados no Brasil")),
+               shiny::div(class = "tm-dash-meta",
+                          sprintf("FII, FIDC, FIP e FIAGRO · informes à CVM · referência %s (último mês completo)",
+                                  paste(months, collapse = " / ")),
+                          shiny::tags$a(href = "#", class = "tm-link tm-goto", `data-tab` = "Sobre",
+                                        "Metodologia e fontes"))),
+    shiny::div(class = "tm-dash-kpis",
+               kpi("Patrimônio líquido", format_brl(total), change_badge(ctx$market_change)),
+               kpi("Fundos", format_int(nrow(s)), "com informe no mês de referência"),
+               kpi("Cotistas", axis_int(sum(s$quotaholders, na.rm = TRUE)), "posições; FIP não publica"),
+               kpi("Administradores", format_int(nrow(r)), "FII, FIDC e FIAGRO"),
+               kpi("Concentração (HHI)", format_int(round(attr(r, "hhi"))),
+                   sprintf("%s · 5 maiores: %s", hhi_label(attr(r, "hhi")),
+                           format_pct(r$cumulative_share[min(5, nrow(r))], sign = FALSE)))),
+    shiny::div(class = "tm-dash-share",
+               shiny::div(class = "tm-dash-label", "Composição do patrimônio"),
+               share_bar(o$net_assets, fund_family_colors[o$family],
+                         paste(toupper(o$family), "·", fund_family_names[o$family]), format_brl(o$net_assets))),
+    shiny::div(class = "tm-dash-families", lapply(o$family, function(f) family_panel(ctx, f))),
+    shiny::div(
+      class = "tm-dash-rank",
+      shiny::div(class = "tm-dash-card",
+                 shiny::div(class = "tm-dash-card-head", "Maiores administradores",
+                            shiny::span(class = "tm-head-note", sprintf("HHI %s · %s", format_int(round(attr(r, "hhi"))),
+                                                                        hhi_label(attr(r, "hhi"))))),
+                 bar_list(top_admins$administrator_name, top_admins$net_assets,
+                          sprintf("%s · %s", format_brl(top_admins$net_assets), format_pct(top_admins$share, sign = FALSE)),
+                          colors = "#0b1f3a", rank = top_admins$rank,
+                          sub = sprintf("%s fundos · %s", format_int(top_admins$funds), top_admins$families),
+                          tips = sprintf("%s\nParticipação %s · acumulada %s", top_admins$administrator_name,
+                                         format_pct(top_admins$share, sign = FALSE),
+                                         format_pct(top_admins$cumulative_share, sign = FALSE)))),
+      shiny::div(class = "tm-dash-card",
+                 shiny::div(class = "tm-dash-card-head", "Maiores fundos",
+                            shiny::span(class = "tm-head-note", "cor = família")),
+                 bar_list(display_name(top_funds$fund_name), top_funds$net_assets, format_brl(top_funds$net_assets),
+                          colors = unname(fund_family_colors[top_funds$family]), rank = seq_len(nrow(top_funds)),
+                          sub = sprintf("%s · %s · %s", toupper(top_funds$family), top_funds$fund_cnpj,
+                                        ifelse(is.na(top_funds$administrator_name), "administrador não publicado",
+                                               top_funds$administrator_name)),
+                          tips = sprintf("%s\n%s · referência %s", display_name(top_funds$fund_name),
+                                         format_brl(top_funds$net_assets),
+                                         month_label(substr(top_funds$period, 1, 7)))))))
 }
 
 fund_admin_ui <- function(id) {
@@ -188,17 +185,7 @@ fund_admin_server <- function(id, ctx) {
     shiny::observeEvent(input$pick, picked(input$pick))
     shiny::observeEvent(input$find, if (nzchar(input$find)) picked(input$find))
 
-    output$kpis <- shiny::renderUI({
-      r <- ranking()
-      h <- attr(r, "hhi")
-      share_at <- function(n) format_pct(r$cumulative_share[min(n, nrow(r))], sign = FALSE)
-      bslib::layout_columns(
-        col_widths = c(3, 3, 3, 3), class = "tm-kpis",
-        kpi("Patrimônio administrado", format_brl(attr(r, "total")), paste(toupper(families()), collapse = " · ")),
-        kpi("Administradores", format_int(nrow(r))),
-        kpi("HHI", format_int(round(h)), hhi_label(h)),
-        kpi("Participação dos maiores", share_at(5), sprintf("5 maiores · 10 maiores: %s", share_at(10))))
-    })
+    output$kpis <- shiny::renderUI(admin_kpis_ui(ranking(), families()))
 
     output$list_title <- shiny::renderText(sprintf("Ranking · %s administradores", format_int(nrow(ranking()))))
 
@@ -216,43 +203,59 @@ fund_admin_server <- function(id, ctx) {
     output$detail <- shiny::renderUI({
       r <- ranking()
       shiny::req(picked(), picked() %in% r$key)
-      a <- r[r$key == picked(), ]
-      admins <- ctx$admins[ctx$admins$family %in% families(), , drop = FALSE]
-      funds <- snapshot_funds(ctx$snapshot, admins, families(), administrator = a$key)
-      by_family <- tapply(funds$net_assets, factor(funds$family, levels = fund_family_order), sum, na.rm = TRUE)
-      by_family <- by_family[!is.na(by_family) & by_family > 0]
-      s <- administrator_series(ctx$m, admins, a$key, ctx$complete)
-      top <- utils::head(funds, 15)
-      bslib::card(
-        class = "tm-section tm-detail tm-pane",
-        bslib::card_header(
-          class = "tm-detail-head",
-          shiny::div(class = "tm-eyebrow", sprintf("#%d de %d · %s", a$rank, nrow(r),
-                                                   if (is.na(a$administrator_cnpj)) "sem CNPJ" else a$administrator_cnpj)),
-          shiny::h2(class = "tm-detail-title", a$administrator_name),
-          shiny::div(class = "tm-detail-meta",
-                     shiny::span(shiny::strong("Patrimônio: "), format_brl(a$net_assets)),
-                     shiny::span(shiny::strong("Participação: "), format_pct(a$share, sign = FALSE)),
-                     shiny::span(shiny::strong("Fundos: "), format_int(a$funds)))),
-        bslib::card_body(
-          fillable = FALSE,
-          if (length(by_family)) share_bar(as.numeric(by_family), fund_family_colors[names(by_family)],
-                                           paste(toupper(names(by_family)), "·", fund_family_names[names(by_family)]),
-                                           format_brl(as.numeric(by_family))),
-          shiny::div(class = "tm-subhead", "Patrimônio dos fundos atuais, mês a mês"),
-          svg_line_chart(s$month, s$net_assets, "#0b1f3a",
-                         tips = sprintf("%s\nPL %s\n%s fundos", month_label(s$month), format_brl(s$net_assets),
-                                        format_int(s$funds)),
-                         label = "Patrimônio administrado por mês", height = 210),
-          shiny::div(class = "tm-caption", "Série dos fundos que o administrador tem hoje (carteira atual retroagida)."),
-          shiny::div(class = "tm-subhead", sprintf("Maiores fundos (%d de %d)", nrow(top), nrow(funds))),
-          bar_list(display_name(top$fund_name), top$net_assets, format_brl(top$net_assets),
-                   colors = unname(fund_family_colors[top$family]),
-                   sub = sprintf("%s · %s", toupper(top$family), top$fund_cnpj),
-                   tips = sprintf("%s\n%s do administrador", display_name(top$fund_name),
-                                  format_pct(top$net_assets / a$net_assets, sign = FALSE)))))
+      admin_detail_ui(ctx, r, picked(), families())
     })
   })
+}
+
+admin_kpis_ui <- function(r, families) {
+  h <- attr(r, "hhi")
+  share_at <- function(n) format_pct(r$cumulative_share[min(n, nrow(r))], sign = FALSE)
+  shiny::div(
+    class = "tm-kpi-row",
+    kpi("Patrimônio administrado", format_brl(attr(r, "total")), paste(toupper(families), collapse = " · ")),
+    kpi("Administradores", format_int(nrow(r))),
+    kpi("HHI", format_int(round(h)), hhi_label(h)),
+    kpi("Participação dos maiores", share_at(5), sprintf("5 maiores · 10 maiores: %s", share_at(10))))
+}
+
+# Detail card of one administrator (`key` from administrator_key()) within ranking `r`.
+admin_detail_ui <- function(ctx, r, key, families) {
+  a <- r[r$key == key, ]
+  admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
+  funds <- snapshot_funds(ctx$snapshot, admins, families, administrator = a$key)
+  by_family <- tapply(funds$net_assets, factor(funds$family, levels = fund_family_order), sum, na.rm = TRUE)
+  by_family <- by_family[!is.na(by_family) & by_family > 0]
+  s <- administrator_series(ctx$m, admins, a$key, ctx$complete)
+  top <- utils::head(funds, 15)
+  bslib::card(
+    class = "tm-section tm-detail tm-pane",
+    bslib::card_header(
+      class = "tm-detail-head",
+      shiny::div(class = "tm-eyebrow", sprintf("#%d de %d · %s", a$rank, nrow(r),
+                                               if (is.na(a$administrator_cnpj)) "sem CNPJ" else a$administrator_cnpj)),
+      shiny::h2(class = "tm-detail-title", a$administrator_name),
+      shiny::div(class = "tm-detail-meta",
+                 shiny::span(shiny::strong("Patrimônio: "), format_brl(a$net_assets)),
+                 shiny::span(shiny::strong("Participação: "), format_pct(a$share, sign = FALSE)),
+                 shiny::span(shiny::strong("Fundos: "), format_int(a$funds)))),
+    bslib::card_body(
+      fillable = FALSE,
+      if (length(by_family)) share_bar(as.numeric(by_family), fund_family_colors[names(by_family)],
+                                       paste(toupper(names(by_family)), "·", fund_family_names[names(by_family)]),
+                                       format_brl(as.numeric(by_family))),
+      shiny::div(class = "tm-subhead", "Patrimônio dos fundos atuais, mês a mês"),
+      svg_line_chart(s$month, s$net_assets, "#0b1f3a",
+                     tips = sprintf("%s\nPL %s\n%s fundos", month_label(s$month), format_brl(s$net_assets),
+                                    format_int(s$funds)),
+                     label = "Patrimônio administrado por mês", height = 210),
+      shiny::div(class = "tm-caption", "Série dos fundos que o administrador tem hoje (carteira atual retroagida)."),
+      shiny::div(class = "tm-subhead", sprintf("Maiores fundos (%d de %d)", nrow(top), nrow(funds))),
+      bar_list(display_name(top$fund_name), top$net_assets, format_brl(top$net_assets),
+               colors = unname(fund_family_colors[top$family]),
+               sub = sprintf("%s · %s", toupper(top$family), top$fund_cnpj),
+               tips = sprintf("%s\n%s do administrador", display_name(top$fund_name),
+                              format_pct(top$net_assets / a$net_assets, sign = FALSE)))))
 }
 
 # Profile of one fund (used by the fund search detail).
