@@ -1,5 +1,26 @@
 # TaxMiner — estado do projeto
 
+## Busca dos fundos — 2026-11-11T11:40:00-03:00
+
+### Fase 1.3, busca (`work_0022`, `decision_0030`)
+
+- **Módulo** `src/intelligence/search_fund_reports.R`: diretório de 17.186 entradas (fundo,
+  nome e administrador como publicados), filtros por família, CNPJ, nome, administrador e
+  período, e as linhas de cada informe com valores originais, citação (dataset, arquivo,
+  linha, hash) e link oficial da CVM. Sem LLM.
+- **Interface** em `prototype/` (`scripts/run_prototype.R`): abas de busca e de cobertura e
+  qualidade. Iniciada localmente em `127.0.0.1:8765` (`test_0050`).
+- **Testes:** 49 sintéticos, incluindo o módulo Shiny com `shiny::testServer` (`test_0049`).
+  O validador roda 9 arquivos de teste.
+- **Dependência:** `shiny` declarado; o setup offline copiou 19 pacotes das bibliotecas já
+  instaladas para o `renv`. `shiny`, `bslib` e `otel` estão travados atrás do CRAN e entram
+  na pré-instalação do CI.
+- **CI do `c8ea514`** aprovado (`test_0048`).
+- **Limitação:** o FIP não publica o administrador.
+- **Processamento documental (`work_0026`):** diagnóstico e plano em
+  `docs/integration/hybrid_document_processing_plan.md`; Python autorizado (`decision_0031`).
+- **Próximo:** aceite humano da Fase 1.3 (`work_0023`).
+
 ## Fundos consolidados em Parquet — 2026-11-11T09:30:00-03:00
 
 ### Fase 1.3, Data P04 (`work_0021`)

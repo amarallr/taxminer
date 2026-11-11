@@ -1,7 +1,8 @@
 # CI only: install locked packages that renv::restore cannot order. When a
 # locked version has no Windows binary left on CRAN, renv builds it from source
 # and reports a false cycle (seen for magrittr <-> testthat,
-# curl <-> qpdf <-> pdftools and arrow <-> cpp11). This script installs those
+# curl <-> qpdf <-> pdftools and arrow <-> cpp11; shiny, bslib and otel are
+# locked behind CRAN as well). This script installs those
 # packages at their exact locked versions, in dependency order, outside the
 # renv resolver: the CRAN binary when CRAN still offers that exact version,
 # otherwise the locked source tarball. renv::restore then finds them in place
@@ -54,3 +55,10 @@ install_locked("pdftools", deps = "Rcpp")
 install_locked("cpp11")
 install_locked("arrow", deps = c("assertthat", "bit64", "glue", "purrr", "R6", "rlang",
                                  "tidyselect", "vctrs"))
+install_locked("otel")
+install_locked("bslib", deps = c("base64enc", "cachem", "fastmap", "htmltools", "jquerylib",
+                                 "jsonlite", "lifecycle", "memoise", "mime", "rlang", "sass"))
+install_locked("shiny", deps = c("cli", "commonmark", "glue", "httpuv", "jsonlite", "later",
+                                 "lifecycle", "mime", "promises", "R6", "rlang", "sourcetools",
+                                 "withr", "xtable", "fontawesome", "cachem", "fastmap",
+                                 "htmltools"))

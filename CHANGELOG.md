@@ -1,5 +1,17 @@
 # Changelog
 
+## Busca dos fundos e plano de processamento documental — 2026-11-11
+
+- Busca dos fundos (`work_0022`): `src/intelligence/search_fund_reports.R`, com diretório de
+  fundos em cache, filtros e linhas citadas do informe.
+- Primeira área do Shiny em `prototype/` (`app.R`, `fund_search_module.R`) e
+  `scripts/run_prototype.R`.
+- `shiny` declarado no `DESCRIPTION`; `renv.lock` atualizado pelo setup offline. CI pré-instala
+  `otel`, `bslib` e `shiny`.
+- Novo teste `test_fund_reports_search.R` (49).
+- Plano do processamento documental híbrido (MarkItDown, Markdown + Parquet + metadados):
+  `docs/integration/hybrid_document_processing_plan.md`.
+
 ## Fundos consolidados e inventário de layouts — 2026-11-11
 
 - Rodada completa da consolidação dos fundos: 102 arquivos, 12,16 milhões de linhas.

@@ -431,3 +431,31 @@ commit ou push, que o `AGENTS.md` exige explícitos.
 - **Etapa 03:** backfill histórico de todos os períodos listados, fora o `DFIN`. Cada nova
   rodada confere de novo o período mais recente de cada conjunto.
 - **Fora do escopo:** o `DFIN` do FII e as outras pastas de fundos do portal.
+
+## decision_0030 — 2026-11-11T11:40:00-03:00 — Busca dos fundos e primeira área do Shiny
+
+O desenvolvedor disse: "sim, pode fazer commit e push e seguir com a busca" e depois "pode
+fechar a busca dos fundos e fazer commit e push". Ficou decidido:
+
+- **Lógica em `src/intelligence/search_fund_reports.R`**, só com R base e `arrow`; nenhum LLM.
+  Um diretório de fundos (uma entrada por fundo, nome e administrador como publicados) vem das
+  tabelas que trazem esses campos: `inf_mensal_fii_geral`, `inf_mensal_fidc_tab_I`,
+  `inf_trimestral_fip`, `inf_quadrimestral_fip` e `inf_mensal_fiagro`. Fica em cache em
+  `processed/search/` e é refeito quando essas partes ou o código mudam.
+- **Filtros:** família, CNPJ (prefixo, sem pontuação), nome e administrador (sem caixa nem
+  acento; administrador também pelo CNPJ) e período por sobreposição de intervalos.
+- **Linhas do informe** com valores originais e citação: dataset, arquivo, linha, hash do
+  arquivo e link oficial do manifesto.
+- **Interface em `prototype/`** (arquitetura, item 5), só de apresentação, uma área por
+  família habilitada só quando os dados existem. `shiny` declarado no `DESCRIPTION` e copiado
+  das bibliotecas já instaladas pelo `scripts/setup_environment.R` (sem download).
+- **Limitação:** o FIP não publica o administrador.
+
+## decision_0031 — 2026-11-11T11:40:00-03:00 — Python autorizado para o processamento documental
+
+Perguntado se autorizava "instalar Python 3.12 só para o usuário, com .venv no projeto e
+MarkItDown fixado", o desenvolvedor respondeu "SIM!". Escopo: Python 3.12 instalado só para o
+usuário, ambiente `.venv` dentro do projeto e `markitdown` 0.1.9 fixado com hashes, conforme
+`docs/integration/hybrid_document_processing_plan.md` (`work_0026`). Plugins, OCR e
+conversores do Azure ficam desligados. Não autoriza chamar LLM nem enviar documentos a
+serviços externos; o provedor ainda será decidido.

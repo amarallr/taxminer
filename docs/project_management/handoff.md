@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-11T09:30:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T11:40:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -36,7 +36,14 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     (`test_0044`). Rodada completa feita (`test_0047`): 12,16 milhões de
     linhas; inventário de layouts em `docs/data_dictionary.md`. A primeira
     tentativa (`test_0045`) revelou um bug, já corrigido.
-  - `work_0022` (busca) e `work_0023` (aceite) não iniciados.
+  - **Busca (`work_0022`, `decision_0030`):** implementada e testada (`test_0049`,
+    `test_0050`). Primeira área do Shiny em `prototype/`; rodar com
+    `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla scripts/run_prototype.R` e abrir
+    `http://127.0.0.1:8765`.
+  - `work_0023` (aceite humano da Fase 1.3) não iniciado.
+- **Processamento documental híbrido (`work_0026`):** diagnóstico e plano em
+  `docs/integration/hybrid_document_processing_plan.md`. Python 3.12 com `.venv` e
+  MarkItDown fixado autorizados (`decision_0031`); LLM e envio de texto ainda sem decisão.
 - **Layout dos dados (`work_0025`, `decision_0028`):** uma pasta por família em
   `C:\TaxMinerData`. Fundos e notas já movidos; as DFP serão movidas depois da
   coleta, com `scripts/organize_data_dir.R dfp`.
@@ -81,8 +88,8 @@ Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
 `docs/data_sources.md` (retoma de onde parou). Em paralelo, atualizar o Parquet
 das notas com `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla
 scripts/extract_financial_notes.R` (só processa pacotes novos). Com
-autorização: commit e push da correção do CI (`arrow` e `cpp11`) e confirmação
-no CI; busca dos fundos (`work_0022`). Para atualizar os fundos: coleta
+autorização: aceite da Fase 1.3 pelo desenvolvedor (`work_0023`), depois de usar a
+busca; incrementos do `work_0026`. Para atualizar os fundos: coleta
 `scripts/collect_fund_reports.R history` e consolidação por família
 (`scripts/consolidate_fund_reports.R fidc`; o FIDC usa menos memória em lotes).
 Depois da coleta das DFP: `scripts/organize_data_dir.R

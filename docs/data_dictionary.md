@@ -129,6 +129,25 @@ unchanged; parts of tables that disappear from a new file version are removed.
 Retrieval provenance (`source_url`, `listing_last_modified`, `retrieved_at`)
 stays in the Collect P05 manifests.
 
+### Search (Phase 1.3, `work_0022`, `decision_0030`)
+
+`src/intelligence/search_fund_reports.R` reads only these outputs. The fund
+directory (`processed/search/fund_directory.parquet`) has one row per family,
+fund CNPJ, fund name and administrator as published:
+
+| Field | Meaning |
+|---|---|
+| `fund_cnpj` / `fund_cnpj_original` | Normalized CNPJ, or the published value when invalid. |
+| `fund_name` | First non-empty of `Nome_Fundo_Classe`, `Nome_Fundo`, `Nome_Classe`, `DENOM_SOCIAL`. |
+| `administrator_name` / `administrator_cnpj` | `Nome_Administrador`/`ADMIN` and `CNPJ_Administrador`/`CNPJ_ADMIN`; empty for FIP, which does not publish them. |
+| `first_period` / `last_period` / `period_count` | Span and distinct row periods (`Data_Referencia` or `DT_COMPTC`). |
+| `zip_sha256` / `source_file` / `source_line` | Citation of the most recent row of the entry. |
+
+Report rows returned by `fund_report_rows()` keep the CVM values as text and add
+`citation` (dataset, member, line, file hash) and `source_url` from the Collect
+P05 manifest. Measured on 2026-11-11: 17,186 directory entries (FII 4,779, FIDC
+7,911, FIP 4,088, FIAGRO 408); building takes about 7 s, the cached load 0.1 s.
+
 Fund reports cannot depend on the consultation-decision or financial-note
 schemas or search. `document_relationships` (Phase 2) may use them only after
 Phase 1.3 has explicit human acceptance.
