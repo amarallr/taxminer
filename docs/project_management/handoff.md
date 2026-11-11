@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-11T00:10:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T02:30:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -42,9 +42,13 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     `signatures.R` e `execution_policy.R`. Adoção por `src/collect/` fica para
     um item posterior, depois da coleta das DFP.
   - Riscos `risk_0014` e `risk_0015`.
-- **Data P03 (`work_0012`):** extração validada em 83 pacotes (66 completos;
-  `test_0035`, `test_0037`). Faltam tabelas e Parquet (`arrow` ainda não
-  declarado). `pdftools`, `xml2` e `base64enc` declarados (`decision_0026`).
+- **Data P03 (`work_0012`):** extração e consolidação em Parquet implementadas
+  (`decision_0026`, `decision_0027`; `test_0035`, `test_0037`–`test_0039`).
+  - Rodada local: 250 pacotes, 205 completos, 6.365 notas, em
+    `C:\TaxMinerData\processed\financial_disclosures\`.
+  - Faltam as tabelas das notas.
+  - O catálogo da coleta tem nomes cortados (`risk_0016`), contornado na
+    consolidação.
 
 ## Validação
 
@@ -68,8 +72,12 @@ escolha do desenvolvedor).
 
 Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
 `manifest.csv`); se o processo parar, rodar de novo o comando de
-`docs/data_sources.md` (retoma de onde parou). Em paralelo: Data P03
-(extração das notas dos pacotes já baixados). ITR depende de mais
+`docs/data_sources.md` (retoma de onde parou). Em paralelo, atualizar o Parquet
+das notas com `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla
+scripts/extract_financial_notes.R` (só processa pacotes novos). Confirmar no CI
+o passo de pré-instalação de `curl`, `qpdf` e `pdftools`. Depois da coleta:
+corrigir a decodificação do índice em `src/collect/` (`risk_0016`) e rodar a
+extração com `force`. ITR depende de mais
 armazenamento. Fase 1.1 retoma quando o desenvolvedor decidir os
 pontos de `docs/feasibility.md`.
 

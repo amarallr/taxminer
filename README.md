@@ -163,7 +163,7 @@ Soluções de Consulta.
 | Módulo | Responsabilidade | Situação |
 |---|---|---|
 | **TaxMiner Collect** (`src/collect/`) | Descoberta de fontes, identificação dos documentos, download controlado com espera entre requisições, hash SHA-256, manifesto de proveniência, tratamento de falhas, retomada e controle de cobertura. | Implementado para as entregas da CVM; coleta das DFP em andamento. |
-| **TaxMiner Data** (`src/data/`) | Extração de texto e metadados, segmentação das notas, tabelas, padronização de campos, preservação do original, identificação de entidades, consolidação histórica em Parquet, qualidade e reprodutibilidade. | Extração das notas em desenvolvimento; tabelas e Parquet ainda não implementados. |
+| **TaxMiner Data** (`src/data/`) | Extração de texto e metadados, segmentação das notas, tabelas, padronização de campos, preservação do original, identificação de entidades, consolidação histórica em Parquet, qualidade e reprodutibilidade. | Extração das notas e consolidação em Parquet implementadas; tabelas ainda não implementadas. |
 | **TaxMiner Intelligence** (`src/intelligence/`) | Pesquisa textual e semântica, recuperação de trechos, apoio de modelos de linguagem, relações entre documentos, evidências e citações, revisão humana e controle de respostas sem fundamento. | Não iniciado. |
 | **TaxMiner Common** | Configuração, validação do ambiente, logging, governança, testes e segurança compartilhados. | Fundação implementada (validador, CI, registros de gestão); `src/common/` será criado quando houver código compartilhado. |
 
@@ -214,8 +214,9 @@ foram implementados.
 - ✅ Catálogo das entregas DFP/ITR da CVM e download retomável com manifesto
   e SHA-256 por arquivo do pacote.
 - 🔧 Extração das notas explicativas com número, título, páginas e escala
-  monetária (em desenvolvimento: 66 de 83 pacotes completos numa rodada local,
-  ainda sem Parquet).
+  monetária, consolidada em Parquet (uma parte por pacote, rodada incremental
+  por hash do pacote e assinatura da extração). Em desenvolvimento: tabelas
+  ainda não extraídas.
 - ✅ Rotinas comuns de confiabilidade em `src/common/` (gravação validada com
   rollback, caminhos contidos, assinaturas e política de execução).
 - Extração de tabelas das notas, com unidade e período.
@@ -291,10 +292,11 @@ passos estão em [`project_status.md`](docs/project_management/project_status.md
 
 - **Linguagem:** R 4.5.1 (ambiente verificado: Windows e RStudio
   2024.04.0+735).
-- **Dependências:** `renv` (snapshot explícito) e `testthat`, declaradas em
-  `DESCRIPTION`; versões e dependências transitivas em `renv.lock`.
-  Bibliotecas de PDF, XML, Parquet e Shiny entram no `DESCRIPTION` somente
-  quando o código que as usa for aceito.
+- **Dependências:** `renv` (snapshot explícito), `testthat`, `pdftools`,
+  `xml2`, `base64enc` e `arrow`, declaradas em `DESCRIPTION`; versões e
+  dependências transitivas em `renv.lock`. Outras bibliotecas (por exemplo
+  `duckdb` e `shiny`) entram no `DESCRIPTION` somente quando o código que as
+  usa for escrito.
 - **Ferramentas de sistema:** `curl` (incluído no Windows 10 ou superior).
 - **Integração contínua:** GitHub Actions restaura o `renv.lock` e roda o
   validador no Windows (`.github/workflows/validate_environment.yml`).

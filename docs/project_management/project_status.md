@@ -1,5 +1,36 @@
 # TaxMiner — estado do projeto
 
+## Notas consolidadas em Parquet — 2026-11-11T02:30:00-03:00
+
+### Fase 1.2, Data P03 (`work_0012`, `decision_0027`)
+
+- **Consolidação em Parquet** (`src/data/consolidate_financial_notes.R`,
+  `scripts/extract_financial_notes.R`): `financial_reports` e `financial_notes`, uma parte
+  por pacote, em `<TAXMINER_DATA_DIR>/processed/financial_disclosures/`. A rodada é
+  incremental: usa o hash do pacote e a assinatura da extração, por isso pode acompanhar a
+  coleta.
+- **`arrow` 25.0.1** declarado no `DESCRIPTION`; `renv.lock` atualizado sem download.
+- **Testes:** 28 testes sintéticos (`test_0038`).
+- **Rodada local** (`test_0039`) sobre os 250 pacotes baixados até então, em 628 s:
+
+| Situação | Pacotes |
+|---|---:|
+| `extracted` (completo) | 205 |
+| `extracted_partial` | 33 |
+| `no_note_structure` | 10 |
+| `image_only` (sem OCR) | 2 |
+
+  Resultado: 6.365 notas, cerca de 53 milhões de caracteres de texto e 20 MB de Parquet.
+- **Defeito do catálogo da coleta** (`risk_0016`): nomes de companhias cortados no primeiro
+  acento. A consolidação contorna o defeito lendo os nomes do índice da CVM em Latin-1. A
+  correção em `src/collect/` fica para depois da coleta das DFP, e então a extração deve ser
+  refeita com `force`.
+- **CI:** o commit `7f17b74` falhou no `renv::restore` por um ciclo falso entre `curl`, `qpdf`
+  e `pdftools`. O workflow agora pré-instala os três nas versões travadas.
+- **Coleta das DFP:** segue em execução, com 266 de 14.010 entregas (262 baixadas, 4 falhas).
+
+**Validador:** 5 + 27 + 22 + 55 + 28 testes aprovados.
+
 ## Extração das notas validada e rotinas comuns implementadas — 2026-11-11T00:10:00-03:00
 
 ### Fase 1.2, Data P03 (`work_0012`)

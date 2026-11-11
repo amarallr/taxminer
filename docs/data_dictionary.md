@@ -47,6 +47,26 @@ are never collapsed based on text similarity alone.
 Company, filing, report version, note, table, and page relationships must remain
 traceable. Notes cannot depend on the consultation-decision schema or search.
 
+### Implemented Parquet layout (Data P03, `decision_0027`)
+
+Written by `src/data/consolidate_financial_notes.R` under
+`<TAXMINER_DATA_DIR>/processed/financial_disclosures/`, one zstd Parquet part
+per filing package (`part-{source_document_id}.parquet`). Columns and types are
+fixed by `financial_report_columns` and `financial_note_columns`, so every part
+shares one schema.
+
+| Table | Grain | Key columns |
+|---|---|---|
+| `financial_reports/` | One row per downloaded filing package | `report_id`, `source_document_id`, `report_type`, `cvm_code`, `company_cnpj`, `company_name`, `reporting_period_end`, `document_version`, `source_url`, `package_sha256`, `document_hash`, `page_count`, `note_count`, `extraction_status`, `extraction_error`, `confidence`, `extraction_signature`, `extracted_at` |
+| `financial_notes/` | One row per extracted note | `note_id`, `report_id`, `source_document_id`, `cvm_code`, `company_cnpj`, `reporting_period_end`, `note_set`, `note_number`, `note_title`, `note_text`, `source_page_start`, `source_page_end`, `document_hash`, `unit_scale`, `unit_scale_source`, `extraction_status`, `confidence`, `extraction_signature` |
+
+`extraction_index.rds` records `source_document_id`, `package_sha256` and
+`extraction_signature` per package. A rerun skips a package only when all three
+match; a new package hash or a change to the extraction functions or heading
+patterns reprocesses it. Packages without notes keep their report row and have
+no notes part. `company_name` comes from the CVM open-data index decoded as
+Latin-1 (`risk_0016`). Raw packages are only read.
+
 ## `investment_fund_reports` (Phase 1.3, `decision_0024`, `decision_0025`)
 
 Conceptual contract; the column inventory per subfamily, table and layout comes

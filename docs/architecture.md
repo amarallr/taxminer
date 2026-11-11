@@ -55,6 +55,14 @@ table hierarchy, page, original unit/value, normalized value when justified,
 and parser uncertainty. Company matching is evidence-backed; unresolved or
 ambiguous matches remain unresolved rather than being forced.
 
+Implemented (Data P03, `decision_0027`): `scripts/extract_financial_notes.R`
+reads the Collect P04 catalog and manifest, extracts each downloaded package
+once and writes `financial_reports` and `financial_notes` as Parquet parts per
+package with `arrow`. An extraction index keyed by package SHA-256 and the
+extraction signature (`src/common/signatures.R`) makes reruns incremental, so
+consolidation can run while the collection is still adding packages. Layout in
+`docs/data_dictionary.md`.
+
 ### Investment fund reports
 
 The `investment_fund_reports` domain (`decision_0024`) is independent of

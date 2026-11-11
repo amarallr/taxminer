@@ -370,3 +370,28 @@ Detalhes:
   `DESCRIPTION`.
 - **`arrow`:** continua não declarado. Entra quando o primeiro código de Parquet for escrito,
   conforme `docs/architecture.md`.
+
+## decision_0027 — 2026-11-11T02:30:00-03:00 — Notas consolidadas em Parquet
+
+O desenvolvedor pediu para seguir com o Parquet das notas (Fase 1.2, `work_0012`). Ficou
+decidido:
+
+- **`arrow` declarado.** `arrow` 25.0.1 entra no `DESCRIPTION`, como previa a
+  `decision_0026`. O `renv.lock` recebeu o pacote e suas dependências (`assertthat`, `bit`,
+  `bit64`, `cpp11`, `purrr`, `tidyselect`, `vctrs`) por snapshot explícito da biblioteca local,
+  sem download.
+- **Uma parte por pacote.** Cada pacote baixado gera `financial_reports/part-{id}.parquet` e,
+  se houver notas, `financial_notes/part-{id}.parquet` (zstd), com esquema fixo. A gravação
+  passa por arquivo temporário vizinho, releitura e troca com rollback.
+- **Rodada incremental.** O índice `extraction_index.rds` (gravado com
+  `write_validated_atomic`) guarda o SHA-256 do pacote e a assinatura da extração. Pacotes
+  iguais são pulados; mudança no pacote ou na lógica da extração força o reprocessamento.
+  Por isso a consolidação pode rodar junto com a coleta.
+- **Fora do repositório.** Os dados ficam em `<TAXMINER_DATA_DIR>/processed/financial_disclosures/`;
+  o script recusa diretórios dentro do OneDrive.
+- **Defeito do catálogo contornado, sem mexer na coleta.** O catálogo da coleta tem nomes de
+  companhias cortados no primeiro caractere acentuado (`risk_0016`). A consolidação repara as
+  linhas e lê `company_name` dos ZIPs de índice da CVM com decodificação Latin-1. A correção
+  em `src/collect/` fica para depois do fim da coleta das DFP.
+- **CI.** O workflow pré-instala `curl`, `qpdf` e `pdftools` nas versões travadas, porque o
+  `renv::restore` acusa um ciclo falso entre eles (mesmo caso do `magrittr`).

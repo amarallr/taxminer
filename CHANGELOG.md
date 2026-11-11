@@ -1,5 +1,17 @@
 # Changelog
 
+## Notas consolidadas em Parquet — 2026-11-11
+
+- `src/data/consolidate_financial_notes.R` e `scripts/extract_financial_notes.R` gravam
+  `financial_reports` e `financial_notes` em Parquet, uma parte por pacote, de forma
+  incremental (`decision_0027`). 28 testes sintéticos
+  (`tests/testthat/test_financial_notes_parquet.R`).
+- `arrow` declarado no `DESCRIPTION`; `renv.lock` atualizado.
+- Nomes de companhias cortados no catálogo da coleta contornados com o índice da CVM em
+  Latin-1 (`risk_0016`).
+- CI: pré-instalação de `curl`, `qpdf` e `pdftools` antes do `renv::restore`.
+- O escritor de ZIP dos testes passou para `tests/testthat/helper_stored_zip.R`.
+
 ## Dependências da extração declaradas — 2026-11-11
 
 - `DESCRIPTION` passa a declarar `pdftools`, `xml2` e `base64enc` (`decision_0026`).
