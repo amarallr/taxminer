@@ -214,7 +214,10 @@ foram implementados.
 - ✅ Catálogo das entregas DFP/ITR da CVM e download retomável com manifesto
   e SHA-256 por arquivo do pacote.
 - 🔧 Extração das notas explicativas com número, título, páginas e escala
-  monetária (em desenvolvimento, sem resultados validados).
+  monetária (em desenvolvimento: 66 de 83 pacotes completos numa rodada local,
+  ainda sem Parquet).
+- ✅ Rotinas comuns de confiabilidade em `src/common/` (gravação validada com
+  rollback, caminhos contidos, assinaturas e política de execução).
 - Extração de tabelas das notas, com unidade e período.
 - Bases Parquet de relatórios, notas e tabelas, com linhagem até o documento.
 - Pesquisa textual por empresa, CNPJ, período, tipo de relatório e nota.
@@ -277,7 +280,7 @@ acompanhados separadamente.
 | Fase 1.3 — Fundos de investimento | **Planejada** (`decision_0024`): listagens da CVM verificadas; coleta não autorizada. |
 | Fase 2 — Inteligência cruzada | Não iniciada. |
 
-Itens de trabalho: 23 registrados, sendo 8 implementados, 3 em andamento,
+Itens de trabalho: 24 registrados, sendo 10 implementados, 2 em andamento,
 1 suspenso e 11 não iniciados. Há 8 aceites humanos. **Nenhum MVP foi
 concluído, liberado em release ou colocado em operação.** Riscos e próximos
 passos estão em [`project_status.md`](docs/project_management/project_status.md),

@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T23:00:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T00:10:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -38,11 +38,13 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   - Etapa 00 concluída (`docs/integration/new_data_sources_gap_analysis.md`).
   - Gate 01 decidido (`decision_0023`): primeiro as rotinas comuns em `src/common/`; a
     família `investment_fund_reports` só depois que a coleta da Fase 1.2 estiver estável.
-  - Nenhum código incorporado. A etapa 02 aguarda nova autorização.
+  - Etapa 02 implementada (`work_0024`, `test_0036`): `src/common/safe_io.R`,
+    `signatures.R` e `execution_policy.R`. Adoção por `src/collect/` fica para
+    um item posterior, depois da coleta das DFP.
   - Riscos `risk_0014` e `risk_0015`.
-- **Data P03 (`work_0012`):** `src/data/extract_financial_notes.R` não
-  commitado. A última correção (`prefer_consistent_style`) ainda não foi
-  revalidada.
+- **Data P03 (`work_0012`):** extração validada em 83 pacotes (66 completos;
+  `test_0035`, `test_0037`). Faltam Parquet, tabelas e a declaração de
+  `pdftools`, `xml2` e `base64enc` (precisa de autorização).
 
 ## Validação
 

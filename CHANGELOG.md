@@ -1,5 +1,14 @@
 # Changelog
 
+## Extração das notas e rotinas comuns — 2026-11-11
+
+- Extração das notas (Fase 1.2) com seleção de conjuntos corrigida e títulos `(N)` como
+  alternativa. Rodada local em 83 pacotes: 66 completos. 22 testes sintéticos
+  (`tests/testthat/test_financial_notes.R`).
+- Rotinas comuns em `src/common/` (`safe_io.R`, `signatures.R`, `execution_policy.R`), só com
+  R base. 55 testes sintéticos (`tests/testthat/test_common_primitives.R`).
+- O validador inclui os dois novos arquivos de teste.
+
 ## Fases reorganizadas — 2026-11-10
 
 - O MVP passa a ter duas fases (`decision_0025`):

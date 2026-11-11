@@ -33,3 +33,6 @@ test_0031,work_0008,source_probe_normas_cvm,windows_rstudio_2024_04_integrated_t
 test_0032,work_0011,source_probe_cvm_open_data_and_rad_filing,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:00:46-03:00,passed,docs/data_sources.md,76b1f81
 test_0033,work_0011,unit_financial_collection_synthetic_fixtures,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:58:00-03:00,passed,tests/testthat/test_financial_collection.R,47f190d
 test_0034,work_0011,live_trial_five_cvm_dfp_packages,windows_rstudio_2024_04_integrated_terminal,2026-11-10T19:57:00-03:00,passed,docs/data_sources.md,47f190d
+test_0035,work_0012,unit_financial_notes_synthetic_text,windows_rstudio_2024_04_integrated_terminal,2026-11-11T00:10:00-03:00,passed,tests/testthat/test_financial_notes.R,152bbff
+test_0036,work_0024,unit_common_primitives_synthetic_fixtures,windows_rstudio_2024_04_integrated_terminal,2026-11-11T00:10:00-03:00,passed,tests/testthat/test_common_primitives.R,152bbff
+test_0037,work_0012,local_trial_note_extraction_83_cvm_dfp_packages,windows_rstudio_2024_04_integrated_terminal,2026-11-11T00:10:00-03:00,passed,docs/project_management/project_status.md,152bbff

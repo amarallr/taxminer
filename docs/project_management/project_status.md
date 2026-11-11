@@ -1,5 +1,42 @@
 # TaxMiner — estado do projeto
 
+## Extração das notas validada e rotinas comuns implementadas — 2026-11-11T00:10:00-03:00
+
+### Fase 1.2, Data P03 (`work_0012`)
+
+- **Correção da seleção de conjuntos de notas.** Listas numeradas dentro de uma nota não cortam
+  mais o conjunto verdadeiro. A busca agora vai da esquerda para a direita e estende o limite
+  enquanto o conjunto é inválido.
+- **Novo padrão de título.** O formato `(N) TÍTULO` passou a ser reconhecido, mas só como
+  alternativa, porque aceitá-lo sempre confundia notas de rodapé de tabelas com títulos.
+- **Testes:** 22 testes sintéticos (`test_0035`).
+- **Rodada local** (`test_0037`) sobre 83 pacotes DFP já baixados:
+
+| Situação | Pacotes |
+|---|---:|
+| `extracted` (confiança alta) | 66 |
+| `extracted_partial` | 12 |
+| `image_only` (sem OCR) | 1 |
+| `no_note_structure` | 4 |
+
+- **Limitações:**
+  - os parciais têm lacunas de numeração ou conjuntos curtos;
+  - ainda faltam Parquet e tabelas;
+  - `pdftools`, `xml2` e `base64enc` continuam sem declaração no `DESCRIPTION`.
+
+### Novas fontes, etapa 02 (`work_0024`)
+
+- **Rotinas comuns em `src/common/`**, só com R base e reimplementadas a partir dos requisitos:
+  - `safe_io.R`;
+  - `signatures.R`;
+  - `execution_policy.R`.
+- **Requisitos:** `req_0015`–`req_0017`.
+- **Testes:** 55 testes sintéticos (`test_0036`).
+- **Coleta:** `src/collect/` não foi alterado e a coleta das DFP segue em execução.
+- **Inventário (`work_0019`):** marcado como implementado; o aceite continua pendente.
+
+**Validador:** 5 + 27 + 22 + 55 testes aprovados.
+
 ## Fases reorganizadas — 2026-11-10T23:00:00-03:00
 
 Por decisão do desenvolvedor (`decision_0025`), o MVP passa a ter duas fases:

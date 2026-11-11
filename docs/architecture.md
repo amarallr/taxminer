@@ -111,6 +111,33 @@ Each subphase and phase has separate implementation, testing, human
 acceptance, release, and operations states. No downstream phase starts until its prerequisites and
 human gates are met. This planning document is not phase acceptance.
 
+## Shared contracts in `src/common/` (Common P07 stage 02)
+
+These are base-R primitives that any source family may use (`decision_0023`, `work_0024`,
+`req_0015`–`req_0017`). They were re-implemented from requirements; each function header
+records its provenance (`origin:`).
+
+- **`safe_io.R`**
+  - `validate_contained_path`: rejects absolute, drive-letter and `..` paths, and paths that
+    resolve outside the root.
+  - `write_validated_atomic`: writes to a temporary neighbour file, reads it back, validates
+    it, publishes with rollback, and keeps the previous version on failure.
+  - `recover_from_rollback` and `read_rds_recoverable`: a corrupt state file is preserved and
+    never read as success.
+  - `validate_zip_archive`: checks member count and size limits, unsafe or duplicate names,
+    and extraction integrity, and returns per-member SHA-256.
+- **`signatures.R`**
+  - `compute_signature_hash`: deterministic SHA-256 of objects and files, independent of the
+    R version.
+  - `code_signature`: signature of an explicit file list, with no traversal.
+  - `transformation_signature`: signature of function arguments and bodies.
+- **`execution_policy.R`**
+  - `resolve_execution_policy`: checkpoint reuse never forces a download.
+  - `record_attempt`: records `in_progress`, then `completed` or `failed`.
+
+Adoption by `src/collect/` is a separate, later work item. Nothing changes while the DFP
+collection runs.
+
 ## Cross-cutting controls
 
 Source terms, availability, rate limits, coverage, and document integrity are

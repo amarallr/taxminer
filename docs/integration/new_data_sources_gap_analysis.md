@@ -165,10 +165,10 @@ recebe o próximo ID livre, com a nota `origin_id`. Os próximos livres no momen
 
 | Proposta | Descrição | `origin_id` |
 |---|---|---|
-| `req_0015` (common, proposto) | Gravação validada com rollback e caminhos contidos | P02-RF-002, P02-RF-003, P02-RF-008, P02-FUN-001/006/007/008 |
-| `req_0016` (common, proposto) | Assinaturas de código, configuração e transformação | P02-FUN-002/009/012, P07-RF-004 |
-| `req_0017` (common, proposto) | Política de execução e registro de tentativas | P02-RF-006, P02-FUN-003/013 |
-| `test_0035` | Testes sintéticos de `src/common/` | P02-TST-001/003/004/011/012/013 |
+| `req_0015` (common, registrado) | Gravação validada com rollback e caminhos contidos | P02-RF-002, P02-RF-003, P02-RF-008, P02-FUN-001/006/007/008 |
+| `req_0016` (common, registrado) | Assinaturas de código, configuração e transformação | P02-FUN-002/009/012, P07-RF-004 |
+| `req_0017` (common, registrado) | Política de execução e registro de tentativas | P02-RF-006, P02-FUN-003/013 |
+| `test_0036` | Testes sintéticos de `src/common/` (`tests/testthat/test_common_primitives.R`, 55 aprovados) | P02-TST-001/003/004/011/012/013 |
 | `req_0012`–`req_0014` (registrados, `decision_0024`) | Coleta, consolidação e busca de `investment_fund_reports` (FII, FIDC, FIP, FIAGRO) | P04, P05_01, P05_02, P06_01, P06_02 para FIDC e FII; FIP e FIAGRO sem código de referência |
 
 Atualização (`decision_0024`): `req_0012`–`req_0014` foram usados pelos requisitos dos fundos. Os requisitos das rotinas comuns recebem os próximos IDs livres na etapa 02 (hoje `req_0015`–`req_0017`).

@@ -20,3 +20,5 @@ cat("testthat: ", as.character(packageVersion("testthat")), "\n", sep = "")
 # Explicit test input; no root traversal or fixture discovery.
 testthat::test_file("tests/testthat/test_environment.R", stop_on_failure = TRUE)
 testthat::test_file("tests/testthat/test_financial_collection.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_financial_notes.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_common_primitives.R", stop_on_failure = TRUE)

@@ -31,7 +31,7 @@ citadas, nunca conclusão de infração.
 
 ## Itens de trabalho
 
-23 registrados: 8 implementados, 3 em andamento, 1 suspenso (bloqueado) e 11 não iniciados; 8 com
+24 registrados: 10 implementados, 2 em andamento, 1 suspenso (bloqueado) e 11 não iniciados; 8 com
 aceite humano. Nenhum foi liberado em release nem está em operação.
 
 | ID | Item | Implementação | Teste | Aceite |
@@ -45,7 +45,8 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0006 | Gemini CLI | implementado | aprovado | aprovado |
 | work_0007 | GitHub Copilot | implementado | aprovado | aprovado |
 | work_0018 | Revisão de consistência do projeto | implementado | aprovado | aprovado |
-| work_0019 | Novas fontes: inventário e lacunas (Common P07) | em andamento | não executado | pendente |
+| work_0019 | Novas fontes: inventário e lacunas (Common P07) | implementado | não se aplica | pendente |
+| work_0024 | Rotinas comuns em `src/common/` | implementado | aprovado | pendente |
 | **Fase 1.1 — Soluções de Consulta** | | | | |
 | work_0008 | Descobrir fontes e coletar a amostra | suspenso | aprovado | pendente |
 | work_0009 | Extrair e consolidar | não iniciado | não executado | pendente |
@@ -53,7 +54,7 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0015 | Aceite humano da Fase 1.1 | não iniciado | não executado | pendente |
 | **Fase 1.2 — Notas explicativas** | | | | |
 | work_0011 | Descobrir fontes e coletar relatórios | em andamento | aprovado | pendente |
-| work_0012 | Extrair notas e tabelas | em andamento | não executado | pendente |
+| work_0012 | Extrair notas e tabelas | em andamento | aprovado | pendente |
 | work_0013 | Busca independente de notas | não iniciado | não executado | pendente |
 | work_0016 | Aceite humano da Fase 1.2 | não iniciado | não executado | pendente |
 | **Fase 1.3 — Fundos de investimento** | | | | |
