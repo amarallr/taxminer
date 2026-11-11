@@ -5,23 +5,24 @@
 #
 # Storage: set TAXMINER_DATA_DIR to a local folder outside OneDrive (raw
 # packages are large and must not be synchronized or published). Layout:
-#   <data_dir>/index/       yearly open-data ZIPs (index + statements, ODbL)
-#   <data_dir>/raw/         immutable filing packages <form>/<year>/<id_doc>.zip
-#   <data_dir>/manifest.csv append-only outcomes, one row per attempt
-#   <data_dir>/catalog.csv  current discovery catalog
+#   <root>/index/       yearly open-data ZIPs (index + statements, ODbL)
+#   <root>/raw/         immutable filing packages <form>/<year>/<id_doc>.zip
+#   <root>/manifest.csv append-only outcomes, one row per attempt
+#   <root>/catalog.csv  current discovery catalog
+# where <root> is <TAXMINER_DATA_DIR>/financial_disclosures, or
+# <TAXMINER_DATA_DIR> itself while the legacy layout of the first DFP
+# collection is in place (src/common/data_layout.R; migrated by
+# scripts/organize_data_dir.R).
 # Reruns skip packages with a terminal outcome, so the command is resumable.
 
 if (!file.exists("taxminer.Rproj")) stop("Run from the TaxMiner project root.")
 if (!nzchar(Sys.which("curl"))) stop("curl executable not found on PATH.")
+source("src/common/data_layout.R")
 source("src/collect/discover_financial_reports.R")
 source("src/collect/download_financial_reports.R")
 
-data_dir <- Sys.getenv("TAXMINER_DATA_DIR")
-if (!nzchar(data_dir)) stop("Set TAXMINER_DATA_DIR to a local folder outside OneDrive.")
-data_dir <- normalizePath(data_dir, winslash = "/", mustWork = FALSE)
-if (grepl("onedrive", data_dir, ignore.case = TRUE)) {
-  stop("TAXMINER_DATA_DIR is inside OneDrive; choose a local folder outside it.")
-}
+data_dir <- source_data_root(resolve_data_dir(must_work = FALSE), "financial_disclosures")
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 
 args <- commandArgs(trailingOnly = TRUE)
 forms <- if (length(args) >= 1) strsplit(args[1], ",")[[1]] else cvm_forms

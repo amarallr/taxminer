@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-11 — per-family data layout (decision_0028)
+- Collect P05 and Data P04 now place raw and processed fund report files under `TAXMINER_DATA_DIR/investment_fund_reports/{raw,processed}/`. Data P04 writes Parquet, since `arrow` is declared (`decision_0027`).
+
 ## 2026-11-10 — two-phase MVP structure (decision_0025)
 - The mandatory roadmap block in every prompt now defines MVP Phase 1 (data collection, structuring and search) with independent subphases 1.1 Tax Consultation Decisions, 1.2 Financial Statement Notes and 1.3 Investment Fund Reports. MVP Phase 2 (cross-source intelligence) covers the bases accepted in Phase 1.
 - Common P01, Common P06, Intelligence P02, Collect P04/P05, Data P04, Common P07 and the README use the new numbering.

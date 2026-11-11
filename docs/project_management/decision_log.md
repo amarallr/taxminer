@@ -395,3 +395,39 @@ decidido:
   em `src/collect/` fica para depois do fim da coleta das DFP.
 - **CI.** O workflow pré-instala `curl`, `qpdf` e `pdftools` nas versões travadas, porque o
   `renv::restore` acusa um ciclo falso entre eles (mesmo caso do `magrittr`).
+
+## decision_0028 — 2026-11-11T03:10:00-03:00 — Dados locais organizados por fonte
+
+O desenvolvedor pediu: "organize a pasta C:\TaxMinerData de acordo com a fonte dos dados".
+Ficou decidido:
+
+- **Uma pasta por família** sob `TAXMINER_DATA_DIR`: `tax_consultation_decisions/`,
+  `financial_disclosures/` e `investment_fund_reports/`. O layout está em
+  `src/common/data_layout.R` e em `docs/architecture.md`.
+- **Movidos agora** (`scripts/organize_data_dir.R`): os arquivos brutos e os manifestos dos
+  fundos, com `raw_path` relativo à pasta da família, e a saída Parquet e o log da extração
+  das notas.
+- **Coleta das DFP preservada.** O catálogo, o manifesto, o índice, os pacotes, a quarentena
+  e os logs da coleta em execução ficam onde estão até ela terminar. O passo `dfp` do script
+  recusa rodar enquanto a coleta estiver ativa. Até a migração, o código lê as DFP no local
+  antigo, e uma coleta retomada não baixa nada de novo.
+- **Nada é apagado.** O script nunca sobrescreve um destino existente; só remove pastas
+  antigas vazias.
+
+## decision_0029 — 2026-11-11T03:10:00-03:00 — Fase 1.3 iniciada: coleta dos fundos
+
+O desenvolvedor disse: "pode iniciar também a fase 1.3". Depois disse: "vc tem autorização
+para continuar e executar as próximas etapas necessárias para a implementação do projeto".
+Isso foi lido como autorização para as etapas 00 a 03 da Collect P05, incluindo a amostra
+pública e o backfill histórico dos arquivos da CVM. Não foi lido como autorização para
+commit ou push, que o `AGENTS.md` exige explícitos.
+
+- **Etapa 00:** `robots.txt`, licença ODbL nas páginas dos conjuntos e dicionários `META/`
+  verificados (`docs/data_sources.md`).
+- **Etapas 01 e 02:** `src/collect/discover_fund_reports.R` e
+  `src/collect/download_fund_reports.R`, com 10 s entre requisições, parada em 403/429,
+  verificação de ZIP e CSV e armazenamento imutável endereçado por conteúdo. São arquivos
+  novos; o código da coleta das DFP não foi alterado.
+- **Etapa 03:** backfill histórico de todos os períodos listados, fora o `DFIN`. Cada nova
+  rodada confere de novo o período mais recente de cada conjunto.
+- **Fora do escopo:** o `DFIN` do FII e as outras pastas de fundos do portal.

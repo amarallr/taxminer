@@ -1,5 +1,20 @@
 # Changelog
 
+## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11
+
+- Coleta dos fundos (FII, FIDC, FIP, FIAGRO; `decision_0029`):
+  `src/collect/discover_fund_reports.R`, `src/collect/download_fund_reports.R` e
+  `scripts/collect_fund_reports.R`. Fontes verificadas; 102 arquivos coletados.
+- Consolidação dos fundos em Parquet com linhagem, CNPJ validado e registros de qualidade:
+  `src/data/consolidate_fund_reports.R` e `scripts/consolidate_fund_reports.R`.
+- Dados locais em uma pasta por família (`decision_0028`): `src/common/data_layout.R` e
+  `scripts/organize_data_dir.R`.
+- `write_parquet_validated` passou para `src/common/parquet_io.R`.
+- CI: `scripts/ci_preinstall_locked.R` instala os pacotes travados sem binário de Windows a
+  partir dos tarballs.
+- Novos testes: `test_fund_reports_collection.R` (34), `test_data_layout.R` (27) e
+  `test_fund_reports_consolidation.R` (29).
+
 ## Notas consolidadas em Parquet — 2026-11-11
 
 - `src/data/consolidate_financial_notes.R` e `scripts/extract_financial_notes.R` gravam

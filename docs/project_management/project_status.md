@@ -1,5 +1,58 @@
 # TaxMiner — estado do projeto
 
+## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11T04:30:00-03:00
+
+### Fase 1.3, Collect P05 (`work_0020`, `decision_0029`)
+
+- **Etapa 00:** `robots.txt`, licença ODbL e dicionários `META/` verificados
+  (`docs/data_sources.md`).
+- **Etapas 01 e 02:** discovery das listagens da CVM e download para um armazenamento imutável
+  e endereçado por conteúdo, com um manifesto por subfamília. Testes: 34 sintéticos
+  (`test_0040`).
+- **Amostra** (`test_0042`): 7 de 7 arquivos, um por conjunto.
+- **Backfill histórico** (`test_0043`): 102 de 102 arquivos, sem falhas, 262 MB.
+
+| Subfamília | Arquivos | Períodos |
+|---|---:|---|
+| FII | 33 | 2016–2026 (mensal, trimestral e anual) |
+| FIDC | 34 | 2013–2024 (anual, `HIST/`) e 2025-01–2026-10 (mensal) |
+| FIP | 17 | 2010–2023 (trimestral) e 2024–2026 (quadrimestral) |
+| FIAGRO | 18 | 2025-05–2026-10 |
+
+### Fase 1.3, Data P04 (`work_0021`)
+
+- **Implementado:** `src/data/consolidate_fund_reports.R` e
+  `scripts/consolidate_fund_reports.R`. O código grava colunas originais da CVM em texto, com
+  linhagem (hash, arquivo e linha), CNPJ validado (inclusive alfanumérico) e
+  `fund_quality_issues`. Testes: 29 sintéticos (`test_0044`).
+- **Primeira rodada completa** (`test_0045`, falhou): o Claude Code interrompeu o processo por
+  falta de memória no sistema, no arquivo 10 de 82. Pela regra, a rodada não foi reiniciada
+  automaticamente.
+- **Bug achado nessa rodada:** nos ZIPs anuais do FIDC, cada mês sobrescrevia o anterior na
+  saída. Foi corrigido (uma parte por membro) e coberto por teste. As saídas parciais foram
+  apagadas; os dados brutos não foram afetados.
+- **Pendente:** nova rodada quando o desenvolvedor autorizar. A rodada pode ser feita por
+  família, para usar menos memória (`scripts/consolidate_fund_reports.R fii`). Depois dela
+  vem o inventário de layouts.
+
+### Layout dos dados locais (`work_0025`, `decision_0028`)
+
+- Uma pasta por família em `C:\TaxMinerData`.
+- Fundos e saída das notas já foram movidos (`test_0046`).
+- A coleta das DFP fica no lugar até terminar; o passo `dfp` de `scripts/organize_data_dir.R`
+  recusou rodar com a coleta ativa.
+- Testes: 27 sintéticos (`test_0041`).
+
+### Outros
+
+- **CI:** a correção anterior falhou (o `renv::install` repetiu o ciclo falso). Agora
+  `scripts/ci_preinstall_locked.R` instala `magrittr`, `curl`, `qpdf` e `pdftools` dos
+  tarballs travados, fora do resolvedor do renv. Só será confirmada depois do push.
+- **Coleta das DFP:** em execução, cerca de 333 de 14.010.
+- **Commit e push:** pendentes de autorização explícita.
+
+**Validador:** 5 + 27 + 22 + 55 + 31 + 34 + 27 + 29 testes.
+
 ## Notas consolidadas em Parquet — 2026-11-11T02:30:00-03:00
 
 ### Fase 1.2, Data P03 (`work_0012`, `decision_0027`)

@@ -5,6 +5,7 @@
 
 source(testthat::test_path("..", "..", "src", "common", "signatures.R"))
 source(testthat::test_path("..", "..", "src", "common", "safe_io.R"))
+source(testthat::test_path("..", "..", "src", "common", "parquet_io.R"))
 source(testthat::test_path("..", "..", "src", "data", "extract_financial_notes.R"))
 source(testthat::test_path("..", "..", "src", "data", "consolidate_financial_notes.R"))
 source(testthat::test_path("helper_stored_zip.R"))
@@ -165,4 +166,15 @@ test_that("company names come from the Latin-1 index when it is present", {
   reports <- downloaded_reports(dir)
   expect_equal(reports$company_name[reports$source_document_id == "900001"], "RAÍZEN S.A.")
   expect_equal(reports$company_name[reports$source_document_id == "900002"], "Companhia Sintetica S.A.")
+})
+
+test_that("outputs can go to a folder separate from the collection inputs", {
+  skip_if_not_installed("arrow")
+  dir <- synthetic_data_dir()
+  out <- tempfile("notes_output_")
+  consolidate_financial_notes(dir, extractor = fake_extractor(), signature = "sig-1",
+                              progress = FALSE, output_dir = out)
+  expect_true(file.exists(file.path(out, "processed", "financial_notes", "part-900001.parquet")))
+  expect_false(dir.exists(file.path(dir, "processed")))
+  expect_equal(nrow(collect_dataset(open_financial_notes(out, "financial_reports"))), 2L)
 })

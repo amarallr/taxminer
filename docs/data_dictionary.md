@@ -50,7 +50,7 @@ traceable. Notes cannot depend on the consultation-decision schema or search.
 ### Implemented Parquet layout (Data P03, `decision_0027`)
 
 Written by `src/data/consolidate_financial_notes.R` under
-`<TAXMINER_DATA_DIR>/processed/financial_disclosures/`, one zstd Parquet part
+`<TAXMINER_DATA_DIR>/financial_disclosures/processed/`, one zstd Parquet part
 per filing package (`part-{source_document_id}.parquet`). Columns and types are
 fixed by `financial_report_columns` and `financial_note_columns`, so every part
 shares one schema.
@@ -69,21 +69,48 @@ Latin-1 (`risk_0016`). Raw packages are only read.
 
 ## `investment_fund_reports` (Phase 1.3, `decision_0024`, `decision_0025`)
 
-Conceptual contract; the column inventory per subfamily, table and layout comes
-from Data P04 step 00 (CVM `META/` dictionaries) and is not yet verified.
+Implemented by `src/data/consolidate_fund_reports.R` (Data P04, `decision_0029`).
+Outputs under `<TAXMINER_DATA_DIR>/investment_fund_reports/processed/`, one zstd
+Parquet part per source file and member (current version of each file):
+`{family}/{table_name}/part-{file stem}--{member stem}.parquet`. A table is read
+across periods with `open_fund_table()`, which unifies the layouts.
 
 | Field | Meaning |
 |---|---|
-| `fund_report_row_id` | Stable row identity: `{family}:{dataset}:{table_name}:{zip_sha256_12}:{source_line}`. |
 | `family` | `fii`, `fidc`, `fip` or `fiagro`. |
-| `dataset` / `table_name` / `layout_version` | CVM dataset (for example `INF_MENSAL`), official table file name, and layout version inferred from the dictionaries and headers. |
-| `reference_period` | Period exactly as published (`DT_COMPTC` or equivalent). |
-| `fund_cnpj_original` / `fund_cnpj_normalized` | Fund CNPJ as published and normalized to 14 digits with check digits validated; invalid values stay unresolved. |
-| `administrator_cnpj_original` | Administrator identifier when the table publishes it. |
-| CVM source columns | Kept with their published names; values kept as text (`value_original`); typed values only with documented conversion. |
-| `zip_sha256` / `source_file` / `source_line` | File-level lineage. |
-| `source_url` / `listing_last_modified` / `retrieved_at` | Retrieval provenance; republished files are separate versions. |
-| `quality_issue` | Repeated key, resubmission, invalid CNPJ, missing mandatory field or unexpected column; rows are never dropped or summed. |
+| `dataset` | CVM dataset, for example `INF_MENSAL`. |
+| `table_name` | Member file name without the period, for example `inf_mensal_fidc_tab_I`; matches the META file `meta_{table_name}.txt`. |
+| `layout_version` | First 12 hex digits of the signature of the member's header (column names in order). |
+| `reference_period` | Period of the source file (`yyyy` or `yyyy-mm`); the row's own period stays in its CVM column (`Data_Referencia` or `DT_COMPTC`). |
+| `fund_cnpj_original` | Fund identifier as published, from the first present of `CNPJ_Fundo_Classe`, `CNPJ_Classe`, `CNPJ_FUNDO` (case-insensitive). |
+| `fund_cnpj_normalized` | 14 characters with check digits validated (numeric or alphanumeric CNPJ); `NA` when invalid or empty. |
+| `zip_sha256` / `source_file` / `source_line` | SHA-256 of the stored file, member name and line number (header is line 1). |
+| CVM columns | Every published column with its published name and original text value; a CVM column that clashes with a TaxMiner column gets the prefix `cvm_`. |
+
+Members are read as Latin-1 and split on `;` without quote handling: the
+published files carry literal quotes inside text and a constant field count.
+
+`fund_quality_issues/` (one part per source file) holds `family`, `dataset`,
+`table_name`, `reference_period`, `zip_sha256`, `source_file`, `source_line`
+(empty for member-level issues), `issue_type`, `detail` and `row_count`.
+
+| `issue_type` | Level | Meaning |
+|---|---|---|
+| `field_count_mismatch` | row | The line has a different number of fields from the header; values kept, missing fields empty. |
+| `duplicate_row` | row | Identical to an earlier line of the same member. |
+| `empty_fund_identifier` / `invalid_cnpj` | row | Fund CNPJ empty or failing the check digits. |
+| `missing_fund_identifier` | member | No fund CNPJ column in the header. |
+| `repeated_fund_period` | member | Rows sharing fund and period (expected in multi-row tables such as assets). |
+| `resubmitted_versions` | member | Fund-periods with more than one value of `Versao`. |
+| `column_not_in_dictionary` / `dictionary_column_absent` | member | Header differs from the META dictionary. |
+| `duplicate_column` / `no_dictionary` | member | Repeated header name; no META entry for the table. |
+
+`consolidation_index.rds` records, per member, the source file SHA-256, the
+consolidation signature, `layout_version`, column and row counts, issue count
+and the output path and SHA-256. Reruns skip files whose hash and signature are
+unchanged; parts of tables that disappear from a new file version are removed.
+Retrieval provenance (`source_url`, `listing_last_modified`, `retrieved_at`)
+stays in the Collect P05 manifests.
 
 Fund reports cannot depend on the consultation-decision or financial-note
 schemas or search. `document_relationships` (Phase 2) may use them only after

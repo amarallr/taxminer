@@ -43,8 +43,8 @@ Implement `src/data/consolidate_fund_reports.R`:
 - Keep all rows; never drop or sum duplicates.
 - Write quality issues as records (`fund_quality_issues`).
 ### 03 — Outputs
-- Write per-family, per-table outputs under `TAXMINER_DATA_DIR/processed/investment_fund_reports/{family}/`.
-- Use Parquet only after `arrow` is approved; until then, use a documented interim format.
+- Write per-family, per-table outputs under `TAXMINER_DATA_DIR/investment_fund_reports/processed/{family}/` (layout of `decision_0028`).
+- Use Parquet (`arrow` declared by `decision_0027`).
 - Record schema versions, row counts and hashes.
 - Make runs resumable by input hash.
 ### 04 — Tests

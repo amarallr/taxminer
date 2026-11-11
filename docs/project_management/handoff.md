@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-11T02:30:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T04:30:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -28,12 +28,18 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 - **Fase 1.3: fundos de investimento** (`decision_0024`): família
   `investment_fund_reports` (FII, FIDC, FIP, FIAGRO), independente das outras
   subfases.
-  - Listagens da CVM verificadas (`docs/data_sources.md`,
-    `config/investment_fund_report_sources.yml`).
-  - Prompts `collect_p05_investment_fund_report_acquisition.txt` e
-    `data_p04_investment_fund_report_consolidation.txt`.
-  - `work_0020`–`work_0023` não iniciados. A coleta só começa depois que as DFP
-    estiverem estáveis e houver nova autorização.
+  - Iniciada pelo desenvolvedor (`decision_0029`).
+  - **Collect P05 (`work_0020`):** implementado. Fontes verificadas
+    (`docs/data_sources.md`); 102 de 102 arquivos coletados
+    (`test_0042`, `test_0043`).
+  - **Data P04 (`work_0021`):** consolidação implementada e testada
+    (`test_0044`). A primeira rodada completa foi interrompida por falta de
+    memória (`test_0045`) e revelou um bug, já corrigido. A nova rodada
+    aguarda autorização.
+  - `work_0022` (busca) e `work_0023` (aceite) não iniciados.
+- **Layout dos dados (`work_0025`, `decision_0028`):** uma pasta por família em
+  `C:\TaxMinerData`. Fundos e notas já movidos; as DFP serão movidas depois da
+  coleta, com `scripts/organize_data_dir.R dfp`.
 - **Novas fontes de dados (Common P07, `work_0019`):** rotinas comuns para as fontes novas.
   - Etapa 00 concluída (`docs/integration/new_data_sources_gap_analysis.md`).
   - Gate 01 decidido (`decision_0023`): primeiro as rotinas comuns em `src/common/`; a
@@ -45,7 +51,7 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 - **Data P03 (`work_0012`):** extração e consolidação em Parquet implementadas
   (`decision_0026`, `decision_0027`; `test_0035`, `test_0037`–`test_0039`).
   - Rodada local: 250 pacotes, 205 completos, 6.365 notas, em
-    `C:\TaxMinerData\processed\financial_disclosures\`.
+    `C:\TaxMinerData\financial_disclosures\processed\`.
   - Faltam as tabelas das notas.
   - O catálogo da coleta tem nomes cortados (`risk_0016`), contornado na
     consolidação.
@@ -74,10 +80,13 @@ Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
 `manifest.csv`); se o processo parar, rodar de novo o comando de
 `docs/data_sources.md` (retoma de onde parou). Em paralelo, atualizar o Parquet
 das notas com `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla
-scripts/extract_financial_notes.R` (só processa pacotes novos). Confirmar no CI
-o passo de pré-instalação de `curl`, `qpdf` e `pdftools`. Depois da coleta:
-corrigir a decodificação do índice em `src/collect/` (`risk_0016`) e rodar a
-extração com `force`. ITR depende de mais
+scripts/extract_financial_notes.R` (só processa pacotes novos). Com
+autorização: commit e push das mudanças pendentes; confirmar no CI o
+`scripts/ci_preinstall_locked.R`; rodar a consolidação dos fundos por família
+(`scripts/consolidate_fund_reports.R fiagro`, `fip`, `fii`, `fidc`) e montar o
+inventário de layouts. Depois da coleta das DFP: `scripts/organize_data_dir.R
+dfp`, corrigir a decodificação do índice em `src/collect/` (`risk_0016`) e
+rodar a extração com `force`. ITR depende de mais
 armazenamento. Fase 1.1 retoma quando o desenvolvedor decidir os
 pontos de `docs/feasibility.md`.
 

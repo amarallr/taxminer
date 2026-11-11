@@ -4,8 +4,10 @@
 #   Rscript --vanilla scripts/extract_financial_notes.R [max_reports] [force]
 # e.g. Rscript --vanilla scripts/extract_financial_notes.R Inf
 #
-# Reads <TAXMINER_DATA_DIR>/{catalog.csv,manifest.csv,raw/} (never modified)
-# and writes <TAXMINER_DATA_DIR>/processed/financial_disclosures/:
+# Reads the financial_disclosures data root (catalog.csv, manifest.csv,
+# index/, raw/; never modified) and writes
+# <TAXMINER_DATA_DIR>/financial_disclosures/processed/ (layout in
+# src/common/data_layout.R):
 #   financial_reports/part-<id>.parquet  one row per filing package
 #   financial_notes/part-<id>.parquet    one row per note
 #   extraction_index.rds                 package hash + extraction signature
@@ -18,26 +20,26 @@ for (pkg in c("arrow", "pdftools", "xml2", "base64enc")) {
 }
 source("src/common/signatures.R")
 source("src/common/safe_io.R")
+source("src/common/parquet_io.R")
+source("src/common/data_layout.R")
 source("src/data/extract_financial_notes.R")
 source("src/data/consolidate_financial_notes.R")
 
-data_dir <- Sys.getenv("TAXMINER_DATA_DIR")
-if (!nzchar(data_dir)) stop("Set TAXMINER_DATA_DIR to a local folder outside OneDrive.")
-data_dir <- normalizePath(data_dir, winslash = "/", mustWork = TRUE)
-if (grepl("onedrive", data_dir, ignore.case = TRUE)) {
-  stop("TAXMINER_DATA_DIR is inside OneDrive; choose a local folder outside it.")
-}
+data_dir <- resolve_data_dir()
+input_dir <- source_data_root(data_dir, "financial_disclosures")
+output_dir <- file.path(data_dir, "financial_disclosures")
 
 args <- commandArgs(trailingOnly = TRUE)
 max_reports <- if (length(args) >= 1) as.numeric(args[1]) else Inf
 force <- length(args) >= 2 && identical(tolower(args[2]), "force")
 
 started <- Sys.time()
-touched <- consolidate_financial_notes(data_dir, max_reports = max_reports, force = force)
+touched <- consolidate_financial_notes(input_dir, max_reports = max_reports, force = force,
+                                       output_dir = output_dir)
 elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
 
 cat(sprintf("Processed %d package(s) in %.0f s.\n", nrow(touched), elapsed))
 if (nrow(touched) > 0) print(table(touched$extraction_status))
-index <- readRDS(financial_notes_paths(data_dir)$index)
+index <- readRDS(financial_notes_paths(output_dir)$index)
 cat(sprintf("Index: %d package(s), %d note(s).\n", nrow(index), sum(index$note_count)))
 print(table(index$extraction_status))

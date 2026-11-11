@@ -90,6 +90,15 @@ Repeated keys and resubmitted versions are diagnosed and kept, never dropped or
 summed. The FII financial statements listed in `DFIN` are documents, not
 tables; reading them is a later decision, not part of the first Phase 1.3 sample.
 
+Implemented (Collect P05 steps 00–03, `decision_0029`):
+`src/collect/discover_fund_reports.R` parses the CVM autoindex listings into a
+catalog with listing timestamp and size; `src/collect/download_fund_reports.R`
+downloads pending files into an immutable, content-addressed raw store with one
+append-only manifest per subfamily. A file is pending when its URL and listing
+timestamp have no terminal manifest row, so republished files are fetched again
+and new content becomes a new version. Entry point:
+`scripts/collect_fund_reports.R` (`sample` or `history`).
+
 ### Cross-source relationships
 
 `document_relationships` is a separate intelligence domain that may
@@ -145,6 +154,28 @@ records its provenance (`origin:`).
 
 Adoption by `src/collect/` is a separate, later work item. Nothing changes while the DFP
 collection runs.
+
+## Local data layout (`decision_0028`)
+
+Collected and processed data live outside the repository and OneDrive, under
+`TAXMINER_DATA_DIR`, with one folder per source family
+(`src/common/data_layout.R`):
+
+```
+<TAXMINER_DATA_DIR>/
+  tax_consultation_decisions/   Phase 1.1 (created when it resumes)
+  financial_disclosures/        Phase 1.2: catalog.csv, manifest.csv, index/, raw/,
+                                quarantine/, processed/, logs/
+  investment_fund_reports/      Phase 1.3: catalog.csv, manifests/, meta/, raw/,
+                                processed/, logs/
+```
+
+`source_data_root()` resolves each family folder. The DFP collection started
+before this layout; while its legacy manifest stays directly under
+`TAXMINER_DATA_DIR`, the financial_disclosures inputs resolve there, so a
+resumed collection never downloads again. `scripts/organize_data_dir.R` moves
+the files into the layout; its `dfp` step refuses to run while the collection
+is active and rewrites the manifest raw paths.
 
 ## Cross-cutting controls
 

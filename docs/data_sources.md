@@ -131,36 +131,78 @@ Observed in the first packages:
   raw store (it is moved to `quarantine/`).
 - The ENET-generated PDF is padded to a power of two (8 MiB, 16 MiB).
 
-# Investment fund report sources (Collect P05, preliminary listing check)
+# Investment fund report sources (Collect P05)
 
-- **Family:** `investment_fund_reports` (MVP Phase 1.3, `decision_0024`, `decision_0025`).
-- **Check:** on 2026-11-10T22:20-03:00, 15 GET requests were made to the CVM open-data
-  directory listings (`https://dados.cvm.gov.br/dados/`) with a generic user agent and 10 s
-  between requests. All returned HTTP 200.
-- **Downloads:** none. No data file was downloaded and no ZIP was opened.
-- **Not yet verified:** dataset pages, licenses, `META/` dictionaries, contents and layouts.
-  Collect P05 step 00 must check them before any acquisition. The portal's `robots.txt`
-  (`Crawl-Delay: 10`, `/dados/` allowed) was verified for Phase 1.2 and applies to the same host.
-- **Registry:** the machine-readable registry is `config/investment_fund_report_sources.yml`.
+- **Family:** `investment_fund_reports` (MVP Phase 1.3, `decision_0024`, `decision_0025`,
+  `decision_0029`).
+- **Registry:** `config/investment_fund_report_sources.yml` (human-readable) and
+  `fund_report_sources` in `src/collect/discover_fund_reports.R` (used by the code).
 
-| Subfamily | Listing | Files observed |
-|---|---|---|
-| `fii` | `FII/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fii_{year}.zip`, 2016–2026; `META/` present |
-| `fii` | `FII/DOC/INF_TRIMESTRAL/DADOS/` | `inf_trimestral_fii_{year}.zip`, 2016–2026 |
-| `fii` | `FII/DOC/INF_ANUAL/DADOS/` | `inf_anual_fii_{year}.zip`, 2016–2026 |
-| `fii` | `FII/DOC/DFIN/DADOS/` | `dfin_fii_{year}.csv`, 2016–2026 (index of financial statements) |
-| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fidc_{yyyymm}.zip`, 202501–202610; older periods under `HIST/` (not opened) |
-| `fip` | `FIP/DOC/INF_TRIMESTRAL/DADOS/` | `inf_trimestral_fip_{year}.csv`, 2010–2023 |
-| `fip` | `FIP/DOC/INF_QUADRIMESTRAL/DADOS/` | `inf_quadrimestral_fip_{year}.csv`, 2024–2026 |
-| `fiagro` | `FIAGRO/DOC/INF_MENSAL/DADOS/` | `inf_mensal_fiagro_{yyyymm}.zip`, 202505–202610; `META/` present |
+## Step 00 — verification (2026-11-11T02:40-03:00)
 
-**Notes.**
+- **Access.** `robots.txt` of `dados.cvm.gov.br` allows `/dados/` and sets `Crawl-Delay: 10`;
+  every request waited at least 10 s. All requests returned HTTP 200; none was refused.
+- **License.** The dataset pages `fii-doc-inf_mensal`, `fidc-doc-inf_mensal`,
+  `fip-doc-inf_quadrimestral` and `fiagro-doc-inf_mensal` state ODbL. The FIP page says the
+  files are updated weekly with resubmissions.
+- **Dictionaries.** The `META/` file of each dataset was downloaded to
+  `<TAXMINER_DATA_DIR>/investment_fund_reports/meta/` (Latin-1 text, one block per field with
+  description, domain, type and size):
 
-- The most recent files are republished as periods are filed. Collection must track each file
-  by its content hash, not by its name.
-- The FIP change from quarterly to four-monthly reports is a layout and cadence break.
-- The portal also lists other fund-related folders (`FI/`, `FIE/`, `ADM_FII/`). They are out of
-  scope unless the developer decides otherwise.
-- Raw files will live under
-  `TAXMINER_DATA_DIR/raw/investment_fund_reports/{fii,fidc,fip,fiagro}/`, outside the
-  repository and OneDrive.
+| Dataset | META file | SHA-256 (12) | Tables | Fund identifier | Period field |
+|---|---|---|---:|---|---|
+| FII `INF_MENSAL` | `meta_inf_mensal_fii.zip` | `d9a4a78941ca` | 3 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
+| FII `INF_TRIMESTRAL` | `meta_inf_trimestral_fii.zip` | `e270e15b47d5` | 16 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
+| FII `INF_ANUAL` | `meta_inf_anual_fii.zip` | `182afa5ecd36` | 13 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
+| FII `DFIN` | `meta_dfin_fii.txt` | `3c4e13039eb3` | 1 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
+| FIDC `INF_MENSAL` | `meta_inf_mensal_fidc_txt.zip` | `5fb2b329aadf` | 18 (`tab_I`–`tab_X_7`) | `CNPJ_FUNDO_CLASSE` (some tables `CNPJ_FUNDO`) | `DT_COMPTC` |
+| FIP `INF_TRIMESTRAL` | `meta_inf_trimestral_fip.txt` | `b2a5fc31e13f` | 1 | `CNPJ_FUNDO` | `DT_COMPTC` |
+| FIP `INF_QUADRIMESTRAL` | `meta_inf_quadrimestral_fip.txt` | `1cab9fb27223` | 1 | `CNPJ_FUNDO_CLASSE` | `DT_COMPTC` |
+| FIAGRO `INF_MENSAL` | `meta_inf_mensal_fiagro.zip` | `f7d9ce7a4c34` | 2 | `CNPJ_Classe` | `Data_Referencia` |
+
+- **Administrator.** `CNPJ_Administrador` appears in the FII `geral` tables and FIAGRO;
+  `CNPJ_ADMIN` in FIDC `tab_I`. FIP has no administrator CNPJ in the dictionary.
+- **Layout breaks.** The fund identifier changes from `CNPJ_FUNDO` (FIP quarterly, up to 2023)
+  to `CNPJ_FUNDO_CLASSE` (four-monthly, from 2024), following the fund/class split of CVM
+  Resolution 175. Data P04 must map both.
+
+## Step 01 — listings (2026-11-11T02:45-03:00)
+
+The listings are nginx autoindex pages with name, timestamp (`dd-Mon-yyyy HH:MM`) and an
+approximate size. Discovery parsed 102 files plus 11 DFIN files:
+
+| Subfamily | Listing | Files | Periods |
+|---|---|---:|---|
+| `fii` | `FII/DOC/INF_MENSAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
+| `fii` | `FII/DOC/INF_TRIMESTRAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
+| `fii` | `FII/DOC/INF_ANUAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
+| `fii` | `FII/DOC/DFIN/DADOS/` | 11 | 2016–2026 (CSV index; outside the collection scopes) |
+| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/` | 22 | 2025-01–2026-10 (monthly ZIP) |
+| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/HIST/` | 12 | 2013–2024 (yearly ZIP) |
+| `fip` | `FIP/DOC/INF_TRIMESTRAL/DADOS/` | 14 | 2010–2023 (yearly CSV) |
+| `fip` | `FIP/DOC/INF_QUADRIMESTRAL/DADOS/` | 3 | 2024–2026 (yearly CSV) |
+| `fiagro` | `FIAGRO/DOC/INF_MENSAL/DADOS/` | 18 | 2025-05–2026-10 (monthly ZIP) |
+
+Every listing timestamp is on or after 2026-11-07: the CVM rewrites the files, including old
+periods. A new timestamp makes a file pending again; identical content is recorded as
+`unchanged_content` without a second copy.
+
+## Steps 02–03 — collection
+
+```powershell
+$env:TAXMINER_DATA_DIR = "C:\TaxMinerData"
+Rscript --vanilla scripts/collect_fund_reports.R sample    # latest period of each dataset
+Rscript --vanilla scripts/collect_fund_reports.R history   # every listed period
+```
+
+- **Storage.** `<TAXMINER_DATA_DIR>/investment_fund_reports/`: `catalog.csv`,
+  `manifests/{family}.csv` (append-only, one row per attempt), `meta/`, `logs/` and
+  `raw/{family}/{dataset}/{file stem}/{sha256_12}.{zip|csv}` (immutable, content-addressed).
+  `raw_path` in the manifests is relative to this folder.
+- **Checks.** ZIP signature, member count and size limits, unsafe or duplicate member names
+  and per-member SHA-256 (`validate_zip_archive`); CSV files must be `;`-separated and not
+  HTML. Bad content and network errors are retried with backoff; 403/429 stop the run.
+- **Sample (2026-11-11T02:50-03:00).** Latest period of each of the 7 datasets: 7 of 7
+  downloaded (HTTP 200), all checks passed.
+- **Out of scope** unless the developer decides otherwise: FII `DFIN` (index of financial
+  statement documents) and the other fund folders of the portal (`FI/`, `FIE/`, `ADM_FII/`).

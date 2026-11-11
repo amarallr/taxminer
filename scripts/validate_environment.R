@@ -23,3 +23,6 @@ testthat::test_file("tests/testthat/test_financial_collection.R", stop_on_failur
 testthat::test_file("tests/testthat/test_financial_notes.R", stop_on_failure = TRUE)
 testthat::test_file("tests/testthat/test_common_primitives.R", stop_on_failure = TRUE)
 testthat::test_file("tests/testthat/test_financial_notes_parquet.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_fund_reports_collection.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_data_layout.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_fund_reports_consolidation.R", stop_on_failure = TRUE)

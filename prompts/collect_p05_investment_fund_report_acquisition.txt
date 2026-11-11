@@ -50,7 +50,7 @@ Implement `src/collect/discover_fund_reports.R` and `src/collect/download_fund_r
 - retry/backoff only for timeouts and 5xx, and an immediate stop on 403/429;
 - ZIP signature and member checks (count and size limits, unsafe or duplicate names);
 - per-member SHA-256 and an append-only manifest.
-Keep raw bytes immutable under `TAXMINER_DATA_DIR/raw/investment_fund_reports/{fii,fidc,fip,fiagro}/`, outside the repository and OneDrive.
+Keep raw bytes immutable under `TAXMINER_DATA_DIR/investment_fund_reports/raw/{fii,fidc,fip,fiagro}/` (layout of `decision_0028`), outside the repository and OneDrive.
 ### 03 — Historical and incremental
 Support bounded historical backfills and incremental refresh with checkpoints and idempotent reruns. Re-check the most recent periods on each refresh, because the CVM republishes those files. Do not infer completeness from download counts.
 ### 04 — Integration and tests

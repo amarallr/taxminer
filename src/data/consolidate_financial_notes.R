@@ -1,14 +1,15 @@
 # Parquet consolidation of explanatory notes (financial_notes, MVP Phase 1.2,
-# Data P03). Reads the Collect P04 catalog and manifest under
-# TAXMINER_DATA_DIR, extracts each downloaded package once and writes one
-# Parquet part per package:
-#   processed/financial_disclosures/financial_reports/part-{source_document_id}.parquet
-#   processed/financial_disclosures/financial_notes/part-{source_document_id}.parquet
+# Data P03). Reads the Collect P04 catalog, manifest and index under the
+# financial_disclosures data root (`data_dir`), extracts each downloaded
+# package once and writes one Parquet part per package under `output_dir`
+# (normally <TAXMINER_DATA_DIR>/financial_disclosures; src/common/data_layout.R):
+#   processed/financial_reports/part-{source_document_id}.parquet
+#   processed/financial_notes/part-{source_document_id}.parquet
 # An extraction index (RDS, written with src/common/safe_io.R) records the
 # package SHA-256 and the extraction signature, so reruns skip unchanged
 # packages and reprocess when the package or the extraction logic changes.
 # The raw packages are only read. Requires arrow and the modules
-# src/common/{signatures,safe_io}.R and src/data/extract_financial_notes.R.
+# src/common/{signatures,safe_io,parquet_io}.R and src/data/extract_financial_notes.R.
 
 financial_report_columns <- c(
   report_id = "character", source_document_id = "character", report_type = "character",
@@ -58,29 +59,6 @@ conform_columns <- function(df, columns) {
   as.data.frame(out, stringsAsFactors = FALSE)
 }
 
-# Write a Parquet file through a neighbour temporary file, read it back and
-# check rows and columns, then replace the destination keeping a rollback.
-write_parquet_validated <- function(df, path) {
-  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
-  temporary <- tempfile(".publish-", tmpdir = dirname(path), fileext = ".parquet")
-  on.exit(unlink(temporary), add = TRUE)
-  arrow::write_parquet(df, temporary, compression = "zstd")
-  observed <- arrow::read_parquet(temporary, as_data_frame = FALSE)
-  if (observed$num_rows != nrow(df) || !identical(names(observed), names(df))) {
-    stop("Parquet differs after write: ", path, call. = FALSE)
-  }
-  backup <- paste0(path, ".rollback")
-  if (file.exists(backup)) stop("Pending rollback kept for review: ", backup, call. = FALSE)
-  existed <- file.exists(path)
-  if (existed && !file.rename(path, backup)) stop("Destination locked: ", path, call. = FALSE)
-  if (!file.rename(temporary, path)) {
-    if (existed) file.rename(backup, path)
-    stop("Publication failed; previous version kept: ", path, call. = FALSE)
-  }
-  if (existed) unlink(backup)
-  invisible(path)
-}
-
 # Catalog reader tolerant to a known collector defect: the open-data index was
 # decoded as UTF-8 instead of Latin-1, so company names were cut at the first
 # accented letter together with their closing quote ("RA,"2026-03-31",...).
@@ -128,8 +106,8 @@ downloaded_reports <- function(data_dir) {
         by = "source_document_id")
 }
 
-financial_notes_paths <- function(data_dir) {
-  base <- file.path(data_dir, "processed", "financial_disclosures")
+financial_notes_paths <- function(output_dir) {
+  base <- file.path(output_dir, "processed")
   list(base = base,
        reports = file.path(base, "financial_reports"),
        notes = file.path(base, "financial_notes"),
@@ -148,8 +126,8 @@ empty_extraction_index <- function() {
 consolidate_financial_notes <- function(data_dir, max_reports = Inf, force = FALSE,
                                         extractor = extract_package_notes,
                                         signature = notes_extraction_signature(),
-                                        progress = TRUE) {
-  paths <- financial_notes_paths(data_dir)
+                                        progress = TRUE, output_dir = data_dir) {
+  paths <- financial_notes_paths(output_dir)
   index <- read_rds_recoverable(paths$index, is.data.frame)
   if (is.null(index)) index <- empty_extraction_index()
   reports <- downloaded_reports(data_dir)
@@ -204,7 +182,7 @@ consolidate_financial_notes <- function(data_dir, max_reports = Inf, force = FAL
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || is.na(x[1])) y else x
 
 # Read-only access to the consolidated tables as Arrow datasets.
-open_financial_notes <- function(data_dir, table = c("financial_notes", "financial_reports")) {
+open_financial_notes <- function(output_dir, table = c("financial_notes", "financial_reports")) {
   table <- match.arg(table)
-  arrow::open_dataset(file.path(financial_notes_paths(data_dir)$base, table), format = "parquet")
+  arrow::open_dataset(file.path(financial_notes_paths(output_dir)$base, table), format = "parquet")
 }
