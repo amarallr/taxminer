@@ -1,19 +1,21 @@
 # Collection feasibility (Collect P01)
 
+> Phase numbers follow `decision_0025`: consultation decisions are Phase 1.1 and financial notes Phase 1.2.
+
 Based on the probe run of 2026-11-10 (`docs/source_inventory.md`). Status:
 proposed; the developer must approve the strategy before Collect P02.
 
-**Suspended on 2026-11-10** by the developer (`decision_0020`): Phase 2 goes
+**Suspended on 2026-11-10** by the developer (`decision_0020`): Phase 1.2 goes
 first. The decisions below stay open; nothing here is withdrawn.
 
 ## Feasibility matrix
 
-| Source / content | Access | Volume (reported) | Format | Feasible for MVP Phase 1? |
+| Source / content | Access | Volume (reported) | Format | Feasible for MVP Phase 1.1? |
 |---|---|---|---|---|
 | Normas search: metadata + ementa of SC, SCI, SD | Works with small rate-limited requests; undocumented internal API; no robots.txt | SC 15,880; SCI 259; SD 374 | JSON + HTML ementa | **Yes**, for a bounded sample, subject to the developer's approval of using an undocumented endpoint |
 | Act viewer: full text | Automated access refused (HTTP 403) | unknown | unknown | **No** by automation. Needs an authorized channel |
 | RFB open data | No dataset found | — | — | No |
-| CVM DFP/ITR open data (Phase 2) | Open, ODbL, crawl delay 10 s | 17 yearly ZIPs per form | ZIP/CSV | Yes for structured statements; notes to be checked in Collect P04 |
+| CVM DFP/ITR open data (Phase 1.2) | Open, ODbL, crawl delay 10 s | 17 yearly ZIPs per form | ZIP/CSV | Yes for structured statements; notes to be checked in Collect P04 |
 
 ## Coverage and denominators
 
@@ -27,7 +29,7 @@ in the index is unknown.
 ## Full-text strategy
 
 The architecture already separates ementa-only records from full-text
-documents, so Phase 1 can proceed on ementa + metadata. Options for full text:
+documents, so Phase 1.1 can proceed on ementa + metadata. Options for full text:
 
 1. **Request authorized access** (recommended, in parallel): ask the RFB
    (Cosit / Normas team, or a request under the access-to-information law via
@@ -41,7 +43,7 @@ documents, so Phase 1 can proceed on ementa + metadata. Options for full text:
    linking to the official viewer for the full text. Full text marked as
    `not_acquired` with the reason.
 
-## Proposed Phase 1 sample (up to 100 acts)
+## Proposed Phase 1.1 sample (up to 100 acts)
 
 Ementa + metadata from the Normas search API, stratified by publication year
 and issuing unit, using only the reported totals as the sampling frame:

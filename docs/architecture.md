@@ -2,9 +2,10 @@
 
 ## Scope and status
 
-This document defines the proposed architecture for the independent product
-phases: three original phases plus Phase 4, investment fund reports, added by
-`decision_0024`. It is architecture work only: it does not authorize source
+This document defines the proposed architecture for the product phases:
+Phase 1 (data collection, structuring and search, in subphases 1.1–1.3, one
+per source family) and Phase 2 (cross-source intelligence), per `decision_0025`.
+It is architecture work only: it does not authorize source
 discovery, data acquisition, MVP implementation, external model processing, or
 release. Requirements and phase criteria remain subject to developer review.
 
@@ -79,30 +80,35 @@ Conceptual entities: `funds`, `fund_reports`, `fund_report_files`,
 
 Repeated keys and resubmitted versions are diagnosed and kept, never dropped or
 summed. The FII financial statements listed in `DFIN` are documents, not
-tables; reading them is a later decision, not part of the first Phase 4 sample.
+tables; reading them is a later decision, not part of the first Phase 1.3 sample.
 
 ### Cross-source relationships
 
-`document_relationships` is a separate, optional intelligence domain that may
-consume only the two independently accepted datasets of Phases 1 and 2.
-Extending it to `investment_fund_reports` requires a later, recorded decision. Every relationship is a
+`document_relationships` is a separate intelligence domain that may
+consume only Phase 1 datasets (subphases 1.1–1.3) that have explicit human
+acceptance; it is MVP Phase 2 (`decision_0025`).
+Every relationship is a
 cited hypothesis with typed source and target IDs, relationship type, evidence
 spans/pages, confidence, uncertainty, method/version, and human review state.
 It does not state or infer misconduct, liability, or legal effect.
 
 ## Data flow and phase gates
 
-1. Phase 1 collects, processes, and independently searches public consultation
-   decisions.
-2. Phase 2 independently collects and processes financial disclosures and
-   searches financial notes without requiring Phase 1 search.
-3. Phase 3 integrates both accepted datasets through cited hypotheses.
-4. Phase 4 independently collects, consolidates and searches CVM investment
-   fund reports (FII, FIDC, FIP, FIAGRO). It has no dependency on Phases 1–3
-   (`decision_0024`).
+Phases were restructured by `decision_0025`.
 
-Each phase has separate implementation, testing, human acceptance, release,
-and operations states. No downstream phase starts until its prerequisites and
+1. **Phase 1 — data collection, structuring and search.** Three independent
+   subphases, one per source family. None depends on another.
+   - **1.1** collects, processes and searches public consultation decisions.
+   - **1.2** collects and processes financial disclosures and searches
+     financial notes.
+   - **1.3** collects, consolidates and searches CVM investment fund reports
+     (FII, FIDC, FIP, FIAGRO; `decision_0024`).
+2. **Phase 2 — cross-source intelligence.** It relates the Phase 1 datasets
+   through cited hypotheses with evidence and human review. A relationship may
+   use only datasets whose subphase has explicit human acceptance.
+
+Each subphase and phase has separate implementation, testing, human
+acceptance, release, and operations states. No downstream phase starts until its prerequisites and
 human gates are met. This planning document is not phase acceptance.
 
 ## Cross-cutting controls
@@ -158,13 +164,13 @@ close the three items from the review above so that `req_0003` can be decided.
    validated). A match needs at least one verified identifier; `name_only`
    matches stay `unresolved`. Keep the root CNPJ (8 digits) as a derived field
    for group-level grouping only, never as identity.
-3. **Relationship confidence.** Phase 3 starts with deterministic rules only
+3. **Relationship confidence.** Phase 2 (numbered Phase 3 before `decision_0025`) starts with deterministic rules only
    (explicit citation of a legal act number or of a decision ID). Confidence is
    a categorical `evidence_level` (`explicit_citation`, `shared_legal_basis`,
    `topic_similarity`), not a probability. A numeric score is introduced only
    after calibrating on the adjudicated set of at least 50 links defined in
    `docs/requirements.md`.
-4. **Storage (proposal for the Phase 1 sample).** Parquet files written with
+4. **Storage (proposal for the Phase 1.1 sample).** Parquet files written with
    `arrow`, queried with `duckdb`; full-text search through DuckDB's `fts`
    extension. Re-evaluate against the latency threshold before scaling. Adding
    `arrow`, `duckdb`, `httr2`, `xml2`, `pdftools` and `shiny` to `DESCRIPTION`

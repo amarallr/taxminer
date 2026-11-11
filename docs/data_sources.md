@@ -1,6 +1,6 @@
 # Financial disclosure sources (Collect P04, step 00)
 
-Family: `financial_disclosures` (MVP Phase 2). Probe run: 2026-11-10T19:00
+Family: `financial_disclosures` (MVP Phase 1.2; numbered Phase 2 before `decision_0025`). Probe run: 2026-11-10T19:00
 -03:00, `scripts/probe_financial_sources.R`
 (`reports/source_probes/20261110T190046_cvm/`, local). Requests used the
 generic user agent `TaxMiner-source-probe/0.1` with 10 s between requests.
@@ -62,7 +62,7 @@ The 2026 DFP index lists 9 filings (fiscal years ending in 2026, e.g.
 - `report_type`: `DFP` (annual) and `ITR` (quarterly); other CVM documents (FRE,
   IPE) are out of scope unless approved.
 
-## Proposed Phase 2 sample (needs authorization)
+## Proposed Phase 1.2 sample (needs authorization)
 
 Collect P04 step 02 should start with up to 20 filing packages (about 15 MB
 each, about 300 MB in total, 10 s between requests):
@@ -133,14 +133,14 @@ Observed in the first packages:
 
 # Investment fund report sources (Collect P05, preliminary listing check)
 
-- **Family:** `investment_fund_reports` (MVP Phase 4, `decision_0024`).
+- **Family:** `investment_fund_reports` (MVP Phase 1.3, `decision_0024`, `decision_0025`).
 - **Check:** on 2026-11-10T22:20-03:00, 15 GET requests were made to the CVM open-data
   directory listings (`https://dados.cvm.gov.br/dados/`) with a generic user agent and 10 s
   between requests. All returned HTTP 200.
 - **Downloads:** none. No data file was downloaded and no ZIP was opened.
 - **Not yet verified:** dataset pages, licenses, `META/` dictionaries, contents and layouts.
   Collect P05 step 00 must check them before any acquisition. The portal's `robots.txt`
-  (`Crawl-Delay: 10`, `/dados/` allowed) was verified for Phase 2 and applies to the same host.
+  (`Crawl-Delay: 10`, `/dados/` allowed) was verified for Phase 1.2 and applies to the same host.
 - **Registry:** the machine-readable registry is `config/investment_fund_report_sources.yml`.
 
 | Subfamily | Listing | Files observed |

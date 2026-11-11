@@ -315,3 +315,37 @@ como fonte de dados, no mesmo nível das Soluções de Consulta e das notas expl
 `docs/data_sources.md` e `config/investment_fund_report_sources.yml`.
 
 **Limites.** Nenhuma coleta, código ou dependência foi autorizado por esta decisão.
+
+## decision_0025 — 2026-11-10T23:00:00-03:00 — Fases reorganizadas: coleta (Fase 1) e inteligência cruzada (Fase 2)
+
+O desenvolvedor reorganizou as fases do MVP em duas.
+
+- **Fase 1 — Coleta, estruturação e pesquisa de dados.** Tem três subfases independentes,
+  cada uma com aceite humano próprio e sem depender das outras:
+  - 1.1 Soluções de Consulta;
+  - 1.2 Notas explicativas;
+  - 1.3 Fundos de investimento (FII, FIDC, FIP, FIAGRO).
+- **Fase 2 — Inteligência cruzada.** Relações entre as bases, sempre como hipóteses com
+  evidências e revisão humana, depois que as bases forem aceitas.
+  - Uma relação só pode usar bases com aceite humano explícito.
+  - Ao contrário da antiga Fase 3, a Fase 2 também alcança os fundos.
+
+| Antes | Agora |
+|---|---|
+| Fase 1 — Soluções de Consulta | Fase 1.1 |
+| Fase 2 — Notas explicativas | Fase 1.2 |
+| Fase 4 — Fundos de investimento (`decision_0024`) | Fase 1.3 |
+| Fase 3 — Inteligência cruzada | Fase 2 |
+
+**Registros.** Os IDs não mudam; só títulos e textos foram ajustados.
+
+- Os marcos de aceite passam a ser:
+  - `work_0015` (1.1), `work_0016` (1.2) e `work_0023` (1.3);
+  - `work_0017` (Fase 2).
+- `work_0014` passa a depender dos três aceites da Fase 1.
+- `req_0010` e `req_0011` foram atualizados.
+
+**O que não muda.** Os registros anteriores (`decision_0001`–`decision_0024`, histórico de
+status e changelogs) mantêm a numeração da época. A suspensão da antiga Fase 1
+(`decision_0020`) vale agora para a subfase 1.1. A coleta da antiga Fase 2 vale para a
+subfase 1.2.

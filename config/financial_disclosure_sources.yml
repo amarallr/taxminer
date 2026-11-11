@@ -1,4 +1,4 @@
-# Source registry for financial_disclosures (MVP Phase 2).
+# Source registry for financial_disclosures (MVP Phase 1.2, decision_0025).
 # Verified by scripts/probe_financial_sources.R on 2026-11-10; see
 # docs/data_sources.md. Only verified patterns are listed.
 sources:

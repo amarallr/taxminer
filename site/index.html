@@ -240,13 +240,13 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
     <div class="section-head">
       <div class="eyebrow">A solução proposta</div>
       <h2 id="h-solucao">Engenharia de dados, processamento documental, pesquisa e IA</h2>
-      <p class="lede">O TaxMiner transforma documentos não estruturados ou semiestruturados em bases de conhecimento organizadas, rastreáveis e acessíveis, em quatro fases com aceite humano próprio.</p>
+      <p class="lede">O TaxMiner transforma documentos não estruturados ou semiestruturados em bases de conhecimento organizadas, rastreáveis e acessíveis, em duas fases: coleta, estruturação e pesquisa de cada base (Fase 1, com três subfases) e inteligência cruzada (Fase 2). Cada subfase e cada fase tem aceite humano próprio.</p>
     </div>
     <div class="grid g2">
-      <div class="card"><span class="kicker">Fase 1</span><h3>Soluções de Consulta</h3><p>Coleta, estruturação e pesquisa das interpretações tributárias publicadas pela Receita Federal.</p></div>
-      <div class="card"><span class="kicker">Fase 2</span><h3>Notas explicativas</h3><p>Coleta, estruturação e pesquisa das notas das demonstrações financeiras entregues à CVM, sem depender da Fase 1.</p></div>
-      <div class="card"><span class="kicker">Fase 3</span><h3>Inteligência cruzada</h3><p>Relações entre as duas bases, sempre como hipóteses com evidências e revisão humana, depois que ambas forem aceitas.</p></div>
-      <div class="card"><span class="kicker">Fase 4</span><h3>Fundos de investimento</h3><p>Coleta, consolidação e pesquisa dos informes de FII, FIDC, FIP e FIAGRO publicados pela CVM, sem depender das outras fases.</p></div>
+      <div class="card"><span class="kicker">Fase 1.1</span><h3>Soluções de Consulta</h3><p>Coleta, estruturação e pesquisa das interpretações tributárias publicadas pela Receita Federal.</p></div>
+      <div class="card"><span class="kicker">Fase 1.2</span><h3>Notas explicativas</h3><p>Coleta, estruturação e pesquisa das notas das demonstrações financeiras entregues à CVM.</p></div>
+      <div class="card"><span class="kicker">Fase 1.3</span><h3>Fundos de investimento</h3><p>Coleta, consolidação e pesquisa dos informes de FII, FIDC, FIP e FIAGRO publicados pela CVM.</p></div>
+      <div class="card"><span class="kicker">Fase 2</span><h3>Inteligência cruzada</h3><p>Relações entre as bases, sempre como hipóteses com evidências e revisão humana, depois que forem aceitas.</p></div>
     </div>
   </section>
 
@@ -397,10 +397,10 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
     <div class="rail">
       <div class="stage done"><span class="num">Common</span><h3>Fundação</h3><p>Ambiente R, renv, Git, GitHub, CI e áreas protegidas.</p><span class="pill ok">aceita</span></div>
       <div class="stage done"><span class="num">Common</span><h3>Arquitetura</h3><p>Contratos por fonte, critérios de aceite e dicionário de dados.</p><span class="pill ok">aceita</span></div>
-      <div class="stage held"><span class="num">Fase 1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; coleta aguarda decisões do desenvolvedor.</p><span class="pill warn">suspensa</span></div>
-      <div class="stage next"><span class="num">Fase 2</span><h3>Notas explicativas</h3><p>Coleta das 14.015 DFP em execução; extração das notas em desenvolvimento.</p><span class="pill acc">em andamento</span></div>
-      <div class="stage"><span class="num">Fase 3</span><h3>Inteligência cruzada</h3><p>Depende do aceite das Fases 1 e 2.</p><span class="pill idle">não iniciada</span></div>
-      <div class="stage"><span class="num">Fase 4</span><h3>Fundos de investimento</h3><p>Listagens da CVM verificadas; coleta ainda não autorizada.</p><span class="pill idle">planejada</span></div>
+      <div class="stage held"><span class="num">Fase 1.1</span><h3>Soluções de Consulta</h3><p>Fontes verificadas; coleta aguarda decisões do desenvolvedor.</p><span class="pill warn">suspensa</span></div>
+      <div class="stage next"><span class="num">Fase 1.2</span><h3>Notas explicativas</h3><p>Coleta das 14.015 DFP em execução; extração das notas em desenvolvimento.</p><span class="pill acc">em andamento</span></div>
+      <div class="stage"><span class="num">Fase 1.3</span><h3>Fundos de investimento</h3><p>Listagens da CVM verificadas; coleta ainda não autorizada.</p><span class="pill idle">planejada</span></div>
+      <div class="stage"><span class="num">Fase 2</span><h3>Inteligência cruzada</h3><p>Depende do aceite das bases da Fase 1.</p><span class="pill idle">não iniciada</span></div>
     </div>
 
     <div class="tally" aria-label="Itens de trabalho por situação de implementação">
@@ -429,24 +429,24 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
               <tr><td class="id">work_0007</td><td>GitHub Copilot</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
               <tr><td class="id">work_0018</td><td>Revisão de consistência do projeto</td><td><span class="pill ok">implementado</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill ok">aprovado</span></td></tr>
               <tr><td class="id">work_0019</td><td>Novas fontes: inventário e lacunas</td><td><span class="pill acc">em andamento</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr class="group"><th scope="rowgroup" colspan="5">Fase 1 · Soluções de Consulta</th></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 1.1 · Soluções de Consulta</th></tr>
               <tr><td class="id">work_0008</td><td>Descobrir fontes e coletar a amostra</td><td><span class="pill warn">suspenso</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0009</td><td>Extrair e consolidar</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0010</td><td>Pesquisa independente</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr><td class="id">work_0015</td><td>Aceite humano da Fase 1</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr class="group"><th scope="rowgroup" colspan="5">Fase 2 · Notas explicativas</th></tr>
+              <tr><td class="id">work_0015</td><td>Aceite humano da Fase 1.1</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 1.2 · Notas explicativas</th></tr>
               <tr><td class="id">work_0011</td><td>Descobrir fontes e coletar relatórios</td><td><span class="pill acc">em andamento</span></td><td><span class="pill ok">aprovado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0012</td><td>Extrair notas e tabelas</td><td><span class="pill acc">em andamento</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0013</td><td>Pesquisa independente de notas</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr><td class="id">work_0016</td><td>Aceite humano da Fase 2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr class="group"><th scope="rowgroup" colspan="5">Fase 3 · Inteligência cruzada</th></tr>
-              <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr><td class="id">work_0017</td><td>Aceite humano da Fase 3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr class="group"><th scope="rowgroup" colspan="5">Fase 4 · Fundos de investimento</th></tr>
+              <tr><td class="id">work_0016</td><td>Aceite humano da Fase 1.2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 1.3 · Fundos de investimento</th></tr>
               <tr><td class="id">work_0020</td><td>Verificar fontes e coletar amostra</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0021</td><td>Consolidar informes por família e layout</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
               <tr><td class="id">work_0022</td><td>Pesquisa independente de fundos</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
-              <tr><td class="id">work_0023</td><td>Aceite humano da Fase 4</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0023</td><td>Aceite humano da Fase 1.3</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr class="group"><th scope="rowgroup" colspan="5">Fase 2 · Inteligência cruzada</th></tr>
+              <tr><td class="id">work_0014</td><td>Relações citadas entre as fontes</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
+              <tr><td class="id">work_0017</td><td>Aceite humano da Fase 2</td><td><span class="pill idle">não iniciado</span></td><td><span class="pill idle">não executado</span></td><td><span class="pill idle">pendente</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -462,7 +462,7 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
           <div class="item"><span class="pill bad">alto</span><span class="t">Cobertura das fontes</span><span class="d">Termos de uso e completude histórica em aberto (risk_0001).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Sincronização do OneDrive</span><span class="d">Exclusões das áreas protegidas não verificadas; dados coletados ficam fora do OneDrive (risk_0002).</span></div>
           <div class="item"><span class="pill bad">alto</span><span class="t">Identificação de empresas</span><span class="d">CNPJ ambíguo e relações inferidas podem ser incertos (risk_0005).</span></div>
-          <div class="item"><span class="pill warn">médio</span><span class="t">Escopo das novas fontes</span><span class="d">Fundos (Fase 4) disputam atenção com a Fase 2; nada muda na coleta em andamento (risk_0015).</span></div>
+          <div class="item"><span class="pill warn">médio</span><span class="t">Escopo das novas fontes</span><span class="d">Fundos (Fase 1.3) disputam atenção com a Fase 1.2; nada muda na coleta em andamento (risk_0015).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">Licença da implementação de referência</span><span class="d">Sem licença declarada; nenhum código copiado, só reimplementação (risk_0014).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">Volume da coleta</span><span class="d">Acervo completo (~450 GB) maior que o disco; DFP primeiro, ITR depois (risk_0013).</span></div>
           <div class="item"><span class="pill warn">médio</span><span class="t">testthat compilado no R 4.5.3</span><span class="d">Aviso só local; o CI usa binário compatível (risk_0007).</span></div>
@@ -475,7 +475,7 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
           <div class="item"><span class="pill acc">1</span><span class="t">Concluir a coleta das DFP</span><span class="d">14.015 entregas de 2010 a 2026, com retomada automática; previsão de cerca de 7 dias.</span></div>
           <div class="item"><span class="pill acc">2</span><span class="t">Extração das notas (Data P03)</span><span class="d">Validar a segmentação, gerar Parquet de relatórios e notas e medir a qualidade.</span></div>
           <div class="item"><span class="pill acc">3</span><span class="t">Pesquisa de notas</span><span class="d">Área própria na interface Shiny local, com filtros e citação da página de origem.</span></div>
-          <div class="item"><span class="pill idle">—</span><span class="t">Fase 1</span><span class="d">Retoma quando o desenvolvedor decidir a estratégia de coleta (docs/feasibility.md).</span></div>
+          <div class="item"><span class="pill idle">—</span><span class="t">Fase 1.1</span><span class="d">Retoma quando o desenvolvedor decidir a estratégia de coleta (docs/feasibility.md).</span></div>
         </div>
       </div>
     </div>

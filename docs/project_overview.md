@@ -1,7 +1,7 @@
 # TaxMiner — panorama do projeto
 
 Projeto independente, não oficial da Receita Federal. Situação em 10/11/2026
-(Fase 1 suspensa, Fase 2 iniciada, Fase 4 planejada). Repositório público `amarallr/taxminer`, licença MIT,
+(fases reorganizadas pela `decision_0025`: subfase 1.1 suspensa, 1.2 em andamento, 1.3 planejada). Repositório público `amarallr/taxminer`, licença MIT,
 CI aprovado. Fonte: registros em `docs/project_management/`.
 
 ## Escopo
@@ -16,7 +16,7 @@ citadas, nunca conclusão de infração.
 | `tax_consultation_decisions` | Soluções de Consulta da RFB | Texto original em português, tipo de documento preservado, ID estável por autoridade, tipo, número e ano. |
 | `financial_disclosures` | Notas explicativas | Relatório → nota → tabela; CNPJ só quando verificado; escopo consolidado ou individual; unidades e página de origem. |
 | `investment_fund_reports` | Informes de fundos (FII, FIDC, FIP, FIAGRO) | Dados abertos da CVM; subfamília, tabela e layout preservados; valores originais como texto; linhagem por arquivo, hash e linha; chaves repetidas diagnosticadas, nunca descartadas. |
-| `document_relationships` | Relações entre fontes | Só sobre as duas bases aceitas; citações dos dois lados, nível de evidência e revisão humana. |
+| `document_relationships` | Relações entre fontes | Fase 2: só sobre as bases da Fase 1 já aceitas; citações dos dois lados, nível de evidência e revisão humana. |
 
 ## Roteiro
 
@@ -24,10 +24,10 @@ citadas, nunca conclusão de infração.
 |---|---|---|
 | Common P02 — Fundação | Ambiente R, renv, Git, GitHub e exclusões das áreas protegidas | ✅ aprovado |
 | Common P03 — Arquitetura | Contratos por fonte, limiares de qualidade e dicionário de dados | ✅ aprovado |
-| Fase 1 — Soluções de Consulta | Fontes verificadas; decisões de coleta em aberto | ⏸️ suspensa |
-| Fase 2 — Notas explicativas | Coleta das 14.015 DFP da CVM em andamento; extração das notas em desenvolvimento; ITR depois | ▶️ em andamento |
-| Fase 3 — Inteligência cruzada | Relações citadas entre as duas bases já aceitas | ⏸️ não iniciada |
-| Fase 4 — Fundos de investimento | Informes da CVM de FII, FIDC, FIP e FIAGRO; listagens verificadas, coleta não autorizada (`decision_0024`) | ⏸️ não iniciada |
+| Fase 1.1 — Soluções de Consulta | Fontes verificadas; decisões de coleta em aberto | ⏸️ suspensa |
+| Fase 1.2 — Notas explicativas | Coleta das 14.015 DFP da CVM em andamento; extração das notas em desenvolvimento; ITR depois | ▶️ em andamento |
+| Fase 1.3 — Fundos de investimento | Informes da CVM de FII, FIDC, FIP e FIAGRO; listagens verificadas, coleta não autorizada (`decision_0024`) | ⏸️ não iniciada |
+| Fase 2 — Inteligência cruzada | Relações entre as bases da Fase 1 já aceitas, como hipóteses com evidências e revisão humana | ⏸️ não iniciada |
 
 ## Itens de trabalho
 
@@ -46,30 +46,30 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 | work_0007 | GitHub Copilot | implementado | aprovado | aprovado |
 | work_0018 | Revisão de consistência do projeto | implementado | aprovado | aprovado |
 | work_0019 | Novas fontes: inventário e lacunas (Common P07) | em andamento | não executado | pendente |
-| **Fase 1** | | | | |
+| **Fase 1.1 — Soluções de Consulta** | | | | |
 | work_0008 | Descobrir fontes e coletar a amostra | suspenso | aprovado | pendente |
 | work_0009 | Extrair e consolidar | não iniciado | não executado | pendente |
 | work_0010 | Busca independente | não iniciado | não executado | pendente |
-| work_0015 | Aceite humano da Fase 1 | não iniciado | não executado | pendente |
-| **Fase 2** | | | | |
+| work_0015 | Aceite humano da Fase 1.1 | não iniciado | não executado | pendente |
+| **Fase 1.2 — Notas explicativas** | | | | |
 | work_0011 | Descobrir fontes e coletar relatórios | em andamento | aprovado | pendente |
 | work_0012 | Extrair notas e tabelas | em andamento | não executado | pendente |
 | work_0013 | Busca independente de notas | não iniciado | não executado | pendente |
-| work_0016 | Aceite humano da Fase 2 | não iniciado | não executado | pendente |
-| **Fase 3** | | | | |
-| work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
-| work_0017 | Aceite humano da Fase 3 | não iniciado | não executado | pendente |
-| **Fase 4** | | | | |
+| work_0016 | Aceite humano da Fase 1.2 | não iniciado | não executado | pendente |
+| **Fase 1.3 — Fundos de investimento** | | | | |
 | work_0020 | Verificar fontes e coletar amostra de fundos | não iniciado | não executado | pendente |
 | work_0021 | Consolidar informes por família e layout | não iniciado | não executado | pendente |
 | work_0022 | Busca independente de fundos | não iniciado | não executado | pendente |
-| work_0023 | Aceite humano da Fase 4 | não iniciado | não executado | pendente |
+| work_0023 | Aceite humano da Fase 1.3 | não iniciado | não executado | pendente |
+| **Fase 2 — Inteligência cruzada** | | | | |
+| work_0014 | Relações citadas entre as fontes | não iniciado | não executado | pendente |
+| work_0017 | Aceite humano da Fase 2 | não iniciado | não executado | pendente |
 
 ## Riscos abertos (10 de 15)
 
 | Impacto | Risco | Detalhe |
 |---|---|---|
-| médio | Escopo das novas fontes | Fundos (Fase 4) disputam atenção com a Fase 2; nada muda em `src/collect/` durante a coleta (risk_0015). |
+| médio | Escopo das novas fontes | Fundos (Fase 1.3) disputam atenção com a Fase 1.2; nada muda em `src/collect/` durante a coleta (risk_0015). |
 | médio | Licença da implementação de referência | Sem LICENSE; nenhum código copiado, só reimplementação (risk_0014). |
 | médio | Volume da coleta | Acervo completo (~450 GB) maior que o disco; DFP primeiro, ITR depois (risk_0013). |
 | alto | Notas só nos pacotes RAD/ENET | Fora dos dados abertos ODbL; RAD sem robots.txt nem licença declarada; PDF gerado com preenchimento (risk_0012). |
@@ -85,8 +85,8 @@ aceite humano. Nenhum foi liberado em release nem está em operação.
 1. **Concluir a coleta das DFP:** 14.015 pacotes, retomável, 4 a 5 dias.
 2. **Data P03:** extrair notas e tabelas dos pacotes baixados (formatos XML
    recente e `.dfp`/`.itr` antigo).
-3. **Busca de notas:** Parquet e área própria no Shiny. A Fase 1 retoma com as decisões de `docs/feasibility.md`.
-4. **Fase 4:** verificar as fontes de fundos (Collect P05) depois que a coleta das DFP estiver estável, com nova autorização.
+3. **Busca de notas:** Parquet e área própria no Shiny. A Fase 1.1 retoma com as decisões de `docs/feasibility.md`.
+4. **Fase 1.3:** verificar as fontes de fundos (Collect P05) depois que a coleta das DFP estiver estável, com nova autorização.
 
 Adiados por escolha do desenvolvedor: atualizar o R e tirar o projeto do
 OneDrive. A refatoração dos prompts fica para a versão 1.1.

@@ -47,7 +47,7 @@ are never collapsed based on text similarity alone.
 Company, filing, report version, note, table, and page relationships must remain
 traceable. Notes cannot depend on the consultation-decision schema or search.
 
-## `investment_fund_reports` (Phase 4, `decision_0024`)
+## `investment_fund_reports` (Phase 1.3, `decision_0024`, `decision_0025`)
 
 Conceptual contract; the column inventory per subfamily, table and layout comes
 from Data P04 step 00 (CVM `META/` dictionaries) and is not yet verified.
@@ -66,8 +66,8 @@ from Data P04 step 00 (CVM `META/` dictionaries) and is not yet verified.
 | `quality_issue` | Repeated key, resubmission, invalid CNPJ, missing mandatory field or unexpected column; rows are never dropped or summed. |
 
 Fund reports cannot depend on the consultation-decision or financial-note
-schemas or search, and are not consumed by `document_relationships` unless a
-later decision extends Phase 3.
+schemas or search. `document_relationships` (Phase 2) may use them only after
+Phase 1.3 has explicit human acceptance.
 
 ## `document_relationships`
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Fases reorganizadas — 2026-11-10
+
+- O MVP passa a ter duas fases (`decision_0025`):
+  - **Fase 1 — Coleta, estruturação e pesquisa de dados**, com as subfases 1.1 (Soluções de
+    Consulta), 1.2 (notas explicativas) e 1.3 (fundos de investimento);
+  - **Fase 2 — Inteligência cruzada** sobre as bases aceitas.
+- Prompts, arquitetura, requisitos, registros, `AGENTS.md`, README, panorama e site atualizados.
+
 ## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10
 
 - Nova família `investment_fund_reports` (FII, FIDC, FIP e FIAGRO) com aceite próprio

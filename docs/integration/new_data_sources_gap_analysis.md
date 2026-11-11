@@ -1,9 +1,9 @@
 # Novas fontes de dados: fundos de investimento da CVM (FII, FIDC, FIP, FIAGRO) — inventário e análise de lacunas (Common P07, etapa 00)
 
 > **Atualização (`decision_0024`, 2026-11-10):** os fundos de investimento (FII, FIDC, FIP e
-> FIAGRO) passaram a ser a família `investment_fund_reports` e a Fase 4 do MVP, com aceite
+> FIAGRO) passaram a ser a família `investment_fund_reports` e a subfase 1.3 da Fase 1 do MVP (`decision_0025`), com aceite
 > próprio. Onde este documento fala em "opção B", "família opcional" ou "fora dos MVPs", vale
-> a Fase 4. A implementação de referência cobre só FIDC e FII; FIP e FIAGRO serão
+> a Fase 1.3. A implementação de referência cobre só FIDC e FII; FIP e FIAGRO serão
 > implementados a partir das fontes da CVM. Listagens verificadas em `docs/data_sources.md`.
 
 - **Prompt:** `prompts/common_p07_new_data_sources.txt` (etapa 00, somente leitura).
@@ -112,7 +112,7 @@ e `dicionario_textual_cvm.csv`.
 ## b) Capacidades: primitiva da origem vs. TaxMiner
 
 TaxMiner hoje: `src/collect/download_financial_reports.R` e `scripts/collect_financial_reports.R`
-(pipeline da Fase 2, `test_0033`/`test_0034`).
+(pipeline da Fase 1.2, `test_0033`/`test_0034`).
 
 | Primitiva da origem | Equivalente no TaxMiner | Situação | Benefício | Risco | Evidência de teste na origem |
 |---|---|---|---|---|---|
@@ -184,12 +184,12 @@ Hoje o `DESCRIPTION` do TaxMiner tem `Imports: renv, testthat`.
 | `httr2` | Transporte HTTP | `curl_fetch` existente (curl do sistema) | **Não adicionar** |
 | `jsonlite` | Resumo e evidência em JSON | `saveRDS` ou CSV | **Não adicionar** agora; avaliar na etapa 04 |
 | `dotenv` | `.env` em P03 e P07 | `readRenviron()` | **Não adicionar** |
-| `arrow` (opcional) | Parquet | Nenhuma equivalente | Já pendente para a Fase 2 (`data_p02`/`data_p03`); decisão própria |
+| `arrow` (opcional) | Parquet | Nenhuma equivalente | Já pendente para as Fases 1.1 e 1.2 (`data_p02`/`data_p03`); decisão própria |
 | `readr`, `vroom`, `curl` e outros transitivos do `renv.lock` (48 pacotes) | Leitura e transporte | — | Não adicionar |
 
 Com a opção A, a incorporação **não exige nenhum pacote novo**.
 
-## f) Mapeamento de diretórios (Fase 4, `decision_0024`)
+## f) Mapeamento de diretórios (Fase 1.3, `decision_0024`)
 
 | Origem | TaxMiner (fora do repositório e do OneDrive) |
 |---|---|
@@ -203,7 +203,7 @@ Com a opção A, a incorporação **não exige nenhum pacote novo**.
 ## g) Conflitos e riscos
 
 1. **Escopo:** FIDC e FII não pertencem a nenhum MVP. A opção B cria uma família opcional que
-   não conta para os gates e disputa atenção com a Fase 2 (`risk_0015`).
+   não conta para os gates e disputa atenção com a Fase 1.2 (`risk_0015`).
 2. **Licença:** a origem não tem LICENSE, e o TaxMiner é MIT. Sem relicenciamento confirmado
    pelo titular, só é possível reimplementar a partir dos requisitos, com atribuição
    (`risk_0014`).

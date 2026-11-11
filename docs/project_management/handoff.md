@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-10T20:00:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-10T23:00:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -14,18 +14,20 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   (`acc_0004`–`acc_0007`); revisão `work_0018` aprovada (`acc_0008`).
 - **Repositório:** licença MIT; CI `validate_environment` no GitHub Actions;
   commits futuros com e-mail noreply (configuração local).
-- **Fase 1: suspensa** por decisão do desenvolvedor (`decision_0020`).
+- **Fases (`decision_0025`):** a Fase 1 tem as subfases 1.1 (Soluções de
+  Consulta), 1.2 (notas) e 1.3 (fundos); a Fase 2 é a inteligência cruzada.
+- **Fase 1.1: suspensa** por decisão do desenvolvedor (`decision_0020`).
   `work_0008` `blocked`; Collect P01 concluído (`docs/source_inventory.md`,
   `docs/feasibility.md`), três decisões em aberto. Nenhum documento coletado.
-- **Fase 2: iniciada** (`work_0011` `in_progress`). Collect P04 etapa 00
+- **Fase 1.2: iniciada** (`work_0011` `in_progress`). Collect P04 etapa 00
   concluída: `docs/data_sources.md`, `config/financial_disclosure_sources.yml`,
   `scripts/probe_financial_sources.R` (`test_0032`). Notas só nos pacotes
   RAD/ENET (`risk_0012`). Pipeline em `src/collect/` (`test_0033`, `test_0034`);
   coleta de todas as 14.015 DFP em andamento em `C:\TaxMinerData`
-  (`decision_0022`). Fase 3 não iniciada.
-- **Fase 4: fundos de investimento** (`decision_0024`): família
+  (`decision_0022`). Fase 2 (inteligência cruzada) não iniciada.
+- **Fase 1.3: fundos de investimento** (`decision_0024`): família
   `investment_fund_reports` (FII, FIDC, FIP, FIAGRO), independente das outras
-  fases.
+  subfases.
   - Listagens da CVM verificadas (`docs/data_sources.md`,
     `config/investment_fund_report_sources.yml`).
   - Prompts `collect_p05_investment_fund_report_acquisition.txt` e
@@ -35,7 +37,7 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 - **Novas fontes de dados (Common P07, `work_0019`):** rotinas comuns para as fontes novas.
   - Etapa 00 concluída (`docs/integration/new_data_sources_gap_analysis.md`).
   - Gate 01 decidido (`decision_0023`): primeiro as rotinas comuns em `src/common/`; a
-    família `investment_fund_reports` só depois que a coleta da Fase 2 estiver estável.
+    família `investment_fund_reports` só depois que a coleta da Fase 1.2 estiver estável.
   - Nenhum código incorporado. A etapa 02 aguarda nova autorização.
   - Riscos `risk_0014` e `risk_0015`.
 - **Data P03 (`work_0012`):** `src/data/extract_financial_notes.R` não
@@ -66,7 +68,7 @@ Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
 `manifest.csv`); se o processo parar, rodar de novo o comando de
 `docs/data_sources.md` (retoma de onde parou). Em paralelo: Data P03
 (extração das notas dos pacotes já baixados). ITR depende de mais
-armazenamento. Fase 1 retoma quando o desenvolvedor decidir os
+armazenamento. Fase 1.1 retoma quando o desenvolvedor decidir os
 pontos de `docs/feasibility.md`.
 
 ## Regras permanentes

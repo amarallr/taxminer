@@ -1,5 +1,28 @@
 # TaxMiner — estado do projeto
 
+## Fases reorganizadas — 2026-11-10T23:00:00-03:00
+
+Por decisão do desenvolvedor (`decision_0025`), o MVP passa a ter duas fases:
+
+- **Fase 1 — Coleta, estruturação e pesquisa de dados**, com três subfases
+  independentes e aceite próprio:
+  - 1.1 Soluções de Consulta (suspensa);
+  - 1.2 Notas explicativas (em andamento);
+  - 1.3 Fundos de investimento (planejada).
+- **Fase 2 — Inteligência cruzada:** relações entre as bases aceitas na Fase 1,
+  sempre como hipóteses com evidências e revisão humana.
+
+O que mudou:
+
+- **Registros:** os IDs ficaram iguais.
+  - Novos títulos dos marcos de aceite: `work_0015` (1.1), `work_0016` (1.2),
+    `work_0023` (1.3) e `work_0017` (Fase 2).
+  - `work_0014` passa a depender dos três aceites da Fase 1.
+  - `req_0010` e `req_0011` foram atualizados.
+- **Documentos e site:** prompts, arquitetura, requisitos, `AGENTS.md`,
+  README, panorama e site já usam a nova numeração.
+- **Histórico:** as entradas anteriores mantêm a numeração da época.
+
 ## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10T22:30:00-03:00
 
 Por decisão do desenvolvedor (`decision_0024`), os informes de fundos da CVM

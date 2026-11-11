@@ -193,15 +193,17 @@ TaxMiner Intelligence  pesquisa textual → pesquisa semântica →
 Conhecimento verificável: resultados com fonte, página, evidência e revisão humana
 ```
 
-O projeto está organizado em quatro fases, cada uma com seu próprio aceite humano:
+O projeto está organizado em duas fases (`decision_0025`). Cada subfase e
+cada fase tem seu próprio aceite humano:
 
-1. **Fase 1 — Soluções de Consulta:** coleta, processamento e pesquisa própria.
-2. **Fase 2 — Notas explicativas:** coleta, processamento e pesquisa própria,
-   sem depender da Fase 1.
-3. **Fase 3 — Inteligência cruzada:** relações citadas entre as duas bases,
-   somente depois que ambas forem aceitas.
-4. **Fase 4 — Fundos de investimento:** coleta, consolidação e pesquisa
-   própria dos informes de FII, FIDC, FIP e FIAGRO, sem depender das outras fases.
+1. **Fase 1 — Coleta, estruturação e pesquisa de dados.** Tem três subfases
+   independentes; nenhuma depende das outras.
+   - **1.1 Soluções de Consulta:** coleta, processamento e pesquisa própria.
+   - **1.2 Notas explicativas:** coleta, processamento e pesquisa própria.
+   - **1.3 Fundos de investimento:** coleta, consolidação e pesquisa própria
+     dos informes de FII, FIDC, FIP e FIAGRO.
+2. **Fase 2 — Inteligência cruzada:** relações entre as bases, sempre como
+   hipóteses com evidências e revisão humana, depois que elas forem aceitas.
 
 ## 8. Funcionalidades previstas
 
@@ -218,10 +220,10 @@ foram implementados.
 - Pesquisa textual por empresa, CNPJ, período, tipo de relatório e nota.
 - Pesquisa de Soluções de Consulta por tributo, assunto e dispositivo legal.
 - Pesquisa semântica e recuperação de trechos com citação.
-- Relações entre as duas fontes como hipóteses com evidências e revisão humana.
+- Relações entre as bases como hipóteses com evidências e revisão humana (Fase 2).
 - Bases de informes de fundos (FII, FIDC, FIP, FIAGRO) consolidadas por tabela e layout, com linhagem até o arquivo e a linha.
 - Pesquisa de fundos por família, CNPJ do fundo, administrador e período.
-- Interface Shiny local com uma área por fase.
+- Interface Shiny local com uma área por subfase e pela inteligência cruzada.
 
 ## 9. Aplicações práticas
 
@@ -270,10 +272,10 @@ acompanhados separadamente.
 | Fundação (ambiente R, renv, Git, GitHub, CI, áreas protegidas) | Implementada, testada e aceita. |
 | Arquitetura, requisitos e critérios de aceite | Aceitos (`acc_0003`). |
 | Assistentes (Codex, Claude Code, Gemini CLI, GitHub Copilot) | Testados no RStudio e aceitos. |
-| Fase 1 — Soluções de Consulta | **Suspensa** por decisão do desenvolvedor, com as fontes já verificadas. |
-| Fase 2 — Notas explicativas | **Em andamento:** fontes verificadas; pipeline de coleta implementado e testado; coleta das 14.015 entregas DFP (2010–2026) em execução; extração das notas em desenvolvimento. |
-| Fase 3 — Inteligência cruzada | Não iniciada. |
-| Fase 4 — Fundos de investimento | **Planejada** (`decision_0024`): listagens da CVM verificadas; coleta não autorizada. |
+| Fase 1.1 — Soluções de Consulta | **Suspensa** por decisão do desenvolvedor, com as fontes já verificadas. |
+| Fase 1.2 — Notas explicativas | **Em andamento:** fontes verificadas; pipeline de coleta implementado e testado; coleta das 14.015 entregas DFP (2010–2026) em execução; extração das notas em desenvolvimento. |
+| Fase 1.3 — Fundos de investimento | **Planejada** (`decision_0024`): listagens da CVM verificadas; coleta não autorizada. |
+| Fase 2 — Inteligência cruzada | Não iniciada. |
 
 Itens de trabalho: 23 registrados, sendo 8 implementados, 3 em andamento,
 1 suspenso e 11 não iniciados. Há 8 aceites humanos. **Nenhum MVP foi
@@ -389,7 +391,7 @@ Dados coletados, intermediários e processados nunca são versionados
 - [Página do projeto (GitHub Pages)](https://amarallr.github.io/taxminer/)
 - [Panorama do projeto](docs/project_overview.md)
 - [Arquitetura](docs/architecture.md) · [Requisitos e critérios de aceite](docs/requirements.md) · [Dicionário de dados](docs/data_dictionary.md)
-- Fontes: [Soluções de Consulta](docs/source_inventory.md) · [Viabilidade da Fase 1](docs/feasibility.md) · [CVM](docs/data_sources.md)
+- Fontes: [Soluções de Consulta](docs/source_inventory.md) · [Viabilidade da Fase 1.1](docs/feasibility.md) · [CVM](docs/data_sources.md)
 - [Ambiente de desenvolvimento](docs/development_environment.md) · [GitHub](docs/github_setup.md)
 - [Gestão do projeto](docs/project_management/) · [CHANGELOG](CHANGELOG.md) · [Prompts](prompts/README.md)
 - Fontes oficiais: [Normas da Receita Federal](https://normas.receita.fazenda.gov.br/) · [Dados abertos da CVM](https://dados.cvm.gov.br/)

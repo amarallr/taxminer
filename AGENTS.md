@@ -33,10 +33,12 @@ separately. Never infer approval or fabricate evidence.
   (fii, fidc, fip, fiagro) have independent schemas, provenance, coverage and
   quality. financial_notes and fund report search must work independently.
   document_relationships express cited hypotheses, never automatic misconduct.
-- Four MVP phases: consultation decisions; independent financial notes;
-  cross-source intelligence over the two datasets of phases 1 and 2; and
-  independent investment fund reports. Each has its own human acceptance gate.
-  Use one local Shiny interface with independent areas.
+- Two MVP phases. Phase 1 is data collection, structuring and search, with
+  three independent subphases: 1.1 consultation decisions, 1.2 financial notes
+  and 1.3 investment fund reports. Phase 2 is cross-source intelligence over
+  the accepted Phase 1 bases, always as hypotheses with evidence and human
+  review. Each subphase and Phase 2 has its own human acceptance gate. Use one
+  local Shiny interface with independent areas.
 - Dependencies are explicit in DESCRIPTION. Use renv snapshot type explicit,
   never implicit root dependency discovery. Bootstrap offline from installed
   packages with Rscript --vanilla scripts/setup_environment.R. Restore a locked
