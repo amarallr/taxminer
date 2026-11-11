@@ -1,5 +1,15 @@
 # TaxMiner — estado do projeto
 
+## Painel analítico dos fundos — 2026-11-11T08:26:24-03:00
+
+- **Painel (`work_0027`, `decision_0034`):** abas Panorama, Fundos (com Perfil) e
+  Administradores sobre a nova tabela de métricas (R$ 2,6 tri em 8.303 fundos; HHI 756 entre
+  107 administradores). 78 testes novos (`test_0051`); validador com 10 arquivos, todos
+  aprovados; conferido por capturas de tela (`test_0052`).
+- **Notas:** extração incremental concluída: 689 pacotes em 1.640 s; índice com 942 pacotes
+  e 24.809 notas.
+- **Próximo:** aceite humano da Fase 1.3 (`work_0023`); ordem do `work_0026` e decisão sobre LLM.
+
 ## Interface dos fundos e horários — 2026-11-11T08:04:21-03:00
 
 - **Interface** (`decision_0033`): autocomplete nos filtros, leiaute paisagem mestre-detalhe,

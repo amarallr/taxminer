@@ -27,3 +27,4 @@ testthat::test_file("tests/testthat/test_fund_reports_collection.R", stop_on_fai
 testthat::test_file("tests/testthat/test_data_layout.R", stop_on_failure = TRUE)
 testthat::test_file("tests/testthat/test_fund_reports_consolidation.R", stop_on_failure = TRUE)
 testthat::test_file("tests/testthat/test_fund_reports_search.R", stop_on_failure = TRUE)
+testthat::test_file("tests/testthat/test_fund_analytics.R", stop_on_failure = TRUE)

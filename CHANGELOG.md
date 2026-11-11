@@ -1,5 +1,16 @@
 # Changelog
 
+## Painel analítico dos fundos — 2026-11-11
+
+- Tabela derivada de métricas por fundo e período (`src/data/build_fund_metrics.R`): patrimônio
+  líquido, ativo e cotistas, com citação e reapresentações resolvidas.
+- Analítica sem LLM (`src/intelligence/fund_analytics.R`): mês completo, variação em 12 meses,
+  totais sem duplicar CNPJ, saldo do FIP entre informes, HHI e ranking de administradores.
+- Novas abas Panorama (indicadores, composição por família, séries, maiores administradores e
+  fundos, metodologia) e Administradores (ranking, concentração, série e fundos de cada um);
+  aba Perfil na ficha do fundo. Gráficos SVG próprios (`prototype/charts.R`), sem pacote novo.
+- Novo teste `test_fund_analytics.R` (78). O validador roda 10 arquivos.
+
 ## Interface dos fundos e horários corrigidos — 2026-11-11
 
 - Interface em paisagem: filtros com autocomplete (fundo por CNPJ ou nome, administrador,

@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-11T08:04:21-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T08:26:24-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -40,6 +40,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     `test_0050`). Primeira área do Shiny em `prototype/`; rodar com
     `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla scripts/run_prototype.R` e abrir
     `http://127.0.0.1:8765`.
+  - **Painel analítico (`work_0027`, `decision_0034`):** abas Panorama, Fundos (Perfil) e
+    Administradores; métricas derivadas em `processed/metrics/` (refeitas só quando a
+    consolidação muda); `test_0051`, `test_0052`.
   - `work_0023` (aceite humano da Fase 1.3) não iniciado.
 - **Processamento documental híbrido (`work_0026`):** diagnóstico e plano em
   `docs/integration/hybrid_document_processing_plan.md`. Python 3.12 com `.venv` e

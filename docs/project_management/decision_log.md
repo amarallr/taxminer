@@ -480,3 +480,26 @@ marca ou identidade de terceiros; fontes do sistema, para funcionar sem internet
 mestre-detalhe em telas de 1200 px ou mais. Sem pacote novo: o `DT` foi descartado porque
 traria `rmarkdown`, `knitr` e `xfun` atrás do CRAN, com risco para o CI; a lista usa tabela
 HTML própria com clique por JavaScript.
+
+## decision_0034 — 2026-11-11T08:26:24-03:00 — Painel analítico dos fundos
+
+Pedido do desenvolvedor: um app "condizente" com um especialista em engenharia de dados, BI,
+dashboards, comunicação visual e fundos, porque "o app ainda está muito simples". Ficou
+decidido:
+
+- Tabela derivada `processed/metrics/fund_period_metrics.parquet` (`src/data/build_fund_metrics.R`):
+  uma linha por fundo e período com patrimônio líquido, ativo e cotistas convertidos dos
+  valores publicados, citação da linha de origem e reapresentações resolvidas pela maior
+  versão. Número inválido vira vazio, nunca zero. Refeita só quando a consolidação muda.
+- Regras analíticas (`src/intelligence/fund_analytics.R`, sem LLM): períodos futuros
+  descartados; último mês completo = fundos que reportaram ≥ 90% da mediana dos seis meses
+  anteriores; totais do mercado contam cada CNPJ uma vez por mês; variação contra o mesmo
+  mês do ano anterior; o saldo do FIP (informe trimestral/quadrimestral) vale até o próximo
+  informe, no máximo três meses; HHI sobre participações em %; administradores agrupados
+  pelo CNPJ. Nomes de fundo no campo de administrador (informes FIAGRO) são trocados pelo
+  nome mais frequente do mesmo CNPJ.
+- Interface: abas Panorama, Fundos (com aba Perfil), Administradores, Cobertura e Sobre.
+  Gráficos em SVG próprios, sem pacote novo; cores categóricas fixas por família, um eixo
+  por gráfico, eixo de valor a partir de zero, dica ao passar o mouse, variação com seta e
+  texto (nunca só cor). Rentabilidade e dividendos ficam fora até a unidade dos campos ser
+  confirmada.

@@ -188,7 +188,8 @@ fund_search_ui <- function(id) {
   )
 }
 
-fund_search_server <- function(id, root) {
+# `analytics` (fund_analytics_context) adds the fund profile tab when given.
+fund_search_server <- function(id, root, analytics = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
     directory <- load_fund_directory(root)
@@ -307,9 +308,15 @@ fund_search_server <- function(id, root) {
             shiny::selectizeInput(ns("period"), "Período", choices = NULL, width = "100%")),
           shiny::div(class = "tm-caption", shiny::textOutput(ns("rows_summary"))),
           bslib::navset_underline(
+            if (!is.null(analytics)) bslib::nav_panel("Perfil", shiny::uiOutput(ns("profile"))),
             bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("card")))),
             bslib::nav_panel("Série completa",
                              shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))))))
+    })
+
+    output$profile <- shiny::renderUI({
+      s <- selected()
+      fund_profile_ui(analytics, s$family, s$cnpj)
     })
 
     rows <- shiny::reactive({
