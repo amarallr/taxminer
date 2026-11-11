@@ -15,7 +15,8 @@ if (!requireNamespace("renv", quietly = TRUE)) {
   stop("renv is missing. Install an approved version in a project-local library first.")
 }
 installed <- installed.packages(lib.loc = source_libraries)
-required <- c("renv", "testthat")
+# Declared project dependencies (DESCRIPTION Imports), installed beforehand.
+required <- trimws(strsplit(read.dcf("DESCRIPTION", fields = "Imports")[1, 1], ",")[[1]])
 dependencies <- tools::package_dependencies(
   required, db = installed, which = c("Depends", "Imports", "LinkingTo"),
   recursive = TRUE

@@ -24,7 +24,7 @@ de Consulta (`tax_consultation_decisions`) and company financial notes
 `docs/project_management/project_status.md`, `work_items.csv` and `handoff.md`): Phase 1.1 is
 suspended (`decision_0020`); Phase 1.2 is in progress (`work_0011`) and a long-running DFP
 collection is executing from `src/collect/` into `TAXMINER_DATA_DIR` (`decision_0022`,
-`risk_0013`). TaxMiner's R code uses base R plus `renv`/`testthat` only, en-US snake_case
+`risk_0013`). TaxMiner's R code uses base R plus the packages declared in `DESCRIPTION`, en-US snake_case
 names, `docs/project_management/` registers and explicit human acceptance per work item.
 
 TaxMiner is adding new public data sources. The reference implementation (the "source") is a

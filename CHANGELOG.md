@@ -1,5 +1,11 @@
 # Changelog
 
+## Dependências da extração declaradas — 2026-11-11
+
+- `DESCRIPTION` passa a declarar `pdftools`, `xml2` e `base64enc` (`decision_0026`).
+- `renv.lock` atualizado por snapshot explícito, sem instalação nova.
+- `scripts/setup_environment.R` lê os pacotes do campo `Imports`.
+
 ## Extração das notas e rotinas comuns — 2026-11-11
 
 - Extração das notas (Fase 1.2) com seleção de conjuntos corrigida e títulos `(N)` como

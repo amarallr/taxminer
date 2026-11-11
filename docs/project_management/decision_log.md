@@ -349,3 +349,24 @@ O desenvolvedor reorganizou as fases do MVP em duas.
 status e changelogs) mantêm a numeração da época. A suspensão da antiga Fase 1
 (`decision_0020`) vale agora para a subfase 1.1. A coleta da antiga Fase 2 vale para a
 subfase 1.2.
+
+## decision_0026 — 2026-11-11T00:40:00-03:00 — Dependências da extração das notas declaradas
+
+O desenvolvedor autorizou declarar no `DESCRIPTION` as dependências usadas pela extração das
+notas (Fase 1.2, `work_0012`):
+
+| Pacote | Versão | Uso |
+|---|---|---|
+| `pdftools` | 3.9.0 | texto do PDF |
+| `xml2` | 1.5.1 | XML do pacote ENET |
+| `base64enc` | 0.1-6 | anexo PDF em base64 |
+
+Detalhes:
+
+- **`renv.lock`:** os pacotes e suas dependências (`qpdf`, `Rcpp`, `curl`, `askpass`, `sys`)
+  foram registrados por snapshot explícito, sem instalação nova. As cópias vieram da
+  biblioteca local já existente, pelo `scripts/setup_environment.R`.
+- **`scripts/setup_environment.R`:** agora lê a lista de pacotes do campo `Imports` do
+  `DESCRIPTION`.
+- **`arrow`:** continua não declarado. Entra quando o primeiro código de Parquet for escrito,
+  conforme `docs/architecture.md`.

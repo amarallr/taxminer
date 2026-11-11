@@ -19,7 +19,7 @@
 | `image_only` (sem OCR) | 1 |
 | `no_note_structure` | 4 |
 
-- **Limitações:**
+- **Limitações** (as dependências foram declaradas depois, na `decision_0026`):
   - os parciais têm lacunas de numeração ou conjuntos curtos;
   - ainda faltam Parquet e tabelas;
   - `pdftools`, `xml2` e `base64enc` continuam sem declaração no `DESCRIPTION`.

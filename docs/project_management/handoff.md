@@ -43,8 +43,8 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     um item posterior, depois da coleta das DFP.
   - Riscos `risk_0014` e `risk_0015`.
 - **Data P03 (`work_0012`):** extração validada em 83 pacotes (66 completos;
-  `test_0035`, `test_0037`). Faltam Parquet, tabelas e a declaração de
-  `pdftools`, `xml2` e `base64enc` (precisa de autorização).
+  `test_0035`, `test_0037`). Faltam tabelas e Parquet (`arrow` ainda não
+  declarado). `pdftools`, `xml2` e `base64enc` declarados (`decision_0026`).
 
 ## Validação
 
