@@ -45,6 +45,10 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     consolidação muda); `test_0051`, `test_0052`.
   - **Painel publicado (`decision_0035`):** https://amarallr.github.io/taxminer/app/;
     regerar com `scripts/export_static_dashboard.R` e publicar `site/app/`.
+  - **Resolução de entidades (`work_0028`, `decision_0036`):** catálogos em
+    `processed/master/`, regras em `config/entity_name_rules.csv`, documentação em
+    `docs/entity_resolution.md`; testes `test_0053`, `test_0054`. Revisão humana da fila
+    `name_review` e uso nas DFP pendentes.
   - `work_0023` (aceite humano da Fase 1.3) não iniciado.
 - **Processamento documental híbrido (`work_0026`):** diagnóstico e plano em
   `docs/integration/hybrid_document_processing_plan.md`. Python 3.12 com `.venv` e

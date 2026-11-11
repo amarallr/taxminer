@@ -8,7 +8,9 @@ source(testthat::test_path("..", "..", "src", "common", "safe_io.R"))
 source(testthat::test_path("..", "..", "src", "common", "parquet_io.R"))
 source(testthat::test_path("..", "..", "src", "data", "consolidate_fund_reports.R"))
 source(testthat::test_path("..", "..", "src", "intelligence", "search_fund_reports.R"))
+source(testthat::test_path("..", "..", "src", "data", "entity_resolution.R"))
 source(testthat::test_path("helper_stored_zip.R"))
+rules <- load_entity_rules(testthat::test_path("..", "..", "config", "entity_name_rules.csv"))
 
 latin1 <- function(x) iconv(x, "UTF-8", "latin1")
 
@@ -70,6 +72,7 @@ search_root <- function() {
 skip_if_not_installed("arrow")
 root <- search_root()
 directory <- load_fund_directory(root)
+master <- load_entity_master(root, directory, rules)
 
 test_that("the directory keeps one entry per fund, name and administrator as published", {
   expect_equal(names(directory), fund_directory_columns)
@@ -165,15 +168,19 @@ test_that("tables and quality summaries come from the consolidation outputs", {
 test_that("the Shiny area searches, lists rows with linked citations and reports bad input", {
   skip_if_not_installed("shiny")
   source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
-  shiny::testServer(fund_search_server, args = list(root = root), {
+  data <- fund_search_data(root, rules = rules)
+  shiny::testServer(fund_search_server, args = list(root = root, data = data), {
+    # Free text: CNPJ prefix with mask. One line per fund, even with two administrators.
     session$setInputs(family = c("fii", "fidc", "fip"), fund_query = "00.332.266",
-                      administrator = "", period_from = "", period_to = "", search = 1)
-    expect_match(output$summary, "^2 entradas")
+                      administrator = character(), period_from = "", period_to = "")
+    expect_match(output$summary, "^1 fundo$")
     expect_match(as.character(output$kpis$html), "<b>1</b>\\s*fundos")
-    session$setInputs(fund_query = "são paulo", administrator = "OUTRA ADMINISTRADORA LTDA",
-                      search = 2)
-    expect_match(output$summary, "^1 entradas")
-    session$setInputs(fund_query = "00.332.266", administrator = "", search = 3)
+    expect_match(as.character(output$kpis$html), "<b>2</b>\\s*administradores")
+    # Administrator by catalog option: its value is a denomination id resolved to the CNPJ.
+    outra <- master$entity_names$name_id[master$entity_names$entity_id == "administrator:60701190000104"]
+    session$setInputs(fund_query = "são paulo", administrator = outra)
+    expect_match(output$summary, "^1 fundo$")
+    session$setInputs(fund_query = "00.332.266", administrator = character())
     expect_match(output$funds$html, "data-key=\"fii|00332266000131\"", fixed = TRUE)
     expect_match(output$page, "^Página 1 de 1")
     # Sorting by header click: a new column takes its default direction
@@ -185,6 +192,8 @@ test_that("the Shiny area searches, lists rows with linked citations and reports
     expect_match(output$funds$html, "Informes ▲", fixed = TRUE)
     session$setInputs(pick = "fii|00332266000131", table = "inf_mensal_fii_ativo_passivo")
     expect_match(output$detail$html, "FUNDO SÃO PAULO", fixed = TRUE)
+    expect_match(output$detail$html, "FII · 00.332.266/0001-31", fixed = TRUE)
+    expect_match(output$names$html, "FUNDO SÃO PAULO", fixed = TRUE)
     expect_match(output$rows_summary, "^2 linhas em 2 períodos")
     expect_match(output$rows$html, "<a href=\"https://dados.cvm.gov.br/dados/FII/inf_mensal_fii_2026.zip\"",
                  fixed = TRUE)
@@ -192,22 +201,39 @@ test_that("the Shiny area searches, lists rows with linked citations and reports
     session$setInputs(period = "2026-03-31")
     expect_match(output$card$html, "0,00", fixed = TRUE)
     expect_false(grepl("-1.234,56", output$card$html, fixed = TRUE))
-    session$setInputs(period_from = "13/2026", search = 4)
+    session$setInputs(period_from = "13/2026")
     expect_match(output$summary, "^Erro:")
   })
 })
 
-test_that("the fund field reads a CNPJ or part of a name, and choices cover every fund", {
+test_that("a family tab only lists that family", {
   skip_if_not_installed("shiny")
   source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
-  expect_equal(fund_query_filters("00.332.266/0001-31", directory), list(cnpj = "00.332.266/0001-31", name = NULL))
-  expect_equal(fund_query_filters("00332", directory), list(cnpj = "00332", name = NULL))
-  expect_equal(fund_query_filters("11.111.111/1111-11", directory)$cnpj, "11.111.111/1111-11")
-  expect_equal(fund_query_filters("fidc crédito", directory), list(cnpj = NULL, name = "fidc crédito"))
-  expect_equal(fund_query_filters("  ", directory), list(cnpj = NULL, name = NULL))
-  choices <- fund_choices(directory)
-  expect_equal(length(choices), length(unique(paste(directory$family, directory$fund_cnpj))))
-  expect_true("00.332.266/0001-31 · FUNDO SÃO PAULO (FII)" %in% names(choices))
+  data <- fund_search_data(root, rules = rules)
+  shiny::testServer(fund_search_server, args = list(root = root, data = data, families = "fidc"), {
+    session$setInputs(fund_query = character(), administrator = character(), period_from = "", period_to = "")
+    expect_match(output$summary, "^1 fundo$")
+    expect_match(output$funds$html, "FIDC CRÉDITO", fixed = TRUE)
+    expect_false(grepl("FUNDO SÃO PAULO", output$funds$html, fixed = TRUE))
+  })
+})
+
+test_that("the fund field reads a CNPJ (with or without mask) or a name, and choices cover every fund", {
+  skip_if_not_installed("shiny")
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  d <- annotate_directory_entities(directory)
+  expect_equal(resolve_entity_query("00.332.266/0001-31", master, "fund"), "fund:00332266000131")
+  expect_equal(resolve_entity_query("00332266000131", master, "fund"), "fund:00332266000131")
+  expect_equal(resolve_entity_query("00332", master, "fund"), "fund:00332266000131")
+  expect_equal(resolve_entity_query("11.111.111/1111-11", master, "fund"), "fund:raw:11111111111111")
+  expect_equal(resolve_entity_query("fidc crédito", master, "fund"), "fund:60701190000104")
+  expect_null(resolve_entity_query("  ", master, "fund"))
+  expect_null(resolve_entity_query(character(), master, "fund"))
+  choices <- fund_choices(master, d)
+  expect_equal(length(unique(sub("#.*$", "", choices))), length(unique(d$fund_entity)))
+  expect_true("00.332.266/0001-31 — FUNDO SÃO PAULO" %in% names(choices))
+  admins <- administrator_choices(master, d)
+  expect_true(any(grepl("^33.000.167/0001-01 — ADMINISTRADORA ÁGIL S.A. \\(3 fundos\\)$", names(admins))))
   periods <- period_choices(directory)
   expect_true(all(c("2023", "2026-03", "2025-12") %in% periods))
   expect_equal(periods[1], "2026-03")

@@ -39,22 +39,23 @@ autocomplete_options <- function(placeholder) {
        maxOptions = 50, placeholder = placeholder)
 }
 
-# The fund field takes a CNPJ (full or initial digits) or part of a name.
-fund_query_filters <- function(value, directory) {
-  value <- trimws(if (is.null(value)) "" else value)
-  if (!nzchar(value)) return(list(cnpj = NULL, name = NULL))
-  stripped <- toupper(gsub("[^0-9A-Za-z]", "", value))
-  if (stripped %in% toupper(gsub("[^0-9A-Za-z]", "", directory$fund_cnpj)) ||
-      grepl("^[0-9./ -]+$", value)) {
-    return(list(cnpj = value, name = NULL))
-  }
-  list(cnpj = NULL, name = value)
+# Entity filters: several options; free text is kept and searched in the
+# catalog (CNPJ with or without mask, current or former names).
+entity_autocomplete_options <- function(placeholder) {
+  list(create = TRUE, createOnBlur = TRUE, persist = FALSE, maxItems = 5,
+       maxOptions = 50, placeholder = placeholder, plugins = list("remove_button"))
 }
 
-fund_choices <- function(directory) {
-  d <- directory[!duplicated(paste(directory$family, directory$fund_cnpj)), , drop = FALSE]
-  stats::setNames(d$fund_cnpj, sprintf("%s · %s (%s)", d$fund_cnpj_original, d$fund_name,
-                                       toupper(d$family)))
+# Fund options from the entity catalog: one per denomination,
+# "00.000.000/0000-00 — NAME"; the value is the denomination id, which the
+# search resolves to the entity (its CNPJ) before querying.
+fund_choices <- function(master, directory = NULL) {
+  n <- master$entity_names[master$entity_names$entity_type == "fund", , drop = FALSE]
+  if (!is.null(directory)) n <- n[n$entity_id %in% directory$fund_entity, , drop = FALSE]
+  cnpj <- master$entities$cnpj_formatted[match(n$entity_id, master$entities$entity_id)]
+  n <- n[order(normalize_search_text(n$display_name), cnpj, method = "radix"), , drop = FALSE]
+  cnpj <- master$entities$cnpj_formatted[match(n$entity_id, master$entities$entity_id)]
+  stats::setNames(n$name_id, sprintf("%s — %s", cnpj, n$display_name))
 }
 
 period_choices <- function(directory) {
@@ -110,11 +111,17 @@ results_table <- function(r, input_id, selected = NULL, sort_input = NULL, sort 
       shiny::tags$td(
         shiny::div(class = "tm-id",
                    shiny::span(class = paste0("tm-tag tm-tag-", r$family[i]), toupper(r$family[i])),
-                   shiny::span(class = "tm-mono", r$fund_cnpj_original[i])),
+                   shiny::span(class = "tm-mono", if (is.null(r$cnpj_formatted)) r$fund_cnpj_original[i]
+                                                  else r$cnpj_formatted[i]),
+                   if (!is.null(r$name_count) && isTRUE(r$name_count[i] > 1L))
+                     shiny::span(class = "tm-names-badge", `data-tip` = "Denominações diferentes ao longo do tempo; veja a aba Denominações.",
+                                 sprintf("%d nomes", r$name_count[i]))),
         shiny::div(class = if (has_name(r$fund_name[i])) "tm-fund" else "tm-fund tm-muted",
                    display_name(r$fund_name[i])),
-        shiny::div(class = "tm-admin", if (is.na(r$administrator_name[i])) "administrador não publicado"
-                   else r$administrator_name[i])),
+        shiny::div(class = "tm-admin", {
+          a <- if (is.null(r$administrator_display)) r$administrator_name[i] else r$administrator_display[i]
+          if (is.na(a)) "administrador não publicado" else a
+        })),
       shiny::tags$td(class = "tm-mono", substr(r$first_period[i], 1, 7), shiny::br(),
                      substr(r$last_period[i], 1, 7)),
       shiny::tags$td(class = "tm-num", format_count(r$period_count[i])))
@@ -133,13 +140,19 @@ results_table <- function(r, input_id, selected = NULL, sort_input = NULL, sort 
     shiny::tags$tbody(rows))
 }
 
-# Administrator choices for the autocomplete: published name with its number
-# of funds (most funds first), value = the name used by the search.
-administrator_choices <- function(directory) {
-  d <- directory[!is.na(directory$administrator_name), , drop = FALSE]
-  d <- d[!duplicated(paste(d$family, d$fund_cnpj, d$administrator_name)), , drop = FALSE]
-  n <- sort(table(d$administrator_name), decreasing = TRUE)
-  stats::setNames(names(n), sprintf("%s (%s fundos)", names(n), format_count(as.integer(n))))
+# Administrator options: one per denomination with the CNPJ and the number of
+# funds of the entity (most funds first); the value resolves to the entity.
+administrator_choices <- function(master, directory) {
+  d <- directory[!is.na(directory$administrator_entity), , drop = FALSE]
+  d <- d[!duplicated(paste(d$administrator_entity, d$family, d$fund_entity)), , drop = FALSE]
+  funds <- table(d$administrator_entity)
+  n <- master$entity_names[master$entity_names$entity_id %in% names(funds), , drop = FALSE]
+  if (!nrow(n)) return(character())
+  n$funds <- as.integer(funds[n$entity_id])
+  n <- n[order(-n$funds, normalize_search_text(n$display_name), method = "radix"), , drop = FALSE]
+  cnpj <- master$entities$cnpj_formatted[match(n$entity_id, master$entities$entity_id)]
+  stats::setNames(n$name_id, sprintf("%s — %s (%s fundos)", ifelse(is.na(cnpj), "sem CNPJ", cnpj),
+                                     n$display_name, format_count(n$funds)))
 }
 
 # Readable label for a CVM field code when the META dictionary has no
@@ -230,37 +243,45 @@ row_periods <- function(r) {
   ifelse(is.na(p), "(sem período)", substr(p, 1, 10))
 }
 
-fund_search_ui <- function(id) {
+fund_search_ui <- function(id, family = NULL) {
   ns <- shiny::NS(id)
+  title <- if (is.null(family)) "Informes de fundos da CVM"
+           else sprintf("%s · %s", toupper(family), fund_family_names[[family]])
   page <- shiny::div(
     class = "tm-page tm-fill-page",
     shiny::tags$script(shiny::HTML(
-      "$(document).on('click', 'table.tm-results tbody tr[data-key]', function() {
-         var t = $(this).closest('table');
-         t.find('tr.tm-selected').removeClass('tm-selected');
-         $(this).addClass('tm-selected');
-         Shiny.setInputValue(t.data('input'), $(this).data('key'), {priority: 'event'});
-       });
-       $(document).on('click', 'table.tm-results th[data-sort]', function() {
-         Shiny.setInputValue($(this).closest('table').data('sort-input'), $(this).data('sort'),
-                             {priority: 'event'});
-       });")),
+      "if (!window.tmResultsBound) {
+         window.tmResultsBound = true;
+         $(document).on('click', 'table.tm-results tbody tr[data-key]', function() {
+           var t = $(this).closest('table');
+           t.find('tr.tm-selected').removeClass('tm-selected');
+           $(this).addClass('tm-selected');
+           Shiny.setInputValue(t.data('input'), $(this).data('key'), {priority: 'event'});
+         });
+         $(document).on('click', 'table.tm-results th[data-sort]', function() {
+           Shiny.setInputValue($(this).closest('table').data('sort-input'), $(this).data('sort'),
+                               {priority: 'event'});
+         });
+       }")),
     shiny::div(class = "tm-dash-head",
-               shiny::div(shiny::span(class = "tm-eyebrow", "Fundos · Fase 1.3"),
-                          shiny::h1("Informes de fundos da CVM")),
+               shiny::div(shiny::span(class = "tm-eyebrow", if (is.null(family)) "Fundos · Fase 1.3"
+                                                            else paste("Fundos", toupper(family), "· Fase 1.3")),
+                          shiny::h1(title)),
                shiny::div(class = "tm-dash-meta", shiny::uiOutput(ns("kpis"), inline = TRUE))),
-    # Filter bar: applies as you choose; free text also works (partial name or CNPJ).
+    # Filter bar: applies as you choose. Fund and administrator take options
+    # from the entity catalog (several allowed) or free text (CNPJ with or
+    # without mask, current or former name, abbreviation).
     shiny::div(
       class = "tm-filterbar",
-      shiny::div(class = "tm-filter tm-filter-family",
+      if (is.null(family)) shiny::div(class = "tm-filter tm-filter-family",
                  shiny::checkboxGroupInput(ns("family"), NULL, choices = fund_family_labels,
                                            selected = unname(fund_family_labels), inline = TRUE)),
       shiny::div(class = "tm-filter tm-filter-wide",
-                 shiny::selectizeInput(ns("fund_query"), NULL, choices = NULL, width = "100%",
-                                       options = autocomplete_options("Fundo: nome ou CNPJ"))),
+                 shiny::selectizeInput(ns("fund_query"), NULL, choices = NULL, width = "100%", multiple = TRUE,
+                                       options = entity_autocomplete_options("Fundo: CNPJ ou nome (atual ou anterior)"))),
       shiny::div(class = "tm-filter tm-filter-wide",
-                 shiny::selectizeInput(ns("administrator"), NULL, choices = NULL, width = "100%",
-                                       options = autocomplete_options("Administrador: nome ou CNPJ"))),
+                 shiny::selectizeInput(ns("administrator"), NULL, choices = NULL, width = "100%", multiple = TRUE,
+                                       options = entity_autocomplete_options("Administrador: CNPJ ou nome"))),
       shiny::div(class = "tm-filter tm-filter-period",
                  shiny::selectizeInput(ns("period_from"), NULL, choices = NULL, width = "100%",
                                        options = autocomplete_options("De (aaaa-mm)"))),
@@ -289,38 +310,86 @@ fund_search_ui <- function(id) {
   htmltools::bindFillRole(page, container = TRUE, item = TRUE)
 }
 
-# `analytics` (fund_analytics_context) adds the fund profile tab when given.
-fund_search_server <- function(id, root, analytics = NULL) {
+# Everything the fund areas read, loaded once and shared by every tab.
+fund_search_data <- function(root, directory = load_fund_directory(root), rules = load_entity_rules(),
+                             master = load_entity_master(root, directory, rules)) {
+  list(directory = annotate_directory_entities(directory), master = master, rules = rules,
+       tables = fund_tables(root), urls = fund_source_urls(root),
+       descriptions = fund_field_descriptions(root))
+}
+
+# Denominations of an entity over time: a separate analytical view; the
+# filters always keep the whole CNPJ history.
+name_timeline_ui <- function(master, entity_id) {
+  t <- entity_name_timeline(master, entity_id)
+  if (!nrow(t)) return(shiny::div(class = "tm-empty", "Sem denominações registradas."))
+  rows <- lapply(seq_len(nrow(t)), function(i) {
+    shiny::tags$tr(
+      shiny::tags$td(shiny::div(class = "tm-fund", t$denomination[i]),
+                     if (t$original_name[i] != t$denomination[i])
+                       shiny::div(class = "tm-admin", "publicado como: ", t$original_name[i]),
+                     if (isTRUE(t$needs_review[i])) shiny::span(class = "tm-review", `data-tip` =
+                       "Parecida com outra denominação deste CNPJ, mas não equivalente pelas regras: em revisão.",
+                       "revisar")),
+      shiny::tags$td(toupper(t$source[i])),
+      shiny::tags$td(class = "tm-mono", substr(t$first_observed_period[i], 1, 7)),
+      shiny::tags$td(class = "tm-mono", substr(t$last_observed_period[i], 1, 7)),
+      shiny::tags$td(class = "tm-num", format_count(t$observed_periods[i])))
+  })
+  shiny::tagList(
+    shiny::div(class = "tm-caption",
+               sprintf("%d denominações após as regras de equivalência (versão %s). Datas são de observação nos informes, não de vigência jurídica.",
+                       length(unique(t$name_id)), master$rule_version)),
+    shiny::tags$table(class = "tm-card-table tm-timeline",
+                      shiny::tags$thead(shiny::tags$tr(shiny::tags$th("Denominação"), shiny::tags$th("Família"),
+                                                       shiny::tags$th("Primeira"), shiny::tags$th("Última"),
+                                                       shiny::tags$th(class = "tm-num", "Períodos"))),
+                      shiny::tags$tbody(rows)))
+}
+
+# `analytics` (fund_analytics_context) adds the fund profile tab when given;
+# `families` fixes the family (one tab per fund type).
+fund_search_server <- function(id, root, analytics = NULL, data = NULL, families = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    directory <- load_fund_directory(root)
-    tables <- fund_tables(root)
-    urls <- fund_source_urls(root)
-    descriptions <- fund_field_descriptions(root)
+    if (is.null(data)) data <- fund_search_data(root)
+    directory <- data$directory
+    master <- data$master
+    tables <- data$tables
+    urls <- data$urls
+    descriptions <- data$descriptions
+    scope <- if (is.null(families)) unname(fund_family_labels) else families
+    in_scope <- directory[directory$family %in% scope, , drop = FALSE]
 
-    shiny::updateSelectizeInput(session, "fund_query", choices = fund_choices(directory),
+    shiny::updateSelectizeInput(session, "fund_query", choices = fund_choices(master, in_scope),
                                 selected = character(), server = TRUE)
-    shiny::updateSelectizeInput(session, "administrator", choices = administrator_choices(directory),
+    shiny::updateSelectizeInput(session, "administrator", choices = administrator_choices(master, in_scope),
                                 selected = character(), server = TRUE)
-    periods <- period_choices(directory)
+    periods <- period_choices(in_scope)
     shiny::updateSelectizeInput(session, "period_from", choices = periods, selected = character())
     shiny::updateSelectizeInput(session, "period_to", choices = periods, selected = character())
 
     shiny::observeEvent(input$clear, {
-      shiny::updateCheckboxGroupInput(session, "family", selected = unname(fund_family_labels))
+      if (is.null(families)) shiny::updateCheckboxGroupInput(session, "family", selected = unname(fund_family_labels))
       for (field in c("fund_query", "administrator", "period_from", "period_to")) {
         shiny::updateSelectizeInput(session, field, selected = character())
       }
     })
 
-    # Filters apply as soon as a value is chosen (no search button).
+    # Filters apply as soon as a value is chosen (no search button). Any
+    # option of an entity resolves to its id, so every name returns the
+    # whole CNPJ history; one line per fund and family.
     results <- shiny::reactive({
-      query <- fund_query_filters(input$fund_query, directory)
-      tryCatch(
-        search_fund_directory(directory, family = input$family, cnpj = query$cnpj,
-                              name = query$name, administrator = input$administrator,
-                              period_from = input$period_from, period_to = input$period_to),
-        error = function(e) structure(directory[0, ], error = conditionMessage(e)))
+      fam <- if (is.null(families)) input$family else families
+      tryCatch({
+        rows <- search_fund_entities(
+          directory, family = fam,
+          funds = resolve_entity_query(input$fund_query, master, "fund", data$rules),
+          administrators = resolve_entity_query(input$administrator, master, "administrator", data$rules),
+          period_from = input$period_from, period_to = input$period_to)
+        structure(fund_list(rows, master), rows = rows)
+      }, error = function(e) structure(fund_list(directory[0, ], master), rows = directory[0, ],
+                                       error = conditionMessage(e)))
     })
 
     # Header clicks: a new column sorts in its default direction, the same
@@ -356,21 +425,21 @@ fund_search_server <- function(id, root, analytics = NULL) {
     })
 
     output$kpis <- shiny::renderUI({
-      r <- results()
-      funds <- length(unique(paste(r$family, r$fund_cnpj)))
+      r <- attr(results(), "rows")
+      funds <- length(unique(r$fund_entity))
       span <- if (nrow(r)) sprintf("%s – %s", substr(min(r$first_period, na.rm = TRUE), 1, 7),
                                    substr(max(r$last_period, na.rm = TRUE), 1, 7)) else "—"
-      admins <- length(unique(stats::na.omit(r$administrator_name)))
+      admins <- length(unique(stats::na.omit(r$administrator_entity)))
       shiny::span(class = "tm-strip",
                   shiny::tags$b(format_count(funds)), " fundos · ", shiny::tags$b(format_count(admins)),
-                  " administradores · ", shiny::tags$b(length(unique(r$family))), " famílias · ",
+                  " administradores · ", shiny::tags$b(length(unique(r$family))), if (length(unique(r$family)) == 1L) " família · " else " famílias · ",
                   shiny::tags$b(span))
     })
 
     output$summary <- shiny::renderText({
       r <- results()
       if (!is.null(attr(r, "error"))) return(paste("Erro:", attr(r, "error")))
-      sprintf("%s entradas", format_count(nrow(r)))
+      sprintf("%s %s", format_count(nrow(r)), if (nrow(r) == 1L) "fundo" else "fundos")
     })
 
     output$page <- shiny::renderText(sprintf("Página %d de %d", page(), pages()))
@@ -388,26 +457,31 @@ fund_search_server <- function(id, root, analytics = NULL) {
       parts <- strsplit(picked(), "|", fixed = TRUE)[[1]]
       info <- directory[directory$family == parts[1] & directory$fund_cnpj == parts[2], , drop = FALSE]
       info <- info[order(!has_name(info$fund_name), info$last_period, decreasing = c(FALSE, TRUE), method = "radix"), ]
-      list(family = parts[1], cnpj = parts[2], info = info)
+      list(family = parts[1], cnpj = parts[2], info = info, entity = info$fund_entity[1])
     })
 
     output$detail <- shiny::renderUI({
       s <- selected()
       i <- s$info[1, ]
       t <- tables[tables$family == s$family, , drop = FALSE]
-      admins <- unique(stats::na.omit(s$info$administrator_name))
+      e <- master$entities
+      ent <- e[match(s$entity, e$entity_id), ]
+      admin_ids <- unique(stats::na.omit(s$info$administrator_entity[order(s$info$last_period, decreasing = TRUE)]))
+      admins <- ifelse(is.na(match(admin_ids, e$entity_id)), admin_ids, e$display_name[match(admin_ids, e$entity_id)])
       bslib::card(
         class = "tm-section tm-detail tm-pane",
         bslib::card_header(
           class = "tm-detail-head",
-          shiny::div(class = "tm-eyebrow", sprintf("%s · %s", toupper(s$family), i$fund_cnpj_original)),
-          shiny::h2(class = "tm-detail-title", display_name(i$fund_name)),
+          shiny::div(class = "tm-eyebrow", sprintf("%s · %s", toupper(s$family), format_cnpj(i$fund_cnpj_original))),
+          shiny::h2(class = "tm-detail-title", if (is.na(ent$display_name)) display_name(i$fund_name) else ent$display_name),
           shiny::div(class = "tm-detail-meta",
                      shiny::span(shiny::strong("Administrador: "),
                                  if (length(admins)) paste(admins, collapse = "; ") else "não publicado"),
                      shiny::span(shiny::strong("Informes: "),
                                  sprintf("%s a %s", substr(min(s$info$first_period), 1, 7),
-                                         substr(max(s$info$last_period), 1, 7))))),
+                                         substr(max(s$info$last_period), 1, 7))),
+                     if (isTRUE(ent$name_count > 1L))
+                       shiny::span(shiny::strong("Denominações: "), ent$name_count))),
         bslib::card_body(
           fillable = FALSE, class = "tm-detail-body",
           bslib::layout_columns(
@@ -424,8 +498,11 @@ fund_search_server <- function(id, root, analytics = NULL) {
             if (!is.null(analytics)) bslib::nav_panel("Perfil", shiny::uiOutput(ns("profile"))),
             bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("card")))),
             bslib::nav_panel("Série completa",
-                             shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))))))
+                             shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))),
+            bslib::nav_panel("Denominações", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("names")))))))
     })
+
+    output$names <- shiny::renderUI(name_timeline_ui(master, selected()$entity))
 
     output$profile <- shiny::renderUI({
       s <- selected()
@@ -477,7 +554,6 @@ fund_search_server <- function(id, root, analytics = NULL) {
     })
   })
 }
-
 fund_coverage_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(

@@ -7,7 +7,8 @@
 # - Family figures use the family's own reports. Market totals count each
 #   CNPJ once per month (a few funds report under two families).
 # - Changes compare a month with the same month one year earlier.
-# Requires src/intelligence/search_fund_reports.R (normalize_search_text).
+# Requires src/intelligence/search_fund_reports.R (normalize_search_text) and
+# src/data/entity_resolution.R (entity_key; names from the entity catalog).
 
 fund_family_order <- c("fii", "fidc", "fip", "fiagro")
 
@@ -119,7 +120,7 @@ snapshot_funds <- function(snapshot, admins, families = fund_family_order, admin
   s <- merge(snapshot[snapshot$family %in% families, c("family", "fund_cnpj", "period", "net_assets", "quotaholders")],
              admins, by = c("family", "fund_cnpj"), all.x = TRUE)
   s$key <- administrator_key(s$administrator_cnpj, s$administrator_name)
-  if (!is.null(administrator)) s <- s[s$key == administrator, , drop = FALSE]
+  if (!is.null(administrator)) s <- s[which(s$key == administrator), , drop = FALSE]
   s <- s[order(s$net_assets, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
   rownames(s) <- NULL
   s
@@ -129,7 +130,7 @@ snapshot_funds <- function(snapshot, admins, families = fund_family_order, admin
 # reports carry the fund (class) name in the administrator name field while
 # the administrator CNPJ is right: such names are dropped (`name_is_fund`)
 # and the label comes from the other reports of that CNPJ.
-fund_administrators <- function(directory) {
+fund_administrators <- function(directory, master = NULL) {
   d <- directory[order(directory$last_period, decreasing = TRUE, method = "radix"), ]
   d <- d[!duplicated(paste(d$family, d$fund_cnpj)), c("family", "fund_cnpj", "fund_name",
                                                          "administrator_name", "administrator_cnpj")]
@@ -145,14 +146,21 @@ fund_administrators <- function(directory) {
   d$administrator_name[fill] <- labels[key[fill]]
   d$administrator_name[fill & is.na(d$administrator_name)] <-
     paste("CNPJ", d$administrator_cnpj[fill & is.na(d$administrator_name)])
+  # With the entity catalog, both names are the current denomination of the
+  # entity (its CNPJ), the same in every area of the app.
+  if (!is.null(master)) {
+    e <- master$entities
+    a <- match(key, e$entity_id)
+    d$administrator_name <- ifelse(is.na(a), d$administrator_name, e$display_name[a])
+    f <- match(entity_key("fund", d$fund_cnpj, d$fund_name), e$entity_id)
+    d$fund_name <- ifelse(is.na(f), d$fund_name, e$display_name[f])
+  }
   rownames(d) <- NULL
   d
 }
 
-administrator_key <- function(cnpj, name) {
-  digits <- gsub("[^0-9A-Za-z]", "", ifelse(is.na(cnpj), "", cnpj))
-  ifelse(nchar(digits) >= 11, paste0("cnpj:", toupper(digits)), paste0("name:", normalize_search_text(name)))
-}
+# Administrator identity: the central entity key (src/data/entity_resolution.R).
+administrator_key <- function(cnpj, name) entity_key("administrator", cnpj, name)
 
 # Herfindahl-Hirschman index on shares in percent (0-10,000).
 hhi <- function(values) {

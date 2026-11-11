@@ -1,5 +1,20 @@
 # Changelog
 
+## Resolução de entidades e abas por tipo de fundo — 2026-11-11
+
+- Serviço central de resolução de entidades (`src/data/entity_resolution.R`): identidade pelo
+  CNPJ canônico, denominações agrupadas só por regras do dicionário versionado
+  (`config/entity_name_rules.csv`), histórico de nomes com fonte e períodos observados, fila de
+  revisão para nomes parecidos mas não equivalentes, relatório de qualidade. Catálogos em
+  `processed/master/`; documentação em `docs/entity_resolution.md`.
+- Filtros de fundo e administrador consomem o catálogo: `CNPJ formatado — denominação`, várias
+  opções por CNPJ, e qualquer uma recupera todo o histórico do CNPJ. Lista com uma linha por
+  fundo; nova aba Denominações no detalhe. CNPJ com máscara no app e no painel publicado.
+- Abas reordenadas (Panorama, Administradores, Fundos) e uma aba por tipo: FIDC, FII, FIP e
+  FIAGRO.
+- Texto justificado na página do projeto e na aba Sobre.
+- Novo teste `test_entity_resolution.R` (15 casos obrigatórios); o validador roda 11 arquivos.
+
 ## Filtros no Panorama, Fundos em uma tela e texto institucional — 2026-11-11
 
 - Panorama: 20 maiores administradores e 20 maiores fundos; clique no gráfico de uma família

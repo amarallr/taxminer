@@ -21,7 +21,7 @@ fund_admin_cnpj_columns <- c("CNPJ_Administrador", "CNPJ_ADMIN")
 
 fund_directory_columns <- c("family", "fund_cnpj", "fund_cnpj_original", "fund_name",
                             "administrator_name", "administrator_cnpj", "first_period",
-                            "last_period", "period_count", "zip_sha256", "source_file",
+                            "last_period", "period_count", "fund_period_count", "zip_sha256", "source_file",
                             "source_line")
 
 fund_search_paths <- function(root) {
@@ -33,7 +33,7 @@ fund_search_paths <- function(root) {
 # Upper case without accents, single spaces: the comparison form for text filters.
 normalize_search_text <- function(x) {
   from <- "ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ"
-  x <- toupper(enc2utf8(ifelse(is.na(x), "", x)))
+  x <- toupper(enc2utf8(as.character(ifelse(is.na(x), "", x))))
   x <- chartr(from, "AAAAAEEEEIIIIOOOOOUUUUCN", x)
   gsub("\\s+", " ", trimws(x))
 }
@@ -116,6 +116,7 @@ build_fund_directory <- function(root) {
     empty <- as.data.frame(setNames(replicate(length(fund_directory_columns), character(),
                                               simplify = FALSE), fund_directory_columns))
     empty$period_count <- integer()
+    empty$fund_period_count <- integer()
     empty$source_line <- integer()
     return(empty)
   }
@@ -134,6 +135,11 @@ build_fund_directory <- function(root) {
   distinct <- !is.na(rows$period) & !duplicated(paste(key, rows$period, sep = "\r"))
   counts <- table(factor(key[distinct], levels = unique(key)))
   out$period_count <- as.integer(counts[key[latest]])
+  fund <- paste(rows$family, rows$fund_cnpj, sep = "\r")
+  fund_distinct <- !is.na(rows$period) & !duplicated(paste(fund, rows$period, sep = "\r"))
+  fund_counts <- table(factor(fund[fund_distinct], levels = unique(fund)))
+  out$fund_period_count <- as.integer(fund_counts[paste(out$family, out$fund_cnpj, sep = "\r")])
+  out$fund_period_count[is.na(out$fund_period_count)] <- 0L
   out <- out[order(out$family, normalize_search_text(out$fund_name), out$fund_cnpj,
                    out$last_period, method = "radix"), fund_directory_columns]
   rownames(out) <- NULL
@@ -188,6 +194,73 @@ search_fund_directory <- function(directory, family = NULL, cnpj = NULL, adminis
   if (!is.na(from)) keep <- keep & !is.na(directory$last_period) & directory$last_period >= from
   if (!is.na(to)) keep <- keep & !is.na(directory$first_period) & directory$first_period <= to
   out <- directory[keep, , drop = FALSE]
+  rownames(out) <- NULL
+  out
+}
+
+# Directory rows with their entity ids (src/data/entity_resolution.R): the
+# fund by its CNPJ, the administrator by its CNPJ (a name equal to the fund
+# name is a known CVM data error and is not used).
+annotate_directory_entities <- function(directory) {
+  same <- !is.na(directory$administrator_name) &
+    normalize_search_text(directory$administrator_name) == normalize_search_text(directory$fund_name)
+  directory$fund_entity <- entity_key("fund", directory$fund_cnpj_original, directory$fund_name)
+  directory$administrator_entity <- entity_key("administrator", directory$administrator_cnpj,
+                                               ifelse(same, NA_character_, directory$administrator_name))
+  directory
+}
+
+# A filter value: selected options (entity or denomination ids, several
+# allowed) or free text (CNPJ with or without mask, current, historical,
+# normalized or abbreviated name). Returns entity ids, or NULL for no filter.
+resolve_entity_query <- function(value, master, type, rules = NULL) {
+  value <- value[!is.na(value) & nzchar(trimws(value))]
+  if (!length(value)) return(NULL)
+  ids <- startsWith(value, paste0(type, ":"))
+  out <- resolve_entity_ids(value[ids])
+  for (text in value[!ids]) out <- c(out, match_entities(master, type, text, rules))
+  unique(out)
+}
+
+# Search by entity: every directory row of the selected entities, whatever
+# the name used in each period.
+search_fund_entities <- function(directory, family = NULL, funds = NULL, administrators = NULL,
+                                 period_from = NULL, period_to = NULL) {
+  keep <- rep(TRUE, nrow(directory))
+  if (length(family)) keep <- keep & directory$family %in% family
+  if (!is.null(funds)) keep <- keep & directory$fund_entity %in% funds
+  if (!is.null(administrators)) keep <- keep & directory$administrator_entity %in% administrators
+  from <- period_bound(period_from)
+  to <- period_bound(period_to, upper = TRUE)
+  if (!is.na(from)) keep <- keep & !is.na(directory$last_period) & directory$last_period >= from
+  if (!is.na(to)) keep <- keep & !is.na(directory$first_period) & directory$first_period <= to
+  out <- directory[keep, , drop = FALSE]
+  rownames(out) <- NULL
+  out
+}
+
+# One line per fund and family: the denomination from the entity catalog,
+# the latest administrator, the full period span and report count.
+fund_list <- function(rows, master) {
+  if (!nrow(rows)) {
+    rows$cnpj_formatted <- character(); rows$name_count <- integer(); rows$administrator_display <- character()
+    return(rows)
+  }
+  key <- paste(rows$family, rows$fund_entity, sep = "\r")
+  latest <- order(key, rows$last_period, decreasing = TRUE, na.last = TRUE, method = "radix")
+  latest <- latest[!duplicated(key[latest])]
+  out <- rows[latest, , drop = FALSE]
+  k <- key[latest]
+  out$first_period <- as.character(tapply(rows$first_period, key, function(v) { v <- v[!is.na(v)]; if (length(v)) min(v) else NA_character_ })[k])
+  out$last_period <- as.character(tapply(rows$last_period, key, function(v) { v <- v[!is.na(v)]; if (length(v)) max(v) else NA_character_ })[k])
+  out$period_count <- out$fund_period_count
+  e <- master$entities
+  m <- match(out$fund_entity, e$entity_id)
+  out$fund_name <- ifelse(is.na(m), out$fund_name, e$display_name[m])
+  out$cnpj_formatted <- ifelse(is.na(m), out$fund_cnpj_original, e$cnpj_formatted[m])
+  out$name_count <- ifelse(is.na(m), 1L, e$name_count[m])
+  a <- match(out$administrator_entity, e$entity_id)
+  out$administrator_display <- ifelse(is.na(a), out$administrator_name, e$display_name[a])
   rownames(out) <- NULL
   out
 }

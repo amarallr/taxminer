@@ -183,6 +183,8 @@ footer .wrap { padding-block: 20px 32px; display: grid; gap: 8px; color: var(--m
   .nav { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* Running text justified, with hyphenation (lang pt-BR) to avoid wide gaps. */
+p, li, .lede { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
 </style>
 </head>
 <body>

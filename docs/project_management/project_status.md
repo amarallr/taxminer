@@ -1,5 +1,17 @@
 # TaxMiner — estado do projeto
 
+## Resolução de entidades — 2026-11-11T10:08:45-03:00
+
+- **Serviço central (`work_0028`, `decision_0036`):** `src/data/entity_resolution.R` com
+  catálogos em `processed/master/` e dicionário versionado `config/entity_name_rules.csv`;
+  documentação em `docs/entity_resolution.md`. Implementado e testado (`test_0053`,
+  `test_0054`); aceite humano pendente.
+- **Interface:** filtros de fundo e administrador pelo catálogo (CNPJ com máscara, uma opção
+  por denominação, qualquer opção traz todo o histórico do CNPJ); abas Panorama,
+  Administradores, Fundos, FIDC, FII, FIP, FIAGRO; aba Denominações no detalhe do fundo.
+- **Fila de revisão:** 1.323 pares de denominações parecidas mas não equivalentes aguardam
+  decisão humana (sem tela de decisão ainda).
+
 ## Painel publicado — 2026-11-11T09:02:13-03:00
 
 - **Publicação (`decision_0035`):** https://amarallr.github.io/taxminer/app/ (Panorama,

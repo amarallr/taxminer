@@ -3,13 +3,14 @@
 # src/data/build_fund_metrics.R and src/intelligence/fund_analytics.R.
 
 # Everything the analytical areas share, computed once per app start.
-fund_analytics_context <- function(root, directory = load_fund_directory(root), today = Sys.Date()) {
+fund_analytics_context <- function(root, directory = load_fund_directory(root), today = Sys.Date(),
+                                   master = load_entity_master(root, directory)) {
   metrics <- load_fund_metrics(root)
   m <- prepare_metrics(metrics, today)
   series <- family_monthly(m)
   complete <- complete_months(series)
   snapshot <- market_snapshot(m, complete)
-  admins <- fund_administrators(directory)
+  admins <- fund_administrators(directory, master)
   list(m = m, series = series, complete = complete, overview = family_overview(series, complete),
        snapshot = snapshot, admins = admins, ranking = administrator_ranking(snapshot, admins),
        market_change = market_change(m, complete), issues = attr(metrics, "issues"),
@@ -170,7 +171,7 @@ dash_fund_list <- function(fu, family, admin = "") {
   else bar_list(display_name(fu$fund_name), fu$net_assets, format_brl(fu$net_assets),
                 colors = unname(fund_family_colors[fu$family]), rank = seq_len(nrow(fu)),
                 tips = sprintf("%s\n%s · %s\n%s\n%s · referência %s", display_name(fu$fund_name),
-                               toupper(fu$family), fu$fund_cnpj,
+                               toupper(fu$family), format_cnpj(fu$fund_cnpj),
                                ifelse(is.na(fu$administrator_name), "administrador não publicado",
                                       fu$administrator_name),
                                format_brl(fu$net_assets), month_label(substr(fu$period, 1, 7))))
@@ -252,7 +253,7 @@ fund_admin_server <- function(id, ctx) {
       shiny::updateSelectizeInput(session, "find", server = TRUE, selected = character(),
                                   choices = stats::setNames(r$key, sprintf("%s · %s", r$administrator_name,
                                                                             ifelse(is.na(r$administrator_cnpj), "sem CNPJ",
-                                                                                   r$administrator_cnpj))))
+                                                                                   format_cnpj(r$administrator_cnpj)))))
       if (is.null(shiny::isolate(picked())) || !shiny::isolate(picked()) %in% r$key) picked(r$key[1])
     })
     shiny::observeEvent(input$pick, picked(input$pick))
@@ -306,7 +307,7 @@ admin_detail_ui <- function(ctx, r, key, families) {
     bslib::card_header(
       class = "tm-detail-head",
       shiny::div(class = "tm-eyebrow", sprintf("#%d de %d · %s", a$rank, nrow(r),
-                                               if (is.na(a$administrator_cnpj)) "sem CNPJ" else a$administrator_cnpj)),
+                                               if (is.na(a$administrator_cnpj)) "sem CNPJ" else format_cnpj(a$administrator_cnpj))),
       shiny::h2(class = "tm-detail-title", a$administrator_name),
       shiny::div(class = "tm-detail-meta",
                  shiny::span(shiny::strong("Patrimônio: "), format_brl(a$net_assets)),
@@ -326,7 +327,7 @@ admin_detail_ui <- function(ctx, r, key, families) {
       shiny::div(class = "tm-subhead", sprintf("Maiores fundos (%d de %d)", nrow(top), nrow(funds))),
       bar_list(display_name(top$fund_name), top$net_assets, format_brl(top$net_assets),
                colors = unname(fund_family_colors[top$family]),
-               sub = sprintf("%s · %s", toupper(top$family), top$fund_cnpj),
+               sub = sprintf("%s · %s", toupper(top$family), format_cnpj(top$fund_cnpj)),
                tips = sprintf("%s\n%s do administrador", display_name(top$fund_name),
                               format_pct(top$net_assets / a$net_assets, sign = FALSE)))))
 }

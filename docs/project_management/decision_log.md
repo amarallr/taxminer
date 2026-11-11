@@ -521,3 +521,30 @@ direita". Ficou decidido:
 - Eixo duplo por pedido explícito: patrimônio em linha cheia na cor da família (eixo esquerdo)
   e número de fundos em linha tracejada neutra (eixo direito, marcas alinhadas à grade), com
   legenda em cada painel.
+
+## decision_0036 — 2026-11-11T10:08:45-03:00 — Resolução de entidades e denominações
+
+Pedido do desenvolvedor (`.claude/Tratamento de nomes.txt`): um serviço central de Entity
+Resolution, determinístico e auditável, em que "identidade cadastral, denominação histórica e
+representação textual" fiquem separadas, e em que "ao selecionar qualquer uma das duas opções, o
+sistema deve recuperar todos os registros associados ao CNPJ". Ficou decidido (`work_0028`,
+`docs/entity_resolution.md`):
+
+- Catálogos em `processed/master/` (entidades, denominações, histórico, revisão, homônimos e
+  qualidade), construídos a partir do diretório de fundos e guardados em cache por assinatura;
+  os dados RAW e as tabelas consolidadas não mudam.
+- Identidade pelo CNPJ canônico (`normalize_cnpj`, já existente, única implementação); CNPJ
+  inválido no dado publicado vira entidade própria sinalizada, sem correção por palpite. Fundo e
+  administrador são tipos distintos mesmo com o mesmo CNPJ.
+- Equivalência só por regras do dicionário versionado `config/entity_name_rules.csv` (dobra de
+  caixa, acento e pontuação, siglas regulatórias, ordem das palavras). Nomes parecidos mas não
+  equivalentes (ex.: sufixo RL, erro de grafia) ficam separados e entram na fila de revisão.
+  Nenhuma IA decide equivalência.
+- Filtros com uma opção por denominação (`CNPJ formatado — nome`); o valor é resolvido para a
+  entidade antes da consulta; lista com uma linha por fundo e família; aba Denominações como
+  consulta temporal separada. Datas são de observação nos informes, nunca de vigência jurídica.
+- Ordem das abas pedida pelo desenvolvedor: Panorama, Administradores, Fundos e uma aba por
+  tipo (FIDC, FII, FIP, FIAGRO), todas sobre os mesmos dados carregados uma vez.
+- Pendências: tela de decisão da fila de revisão; uso nas demonstrações financeiras (Fase 1.2)
+  quando forem consolidadas; granularidade fundo/classe da Resolução CVM 175 limitada ao CNPJ
+  publicado.

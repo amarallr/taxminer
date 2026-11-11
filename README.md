@@ -423,7 +423,7 @@ Dados coletados, intermediários e processados nunca são versionados
 - [Página do projeto (GitHub Pages)](https://amarallr.github.io/taxminer/)
 - [Painel de fundos publicado](https://amarallr.github.io/taxminer/app/)
 - [Panorama do projeto](docs/project_overview.md)
-- [Arquitetura](docs/architecture.md) · [Requisitos e critérios de aceite](docs/requirements.md) · [Dicionário de dados](docs/data_dictionary.md)
+- [Arquitetura](docs/architecture.md) · [Requisitos e critérios de aceite](docs/requirements.md) · [Dicionário de dados](docs/data_dictionary.md) · [Resolução de entidades e denominações](docs/entity_resolution.md)
 - Fontes: [Soluções de Consulta](docs/source_inventory.md) · [Viabilidade da Fase 1.1](docs/feasibility.md) · [CVM](docs/data_sources.md)
 - [Ambiente de desenvolvimento](docs/development_environment.md) · [GitHub](docs/github_setup.md)
 - [Gestão do projeto](docs/project_management/) · [CHANGELOG](CHANGELOG.md) · [Prompts](prompts/README.md)

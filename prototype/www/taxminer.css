@@ -446,3 +446,12 @@ table.tm-wide td.tm-num, table.tm-card-table td.tm-num { text-align: right; whit
 .tm-dash .tm-big { font-size: 1.1rem; }
 .tm-dash .tm-kpi-value { font-size: 1.2rem; }
 .tm-dash .tm-family-side, .tm-dash .tm-change { font-size: .68rem; }
+/* Documentation text (Sobre, metodologia) justified, with hyphenation. */
+.tm-about .tm-lede, .tm-method li { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+/* Entity resolution: several denominations per CNPJ, review flags. */
+.tm-names-badge { font-size: .62rem; color: var(--tm-navy); background: #e8eefc; border-radius: 8px;
+                  padding: 0 6px; white-space: nowrap; }
+.tm-review { display: inline-block; margin-top: 2px; font-size: .62rem; color: #8a5a00; background: #fff3d6;
+             border-radius: 8px; padding: 0 6px; }
+table.tm-timeline td { vertical-align: top; }
+.tm-filterbar .selectize-control.multi .selectize-input > div { font-size: .7rem; margin: 1px 3px 1px 0; }
