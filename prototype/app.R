@@ -31,18 +31,26 @@ app_script <- tm_app_script()
 
 theme <- tm_theme()
 
+# The Panorama is about 1 MB of HTML that never changes while the app runs:
+# rendered once here instead of on every page load.
+prerender <- function(x) {
+  r <- htmltools::renderTags(x)
+  htmltools::attachDependencies(htmltools::HTML(r$html), r$dependencies)
+}
+overview_html <- if (fund_ready) prerender(fund_overview_ui("overview", fund_ctx)) else NULL
+
 unavailable <- function(text) {
   shiny::div(class = "tm-page", shiny::div(class = "alert alert-warning mt-4", text))
 }
 
 ui <- bslib::page_navbar(
-  title = "TaxMiner", fillable = c("Panorama", "Fundos", toupper(family_tabs)), fluid = TRUE, lang = "pt-BR",
+  title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs)), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script),
   bslib::nav_panel(
     "Panorama",
-    if (fund_ready) fund_overview_ui("overview", fund_ctx)
+    if (fund_ready) overview_html
     else unavailable("Fase 1.3 indisponível: rode a coleta e a consolidação dos fundos.")),
   bslib::nav_panel(
     "Administradores",

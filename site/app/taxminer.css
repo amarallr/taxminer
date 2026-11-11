@@ -455,3 +455,55 @@ table.tm-wide td.tm-num, table.tm-card-table td.tm-num { text-align: right; whit
              border-radius: 8px; padding: 0 6px; }
 table.tm-timeline td { vertical-align: top; }
 .tm-filterbar .selectize-control.multi .selectize-input > div { font-size: .7rem; margin: 1px 3px 1px 0; }
+
+/* Administradores: one screen like Fundos. Ranking and fund list scroll
+   inside their cards; the chart is a month picker. */
+.tm-admin-page { font-size: .74rem; }
+.tm-admin-page > .shiny-html-output, .tm-admin-page > .tm-kpi-row { flex: none; }
+.tm-admin-page .tm-kpi-row { margin: 0; gap: 10px; }
+.tm-admin-page .tm-kpis-sm .tm-kpi-value { font-size: .95rem; }
+.tm-admin-page .tm-kpi-label { font-size: .6rem; }
+.tm-admin-page .tm-kpi-note { font-size: .64rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tm-admin-page .tm-bar-name { font-size: .74rem; }
+.tm-admin-page .tm-bar-sub, .tm-admin-page .tm-bar-value { font-size: .68rem; }
+.tm-admin-page .tm-bar-row { padding: 2px 0; }
+.tm-admin-page .tm-pane-wrap > [data-detail]:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.tm-admin-page .tm-pane-wrap > [data-detail] > .card { flex: 1 1 auto; min-height: 0; max-height: 100%; margin: 0; }
+.tm-admin-detail .card-header { padding: 6px 12px 4px; }
+.tm-admin-detail .tm-detail-title { font-size: 1.02rem; margin: 0 0 2px; }
+.tm-admin-detail .tm-detail-meta { font-size: .7rem; }
+.tm-admin-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 6px 12px 8px; }
+.tm-admin-top { flex: none; }
+.tm-admin-top .tm-share-track { height: 12px; }
+.tm-admin-top .tm-legend { font-size: .68rem; margin-top: 4px; }
+.tm-admin-top .tm-subhead { margin: 6px 0 0; }
+.tm-admin-top .tm-chart { display: block; width: 100%; max-height: 120px; }
+.tm-admin-top .tm-share { margin: 0; }
+.tm-admin-top .tm-legend { gap: 2px 14px; }
+.tm-funds-head .tm-head-note { text-transform: none; letter-spacing: 0; }
+.tm-admin-page .tm-kpi { padding-top: 2px; }
+.tm-admin-page .tm-kpi-value { font-size: .95rem !important; }
+.tm-admin-funds { flex: 1 1 auto; min-height: 0; overflow: auto; border-top: 1px solid var(--tm-rule); margin-top: 4px; }
+.tm-admin-funds > .shiny-html-output { min-height: 100%; }
+.tm-funds-head { position: sticky; top: 0; background: #fff; z-index: 1; display: flex; flex-wrap: wrap;
+                 align-items: baseline; gap: 2px 12px; margin: 0; padding: 4px 0; }
+.tm-month-reset { font-size: .68rem; }
+.tm-chart-pick .tm-hit { cursor: pointer; }
+.tm-chart-pick .tm-hit.tm-hit-on .tm-cross { stroke: var(--tm-navy); stroke-width: 1.5; opacity: 1; }
+.tm-chart-pick .tm-hit.tm-hit-on .tm-dot { opacity: 1; }
+@media (max-width: 1199px) { .tm-admin-funds { overflow: visible; } }
+
+/* Published fund tabs (taxminer_static.js): list and detail side by side. */
+.tm-static-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 12px; }
+.tm-static-grid > .tm-pane, .tm-static-grid > .tm-pane-wrap { min-height: 0; overflow: hidden; }
+.tm-static-grid > .tm-pane-wrap > .card { flex: 1 1 auto; min-height: 0; max-height: 100%; margin: 0;
+                                          display: flex; flex-direction: column; }
+.tm-static-funds .tm-filterbar input[type=search] { height: 28px; font-size: .76rem; }
+.tm-static-funds .tm-filter-family label { margin: 0; }
+.tm-static-detail .nav-underline { gap: 12px; }
+.tm-names-table { width: 100%; font-size: .74rem; }
+.tm-names-table th, .tm-names-table td { padding: 3px 6px; border-bottom: 1px solid #eef1f5; vertical-align: top; }
+@media (max-width: 1199px) {
+  .tm-static-grid { grid-template-columns: minmax(0, 1fr); }
+  .tm-static-grid > .tm-pane, .tm-static-grid > .tm-pane-wrap { height: 70vh; }
+}

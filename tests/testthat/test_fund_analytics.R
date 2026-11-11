@@ -250,7 +250,15 @@ test_that("the Administradores area ranks, filters by family and shows the picke
     expect_match(output$kpis$html, "R\\$ 450")
     session$setInputs(pick = entity_key("administrator", "11111111000111"))
     expect_match(output$detail$html, "ADM UM")
-    expect_match(output$detail$html, "FIDC E")
+    expect_match(output$detail$html, "data-month=\"2025-06\"")
+    expect_match(output$funds$html, "FIDC E")
+    expect_match(output$funds$html, "mês de referência")
+    # A month clicked on the chart lists the funds of that month.
+    session$setInputs(month = "2025-06")
+    expect_match(output$funds$html, "Fundos em jun/2025 \\(2\\)")
+    expect_match(output$funds$html, "FUNDO A")
+    session$setInputs(month_reset = 1)
+    expect_match(output$funds$html, "mês de referência")
     session$setInputs(family = "fii")
     expect_equal(ranking()$administrator_name, "ADM UM")
     expect_equal(attr(ranking(), "total"), 100)
@@ -289,4 +297,15 @@ test_that("the Panorama renders every family/administrator ranking for browser-s
   expect_match(block, "FIDC E", fixed = TRUE)
   expect_false(grepl("FIDC D", sub("data-funds=.*", "", substr(block, 40, nchar(block))), fixed = TRUE))
   expect_match(html, "data-funds=\"all|\">", fixed = TRUE)
+})
+
+# --- Published (static) dashboard data ---------------------------------------
+
+test_that("the static JSON writers keep every digit and produce valid JSON", {
+  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), local = TRUE, encoding = "UTF-8")
+  expect_equal(json_number(c(100, 0, 1.5, 120.1, NA, 1e9)), c("100", "0", "1.5", "120.1", "null", "1000000000"))
+  expect_equal(json_number(c(65, 100, 0), 0L), c("65", "100", "0"))
+  expect_equal(json_string(c("a \"b\" \\ c", NA)), c("\"a \\\"b\\\" \\\\ c\"", "null"))
+  txt <- json_array(json_string("x"), json_number(1000), json_number(NA))
+  expect_equal(txt, "[\"x\",1000,null]")
 })

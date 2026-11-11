@@ -1,0 +1,333 @@
+/* TaxMiner — published (static) dashboard: fund tabs and the administrator
+   month picker. Data files written by prototype/static_funds.R:
+     data/funds.json            fund list, profile figures, denominations
+     data/series/{fam}_{c}.json monthly net assets and quotaholders
+     data/admins/{i}.json       funds of an administrator per month
+   No server: everything runs in the browser. */
+(function ($) {
+  'use strict';
+
+  // ---- formatting (same rules as the R helpers, pt-BR) ----
+  var MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  function num(v, d) {
+    return v.toLocaleString('pt-BR', {minimumFractionDigits: d, maximumFractionDigits: d});
+  }
+  function fmtInt(v) { return v == null || isNaN(v) ? '—' : num(Math.round(v), 0); }
+  function fmtBRL(v, d) {
+    if (v == null || isNaN(v)) return '—';
+    d = d == null ? 1 : d;
+    var a = Math.abs(v), u = [1, ''];
+    if (a >= 1e12) u = [1e12, 'tri']; else if (a >= 1e9) u = [1e9, 'bi'];
+    else if (a >= 1e6) u = [1e6, 'mi']; else if (a >= 1e3) u = [1e3, 'mil'];
+    return ('R$ ' + num(v / u[0], u[1] ? d : 0) + ' ' + u[1]).trim();
+  }
+  function axisBRL(v) { return fmtBRL(v, 1).replace(',0 ', ' '); }
+  function fmtPct(v, d, sign) {
+    if (v == null || isNaN(v)) return '—';
+    var s = num(100 * v, d == null ? 1 : d) + '%';
+    return sign !== false && v > 0 ? '+' + s : s;
+  }
+  function monthLabel(m) { return m ? MONTHS[parseInt(m.substr(5, 2), 10) - 1] + '/' + m.substr(0, 4) : '—'; }
+  function esc(s) {
+    return s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function fold(s) {
+    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
+      .replace(/[^A-Z0-9]+/g, ' ').trim();
+  }
+  function addMonths(m, k) {
+    var y = parseInt(m.substr(0, 4), 10), n = parseInt(m.substr(5, 2), 10) - 1 + k;
+    y += Math.floor(n / 12); n = ((n % 12) + 12) % 12;
+    return y + '-' + (n < 9 ? '0' : '') + (n + 1);
+  }
+
+  // ---- SVG line chart (port of svg_line_chart in prototype/charts.R) ----
+  function niceTicks(max) {
+    if (!(max > 0)) return [0, 1];
+    var raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+    var step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p, t = [];
+    for (var v = 0; v < max + step * 0.999; v += step) t.push(v);
+    return t;
+  }
+  function lineChart(months, values, o) {
+    o = $.extend({color: '#2a78d6', width: 560, height: 190, area: true, fmt: axisBRL, tip: fmtBRL, label: ''}, o);
+    var ok = values.some(function (v) { return v != null; });
+    if (!months.length || !ok) return '<div class="tm-chart-empty">Sem dados para o gráfico.</div>';
+    var ml = 62, mr = 14, mt = 10, mb = 24, W = o.width, H = o.height, pw = W - ml - mr, ph = H - mt - mb;
+    var d = months.map(function (m) { return Date.UTC(+m.substr(0, 4), +m.substr(5, 2) - 1, 1); });
+    var x0 = d[0], x1 = d[d.length - 1]; if (x1 === x0) x1 = x0 + 31 * 864e5;
+    var vmax = Math.max.apply(null, values.filter(function (v) { return v != null; }));
+    var ticks = niceTicks(vmax), ymax = ticks[ticks.length - 1] || 1;
+    function sx(v) { return ml + (v - x0) / (x1 - x0) * pw; }
+    function sy(v) { return mt + ph - v / ymax * ph; }
+    var px = d.map(sx), py = values.map(function (v) { return v == null ? null : sy(v); });
+    var out = [];
+    ticks.forEach(function (t) {
+      out.push('<line class="tm-grid" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + sy(t).toFixed(1) + '" y2="' + sy(t).toFixed(1) +
+               '"/><text class="tm-axis" x="' + (ml - 8) + '" y="' + (sy(t) + 4).toFixed(1) + '" text-anchor="end">' + esc(o.fmt(t)) + '</text>');
+    });
+    var y0 = new Date(x0).getUTCFullYear(), y1 = new Date(x1).getUTCFullYear(), step = Math.max(1, Math.ceil((y1 - y0 + 1) / 6));
+    for (var y = y0; y <= y1; y += step) {
+      var yd = Date.UTC(y, 0, 1); if (yd < x0 || yd > x1) continue;
+      out.push('<line class="tm-tick" x1="' + sx(yd).toFixed(1) + '" x2="' + sx(yd).toFixed(1) + '" y1="' + (mt + ph) + '" y2="' + (mt + ph + 4) +
+               '"/><text class="tm-axis" x="' + sx(yd).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + y + '</text>');
+    }
+    // Lines are broken where a month has no report.
+    var segs = [], cur = [];
+    py.forEach(function (v, i) { if (v == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push(i); });
+    if (cur.length) segs.push(cur);
+    segs.forEach(function (s) {
+      var path = s.map(function (i) { return px[i].toFixed(1) + ',' + py[i].toFixed(1); }).join(' L');
+      if (o.area) out.push('<path class="tm-area" d="M' + px[s[0]].toFixed(1) + ',' + sy(0).toFixed(1) + ' L' + path + ' L' +
+                           px[s[s.length - 1]].toFixed(1) + ',' + sy(0).toFixed(1) + ' Z" fill="' + o.color + '"/>');
+      out.push('<path class="tm-line" d="M' + path + '" stroke="' + o.color + '"/>');
+    });
+    var last = -1; py.forEach(function (v, i) { if (v != null) last = i; });
+    out.push('<circle class="tm-end" cx="' + px[last].toFixed(1) + '" cy="' + py[last].toFixed(1) + '" r="4" fill="' + o.color + '"/>');
+    px.forEach(function (x, i) {
+      var a = i ? (px[i - 1] + x) / 2 : ml, b = i < px.length - 1 ? (x + px[i + 1]) / 2 : W - mr;
+      var tip = monthLabel(months[i]) + '\n' + (values[i] == null ? 'sem informe' : o.tip(values[i]));
+      out.push('<g class="tm-hit" data-tip="' + esc(tip) + '"><rect x="' + a.toFixed(1) + '" y="' + mt + '" width="' + Math.max(1, b - a).toFixed(1) +
+               '" height="' + ph + '"/><line class="tm-cross" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + mt + '" y2="' + (mt + ph) + '"/>' +
+               (py[i] == null ? '' : '<circle class="tm-dot" cx="' + x.toFixed(1) + '" cy="' + py[i].toFixed(1) + '" r="5" fill="' + o.color + '"/>') + '</g>');
+    });
+    return '<svg class="tm-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label) + '">' + out.join('') + '</svg>';
+  }
+
+  // Horizontal bars (same markup as bar_list in prototype/charts.R).
+  function barList(rows) {
+    var top = Math.max.apply(null, rows.map(function (r) { return r.value || 0; }).concat([0]));
+    return '<div class="tm-bars">' + rows.map(function (r) {
+      var w = top > 0 && r.value != null ? Math.max(0.4, 100 * r.value / top) : 0;
+      return '<div class="tm-bar-row" data-tip="' + esc(r.tip) + '"><div class="tm-bar-label"><div class="tm-bar-name">' + esc(r.label) +
+             '</div><div class="tm-bar-sub">' + esc(r.sub) + '</div></div><div class="tm-bar-track"><div class="tm-bar" style="width:' +
+             w.toFixed(2) + '%;background:' + r.color + '"></div></div><div class="tm-bar-value">' + esc(r.text) + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  // Same as fund_family_colors (prototype/charts.R); funds.json carries them too.
+  var FAMILY_COLORS = {fii: '#2a78d6', fidc: '#eb6834', fip: '#1baf7a', fiagro: '#eda100'};
+  var cache = {};
+  function getJSON(url) {
+    if (!cache[url]) cache[url] = $.ajax({url: url, dataType: 'json', cache: true});
+    return cache[url];
+  }
+
+  // ---- Administradores: a month clicked on the chart lists its funds ----
+  $(document).on('tm:month', '.tm-admin-body', function (e, month) {
+    var box = $(this), file = box.attr('data-admin-file'), list = box.find('.tm-admin-funds');
+    if (!file) return;
+    getJSON(file).done(function (a) {
+      var i = a.months.indexOf(month), rows = i < 0 ? [] : a.rows[i];
+      var total = rows.reduce(function (s, r) { return s + (r[1] || 0); }, 0), carried = rows.some(function (r) { return r[2]; });
+      var colors = (window.TM_FUNDS_META || {}).colors || FAMILY_COLORS;
+      var head = '<div class="tm-subhead tm-funds-head"><span>Fundos em ' + monthLabel(month) + ' (' + fmtInt(rows.length) + ') · ' +
+                 fmtBRL(total) + '</span>' + (carried ? '<span class="tm-head-note">* valor repetido do último informe</span>' : '') +
+                 '<a href="#" class="tm-month-reset">voltar ao mês de referência</a></div>';
+      if (!list.data('reference')) list.data('reference', list.html());
+      list.html(head + (rows.length ? barList(rows.map(function (r) {
+        var f = a.funds[r[0]];
+        return {label: f[0] + (r[2] ? ' *' : ''), value: r[1], text: fmtBRL(r[1]), color: colors[f[1]] || '#2a78d6',
+                sub: f[1].toUpperCase() + ' · ' + f[2], tip: f[0] + '\n' + fmtPct(total ? r[1] / total : null, 1, false) + ' do total'};
+      })) : '<div class="tm-empty">Sem fundos neste mês.</div>'));
+      list.scrollTop(0);
+    }).fail(function () { list.html('<div class="tm-empty">Não foi possível carregar os fundos deste mês.</div>'); });
+  });
+  $(document).on('click', '.tm-admin-body .tm-month-reset', function (e) {
+    e.preventDefault();
+    var body = $(this).closest('.tm-admin-body'), list = body.find('.tm-admin-funds');
+    if (list.data('reference')) list.html(list.data('reference'));
+    body.find('.tm-hit-on').removeClass('tm-hit-on');
+  });
+
+  // ---- Fund tabs (Fundos, FIDC, FII, FIP, FIAGRO) ----
+  var F = {family: 0, entity: 1, cnpj: 2, key: 3, name: 4, names: 5, admin: 6, adminEntity: 7, adminCnpj: 8,
+           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18};
+  var PAGE = 25, data = null;
+
+  function loadFunds() {
+    if (!data) {
+      data = getJSON('data/funds.json').then(function (d) {
+        var byEntity = {};
+        d.names.forEach(function (n) { (byEntity[n[0]] = byEntity[n[0]] || []).push(n); });
+        d.funds.forEach(function (f) {
+          var ns = byEntity[f[F.entity]] || [];
+          f.search = fold([f[F.name], f[F.admin]].concat(ns.map(function (n) { return n[2]; })).join(' ')) + ' ' +
+                     f[F.key] + ' ' + (f[F.adminCnpj] || '').replace(/\D/g, '');
+        });
+        d.byEntity = byEntity;
+        window.TM_FUNDS_META = d.meta;
+        return d;
+      });
+    }
+    return data;
+  }
+
+  var SORTS = [
+    {by: 'name', label: 'Fundo', dec: false},
+    {by: 'period', label: 'Período', dec: true},
+    {by: 'count', label: 'Informes', dec: true, num: true},
+    {by: 'pl', label: 'Patrimônio', dec: true, num: true}
+  ];
+
+  function FundTab(el) {
+    this.el = el; this.family = el.attr('data-family') || '';
+    this.families = this.family ? [this.family] : ['fidc', 'fii', 'fip', 'fiagro'];
+    this.sort = {by: 'pl', dec: true}; this.page = 0; this.selected = null;
+  }
+  FundTab.prototype.render = function (d) {
+    var t = this, fam = t.family, meta = d.meta;
+    var title = fam ? fam.toUpperCase() + ' · ' + (meta.family_names[fam] || '') : 'Fundos';
+    var chips = fam ? '' : '<div class="tm-filter-family"><div class="shiny-options-group">' + t.families.map(function (f) {
+      return '<label><input type="checkbox" value="' + f + '" checked> ' + f.toUpperCase() + '</label>';
+    }).join('') + '</div></div>';
+    t.el.html(
+      '<div class="tm-dash-head"><div><span class="tm-eyebrow">Fase 1.3 · Informes de fundos</span><h1>' + esc(title) + '</h1></div>' +
+      '<div class="tm-dash-meta tm-strip"></div></div>' +
+      '<div class="tm-filterbar">' + chips +
+      '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-q" placeholder="Fundo: nome atual ou anterior, ou CNPJ (com ou sem máscara)"></div>' +
+      '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-qa" placeholder="Administrador: nome ou CNPJ"></div>' +
+      '<button type="button" class="btn btn-link btn-sm tm-filter-clear">Limpar</button></div>' +
+      '<div class="tm-master-detail tm-static-grid">' +
+      '<div class="card tm-section tm-pane"><div class="card-header tm-card-head"><span class="tm-count"></span>' +
+      '<span class="tm-head-note">clique em um fundo</span></div><div class="card-body tm-scroll tm-list"></div>' +
+      '<div class="tm-pager"></div></div>' +
+      '<div class="tm-pane-wrap"><div class="card tm-section tm-detail tm-pane tm-static-detail"><div class="tm-empty">Selecione um fundo na lista.</div></div></div></div>');
+    var timer;
+    t.el.on('input', '.tm-q, .tm-qa', function () { clearTimeout(timer); timer = setTimeout(function () { t.page = 0; t.update(); }, 180); });
+    t.el.on('change', '.tm-filter-family input', function () { t.page = 0; t.update(); });
+    t.el.on('click', '.tm-filter-clear', function () {
+      t.el.find('.tm-q, .tm-qa').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.page = 0; t.update();
+    });
+    t.el.on('click', 'th[data-sort]', function () {
+      var by = $(this).attr('data-sort'), s = SORTS.filter(function (x) { return x.by === by; })[0];
+      t.sort = t.sort.by === by ? {by: by, dec: !t.sort.dec} : {by: by, dec: s.dec}; t.page = 0; t.update();
+    });
+    t.el.on('click', '.tm-pager a', function (e) { e.preventDefault(); t.page += +$(this).attr('data-step'); t.update(); });
+    t.el.on('click', 'tr[data-row]', function () {
+      $(this).addClass('tm-selected').siblings('.tm-selected').removeClass('tm-selected');
+      t.selected = t.rows[+$(this).attr('data-row')]; t.detail(t.selected);
+    });
+    t.el.on('click', '.tm-static-detail .nav-link', function (e) {
+      e.preventDefault();
+      var k = $(this).attr('data-pane'), box = $(this).closest('.tm-static-detail');
+      box.find('.nav-link').removeClass('active'); $(this).addClass('active');
+      box.find('[data-pane-body]').attr('hidden', true).filter('[data-pane-body="' + k + '"]').removeAttr('hidden');
+    });
+    t.d = d; t.update();
+  };
+  FundTab.prototype.update = function () {
+    var t = this, d = t.d, q = fold(t.el.find('.tm-q').val()), qa = fold(t.el.find('.tm-qa').val());
+    var qd = (t.el.find('.tm-q').val() || '').replace(/\D/g, ''), qad = (t.el.find('.tm-qa').val() || '').replace(/\D/g, '');
+    var fams = t.family ? [t.family] : t.el.find('.tm-filter-family input:checked').map(function () { return this.value; }).get();
+    var words = q ? q.split(' ') : [], awords = qa ? qa.split(' ') : [];
+    var rows = d.funds.filter(function (f) {
+      if (fams.indexOf(f[F.family]) < 0) return false;
+      if (words.length && !(qd.length >= 4 && f[F.key].indexOf(qd) === 0) &&
+          !words.every(function (w) { return f.search.indexOf(w) >= 0; })) return false;
+      if (awords.length) {
+        var a = fold(f[F.admin]);
+        if (!(qad.length >= 4 && (f[F.adminCnpj] || '').replace(/\D/g, '').indexOf(qad) === 0) &&
+            !awords.every(function (w) { return a.indexOf(w) >= 0; })) return false;
+      }
+      return true;
+    });
+    var s = t.sort, dir = s.dec ? -1 : 1;
+    function val(f) {
+      return s.by === 'name' ? fold(f[F.name]) : s.by === 'period' ? f[F.last] : s.by === 'count' ? f[F.count] : f[F.pl];
+    }
+    rows.sort(function (a, b) {
+      var x = val(a), y = val(b);
+      if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+      return (x < y ? -1 : x > y ? 1 : 0) * dir;
+    });
+    t.rows = rows;
+    var pages = Math.max(1, Math.ceil(rows.length / PAGE)); t.page = Math.min(Math.max(0, t.page), pages - 1);
+    var slice = rows.slice(t.page * PAGE, (t.page + 1) * PAGE);
+    var head = SORTS.map(function (c) {
+      var on = s.by === c.by;
+      return '<th class="tm-sortable' + (on ? ' tm-sorted' : '') + (c.num ? ' tm-num' : '') + '" data-sort="' + c.by +
+             '" title="Clique para ordenar; de novo para inverter">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') + '</th>';
+    }).join('');
+    var body = slice.map(function (f, i) {
+      var n = t.page * PAGE + i, sel = t.selected === f ? ' class="tm-selected"' : '';
+      return '<tr data-row="' + n + '"' + sel + '><td><div class="tm-id"><span class="tm-tag tm-tag-' + f[F.family] + '">' +
+             f[F.family].toUpperCase() + '</span><span class="tm-mono">' + esc(f[F.cnpj]) + '</span>' +
+             (f[F.names] > 1 ? '<span class="tm-names-badge" data-tip="Denominações diferentes ao longo do tempo; veja a aba Denominações.">' +
+              f[F.names] + ' nomes</span>' : '') + '</div><div class="tm-fund">' + esc(f[F.name]) + '</div><div class="tm-admin">' +
+             esc(f[F.admin] || 'administrador não publicado') + '</div></td><td class="tm-mono">' + esc(f[F.first]) + '<br>' + esc(f[F.last]) +
+             '</td><td class="tm-num">' + fmtInt(f[F.count]) + '</td><td class="tm-num">' + fmtBRL(f[F.pl]) + '</td></tr>';
+    }).join('');
+    t.el.find('.tm-list').html(rows.length ? '<table class="tm-results"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
+                                           : '<div class="tm-empty">Nenhum fundo encontrado.</div>').scrollTop(0);
+    t.el.find('.tm-count').text(fmtInt(rows.length) + (rows.length === 1 ? ' fundo' : ' fundos'));
+    t.el.find('.tm-pager').html(pages > 1 ? (t.page ? '<a href="#" data-step="-1">‹ anterior</a>' : '<span></span>') +
+      '<span>página ' + fmtInt(t.page + 1) + ' de ' + fmtInt(pages) + '</span>' +
+      (t.page < pages - 1 ? '<a href="#" data-step="1">próxima ›</a>' : '<span></span>') : '');
+    t.el.find('.tm-strip').html('Dados gerados em ' + esc(d.meta.generated) + ' · Perfil e Denominações aqui; ficha e série completa no app local');
+    if (!t.selected && rows.length) { t.selected = rows[0]; t.detail(rows[0]); t.el.find('tr[data-row="0"]').addClass('tm-selected'); }
+  };
+  FundTab.prototype.detail = function (f) {
+    var t = this, d = t.d, box = t.el.find('.tm-static-detail');
+    var color = d.meta.colors[f[F.family]] || '#2a78d6', names = d.byEntity[f[F.entity]] || [];
+    box.html(
+      '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
+      '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2><div class="tm-detail-meta"><span><strong>Administrador: </strong>' +
+      esc(f[F.admin] || 'não publicado') + (f[F.adminCnpj] ? ' · ' + esc(f[F.adminCnpj]) : '') + '</span><span><strong>Informes: </strong>' +
+      fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span></div></div>' +
+      '<div class="tm-detail-body"><ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="nomes">Denominações (' + names.length + ')</a></li></ul>' +
+      '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-empty">Carregando série…</div></div>' +
+      '<div data-pane-body="nomes" hidden>' + namesTable(names) + '</div></div></div>');
+    var key = f[F.key];
+    getJSON('data/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
+      if (t.selected !== f) return;
+      box.find('[data-pane-body="perfil"]').html(profile(f, s[key], color));
+    }).fail(function () {
+      box.find('[data-pane-body="perfil"]').html('<div class="tm-empty">Não foi possível carregar a série deste fundo.</div>');
+    });
+  };
+  function profile(f, s, color) {
+    if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';
+    var months = s[1].map(function (_, i) { return addMonths(s[0], i); });
+    var rank = f[F.rank] == null ? '—' : '#' + fmtInt(f[F.rank]) + ' de ' + fmtInt(f[F.peers]);
+    var holders = s[2].some(function (v) { return v != null; });
+    function kpi(label, value, note) {
+      return '<div class="tm-kpi"><div class="tm-kpi-value">' + value + '</div><div class="tm-kpi-label">' + label + '</div>' +
+             (note ? '<div class="tm-kpi-note">' + note + '</div>' : '') + '</div>';
+    }
+    return '<div class="tm-kpi-row tm-kpis-sm">' +
+      kpi('Patrimônio líquido', fmtBRL(f[F.pl]), monthLabel(f[F.plMonth])) +
+      kpi('Variação 12 meses', fmtPct(f[F.change]), 'mesmo mês, ano anterior') +
+      kpi('Cotistas', fmtInt(f[F.holders])) +
+      kpi('Posição entre ' + f[F.family].toUpperCase(), rank, f[F.pct] == null ? '' : 'maior que ' + fmtPct(f[F.pct], 0, false) + ' dos fundos') +
+      '</div><div class="tm-profile-charts' + (holders ? '' : ' tm-one') + '"><div><div class="tm-subhead">Patrimônio líquido</div>' +
+      lineChart(months, s[1], {color: color, height: 220, label: 'Patrimônio líquido do fundo'}) + '</div>' +
+      (holders ? '<div><div class="tm-subhead">Cotistas</div>' + lineChart(months, s[2], {color: color, height: 220, area: false,
+        fmt: function (v) { return fmtInt(v); }, tip: fmtInt, label: 'Número de cotistas do fundo'}) + '</div>' : '') +
+      '</div><div class="tm-caption">Valores do informe de cada período (versão mais recente). Meses sem informe ficam em branco.</div>';
+  }
+  function namesTable(names) {
+    if (!names.length) return '<div class="tm-empty">Sem denominações no catálogo.</div>';
+    return '<table class="tm-card-table tm-names-table"><thead><tr><th>Denominação publicada</th><th>Fonte</th><th>Primeira</th>' +
+      '<th>Última</th><th class="tm-num">Informes</th></tr></thead><tbody>' + names.map(function (n) {
+        return '<tr><td>' + esc(n[2]) + (n[7] ? ' <span class="tm-review" data-tip="Parecida com outra denominação; aguarda revisão humana.">revisão</span>' : '') +
+               '</td><td>' + esc((n[3] || '').toUpperCase()) + '</td><td class="tm-mono">' + esc(n[4]) + '</td><td class="tm-mono">' + esc(n[5]) +
+               '</td><td class="tm-num">' + fmtInt(n[6]) + '</td></tr>';
+      }).join('') + '</tbody></table><div class="tm-caption">Datas de observação nos informes, não datas jurídicas da denominação.</div>';
+  }
+
+  // Build a tab the first time it is shown (the data file is loaded once).
+  function activate(el) {
+    if (el.data('tm-ready')) return;
+    el.data('tm-ready', true);
+    loadFunds().done(function (d) { new FundTab(el).render(d); })
+      .fail(function () { el.html('<div class="tm-empty">Não foi possível carregar a lista de fundos.</div>'); });
+  }
+  $(document).on('shown.bs.tab', function (e) {
+    var pane = $($(e.target).attr('data-bs-target') || $(e.target).attr('href'));
+    pane.find('.tm-static-funds').each(function () { activate($(this)); });
+  });
+  $(function () { $('.tab-pane.active .tm-static-funds').each(function () { activate($(this)); }); });
+})(jQuery);

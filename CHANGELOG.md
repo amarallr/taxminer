@@ -1,5 +1,16 @@
 # Changelog
 
+## Abas de fundos no painel publicado e Administradores em tela única — 2026-11-11
+
+- Painel publicado (GitHub Pages) ganha as abas Fundos, FIDC, FII, FIP e FIAGRO: lista com busca por
+  nome atual ou anterior, CNPJ e administrador, ordenação, paginação, Perfil (indicadores e gráficos) e
+  Denominações, lidos no navegador a partir de `site/app/data/` (`prototype/static_funds.R`,
+  `prototype/static/taxminer_static.js`). Ficha e série completa seguem no app local.
+- Administradores: uma tela, sem rolagem do navegador (só ranking e lista de fundos rolam); fonte e
+  gráfico menores; clicar em um mês do gráfico lista os fundos daquela competência.
+- Desempenho: o Panorama do app local é montado uma vez na inicialização (carga da página de cerca
+  de 6 s para cerca de 1 s).
+
 ## Resolução de entidades e abas por tipo de fundo — 2026-11-11
 
 - Serviço central de resolução de entidades (`src/data/entity_resolution.R`): identidade pelo

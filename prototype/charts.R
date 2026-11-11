@@ -51,7 +51,7 @@ svg_segments <- function(px, py, template, close_at = NULL) {
 svg_line_chart <- function(months, values, color = "#2a78d6", format_value = axis_brl,
                            format_tip = format_brl, tips = NULL, label = "",
                            width = 560, height = 190, area = TRUE,
-                           values2 = NULL, format_value2 = axis_int, color2 = "#5b6573") {
+                           values2 = NULL, format_value2 = axis_int, color2 = "#5b6573", pick = FALSE) {
   ok <- !is.na(months)
   months <- months[ok]; values <- values[ok]; if (!is.null(tips)) tips <- tips[ok]
   if (!is.null(values2)) values2 <- values2[ok]
@@ -109,13 +109,13 @@ svg_line_chart <- function(months, values, color = "#2a78d6", format_value = axi
                                              px[i], py[i], color)
     dot2 <- if (is.na(py2[i])) "" else sprintf('<circle class="tm-dot" cx="%.1f" cy="%.1f" r="4" fill="%s"/>',
                                                px[i], py2[i], color2)
-    sprintf('<g class="tm-hit" data-tip="%s"><rect x="%.1f" y="%.1f" width="%.1f" height="%.1f"/><line class="tm-cross" x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f"/>%s%s</g>',
-            html_attr(tips[i]), edges[i], mt, max(1, edges[i + 1] - edges[i]), ph, px[i], px[i], mt, mt + ph, dot, dot2)
+    sprintf('<g class="tm-hit"%s data-tip="%s"><rect x="%.1f" y="%.1f" width="%.1f" height="%.1f"/><line class="tm-cross" x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f"/>%s%s</g>',
+            if (pick) sprintf(' data-month="%s"', months[i]) else "", html_attr(tips[i]), edges[i], mt, max(1, edges[i + 1] - edges[i]), ph, px[i], px[i], mt, mt + ph, dot, dot2)
   }, character(1))
 
   htmltools::HTML(sprintf(
-    '<svg class="tm-chart" viewBox="0 0 %d %d" role="img" aria-label="%s">%s%s%s%s%s%s%s%s</svg>',
-    width, height, html_attr(label), paste(grid, collapse = ""), paste(right, collapse = ""),
+    '<svg class="tm-chart%s" viewBox="0 0 %d %d" role="img" aria-label="%s">%s%s%s%s%s%s%s%s</svg>',
+    if (pick) " tm-chart-pick" else "", width, height, html_attr(label), paste(grid, collapse = ""), paste(right, collapse = ""),
     paste(xaxis, collapse = ""), paste(fills, collapse = ""), paste(lines2, collapse = ""),
     paste(lines, collapse = ""), end, paste(hits, collapse = "")))
 }
@@ -198,6 +198,18 @@ $(function() {
       e.preventDefault();
       var t = $(this).attr('data-tab');
       $('.navbar a[data-bs-toggle=\"tab\"]').filter(function() { return $(this).attr('data-value') === t; }).first().click();
+    })
+    .on('click', '.tm-chart-pick .tm-hit[data-month]', function() {
+      // A month on a clickable chart: the enclosing [data-month-input] gets
+      // it (Shiny input, or the event tm:month on the static page).
+      var box = $(this).closest('[data-month-input]'), month = $(this).attr('data-month');
+      $(this).closest('svg').find('.tm-hit-on').removeClass('tm-hit-on');
+      $(this).addClass('tm-hit-on');
+      if (window.Shiny && Shiny.setInputValue) {
+        Shiny.setInputValue(box.attr('data-month-input'), month, {priority: 'event'});
+      } else {
+        box.trigger('tm:month', [month]);
+      }
     })
     .on('click', '.tm-pick[data-key]', function() {
       if ($(this).closest('.tm-dash').length) return;

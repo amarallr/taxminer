@@ -231,6 +231,19 @@ administrator_series <- function(m, admins, administrator, complete) {
   out
 }
 
+# Funds behind one point of administrator_series(): the administrator's
+# current funds with their net assets in `month` (largest first). `carried`
+# marks a value repeated from the fund's last report (FIP, quarterly).
+administrator_month_funds <- function(m, admins, administrator, month) {
+  funds <- admins[administrator_key(admins$administrator_cnpj, admins$administrator_name) == administrator,
+                  c("family", "fund_cnpj", "fund_name")]
+  d <- m[m$month == month, c("family", "fund_cnpj", "month", "net_assets", "carried")]
+  d <- merge(d, funds, by = c("family", "fund_cnpj"))
+  d <- d[order(d$net_assets, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  rownames(d) <- NULL
+  d
+}
+
 # Values in reais, abbreviated the way Brazilian reports write them.
 format_brl <- function(x, digits = 1) {
   vapply(x, function(v) {
