@@ -347,3 +347,102 @@ table.tm-card-table thead th { font-size: .7rem; }
 /* Plain KPI row (same in the app and the static export). */
 .tm-kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 8px; }
 @media (max-width: 767px) { .tm-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Fundos: filter bar, sortable headers, detail pane that fits the window. */
+.tm-fill-page { display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0;
+                overflow: hidden; font-size: .78rem; }
+.tm-fill-page .tm-dash-head { flex: none; }
+.tm-strip b { color: var(--tm-ink); font-weight: 600; }
+.tm-filterbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+                padding: 6px 8px; background: var(--tm-panel); border: 1px solid var(--tm-rule);
+                border-radius: 4px; }
+.tm-filterbar .form-group, .tm-filterbar .shiny-input-container { margin: 0; width: 100% !important; }
+.tm-filter-wide { flex: 1 1 260px; min-width: 200px; }
+.tm-filter-period { flex: 0 0 120px; }
+.tm-filter-family { flex: none; }
+.tm-filter-family .shiny-options-group { display: flex; gap: 4px; }
+.tm-filter-family .form-check-inline, .tm-filter-family .checkbox-inline { margin: 0; padding: 0; }
+.tm-filter-family label { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+                          border: 1px solid var(--tm-rule); border-radius: 12px; background: #fff;
+                          font-size: .72rem; cursor: pointer; }
+.tm-filter-family input { margin: 0; }
+.tm-filterbar .selectize-input { min-height: 28px; padding: 3px 8px; font-size: .76rem; }
+.tm-filter-clear { flex: none; font-size: .74rem; }
+.tm-fill-page .tm-master-detail { flex: 1 1 auto; min-height: 0; margin: 0; }
+.tm-fill-page .tm-pane { height: auto; min-height: 0; margin: 0; display: flex; flex-direction: column; }
+.tm-fill-page .tm-pane > .card-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.tm-fill-page .tm-pane-wrap { min-height: 0; display: flex; flex-direction: column; }
+.tm-fill-page .tm-pane-wrap > .shiny-html-output { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.tm-fill-page .tm-pane-wrap > .shiny-html-output > .card { flex: 1 1 auto; }
+.tm-head-note { font-size: .68rem; color: var(--tm-muted); font-weight: 400; }
+.card-header.tm-card-head { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px; }
+.tm-pager { display: flex; justify-content: space-between; padding: 4px 10px; font-size: .74rem; }
+table.tm-results th.tm-sortable { cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1; }
+table.tm-results th.tm-sortable:hover { color: var(--tm-accent); }
+table.tm-results th.tm-sorted { color: var(--tm-navy); }
+.tm-derived { font-style: italic; }
+/* Detail card: compact header, tools row, tab content scrolls inside the card. */
+.tm-fill-page .tm-detail .card-header { padding: 6px 12px 4px; }
+.tm-fill-page .tm-detail-title { font-size: 1.05rem; margin: 0 0 2px; }
+.tm-detail-body { display: flex; flex-direction: column; min-height: 0; padding: 6px 12px 8px; }
+.tm-detail-tools { flex: none; margin-bottom: 2px; }
+.tm-detail-tools .form-group { margin: 0; }
+.tm-detail-tools .selectize-input { min-height: 28px; padding: 3px 8px; font-size: .76rem; }
+.tm-detail-body > .tm-caption { flex: none; font-size: .68rem; margin: 2px 0; }
+.tm-detail-body > .bslib-navs-card-title, .tm-detail-body .nav { flex: none; }
+.tm-detail-body .nav-link { padding: 4px 10px; font-size: .78rem; }
+.tm-detail-body > .tab-content { flex: 1 1 auto; min-height: 0; overflow: auto; padding-top: 6px; }
+.tm-fill-page .tm-detail.tm-pane > .card-body { overflow: hidden; }
+.tm-fill-page .tm-tall { max-height: none; }
+.tm-kpis-sm .tm-kpi { padding: 2px 0; }
+.tm-kpis-sm .tm-kpi-value { font-size: 1rem; }
+.tm-profile-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tm-profile-charts.tm-one { grid-template-columns: minmax(0, 1fr); }
+.tm-profile-charts .tm-subhead { margin: 2px 0; }
+/* Ficha: label above value, packed in columns. */
+.tm-ficha { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 14px; }
+.tm-ficha-item { min-width: 0; border-bottom: 1px solid #eef1f5; padding: 2px 0; }
+.tm-ficha-label { font-size: .66rem; color: var(--tm-muted); line-height: 1.2; }
+.tm-ficha-value { font-size: .76rem; color: var(--tm-ink); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.tm-ficha-cite { font-size: .66rem; color: var(--tm-muted); margin-bottom: 4px; }
+@media (max-width: 1199px) {
+  .tm-fill-page { overflow: visible; }
+  .tm-fill-page .tm-pane { height: 70vh; }
+}
+.tm-filter-family .control-label, .tm-filter-family > .form-group > label:empty { display: none; }
+.tm-filter-family .shiny-options-group { margin: 0; }
+.tm-filter-period { flex: 0 0 140px; }
+.tm-ficha-value.tm-num { text-align: right; }
+table.tm-wide td.tm-num, table.tm-card-table td.tm-num { text-align: right; white-space: nowrap; }
+/* Detail card is bounded by the grid row; its tab content scrolls inside. */
+.tm-fill-page .tm-pane-wrap { overflow: hidden; }
+.tm-fill-page .tm-pane-wrap > .shiny-html-output > .card { flex: 1 1 auto; min-height: 0; max-height: 100%; margin: 0; }
+.tm-fill-page .tm-detail > .tm-detail-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.tm-fill-page .tm-master-detail > .bslib-grid-item { min-height: 0; overflow: hidden; }
+.tm-fill-page .tm-pane-wrap { flex: 1 1 auto; height: 100%; }
+.tm-detail-body > .tabbable { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.tm-detail-body > .tabbable > .nav { flex: none; }
+.tm-detail-body > .tabbable > .tab-content { flex: 1 1 auto; min-height: 0; overflow: auto; padding-top: 6px; }
+
+/* Panorama rankings: top 20, one line per row, filtered in the browser. */
+.tm-dash .tm-family[data-family] { cursor: pointer; transition: box-shadow .12s, border-color .12s; }
+.tm-dash .tm-family[data-family]:hover { border-color: #b8bfc9; }
+.tm-dash .tm-family.tm-active { border-color: var(--tm-navy); box-shadow: inset 0 0 0 1px var(--tm-navy); }
+.tm-dash-filter { color: var(--tm-accent); font-weight: 600; white-space: nowrap; overflow: hidden;
+                  text-overflow: ellipsis; max-width: 280px; }
+.tm-dash-filter:empty { display: none; }
+.tm-dash-clear { font-size: .68rem; font-weight: 400; }
+.tm-dash-card-head .tm-head-note { margin-left: auto; }
+.tm-rank-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.tm-rank-list[hidden] { display: none; }
+.tm-dash-card .tm-rank-list .tm-bars { overflow: visible; justify-content: flex-start; gap: 0; }
+.tm-dash .tm-rank-list .tm-bar-row { padding: 1px 4px; gap: 6px; align-items: center;
+                                     grid-template-columns: 20px minmax(0, 1.4fr) minmax(40px, 1fr) auto; }
+.tm-dash .tm-rank-list .tm-bar-rank { font-size: .64rem; }
+.tm-dash .tm-rank-list .tm-bar-name { font-size: .68rem; font-weight: 500; white-space: nowrap; }
+.tm-dash .tm-rank-list .tm-bar-value { font-size: .66rem; }
+.tm-dash .tm-rank-list .tm-bar, .tm-dash .tm-rank-list .tm-bar-track { height: 8px; }
+.tm-dash .tm-rank-list .tm-pick.tm-selected { background: #e8eefc; box-shadow: inset 3px 0 0 var(--tm-accent); }
+.tm-dash .tm-big { font-size: 1.1rem; }
+.tm-dash .tm-kpi-value { font-size: 1.2rem; }
+.tm-dash .tm-family-side, .tm-dash .tm-change { font-size: .68rem; }

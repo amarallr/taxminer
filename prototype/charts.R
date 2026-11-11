@@ -17,7 +17,7 @@ axis_int <- function(v) {
   vapply(v, function(x) {
     if (x >= 1e6) paste0(formatC(x / 1e6, format = "f", digits = 1, decimal.mark = ","), " mi")
     else if (x >= 1e4) paste0(formatC(x / 1e3, format = "f", digits = 0), " mil")
-    else formatC(x, format = "d", big.mark = ".")
+    else formatC(x, format = "d", big.mark = ".", decimal.mark = ",")
   }, character(1))
 }
 
@@ -200,6 +200,7 @@ $(function() {
       $('.navbar a[data-bs-toggle=\"tab\"]').filter(function() { return $(this).attr('data-value') === t; }).first().click();
     })
     .on('click', '.tm-pick[data-key]', function() {
+      if ($(this).closest('.tm-dash').length) return;
       var key = $(this).attr('data-key');
       $(this).siblings('.tm-selected').removeClass('tm-selected');
       $(this).addClass('tm-selected');

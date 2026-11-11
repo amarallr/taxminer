@@ -255,3 +255,37 @@ test_that("the Administradores area ranks, filters by family and shows the picke
     expect_equal(attr(ranking(), "total"), 100)
   })
 })
+
+# --- Panorama ---------------------------------------------------------------
+
+test_that("the Panorama renders every family/administrator ranking for browser-side filtering", {
+  directory <- data.frame(
+    family = c("fii", "fidc", "fidc"), fund_cnpj = c("A", "D", "E"),
+    fund_name = c("FUNDO A", "FIDC D", "FIDC E"),
+    administrator_name = c("ADM UM", "ADM DOIS", "ADM UM"),
+    administrator_cnpj = c("11111111000111", "22222222000122", "11111111000111"),
+    first_period = "2025-01-01", last_period = "2025-12-28", stringsAsFactors = FALSE)
+  rows <- rbind(metric_rows("fii", "A", months, rep(100, 12)), metric_rows("fidc", "D", months, rep(300, 12)),
+                metric_rows("fidc", "E", months, rep(50, 12)))
+  mm <- prepare_metrics(rows, today = as.Date("2026-11-11"))
+  series <- family_monthly(mm)
+  complete <- complete_months(series)
+  snapshot <- market_snapshot(mm, complete)
+  admins <- fund_administrators(directory)
+  ctx <- list(m = mm, series = series, complete = complete, overview = family_overview(series, complete),
+              snapshot = snapshot, admins = admins, ranking = administrator_ranking(snapshot, admins),
+              market_change = market_change(mm, complete))
+  html <- as.character(fund_overview_ui("overview", ctx, top = 20L))
+  expect_match(html, "20 maiores administradores", fixed = TRUE)
+  expect_match(html, "data-family=\"fidc\"", fixed = TRUE)
+  # One admin list per family filter; the "all" list is the visible one.
+  expect_match(html, "data-admins=\"all\">", fixed = TRUE)
+  expect_match(html, "data-admins=\"fidc\" hidden>", fixed = TRUE)
+  # Funds of ADM UM within FIDC: only E.
+  pos <- regexpr("data-funds=\"fidc|cnpj:11111111000111\"", html, fixed = TRUE)
+  expect_gt(pos, 0)
+  block <- substr(html, pos, pos + 1500)
+  expect_match(block, "FIDC E", fixed = TRUE)
+  expect_false(grepl("FIDC D", sub("data-funds=.*", "", substr(block, 40, nchar(block))), fixed = TRUE))
+  expect_match(html, "data-funds=\"all|\">", fixed = TRUE)
+})

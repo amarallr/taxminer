@@ -8,6 +8,31 @@ escape_html <- function(x) htmltools::htmlEscape(ifelse(is.na(x), "", as.charact
 
 format_count <- function(x) formatC(x, format = "d", big.mark = ".", decimal.mark = ",")
 
+# Fields holding identifiers or codes: shown exactly as published.
+fund_code_fields <- "CNPJ|CPF|CEP|ISIN|TEL|FONE|FAX|^CD_|_CD_|^COD|_COD|^ID_|_ID$|^ANO|_ANO$|^NR_PROC|VERSAO|^TP_|CODIGO"
+
+# Display of published values (presentation only; stored values unchanged):
+# plain numbers get "." for thousands and "," for decimals, keeping the
+# published decimal places; values already in that format pass through.
+# Returns the text and whether it is numeric (right-aligned).
+display_value <- function(v, field = "") {
+  if (is.na(v) || !nzchar(trimws(v))) return(list(text = "—", num = FALSE))
+  v <- trimws(v)
+  if (grepl(fund_code_fields, toupper(field))) return(list(text = v, num = FALSE))
+  if (grepl("^-?[0-9]{1,3}([.][0-9]{3})*(,[0-9]+)?$", v) && grepl("[.,]", v))
+    return(list(text = v, num = TRUE))
+  if (!grepl("^-?[0-9]+([.][0-9]+)?$", v) || grepl("^-?0[0-9]", v)) return(list(text = v, num = FALSE))
+  parts <- strsplit(sub("^-", "", v), ".", fixed = TRUE)[[1]]
+  int <- gsub("(?<=[0-9])(?=([0-9]{3})+$)", ".", parts[1], perl = TRUE)
+  text <- paste0(if (startsWith(v, "-")) "-" else "", int, if (length(parts) > 1) paste0(",", parts[2]) else "")
+  list(text = text, num = TRUE)
+}
+
+value_cell <- function(v, field) {
+  d <- display_value(v, field)
+  shiny::tags$td(class = if (d$num) "tm-num", d$text)
+}
+
 # Autocomplete settings: free text is kept, so partial values still filter.
 autocomplete_options <- function(placeholder) {
   list(create = TRUE, createOnBlur = TRUE, persist = FALSE, maxItems = 1,
@@ -48,27 +73,36 @@ kpi <- function(label, value, note = NULL) {
 
 
 fund_page_size <- 25L
-fund_sort_options <- c("Nome" = "name", "Último período (recente primeiro)" = "last",
-                       "CNPJ" = "cnpj", "Períodos publicados" = "count")
 fund_card_columns <- 6L
+
+# Sortable columns of the result list: header label and default direction
+# (names A-Z; most recent and most reports first).
+fund_sort_columns <- data.frame(by = c("name", "last", "count"), label = c("Fundo", "Informes", "Nº"),
+                                decreasing = c(FALSE, TRUE, TRUE), stringsAsFactors = FALSE)
 
 # Published names such as "NA", "," or "0" carry no letters: shown as missing,
 # sorted last, the stored value is unchanged.
 has_name <- function(x) !is.na(x) & grepl("[[:alpha:]]", x) & x != "NA"
 display_name <- function(x) ifelse(has_name(x), x, "(sem nome publicado)")
 
-sort_directory <- function(r, by) {
+sort_directory <- function(r, by, decreasing = NULL) {
+  if (is.null(decreasing)) {
+    decreasing <- fund_sort_columns$decreasing[match(by, fund_sort_columns$by)]
+    if (is.na(decreasing)) decreasing <- FALSE
+  }
   key <- switch(by,
-    last = order(r$last_period, decreasing = TRUE, method = "radix"),
-    cnpj = order(r$fund_cnpj, method = "radix"),
-    count = order(r$period_count, decreasing = TRUE, method = "radix"),
-    order(!has_name(r$fund_name), normalize_search_text(r$fund_name), method = "radix"))
+    last = order(r$last_period, decreasing = decreasing, method = "radix"),
+    cnpj = order(r$fund_cnpj, decreasing = decreasing, method = "radix"),
+    count = order(r$period_count, decreasing = decreasing, method = "radix"),
+    # Missing names stay last in both directions.
+    order(!has_name(r$fund_name), normalize_search_text(r$fund_name),
+          decreasing = c(FALSE, decreasing), method = "radix"))
   r[key, , drop = FALSE]
 }
 
-# Clickable results: each row sends "family|cnpj" to the `pick` input.
-results_table <- function(r, input_id, selected = NULL) {
-  header <- c("Fundo", "Informes", "Nº")
+# Clickable results: each row sends "family|cnpj" to the `pick` input; each
+# sortable header sends its column to `sort_input` (click again to reverse).
+results_table <- function(r, input_id, selected = NULL, sort_input = NULL, sort = NULL) {
   keys <- paste(r$family, r$fund_cnpj, sep = "|")
   rows <- lapply(seq_len(nrow(r)), function(i) {
     shiny::tags$tr(
@@ -83,46 +117,110 @@ results_table <- function(r, input_id, selected = NULL) {
                    else r$administrator_name[i])),
       shiny::tags$td(class = "tm-mono", substr(r$first_period[i], 1, 7), shiny::br(),
                      substr(r$last_period[i], 1, 7)),
-      shiny::tags$td(class = "tm-num", r$period_count[i]))
+      shiny::tags$td(class = "tm-num", format_count(r$period_count[i])))
+  })
+  header <- lapply(seq_len(nrow(fund_sort_columns)), function(k) {
+    col <- fund_sort_columns[k, ]
+    active <- !is.null(sort) && identical(sort$by, col$by)
+    arrow <- if (active) (if (isTRUE(sort$decreasing)) " ▼" else " ▲") else ""
+    shiny::tags$th(class = paste("tm-sortable", if (active) "tm-sorted", if (col$by == "count") "tm-num"),
+                   `data-sort` = col$by, title = "Clique para ordenar; de novo para inverter",
+                   paste0(col$label, arrow))
   })
   shiny::tags$table(
-    class = "tm-results", `data-input` = input_id,
-    shiny::tags$thead(shiny::tags$tr(lapply(header, shiny::tags$th))),
+    class = "tm-results", `data-input` = input_id, `data-sort-input` = sort_input,
+    shiny::tags$thead(shiny::tags$tr(header)),
     shiny::tags$tbody(rows))
 }
 
+# Administrator choices for the autocomplete: published name with its number
+# of funds (most funds first), value = the name used by the search.
+administrator_choices <- function(directory) {
+  d <- directory[!is.na(directory$administrator_name), , drop = FALSE]
+  d <- d[!duplicated(paste(d$family, d$fund_cnpj, d$administrator_name)), , drop = FALSE]
+  n <- sort(table(d$administrator_name), decreasing = TRUE)
+  stats::setNames(names(n), sprintf("%s (%s fundos)", names(n), format_count(as.integer(n))))
+}
+
+# Readable label for a CVM field code when the META dictionary has no
+# description: underscores to spaces, sentence case.
+humanize_field <- function(field) {
+  y <- gsub("_+", " ", field)
+  y <- ifelse(grepl("[a-z]", y), y, tolower(y))
+  paste0(toupper(substr(y, 1, 1)), substr(y, 2, nchar(y)))
+}
+
+# Field labels: the META description when published, else the humanized code
+# (marked `derived`). The code itself goes to the tooltip.
+field_labels <- function(fields, descriptions = NULL, table_name = NULL) {
+  desc <- if (is.null(descriptions) || is.null(table_name)) rep(NA_character_, length(fields))
+          else describe_fields(descriptions, table_name, fields)
+  data.frame(field = fields, label = ifelse(is.na(desc), humanize_field(fields), desc),
+             derived = is.na(desc), stringsAsFactors = FALSE)
+}
+
+# One report row: fields as a compact two-column grid (label above value).
+ficha_grid <- function(r, labels) {
+  items <- lapply(seq_len(nrow(labels)), function(k) {
+    v <- r[[labels$field[k]]][1]
+    shiny::div(class = "tm-ficha-item",
+               shiny::div(class = if (labels$derived[k]) "tm-ficha-label tm-derived" else "tm-ficha-label",
+                          `data-tip` = sprintf("%s\nCampo CVM: %s%s", labels$label[k], labels$field[k],
+                                               if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                          labels$label[k]),
+               {
+                 d <- display_value(v, labels$field[k])
+                 shiny::div(class = if (d$num) "tm-ficha-value tm-num" else "tm-ficha-value", d$text)
+               })
+  })
+  cite <- if (is.na(r$source_url[1])) r$citation[1]
+          else shiny::tags$a(href = r$source_url[1], target = "_blank", rel = "noopener", r$citation[1])
+  shiny::tagList(shiny::div(class = "tm-ficha-cite", "Fonte: ", cite), shiny::div(class = "tm-ficha", items))
+}
+
 # One column per report row of the chosen period, one line per CVM field.
-report_card <- function(r) {
+# Fields empty in every shown row are left out (counted in `hidden`).
+report_card <- function(r, descriptions = NULL, table_name = NULL) {
   r <- utils::head(r, fund_card_columns)
   fields <- setdiff(names(r), c("citation", "source_url", "zip_sha256", "source_file", "source_line",
                                 "fund_cnpj_normalized", "reference_period", "layout_version"))
+  filled <- vapply(fields, function(f) any(!is.na(r[[f]]) & nzchar(trimws(r[[f]]))), logical(1))
+  labels <- field_labels(fields[filled], descriptions, table_name)
+  if (nrow(r) == 1L) return(structure(ficha_grid(r, labels), hidden = sum(!filled)))
   cite <- lapply(seq_len(nrow(r)), function(i) {
     text <- r$citation[i]
     shiny::tags$th(if (is.na(r$source_url[i])) text
                    else shiny::tags$a(href = r$source_url[i], target = "_blank", rel = "noopener", text))
   })
-  body <- lapply(fields, function(f) {
-    shiny::tags$tr(shiny::tags$th(class = "tm-field", f),
-                   lapply(r[[f]], function(v) shiny::tags$td(if (is.na(v) || !nzchar(v)) "—" else v)))
+  body <- lapply(seq_len(nrow(labels)), function(k) {
+    f <- labels$field[k]
+    shiny::tags$tr(shiny::tags$th(class = if (labels$derived[k]) "tm-field tm-derived" else "tm-field",
+                                  `data-tip` = sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
+                                                       if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                                  labels$label[k]),
+                   lapply(r[[f]], function(v) value_cell(v, f)))
   })
-  shiny::tags$table(
+  structure(shiny::tags$table(
     class = "tm-card-table",
     shiny::tags$thead(shiny::tags$tr(shiny::tags$th(class = "tm-field", "Campo"), cite)),
-    shiny::tags$tbody(body))
+    shiny::tags$tbody(body)), hidden = sum(!filled))
 }
 
-wide_table <- function(r) {
+wide_table <- function(r, descriptions = NULL, table_name = NULL) {
   shown <- r[, setdiff(names(r), c("source_url", "zip_sha256", "source_file", "source_line",
                                    "fund_cnpj_normalized")), drop = FALSE]
+  labels <- field_labels(names(shown), descriptions, table_name)
   shiny::tags$table(
     class = "tm-wide",
-    shiny::tags$thead(shiny::tags$tr(lapply(names(shown), shiny::tags$th))),
+    shiny::tags$thead(shiny::tags$tr(lapply(seq_len(nrow(labels)), function(k) {
+      shiny::tags$th(`data-tip` = labels$label[k], labels$field[k])
+    }))),
     shiny::tags$tbody(lapply(seq_len(nrow(shown)), function(i) {
       shiny::tags$tr(lapply(names(shown), function(n) {
         v <- shown[[n]][i]
         if (n == "citation" && !is.na(r$source_url[i])) {
           shiny::tags$td(shiny::tags$a(href = r$source_url[i], target = "_blank", rel = "noopener", v))
-        } else shiny::tags$td(if (is.na(v)) "" else v)
+        } else if (n == "citation") shiny::tags$td(v) else value_cell(v, n)
       }))
     })))
 }
@@ -134,58 +232,61 @@ row_periods <- function(r) {
 
 fund_search_ui <- function(id) {
   ns <- shiny::NS(id)
-  shiny::div(
-    class = "tm-page",
+  page <- shiny::div(
+    class = "tm-page tm-fill-page",
     shiny::tags$script(shiny::HTML(
       "$(document).on('click', 'table.tm-results tbody tr[data-key]', function() {
          var t = $(this).closest('table');
          t.find('tr.tm-selected').removeClass('tm-selected');
          $(this).addClass('tm-selected');
          Shiny.setInputValue(t.data('input'), $(this).data('key'), {priority: 'event'});
+       });
+       $(document).on('click', 'table.tm-results th[data-sort]', function() {
+         Shiny.setInputValue($(this).closest('table').data('sort-input'), $(this).data('sort'),
+                             {priority: 'event'});
        });")),
-    shiny::div(class = "tm-hero",
-               shiny::div(class = "tm-eyebrow", "Fase 1.3 · Fundos de investimento"),
-               shiny::h1("Informes de fundos da CVM"),
-               shiny::p(class = "tm-lede",
-                        "Filtre, clique em um fundo e leia os informes ao lado.",
-                        "Valores como publicados pela CVM, com a citação do arquivo de origem.")),
-    bslib::layout_sidebar(
-      sidebar = bslib::sidebar(
-        width = 260, title = "Filtros", open = list(desktop = "open", mobile = "closed"),
-        shiny::checkboxGroupInput(ns("family"), "Família", choices = fund_family_labels,
-                                  selected = unname(fund_family_labels), inline = TRUE),
-        shiny::selectizeInput(ns("fund_query"), "Fundo (CNPJ ou nome)", choices = NULL,
-                              options = autocomplete_options("Digite o CNPJ ou parte do nome")),
-        shiny::selectizeInput(ns("administrator"), "Administrador", choices = NULL,
-                              options = autocomplete_options("Nome ou CNPJ")),
-        shiny::fluidRow(
-          shiny::column(6, shiny::selectizeInput(ns("period_from"), "De", choices = NULL,
-                                                 options = autocomplete_options("aaaa-mm"))),
-          shiny::column(6, shiny::selectizeInput(ns("period_to"), "Até", choices = NULL,
-                                                 options = autocomplete_options("aaaa-mm")))),
-        shiny::actionButton(ns("search"), "Buscar", class = "btn-primary w-100"),
-        shiny::actionLink(ns("clear"), "Limpar filtros", class = "tm-link"),
-        shiny::p(class = "tm-footnote",
-                 "O FIP não publica o administrador; o filtro de administrador não encontra fundos FIP.")),
-      shiny::uiOutput(ns("kpis")),
-      bslib::layout_columns(
-        col_widths = bslib::breakpoints(sm = 12, xl = c(6, 6)), class = "tm-master-detail",
+    shiny::div(class = "tm-dash-head",
+               shiny::div(shiny::span(class = "tm-eyebrow", "Fundos · Fase 1.3"),
+                          shiny::h1("Informes de fundos da CVM")),
+               shiny::div(class = "tm-dash-meta", shiny::uiOutput(ns("kpis"), inline = TRUE))),
+    # Filter bar: applies as you choose; free text also works (partial name or CNPJ).
+    shiny::div(
+      class = "tm-filterbar",
+      shiny::div(class = "tm-filter tm-filter-family",
+                 shiny::checkboxGroupInput(ns("family"), NULL, choices = fund_family_labels,
+                                           selected = unname(fund_family_labels), inline = TRUE)),
+      shiny::div(class = "tm-filter tm-filter-wide",
+                 shiny::selectizeInput(ns("fund_query"), NULL, choices = NULL, width = "100%",
+                                       options = autocomplete_options("Fundo: nome ou CNPJ"))),
+      shiny::div(class = "tm-filter tm-filter-wide",
+                 shiny::selectizeInput(ns("administrator"), NULL, choices = NULL, width = "100%",
+                                       options = autocomplete_options("Administrador: nome ou CNPJ"))),
+      shiny::div(class = "tm-filter tm-filter-period",
+                 shiny::selectizeInput(ns("period_from"), NULL, choices = NULL, width = "100%",
+                                       options = autocomplete_options("De (aaaa-mm)"))),
+      shiny::div(class = "tm-filter tm-filter-period",
+                 shiny::selectizeInput(ns("period_to"), NULL, choices = NULL, width = "100%",
+                                       options = autocomplete_options("Até (aaaa-mm)"))),
+      shiny::actionLink(ns("clear"), "Limpar", class = "tm-link tm-filter-clear",
+                        title = "Limpar todos os filtros")),
+    bslib::layout_columns(
+      col_widths = bslib::breakpoints(sm = 12, xl = c(5, 7)), class = "tm-master-detail",
+      fill = TRUE, row_heights = "minmax(0, 1fr)",
       bslib::card(
         class = "tm-section tm-pane",
-        bslib::card_header(
-          class = "tm-card-head",
-          shiny::div(class = "tm-card-title", shiny::textOutput(ns("summary"), inline = TRUE)),
-          shiny::div(class = "tm-card-tools",
-                     shiny::selectInput(ns("sort"), NULL, choices = fund_sort_options, width = "260px"))),
+        bslib::card_header(class = "tm-card-head",
+                           shiny::div(class = "tm-card-title", shiny::textOutput(ns("summary"), inline = TRUE)),
+                           shiny::span(class = "tm-head-note", "clique no cabeçalho para ordenar")),
         bslib::card_body(padding = 0, class = "tm-scroll", shiny::uiOutput(ns("funds"))),
         bslib::card_footer(class = "tm-pager",
                            shiny::actionLink(ns("prev"), "‹ Anterior"),
                            shiny::span(class = "tm-muted", shiny::textOutput(ns("page"), inline = TRUE)),
                            shiny::actionLink(ns("next_page"), "Próxima ›"))),
-      shiny::div(class = "tm-pane-wrap", shiny::uiOutput(ns("detail")),
-                 shiny::div(class = "tm-empty tm-hint", "Selecione um fundo na lista.")))
-    )
-  )
+      shiny::div(class = "tm-pane-wrap", shiny::uiOutput(ns("detail"), fill = TRUE),
+                 shiny::div(class = "tm-empty tm-hint", "Selecione um fundo na lista."))))
+  # Fills the window (page_navbar fillable): list and detail stay inside the
+  # window; the page itself never scrolls.
+  htmltools::bindFillRole(page, container = TRUE, item = TRUE)
 }
 
 # `analytics` (fund_analytics_context) adds the fund profile tab when given.
@@ -195,11 +296,11 @@ fund_search_server <- function(id, root, analytics = NULL) {
     directory <- load_fund_directory(root)
     tables <- fund_tables(root)
     urls <- fund_source_urls(root)
+    descriptions <- fund_field_descriptions(root)
 
     shiny::updateSelectizeInput(session, "fund_query", choices = fund_choices(directory),
                                 selected = character(), server = TRUE)
-    admins <- sort(unique(stats::na.omit(directory$administrator_name)))
-    shiny::updateSelectizeInput(session, "administrator", choices = admins,
+    shiny::updateSelectizeInput(session, "administrator", choices = administrator_choices(directory),
                                 selected = character(), server = TRUE)
     periods <- period_choices(directory)
     shiny::updateSelectizeInput(session, "period_from", choices = periods, selected = character())
@@ -212,19 +313,32 @@ fund_search_server <- function(id, root, analytics = NULL) {
       }
     })
 
-    results <- shiny::eventReactive(input$search, {
+    # Filters apply as soon as a value is chosen (no search button).
+    results <- shiny::reactive({
       query <- fund_query_filters(input$fund_query, directory)
       tryCatch(
         search_fund_directory(directory, family = input$family, cnpj = query$cnpj,
                               name = query$name, administrator = input$administrator,
                               period_from = input$period_from, period_to = input$period_to),
         error = function(e) structure(directory[0, ], error = conditionMessage(e)))
-    }, ignoreNULL = FALSE)
+    })
+
+    # Header clicks: a new column sorts in its default direction, the same
+    # column again reverses it.
+    sort_state <- shiny::reactiveVal(list(by = "name", decreasing = FALSE))
+    shiny::observeEvent(input$sort_col, {
+      s <- sort_state()
+      by <- input$sort_col
+      if (!by %in% fund_sort_columns$by) return()
+      sort_state(if (identical(s$by, by)) list(by = by, decreasing = !s$decreasing)
+                 else list(by = by, decreasing = fund_sort_columns$decreasing[fund_sort_columns$by == by]))
+    })
 
     sorted <- shiny::reactive({
       r <- results()
       if (nrow(r) == 0L) return(r)
-      sort_directory(r, if (is.null(input$sort)) "name" else input$sort)
+      s <- sort_state()
+      sort_directory(r, s$by, s$decreasing)
     })
 
     page <- shiny::reactiveVal(1L)
@@ -247,12 +361,10 @@ fund_search_server <- function(id, root, analytics = NULL) {
       span <- if (nrow(r)) sprintf("%s – %s", substr(min(r$first_period, na.rm = TRUE), 1, 7),
                                    substr(max(r$last_period, na.rm = TRUE), 1, 7)) else "—"
       admins <- length(unique(stats::na.omit(r$administrator_name)))
-      bslib::layout_columns(
-        col_widths = c(3, 3, 3, 3), class = "tm-kpis",
-        kpi("Fundos", format_count(funds)),
-        kpi("Administradores", format_count(admins)),
-        kpi("Famílias", length(unique(r$family))),
-        kpi("Períodos", span))
+      shiny::span(class = "tm-strip",
+                  shiny::tags$b(format_count(funds)), " fundos · ", shiny::tags$b(format_count(admins)),
+                  " administradores · ", shiny::tags$b(length(unique(r$family))), " famílias · ",
+                  shiny::tags$b(span))
     })
 
     output$summary <- shiny::renderText({
@@ -268,7 +380,7 @@ fund_search_server <- function(id, root, analytics = NULL) {
       if (nrow(r) == 0L) return(shiny::div(class = "tm-empty", "Nenhum fundo com esses filtros."))
       first <- (page() - 1L) * fund_page_size + 1L
       r <- r[first:min(nrow(r), first + fund_page_size - 1L), , drop = FALSE]
-      results_table(r, ns("pick"), shiny::isolate(picked()))
+      results_table(r, ns("pick"), shiny::isolate(picked()), ns("sort_col"), sort_state())
     })
 
     selected <- shiny::reactive({
@@ -297,19 +409,20 @@ fund_search_server <- function(id, root, analytics = NULL) {
                                  sprintf("%s a %s", substr(min(s$info$first_period), 1, 7),
                                          substr(max(s$info$last_period), 1, 7))))),
         bslib::card_body(
-          fillable = FALSE,
+          fillable = FALSE, class = "tm-detail-body",
           bslib::layout_columns(
-            col_widths = c(7, 5),
-            shiny::selectizeInput(ns("table"), "Tabela do informe", width = "100%",
+            col_widths = c(8, 4), class = "tm-detail-tools",
+            shiny::selectizeInput(ns("table"), NULL, width = "100%",
                                   choices = stats::setNames(t$table_name, sprintf(
                                     "%s  (%s–%s)", t$table_name, t$first_period, t$last_period)),
                                   selected = t$table_name[grepl("geral|tab_I$|fip$|fiagro$",
                                                                 t$table_name)][1]),
-            shiny::selectizeInput(ns("period"), "Período", choices = NULL, width = "100%")),
+            shiny::selectizeInput(ns("period"), NULL, choices = NULL, width = "100%",
+                                  options = list(placeholder = "Período"))),
           shiny::div(class = "tm-caption", shiny::textOutput(ns("rows_summary"))),
           bslib::navset_underline(
             if (!is.null(analytics)) bslib::nav_panel("Perfil", shiny::uiOutput(ns("profile"))),
-            bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("card")))),
+            bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("card")))),
             bslib::nav_panel("Série completa",
                              shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))))))
     })
@@ -347,17 +460,20 @@ fund_search_server <- function(id, root, analytics = NULL) {
       shiny::req(nrow(r) > 0L, input$period)
       r <- r[row_periods(r) == input$period, , drop = FALSE]
       if (nrow(r) == 0L) return(NULL)
-      shiny::tagList(
-        if (nrow(r) > fund_card_columns) shiny::div(
-          class = "tm-caption", sprintf("Mostrando %d de %d linhas deste período; veja todas em Série completa.",
-                                        fund_card_columns, nrow(r))),
-        report_card(r))
+      card <- report_card(r, descriptions, input$table)
+      notes <- c(if (nrow(r) > fund_card_columns)
+                   sprintf("Mostrando %d de %d linhas deste período; veja todas em Série completa.",
+                           fund_card_columns, nrow(r)),
+                 if (attr(card, "hidden") > 0)
+                   if (attr(card, "hidden") == 1) "1 campo vazio neste período oculto."
+                   else sprintf("%s campos vazios neste período ocultos.", format_count(attr(card, "hidden"))))
+      shiny::tagList(if (length(notes)) shiny::div(class = "tm-caption", paste(notes, collapse = " ")), card)
     })
 
     output$rows <- shiny::renderUI({
       r <- rows()
       if (nrow(r) == 0L) return(shiny::div(class = "tm-empty", "Sem linhas nesta tabela para o fundo."))
-      wide_table(r)
+      wide_table(r, descriptions, input$table)
     })
   })
 }

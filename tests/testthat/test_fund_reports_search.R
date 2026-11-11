@@ -169,13 +169,20 @@ test_that("the Shiny area searches, lists rows with linked citations and reports
     session$setInputs(family = c("fii", "fidc", "fip"), fund_query = "00.332.266",
                       administrator = "", period_from = "", period_to = "", search = 1)
     expect_match(output$summary, "^2 entradas")
-    expect_match(as.character(output$kpis$html), "tm-kpi-value\">1<", fixed = TRUE)
+    expect_match(as.character(output$kpis$html), "<b>1</b>\\s*fundos")
     session$setInputs(fund_query = "são paulo", administrator = "OUTRA ADMINISTRADORA LTDA",
                       search = 2)
     expect_match(output$summary, "^1 entradas")
     session$setInputs(fund_query = "00.332.266", administrator = "", search = 3)
     expect_match(output$funds$html, "data-key=\"fii|00332266000131\"", fixed = TRUE)
     expect_match(output$page, "^Página 1 de 1")
+    # Sorting by header click: a new column takes its default direction
+    # (Informes: most recent first), the same column again reverses it.
+    expect_match(output$funds$html, "data-sort=\"name\"", fixed = TRUE)
+    session$setInputs(sort_col = "last")
+    expect_match(output$funds$html, "Informes ▼", fixed = TRUE)
+    session$setInputs(sort_col = "last")
+    expect_match(output$funds$html, "Informes ▲", fixed = TRUE)
     session$setInputs(pick = "fii|00332266000131", table = "inf_mensal_fii_ativo_passivo")
     expect_match(output$detail$html, "FUNDO SÃO PAULO", fixed = TRUE)
     expect_match(output$rows_summary, "^2 linhas em 2 períodos")

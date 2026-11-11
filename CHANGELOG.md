@@ -1,5 +1,17 @@
 # Changelog
 
+## Filtros no Panorama, Fundos em uma tela e texto institucional — 2026-11-11
+
+- Panorama: 20 maiores administradores e 20 maiores fundos; clique no gráfico de uma família
+  filtra os dois rankings e clique num administrador mostra os maiores fundos dele. Filtros no
+  navegador, iguais no app e na versão publicada.
+- Fundos: barra de filtros com autocomplete (fundo, administrador com nº de fundos, período,
+  famílias), ordenação pelo cabeçalho, sem barras de rolagem da página; ficha com a descrição dos
+  campos conforme os metadados da CVM (rótulo derivado em itálico quando não há descrição).
+- Valores numéricos exibidos com ponto de milhar e vírgula decimal, alinhados à direita
+  (identificadores ficam como publicados).
+- Texto institucional (engenharia de dados, IA e engenharia de software) no README e no site.
+
 ## Painel publicado e Panorama em uma tela — 2026-11-11
 
 - Painel de fundos publicado em https://amarallr.github.io/taxminer/app/ (versão estática gerada

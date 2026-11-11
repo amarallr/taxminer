@@ -280,3 +280,44 @@ fund_quality_summary <- function(root) {
   rownames(out) <- NULL
   out
 }
+
+# Field descriptions from the CVM META dictionaries stored in <root>/meta
+# ("Campo: X" followed by "Descrição : ..."). One row per table and field;
+# tables are named as in the consolidation (meta_{table}.txt).
+fund_field_descriptions <- function(root) {
+  files <- list.files(file.path(root, "meta"), pattern = "^meta_.*\\.(zip|txt)$", full.names = TRUE)
+  rows <- list()
+  for (path in files) {
+    texts <- if (grepl("\\.zip$", path)) {
+      members <- utils::unzip(path, list = TRUE)$Name
+      stats::setNames(lapply(members, function(m) readLines(unz(path, m), warn = FALSE)), members)
+    } else {
+      stats::setNames(list(readLines(path, warn = FALSE)), basename(path))
+    }
+    for (member in names(texts)) {
+      lines <- trimws(iconv(texts[[member]], "latin1", "UTF-8"))
+      field_at <- grep("^Campo:", lines)
+      if (!length(field_at)) next
+      desc_at <- grep("^Descri", lines)
+      description <- vapply(field_at, function(i) {
+        j <- desc_at[desc_at > i][1]
+        nxt <- c(field_at[field_at > i], Inf)[1]
+        if (is.na(j) || j > nxt) NA_character_ else trimws(sub("^[^:]*:", "", lines[j]))
+      }, character(1))
+      rows[[length(rows) + 1L]] <- data.frame(
+        table_name = sub("^meta_", "", sub("\\.txt$", "", basename(member))),
+        field = trimws(sub("^Campo:", "", lines[field_at])), description = description,
+        stringsAsFactors = FALSE)
+    }
+  }
+  if (!length(rows)) return(data.frame(table_name = character(), field = character(), description = character()))
+  out <- do.call(rbind, rows)
+  out$description[!is.na(out$description) & !nzchar(out$description)] <- NA_character_
+  out[!duplicated(paste(out$table_name, tolower(out$field))), , drop = FALSE]
+}
+
+# Description of each field of one table (case-insensitive); NA when unknown.
+describe_fields <- function(descriptions, table_name, fields) {
+  d <- descriptions[descriptions$table_name == table_name, , drop = FALSE]
+  unname(d$description[match(tolower(fields), tolower(d$field))])
+}

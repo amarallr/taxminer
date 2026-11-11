@@ -46,14 +46,15 @@ method_note <- function(ctx) {
                      "administrador correto; nesses casos o nome vem dos demais informes desse CNPJ.")))
 }
 
-family_panel <- function(ctx, family) {
+family_panel <- function(ctx, family, pick = FALSE) {
   o <- ctx$overview[ctx$overview$family == family, ]
   d <- ctx$series[ctx$series$family == family & ctx$series$month <= ctx$complete[[family]], ]
   color <- fund_family_colors[[family]]
   tips <- sprintf("%s\nPL %s\n%s fundos", month_label(d$month), format_brl(d$net_assets), format_int(d$funds))
   pending <- o$latest_month > o$month
   shiny::div(
-    class = "tm-family",
+    class = "tm-family", `data-family` = if (pick) family,
+    title = if (pick) sprintf("Clique para mostrar só %s nos rankings (de novo para todas)", toupper(family)),
     shiny::div(class = "tm-family-head",
                shiny::span(class = "tm-swatch", style = sprintf("background:%s", color)),
                shiny::span(class = "tm-family-code", toupper(family)),
@@ -75,23 +76,39 @@ family_panel <- function(ctx, family) {
                                      else shiny::tagList(shiny::strong(axis_int(o$quotaholders)), " cotistas")))),
     chart_key(color, "Patrimônio líquido (eixo esq.)", "Fundos (eixo dir.)"),
     shiny::div(class = "tm-chart-box",
-               svg_line_chart(d$month, d$net_assets, color, tips = tips, width = 360, height = 150,
+               svg_line_chart(d$month, d$net_assets, color, tips = tips, width = 360, height = 128,
                               values2 = d$funds,
                               label = sprintf("Patrimônio líquido e número de fundos %s por mês", toupper(family)))))
 }
 
-# Panorama: one landscape screen, no scrolling (grid in taxminer.css,
-# `.tm-dash`). Rankings show the top 6; the methodology is in the Sobre tab.
-fund_overview_ui <- function(id, ctx, top = 6L) {
+# Panorama: one landscape screen, no page scrolling (grid in taxminer.css,
+# `.tm-dash`). Rankings show the top `top`; a click on a family chart filters
+# both rankings to that family, a click on an administrator shows its largest
+# funds. Every combination is rendered here and switched in the browser
+# (dash_script), so the same page works in Shiny and in the static export.
+fund_overview_ui <- function(id, ctx, top = 20L) {
   s <- ctx$snapshot
   r <- ctx$ranking
   o <- ctx$overview
   total <- sum(s$net_assets, na.rm = TRUE)
-  top_funds <- utils::head(snapshot_funds(s, ctx$admins), top)
-  top_admins <- utils::head(r, top)
   months <- unique(month_label(ctx$complete[fund_family_order[fund_family_order %in% names(ctx$complete)]]))
+  filters <- c("all", o$family)
+  admin_lists <- lapply(filters, function(f) {
+    fams <- if (f == "all") unname(admin_families) else f
+    a <- if (f %in% c("all", admin_families)) administrator_ranking(s, ctx$admins, fams) else NULL
+    list(family = f, ranking = a)
+  })
+  fund_lists <- unlist(lapply(admin_lists, function(a) {
+    fams <- if (a$family == "all") fund_family_order else a$family
+    keys <- c("", if (!is.null(a$ranking)) utils::head(a$ranking$key, top))
+    lapply(keys, function(k) {
+      fu <- snapshot_funds(s, ctx$admins, fams, if (nzchar(k)) k else NULL)
+      dash_fund_list(utils::head(fu, top), a$family, k)
+    })
+  }), recursive = FALSE)
   shiny::div(
     class = "tm-dash",
+    dash_script(),
     shiny::div(class = "tm-dash-head",
                shiny::div(shiny::span(class = "tm-eyebrow", "Panorama · Fase 1.3"),
                           shiny::h1("Fundos estruturados no Brasil")),
@@ -112,31 +129,87 @@ fund_overview_ui <- function(id, ctx, top = 6L) {
                shiny::div(class = "tm-dash-label", "Composição do patrimônio"),
                share_bar(o$net_assets, fund_family_colors[o$family],
                          paste(toupper(o$family), "·", fund_family_names[o$family]), format_brl(o$net_assets))),
-    shiny::div(class = "tm-dash-families", lapply(o$family, function(f) family_panel(ctx, f))),
+    shiny::div(class = "tm-dash-families", lapply(o$family, function(f) family_panel(ctx, f, pick = TRUE))),
     shiny::div(
       class = "tm-dash-rank",
       shiny::div(class = "tm-dash-card",
-                 shiny::div(class = "tm-dash-card-head", "Maiores administradores",
-                            shiny::span(class = "tm-head-note", sprintf("HHI %s · %s", format_int(round(attr(r, "hhi"))),
-                                                                        hhi_label(attr(r, "hhi"))))),
-                 bar_list(top_admins$administrator_name, top_admins$net_assets,
-                          sprintf("%s · %s", format_brl(top_admins$net_assets), format_pct(top_admins$share, sign = FALSE)),
-                          colors = "#0b1f3a", rank = top_admins$rank,
-                          sub = sprintf("%s fundos · %s", format_int(top_admins$funds), top_admins$families),
-                          tips = sprintf("%s\nParticipação %s · acumulada %s", top_admins$administrator_name,
-                                         format_pct(top_admins$share, sign = FALSE),
-                                         format_pct(top_admins$cumulative_share, sign = FALSE)))),
+                 shiny::div(class = "tm-dash-card-head",
+                            sprintf("%d maiores administradores", top),
+                            shiny::span(class = "tm-dash-filter", `data-show` = "family"),
+                            shiny::span(class = "tm-head-note", "clique para ver os fundos")),
+                 lapply(admin_lists, function(a) dash_admin_list(a$ranking, a$family, top))),
       shiny::div(class = "tm-dash-card",
-                 shiny::div(class = "tm-dash-card-head", "Maiores fundos",
+                 shiny::div(class = "tm-dash-card-head",
+                            sprintf("%d maiores fundos", top),
+                            shiny::span(class = "tm-dash-filter", `data-show` = "family"),
+                            shiny::span(class = "tm-dash-filter", `data-show` = "admin"),
+                            shiny::tags$a(href = "#", class = "tm-link tm-dash-clear", hidden = NA, "limpar filtro"),
                             shiny::span(class = "tm-head-note", "cor = família")),
-                 bar_list(display_name(top_funds$fund_name), top_funds$net_assets, format_brl(top_funds$net_assets),
-                          colors = unname(fund_family_colors[top_funds$family]), rank = seq_len(nrow(top_funds)),
-                          sub = sprintf("%s · %s · %s", toupper(top_funds$family), top_funds$fund_cnpj,
-                                        ifelse(is.na(top_funds$administrator_name), "administrador não publicado",
-                                               top_funds$administrator_name)),
-                          tips = sprintf("%s\n%s · referência %s", display_name(top_funds$fund_name),
-                                         format_brl(top_funds$net_assets),
-                                         month_label(substr(top_funds$period, 1, 7)))))))
+                 fund_lists)))
+}
+
+# Administrators of one family filter ("all" = FII, FIDC and FIAGRO).
+dash_admin_list <- function(a, family, top) {
+  body <- if (is.null(a)) {
+    shiny::div(class = "tm-empty", "O FIP não publica administrador no informe.")
+  } else {
+    a <- utils::head(a, top)
+    bar_list(a$administrator_name, a$net_assets,
+             sprintf("%s · %s", format_brl(a$net_assets), format_pct(a$share, sign = FALSE)),
+             colors = "#0b1f3a", rank = a$rank, keys = a$key,
+             tips = sprintf("%s\n%s fundos · %s\nParticipação %s · acumulada %s\nClique para ver os maiores fundos",
+                            a$administrator_name, format_int(a$funds), a$families,
+                            format_pct(a$share, sign = FALSE), format_pct(a$cumulative_share, sign = FALSE)))
+  }
+  shiny::div(class = "tm-rank-list", `data-admins` = family, hidden = if (family != "all") NA, body)
+}
+
+# Largest funds of one family filter, optionally of one administrator.
+dash_fund_list <- function(fu, family, admin = "") {
+  body <- if (!nrow(fu)) shiny::div(class = "tm-empty", "Sem fundos com patrimônio publicado.")
+  else bar_list(display_name(fu$fund_name), fu$net_assets, format_brl(fu$net_assets),
+                colors = unname(fund_family_colors[fu$family]), rank = seq_len(nrow(fu)),
+                tips = sprintf("%s\n%s · %s\n%s\n%s · referência %s", display_name(fu$fund_name),
+                               toupper(fu$family), fu$fund_cnpj,
+                               ifelse(is.na(fu$administrator_name), "administrador não publicado",
+                                      fu$administrator_name),
+                               format_brl(fu$net_assets), month_label(substr(fu$period, 1, 7))))
+  shiny::div(class = "tm-rank-list", `data-funds` = paste0(family, "|", admin),
+             hidden = if (family != "all" || nzchar(admin)) NA, body)
+}
+
+# Browser-side filters of the Panorama (no server round trip).
+dash_script <- function() {
+  shiny::tags$script(shiny::HTML("
+$(function() {
+  var st = {family: 'all', admin: ''};
+  var eq = function(attr, v) { return function() { return $(this).attr(attr) === v; }; };
+  function apply() {
+    var d = $('.tm-dash');
+    d.find('.tm-family[data-family]').removeClass('tm-active').filter(eq('data-family', st.family)).addClass('tm-active');
+    d.find('[data-admins]').attr('hidden', true).filter(eq('data-admins', st.family)).removeAttr('hidden');
+    d.find('[data-funds]').attr('hidden', true).filter(eq('data-funds', st.family + '|' + st.admin)).removeAttr('hidden');
+    var rows = d.find('[data-admins]').not('[hidden]').find('.tm-pick');
+    rows.removeClass('tm-selected');
+    var row = rows.filter(eq('data-key', st.admin)).addClass('tm-selected');
+    d.find('.tm-dash-filter[data-show=family]').text(st.family === 'all' ? '' : '· ' + st.family.toUpperCase());
+    d.find('.tm-dash-filter[data-show=admin]').text(st.admin ? '· ' + row.find('.tm-bar-name').text() : '');
+    d.find('.tm-dash-clear').attr('hidden', st.family === 'all' && !st.admin ? true : null);
+  }
+  $(document).on('click', '.tm-dash .tm-family[data-family]', function() {
+    var f = $(this).attr('data-family');
+    st = {family: st.family === f ? 'all' : f, admin: ''};
+    apply();
+  }).on('click', '.tm-dash [data-admins] .tm-pick', function() {
+    var k = $(this).attr('data-key');
+    st.admin = st.admin === k ? '' : k;
+    apply();
+  }).on('click', '.tm-dash .tm-dash-clear', function(e) {
+    e.preventDefault();
+    st = {family: 'all', admin: ''};
+    apply();
+  });
+});"))
 }
 
 fund_admin_ui <- function(id) {
@@ -265,21 +338,25 @@ fund_profile_ui <- function(ctx, family, cnpj) {
   d <- p$series
   color <- fund_family_colors[[family]]
   rank_text <- if (is.na(p$rank)) "—" else sprintf("#%s de %s", format_int(p$rank), format_int(p$peers))
+  has_holders <- any(!is.na(d$quotaholders))
+  # Compact: four KPIs across, the two charts side by side (fits the detail pane).
   shiny::tagList(
-    bslib::layout_columns(
-      col_widths = c(6, 6, 6, 6), class = "tm-kpis tm-kpis-sm",
+    shiny::div(
+      class = "tm-kpi-row tm-kpis-sm",
       kpi("Patrimônio líquido", format_brl(p$last$net_assets), month_label(p$last$month)),
       kpi("Variação 12 meses", format_pct(p$net_assets_change), "mesmo mês, ano anterior"),
       kpi("Cotistas", format_int(p$last$quotaholders)),
       kpi(sprintf("Posição entre %s", toupper(family)), rank_text,
           if (is.na(p$percentile)) NULL else sprintf("maior que %s dos fundos", format_pct(p$percentile, 0, sign = FALSE)))),
-    shiny::div(class = "tm-subhead", "Patrimônio líquido"),
-    svg_line_chart(d$month, d$net_assets, color, label = "Patrimônio líquido do fundo", height = 180,
-                   tips = sprintf("%s\nPL %s\nFonte: %s, linha %s", month_label(d$month), format_brl(d$net_assets),
-                                  d$source_file, d$source_line)),
-    if (any(!is.na(d$quotaholders))) shiny::tagList(
-      shiny::div(class = "tm-subhead", "Cotistas"),
-      svg_line_chart(d$month, d$quotaholders, color, format_value = axis_int, format_tip = format_int,
-                     area = FALSE, label = "Número de cotistas do fundo", height = 150)),
+    shiny::div(
+      class = if (has_holders) "tm-profile-charts" else "tm-profile-charts tm-one",
+      shiny::div(shiny::div(class = "tm-subhead", "Patrimônio líquido"),
+                 svg_line_chart(d$month, d$net_assets, color, label = "Patrimônio líquido do fundo", height = 220,
+                                tips = sprintf("%s\nPL %s\nFonte: %s, linha %s", month_label(d$month),
+                                               format_brl(d$net_assets), d$source_file, d$source_line))),
+      if (has_holders) shiny::div(
+        shiny::div(class = "tm-subhead", "Cotistas"),
+        svg_line_chart(d$month, d$quotaholders, color, format_value = axis_int, format_tip = format_int,
+                       area = FALSE, label = "Número de cotistas do fundo", height = 220))),
     shiny::div(class = "tm-caption", "Valores do informe de cada período (versão mais recente). Passe o mouse para ver o arquivo de origem."))
 }

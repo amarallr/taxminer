@@ -13,19 +13,41 @@
 > Receita Federal do Brasil** nem tem vinculação institucional com o órgão
 > ou com a CVM.
 
-## 1. Apresentação
+## 1. Apresentação: engenharia de dados, inteligência artificial e engenharia de software
 
-O TaxMiner é um projeto independente e de código aberto para coletar,
-organizar, processar e analisar documentos públicos de natureza tributária,
-contábil e financeira.
+O **TaxMiner** é um projeto independente e de código aberto (*open source*), voltado à coleta, organização, processamento, integração e análise inteligente de documentos públicos de natureza tributária, contábil e financeira. Seu objetivo é transformar grandes volumes de informações dispersas, frequentemente disponibilizadas em formatos não estruturados ou semiestruturados, em bases de dados e conhecimento organizadas, pesquisáveis, rastreáveis e acessíveis, contribuindo para a transparência, a produção de conhecimento e a identificação de padrões, relações e possíveis inconsistências.
 
-Órgãos públicos e empresas divulgam um grande volume de informações
-relevantes, mas esse conhecimento fica espalhado por plataformas, documentos,
-formatos e períodos diferentes. O TaxMiner combina engenharia de dados,
-processamento de documentos, mecanismos de pesquisa e técnicas de
-inteligência artificial para transformar esses documentos, em geral não
-estruturados ou semiestruturados, em bases de conhecimento organizadas,
-rastreáveis e acessíveis.
+Órgãos públicos, entidades reguladoras e empresas disponibilizam continuamente um vasto conjunto de informações relevantes. Entretanto, esses dados encontram-se distribuídos entre diferentes plataformas, fontes, formatos e períodos históricos, dificultando sua integração, recuperação e análise sistemática. Para enfrentar esse desafio, o TaxMiner combina **engenharia de dados, processamento automatizado de documentos, bancos de dados, pesquisa semântica e inteligência artificial generativa**, permitindo transformar informações fragmentadas em conhecimento estruturado e útil para análises financeiras, contábeis, tributárias e regulatórias.
+
+### Inteligência artificial como instrumento de desenvolvimento
+
+Um dos principais diferenciais do TaxMiner está em seu processo de construção: **o projeto é concebido e desenvolvido integralmente com o apoio de inteligência artificial generativa, utilizando engenharia de prompts (*Prompt Engineering*) e agentes inteligentes de desenvolvimento de software**.
+
+Nesse modelo, a inteligência artificial participa de todas as etapas do ciclo de desenvolvimento, incluindo levantamento e especificação de requisitos, planejamento, definição da arquitetura, implementação, revisão de código, elaboração de testes, documentação, manutenção e evolução contínua.
+
+A engenharia de prompts desempenha papel central nesse processo, permitindo traduzir requisitos funcionais, regras de negócio e decisões arquiteturais em instruções estruturadas, contextualizadas, verificáveis e reproduzíveis. A supervisão humana permanece responsável pela definição dos objetivos, pelas decisões técnicas e funcionais, pela avaliação dos resultados e pela aceitação das entregas.
+
+O desenvolvimento utiliza como referência as **boas práticas de Engenharia de Software sistematizadas pelo SWEBOK (*Software Engineering Body of Knowledge*), do IEEE Computer Society**, abrangendo engenharia de requisitos, arquitetura e projeto de software, construção, testes, manutenção, qualidade, gerenciamento de configuração e processos de engenharia.
+
+Essas práticas são complementadas por princípios de modularidade, versionamento com Git, integração contínua (CI), testes automatizados, rastreabilidade de requisitos, documentação técnica e validação sistemática, buscando assegurar qualidade, confiabilidade, segurança, auditabilidade e sustentabilidade do software.
+
+### Inteligência artificial como componente da plataforma
+
+Além de apoiar seu desenvolvimento, a inteligência artificial constitui um dos componentes tecnológicos do próprio TaxMiner.
+
+A plataforma integra técnicas de engenharia de dados, processamento de documentos, recuperação de informações e modelos de linguagem de grande porte (*Large Language Models — LLMs*) para apoiar a extração, classificação, estruturação, contextualização e análise de informações provenientes de diferentes fontes documentais.
+
+Essa abordagem permite explorar grandes conjuntos de documentos, identificar relações entre entidades, reconhecer padrões, comparar informações ao longo do tempo e apoiar a identificação de inconsistências e situações que mereçam investigação adicional.
+
+A arquitetura prioriza a preservação das fontes originais, a rastreabilidade das informações, a utilização de dados estruturados sempre que disponíveis e a fundamentação das análises em evidências documentais verificáveis, reduzindo riscos de interpretações incorretas e de geração de informações sem suporte nas fontes consultadas.
+
+### Uma abordagem integrada de inovação
+
+O **TaxMiner reúne duas aplicações complementares da inteligência artificial generativa: como tecnologia utilizada na construção do software e como capacidade incorporada ao produto desenvolvido**.
+
+Essa característica faz do projeto não apenas uma plataforma de mineração e inteligência documental, mas também uma iniciativa experimental de engenharia de software orientada por IA, destinada a explorar como a combinação entre conhecimento especializado, engenharia de prompts, agentes inteligentes e práticas consolidadas de desenvolvimento pode acelerar a construção de soluções tecnológicas complexas.
+
+Ao integrar engenharia de dados, inteligência artificial generativa e boas práticas de engenharia de software, o TaxMiner busca demonstrar a viabilidade de uma abordagem de desenvolvimento aberta, documentada, reproduzível e tecnicamente rigorosa, na qual a automação inteligente amplia a capacidade de implementação sem substituir a responsabilidade humana pela qualidade, segurança e confiabilidade dos resultados.
 
 ## 2. Visão geral
 
