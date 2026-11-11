@@ -221,6 +221,8 @@
       $(this).addClass('tm-selected').siblings('.tm-selected').removeClass('tm-selected');
       t.selected = t.rows[+$(this).attr('data-row')]; t.detail(t.selected);
     });
+    t.el.on('change', '.tm-ficha-table', function () { if (t.ficha) t.fichaTable(+this.value); });
+    t.el.on('change', '.tm-ficha-period', function () { if (t.ficha) t.fichaPeriod(this.value); });
     t.el.on('click', '.tm-static-detail .nav-link', function (e) {
       e.preventDefault();
       var k = $(this).attr('data-pane'), box = $(this).closest('.tm-static-detail');
@@ -286,7 +288,7 @@
     t.el.find('.tm-pager').html(pages > 1 ? (t.page ? '<a href="#" data-step="-1">‹ anterior</a>' : '<span></span>') +
       '<span>página ' + fmtInt(t.page + 1) + ' de ' + fmtInt(pages) + '</span>' +
       (t.page < pages - 1 ? '<a href="#" data-step="1">próxima ›</a>' : '<span></span>') : '');
-    t.el.find('.tm-strip').html('Dados gerados em ' + esc(d.meta.generated) + ' · Perfil e Denominações aqui; ficha e série completa no app local');
+    t.el.find('.tm-strip').html('Dados gerados em ' + esc(d.meta.generated) + ' · Ficha e Série completa das tabelas principais; as demais tabelas no app local');
     if (!t.selected && rows.length) { t.selected = rows[0]; t.detail(rows[0]); t.el.find('tr[data-row="0"]').addClass('tm-selected'); }
   };
   FundTab.prototype.detail = function (f) {
@@ -297,11 +299,34 @@
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2><div class="tm-detail-meta"><span><strong>Administrador: </strong>' +
       esc(f[F.admin] || 'não publicado') + (f[F.adminCnpj] ? ' · ' + esc(f[F.adminCnpj]) : '') + '</span><span><strong>Informes: </strong>' +
       fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span></div></div>' +
-      '<div class="tm-detail-body"><ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
+      '<div class="tm-detail-body"><div class="tm-static-tools"><select class="form-select form-select-sm tm-ficha-table" disabled>' +
+      '<option>Carregando informes…</option></select><select class="form-select form-select-sm tm-ficha-period" disabled></select></div>' +
+      '<div class="tm-caption tm-ficha-summary"></div>' +
+      '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="ficha">Ficha</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="nomes">Denominações (' + names.length + ')</a></li></ul>' +
       '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-empty">Carregando série…</div></div>' +
+      '<div data-pane-body="ficha" hidden><div class="tm-empty">Carregando ficha…</div></div>' +
+      '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div>' +
       '<div data-pane-body="nomes" hidden>' + namesTable(names) + '</div></div></div>');
     var key = f[F.key];
+    loadFicha(f).done(function (fd, urls) {
+      if (t.selected !== f) return;
+      t.ficha = {data: fd, urls: urls};
+      var sel = box.find('.tm-ficha-table');
+      if (!fd || !fd.t.length) {
+        sel.html('<option>Sem informes nas tabelas publicadas</option>');
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html(
+          '<div class="tm-empty">Sem linhas nas tabelas principais para este fundo. As demais tabelas estão no app local.</div>');
+        return;
+      }
+      // The file lists the main table of the family first.
+      sel.html(fd.t.map(function (x, i) {
+        return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
+      }).join('')).prop('disabled', fd.t.length < 2);
+      t.fichaTable(0);
+    });
     getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
       if (t.selected !== f) return;
       box.find('[data-pane-body="perfil"]').html(profile(f, s[key], color));
@@ -309,6 +334,88 @@
       box.find('[data-pane-body="perfil"]').html('<div class="tm-empty">Não foi possível carregar a série deste fundo.</div>');
     });
   };
+  // ---- Ficha and Série completa (data/fichas/{family}/{CNPJ}.json, written by
+  // write_static_fichas in prototype/static_funds.R). Values arrive formatted
+  // with the rules of the app; the markup is the one of report_card and
+  // wide_table in prototype/fund_search_module.R. ----
+  var CARD_COLUMNS = 6;
+  function loadFicha(f) {
+    var done = $.Deferred();
+    $.when(getJSON('data/fichas/urls.json'), getJSON('data/fichas/' + f[F.family] + '/' + f[F.key] + '.json'))
+      .done(function (u, d) { done.resolve(d[0], u[0]); })
+      .fail(function () { getJSON('data/fichas/urls.json').always(function (u) { done.resolve(null, $.isArray(u) ? u : []); }); });
+    return done.promise();
+  }
+  function citeText(c) { return 'CVM ' + c[1] + ', ' + c[2] + ', linha ' + c[3] + ', arquivo SHA-256 ' + c[4]; }
+  function fieldTip(x) { return x[0] + '\nCampo CVM: ' + x[1] + (x[2] ? ' (sem descrição no dicionário)' : ''); }
+  function fieldHead(x, tag, cls) {
+    return '<' + tag + ' class="' + cls + (x[2] ? ' tm-derived' : '') + '" data-tip="' + esc(fieldTip(x)) + '">' + esc(x[0]) + '</' + tag + '>';
+  }
+  function valueText(v) { return v === '' || v == null ? '—' : v; }
+  function plural(n, one, many) { return n === 1 ? one : fmtInt(n) + ' ' + many; }
+  FundTab.prototype.fichaTable = function (k) {
+    var t = this, box = t.el.find('.tm-static-detail'), x = t.ficha.data.t[k];
+    t.fichaIndex = k;
+    var periods = [];
+    x.c.forEach(function (c) { if (periods.indexOf(c[0]) < 0) periods.push(c[0]); });
+    box.find('.tm-ficha-period').html(periods.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join(''))
+      .prop('disabled', periods.length < 2);
+    box.find('.tm-ficha-summary').text(fmtInt(x.c.length) + ' linhas em ' + fmtInt(periods.length) +
+      ' períodos · valores originais da CVM, cada coluna cita o arquivo de origem');
+    box.find('[data-pane-body="serie"]').html(seriesTable(x, t.ficha.urls));
+    t.fichaPeriod(periods[0]);
+  };
+  FundTab.prototype.fichaPeriod = function (p) {
+    var t = this, x = t.ficha.data.t[t.fichaIndex], urls = t.ficha.urls;
+    var idx = [];
+    x.c.forEach(function (c, i) { if (c[0] === p) idx.push(i); });
+    var all = idx.length;
+    idx = idx.slice(0, CARD_COLUMNS);
+    var fields = x.f.filter(function (y) { return idx.some(function (i) { return y[4][i] !== ''; }); });
+    var hidden = x.f.length - fields.length, html;
+    function link(c) {
+      var u = c[5] == null ? null : urls[c[5]];
+      return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(citeText(c)) + '</a>' : esc(citeText(c));
+    }
+    if (idx.length === 1) {
+      var i = idx[0];
+      html = '<div class="tm-ficha-cite">Fonte: ' + link(x.c[i]) + '</div><div class="tm-ficha">' + fields.map(function (y) {
+        return '<div class="tm-ficha-item">' + fieldHead(y, 'div', 'tm-ficha-label') + '<div class="tm-ficha-value' +
+               (y[3].charAt(i) === '1' ? ' tm-num' : '') + '">' + esc(valueText(y[4][i])) + '</div></div>';
+      }).join('') + '</div>';
+    } else {
+      html = '<table class="tm-card-table"><thead><tr><th class="tm-field">Campo</th>' +
+        idx.map(function (i) { return '<th>' + link(x.c[i]) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        fields.map(function (y) {
+          return '<tr>' + fieldHead(y, 'th', 'tm-field') + idx.map(function (i) {
+            return '<td' + (y[3].charAt(i) === '1' ? ' class="tm-num"' : '') + '>' + esc(valueText(y[4][i])) + '</td>';
+          }).join('') + '</tr>';
+        }).join('') + '</tbody></table>';
+    }
+    // Hidden = fields of the fund empty in this period (the file already
+    // leaves out fields empty in every period, as the app does per period).
+    var notes = [];
+    if (all > CARD_COLUMNS) notes.push('Mostrando ' + CARD_COLUMNS + ' de ' + all + ' linhas deste período; veja todas em Série completa.');
+    if (hidden > 0) notes.push(hidden === 1 ? '1 campo vazio neste período oculto.' : plural(hidden, '', 'campos vazios neste período ocultos.'));
+    t.el.find('.tm-static-detail [data-pane-body="ficha"]').html(
+      (notes.length ? '<div class="tm-caption">' + notes.join(' ') + '</div>' : '') + '<div class="tm-table-wrap">' + html + '</div>');
+  };
+  function seriesTable(x, urls) {
+    var head = x.c.map(function (c) {
+      var u = c[5] == null ? null : urls[c[5]], cite = esc(citeText(c));
+      return '<th class="tm-col-period" title="' + cite + '">' +
+             (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(c[0]) + '</a>' : esc(c[0])) + '</th>';
+    }).join('');
+    var body = x.f.map(function (y) {
+      var cells = '';
+      for (var i = 0; i < y[4].length; i++) {
+        cells += '<td' + (y[3].charAt(i) === '1' ? ' class="tm-num"' : '') + '>' + esc(valueText(y[4][i])) + '</td>';
+      }
+      return '<tr>' + fieldHead(y, 'th', 'tm-field') + cells + '</tr>';
+    }).join('');
+    return '<div class="tm-caption">Períodos do mais recente ao mais antigo; passe o mouse no período para ver a citação da fonte.</div>' +
+      '<table class="tm-wide tm-series"><thead><tr><th class="tm-field">Campo</th>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+  }
   function profile(f, s, color) {
     if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';
     var months = s[1].map(function (_, i) { return addMonths(s[0], i); });

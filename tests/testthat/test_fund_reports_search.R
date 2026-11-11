@@ -300,3 +300,31 @@ test_that("CNPJ and CPF fields are shown with their masks only when valid", {
   expect_equal(display_value("11222333000181", "CNPJ_ADMIN")$text, "11.222.333/0001-81")
   expect_equal(display_values(c("11222333000181", "", NA), "CNPJ_ADMIN")$text, c("11.222.333/0001-81", "—", "—"))
 })
+
+test_that("the published fund records carry the series of the app, formatted the same way", {
+  skip_if_not_installed("jsonlite")
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "src", "intelligence", "panorama_data.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), encoding = "UTF-8")
+  out <- tempfile("site")
+  data <- list(urls = fund_source_urls(root), descriptions = fund_field_descriptions(root))
+  res <- write_static_fichas(out, root, data, tables = list(fii = "inf_mensal_fii_ativo_passivo"))
+  expect_equal(res$funds, 2L)
+  f <- jsonlite::fromJSON(file.path(out, "data", "fichas", "fii", "00332266000131.json"), simplifyVector = FALSE)
+  x <- f$t[[1]]
+  expect_equal(x$n, "inf_mensal_fii_ativo_passivo")
+  # Most recent period first, citing the CVM file and line.
+  expect_equal(vapply(x$c, function(c) c[[1]], ""), c("2026-03", "2026-01"))
+  expect_equal(x$c[[2]][[4]], 2L)
+  urls <- jsonlite::fromJSON(file.path(out, "data", "fichas", "urls.json"))
+  expect_equal(urls[x$c[[1]][[6]] + 1L], "https://dados.cvm.gov.br/dados/FII/inf_mensal_fii_2026.zip")
+  codes <- vapply(x$f, function(y) y[[2]], "")
+  expect_false("Campo_Vazio" %in% codes)
+  v <- x$f[[match("Valor_Ativo", codes)]]
+  expect_equal(unlist(v[[5]]), c("0,00", "-1.234,56"))
+  expect_equal(v[[4]], "11")
+  # Same text as the Série completa of the app.
+  rows <- fund_report_rows(root, "fii", "inf_mensal_fii_ativo_passivo", "00332266000131")
+  expect_match(as.character(wide_table(rows)), "-1.234,56", fixed = TRUE)
+  expect_equal(unlist(x$f[[match("fund_cnpj_original", codes)]][[5]]), c("00.332.266/0001-31", "00.332.266/0001-31"))
+})

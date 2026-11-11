@@ -744,3 +744,8 @@ table.tm-series th.tm-field { min-width: 180px; max-width: 220px; padding: 3px 8
 /* Cell values 30% smaller (developer request 2026-11-11): .6rem -> .42rem. */
 table.tm-series td { font-size: .42rem; line-height: 1.35; max-width: 52px; }
 table.tm-series td.tm-num { max-width: none; }
+
+/* Published fund tabs: table and period pickers above Ficha / Série completa */
+.tm-static-tools { display: grid; grid-template-columns: 2fr 1fr; gap: 6px; margin-bottom: 2px; }
+.tm-static-tools .form-select { font-size: .66rem; padding: 2px 24px 2px 8px; min-height: 26px; }
+.tm-static-detail [data-pane-body="serie"] { overflow: auto; }

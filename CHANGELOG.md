@@ -1,5 +1,14 @@
 # Changelog
 
+## Ficha e Série completa no painel publicado — 2026-11-11
+
+- As abas de fundos do painel publicado (Fundos, FIDC, FII, FIP, FIAGRO) ganham Ficha e Série completa,
+  como no app local, para as tabelas principais de cada tipo: FIDC tab_I; FII geral, complemento e
+  ativo/passivo mensais; FIP trimestral e quadrimestral; FIAGRO mensal. As demais tabelas seguem no app local.
+- Um arquivo por fundo (`data/fichas/{tipo}/{CNPJ}.json`, mediana 28 KB), baixado só quando o fundo é
+  aberto. Valores e rótulos são gerados pelas mesmas funções do app (formato brasileiro, máscara de
+  CNPJ/CPF, descrição do dicionário da CVM) e cada coluna cita arquivo, linha e SHA-256 da origem.
+
 ## Navegação mais rápida — 2026-11-11
 
 - Administradores (app local): índice administrador × fundo calculado uma vez na carga; trocar de

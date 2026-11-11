@@ -5,8 +5,9 @@
 # Panorama, Administradores, Fundos and one tab per fund type (FIDC, FII, FIP,
 # FIAGRO), built from aggregated public CVM data (ODbL); no raw files. The fund
 # tabs read JSON files in the browser (prototype/static_funds.R,
-# prototype/static/taxminer_static.js); the report rows (Ficha, Série completa)
-# stay in the local app.
+# prototype/static/taxminer_static.js); Ficha and Série completa read one file
+# per fund with the main report tables (write_static_fichas); the other
+# tables stay in the local app.
 # Writes site/app/index.html, taxminer.css, taxminer_static.js, data/ and lib/.
 
 if (!file.exists("taxminer.Rproj")) stop("Run from the TaxMiner project root.")
@@ -34,6 +35,7 @@ generated <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 fund_files <- write_static_fund_data(out_dir, data, ctx, generated)
+fichas <- write_static_fichas(out_dir, root, data)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
 panorama <- write_panorama_data(file.path(out_dir, "data", "panorama"), ctx, data$directory, data$master, generated)
 
@@ -70,8 +72,8 @@ about_area <- shiny::div(
              shiny::p(class = "tm-lede",
                       sprintf("Gerado em %s a partir dos informes públicos da CVM", generated),
                       "(dados.cvm.gov.br, Open Database License — ODbL). Material de pesquisa, não conclusão fiscal.",
-                      "As abas de fundos trazem lista, perfil e denominações; a ficha completa e a série de cada",
-                      "informe rodam no app local do TaxMiner."),
+                      "As abas de fundos trazem lista, perfil, ficha, série completa e denominações das tabelas",
+                      "principais de cada tipo; as demais tabelas dos informes ficam no app local do TaxMiner."),
              shiny::p(class = "tm-lede", shiny::strong("Não é um serviço oficial"),
                       " da Receita Federal do Brasil nem da CVM, e não tem vinculação institucional com esses órgãos."),
              shiny::p(shiny::tags$a(href = "https://github.com/amarallr/taxminer", "Código no GitHub"), " · ",
@@ -108,5 +110,5 @@ unlink(c(list.files(lib, pattern = "\\.map$", recursive = TRUE, full.names = TRU
          list.files(lib, pattern = "^font\\.css$", recursive = TRUE, full.names = TRUE),
          list.dirs(lib)[basename(list.dirs(lib)) == "fonts"]), recursive = TRUE)
 size <- sum(file.info(list.files(out_dir, recursive = TRUE, full.names = TRUE))$size)
-cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files).\n",
-            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks))
+cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files, %d fund records).\n",
+            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks, fichas$funds))

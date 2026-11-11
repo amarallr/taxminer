@@ -2,7 +2,7 @@
 # (prototype/static/taxminer_static.js renders them). Same sources as the app:
 # fund list and denominations from the entity catalog
 # (src/data/entity_resolution.R), profile figures from the derived metrics.
-# Raw report rows (Ficha, Série completa) stay in the local app. JSON writers
+# Ficha and Série completa: one file per fund (write_static_fichas). JSON writers
 # and the per-fund monthly series: src/intelligence/panorama_data.R.
 
 # Profile figures per fund (vectorized fund_profile): latest reported month,
@@ -112,6 +112,81 @@ write_static_admin_months <- function(out_dir, ctx, keys, families = unname(admi
                file.path(out_dir, files[i]), useBytes = TRUE)
   }
   files
+}
+
+# --- Ficha and Série completa -------------------------------------------------
+# Main report tables of each family (the ones the local app opens first). The
+# other tables stay in the local app.
+static_ficha_tables <- list(
+  fidc = "inf_mensal_fidc_tab_I",
+  fii = c("inf_mensal_fii_geral", "inf_mensal_fii_complemento", "inf_mensal_fii_ativo_passivo"),
+  fip = c("inf_trimestral_fip", "inf_quadrimestral_fip"),
+  fiagro = "inf_mensal_fiagro")
+
+# One file per fund, data/fichas/{family}/{CNPJ digits}.json, read when the
+# fund is opened: {"t": [{"n": table, "c": [[period, dataset, file, line,
+# sha12, url index]] (most recent first), "f": [[label, code, derived, numeric
+# flags, [values]]]}]}. Values are already formatted with the rules of the app
+# (display_values) and labels come from the CVM dictionary (field_labels), so
+# both versions show the same text; empty values are "". Fields empty in every
+# row of the fund are left out. data/fichas/urls.json lists the CVM files.
+write_static_fichas <- function(out_dir, root, data, tables = static_ficha_tables) {
+  dir <- file.path(out_dir, "data", "fichas")
+  unlink(dir, recursive = TRUE)
+  dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  urls <- data$urls
+  base <- fund_processed_paths(root)$base
+  lineage <- c("citation", "source_url", "zip_sha256", "source_file", "source_line",
+               "fund_cnpj_normalized", "reference_period", "layout_version")
+  parts <- new.env(parent = emptyenv())
+  rows_total <- 0L
+  for (fam in names(tables)) for (tn in tables[[fam]]) {
+    if (!dir.exists(file.path(base, fam, tn))) next
+    r <- as.data.frame(open_fund_table(root, fam, tn))
+    r <- r[!is.na(r$fund_cnpj_normalized), , drop = FALSE]
+    period <- row_periods(r)
+    o <- order(r$fund_cnpj_normalized, period, r$source_file, r$source_line,
+               decreasing = c(FALSE, TRUE, FALSE, FALSE), method = "radix")
+    r <- r[o, , drop = FALSE]; period <- period[o]
+    rows_total <- rows_total + nrow(r)
+    shown <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+    url <- match(r$zip_sha256, urls$file_sha256)
+    cols <- sprintf("[%s,%s,%s,%s,%s,%s]", json_string(shown), json_string(r$dataset), json_string(r$source_file),
+                    ifelse(is.na(r$source_line), "null", r$source_line), json_string(substr(r$zip_sha256, 1L, 12L)),
+                    ifelse(is.na(url), "null", url - 1L))
+    fields <- c("fund_cnpj_original", setdiff(names(r), c(lineage, fund_report_columns)))
+    labels <- field_labels(fields, data$descriptions, tn)
+    filled <- matrix(FALSE, nrow(r), length(fields))
+    text <- vector("list", length(fields)); num <- text
+    for (k in seq_along(fields)) {
+      v <- r[[fields[k]]]
+      filled[, k] <- !is.na(v) & nzchar(trimws(v))
+      d <- display_values(v, fields[k])
+      text[[k]] <- json_string(ifelse(filled[, k], d$text, ""))
+      num[[k]] <- ifelse(d$num, "1", "0")
+    }
+    head <- sprintf("[%s,%s,%d,", json_string(labels$label), json_string(labels$field), as.integer(labels$derived))
+    groups <- split(seq_len(nrow(r)), r$fund_cnpj_normalized)
+    for (cnpj in names(groups)) {
+      i <- groups[[cnpj]]
+      keep <- which(colSums(filled[i, , drop = FALSE]) > 0)
+      f <- vapply(keep, function(k) paste0(head[k], "\"", paste(num[[k]][i], collapse = ""), "\",[",
+                                           paste(text[[k]][i], collapse = ","), "]]"), character(1))
+      key <- paste(fam, cnpj, sep = "/")
+      assign(key, c(parts[[key]], sprintf("{\"n\":%s,\"c\":[%s],\"f\":[%s]}", json_string(tn),
+                                          paste(cols[i], collapse = ","), paste(f, collapse = ","))), envir = parts)
+    }
+    rm(r, filled, text, num); invisible(gc())
+  }
+  for (fam in names(tables)) dir.create(file.path(dir, fam), showWarnings = FALSE)
+  keys <- ls(parts)
+  for (key in keys) {
+    writeLines(enc2utf8(paste0("{\"t\":[", paste(parts[[key]], collapse = ","), "]}")),
+               file.path(dir, paste0(key, ".json")), useBytes = TRUE)
+  }
+  writeLines(enc2utf8(paste0("[", paste(json_string(urls$source_url), collapse = ","), "]")),
+             file.path(dir, "urls.json"), useBytes = TRUE)
+  invisible(list(funds = length(keys), rows = rows_total))
 }
 
 # Tab body: filled in the browser by taxminer_static.js.
