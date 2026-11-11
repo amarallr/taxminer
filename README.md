@@ -278,7 +278,7 @@ acompanhados separadamente.
 | Assistentes (Codex, Claude Code, Gemini CLI, GitHub Copilot) | Testados no RStudio e aceitos. |
 | Fase 1.1 — Soluções de Consulta | **Suspensa** por decisão do desenvolvedor, com as fontes já verificadas. |
 | Fase 1.2 — Notas explicativas | **Em andamento:** fontes verificadas; pipeline de coleta implementado e testado; coleta das 14.015 entregas DFP (2010–2026) em execução; extração das notas em desenvolvimento. |
-| Fase 1.3 — Fundos de investimento | **Em andamento** (`decision_0029`): fontes verificadas e 102 arquivos da CVM coletados (FII, FIDC, FIP, FIAGRO); consolidação em Parquet implementada, rodada completa pendente. |
+| Fase 1.3 — Fundos de investimento | **Em andamento** (`decision_0029`): fontes verificadas e 102 arquivos da CVM coletados (FII, FIDC, FIP, FIAGRO); consolidação em Parquet concluída (12,16 milhões de linhas, inventário de layouts); busca pendente. |
 | Fase 2 — Inteligência cruzada | Não iniciada. |
 
 Itens de trabalho: 24 registrados, sendo 10 implementados, 2 em andamento,

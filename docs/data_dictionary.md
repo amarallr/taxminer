@@ -90,6 +90,23 @@ across periods with `open_fund_table()`, which unifies the layouts.
 Members are read as Latin-1 and split on `;` without quote handling: the
 published files carry literal quotes inside text and a constant field count.
 
+### Layout inventory (Data P04 step 00, consolidation of 2026-11-11)
+
+Measured on the 102 files collected on 2026-11-11 (3,094 members, 12.16 million
+rows). A layout is a distinct header; periods are those of the members.
+
+| Family | Tables | Rows | Layout breaks |
+|---|---:|---:|---|
+| FII | 32 (`inf_mensal` 3, `inf_trimestral` 16, `inf_anual` 13) | 1,397,634 | Every table changes between 2020 and 2021; `inf_mensal_fii_ativo_passivo` also between 2018 and 2019. Column counts mostly unchanged, so the break is in names. |
+| FIDC | 18 (`tab_I`–`tab_X_7`) | 10,680,382 | 2020-11 for `tab_I`–`tab_VII`, `tab_X_1_1`, `tab_X_5` and `tab_X_7` (`tab_I` also at 2019-11: 67, 104 and 109 columns); 2023-10 for `tab_X_1`–`tab_X_4` and `tab_X_6`; `tab_X` first appears in 2023-10, `tab_X_1_1` and `tab_X_7` in 2019-11. |
+| FIP | 2 | 74,391 | `inf_trimestral_fip` (2010–2023, 54 columns, `CNPJ_FUNDO`) is replaced by `inf_quadrimestral_fip` (2024–2026, 55 columns, `CNPJ_FUNDO_CLASSE`). |
+| FIAGRO | 2 | 10,109 | None (2025-05 to 2026-10). |
+
+Quality records of that run: `duplicate_row` 13,603 (10,636 in FII),
+`repeated_fund_period` 1,773 member-level records, `column_not_in_dictionary`
+and `dictionary_column_absent` 1,251 each (the META files describe the current
+layout only), `resubmitted_versions` 10. Every fund CNPJ passed the check digits.
+
 `fund_quality_issues/` (one part per source file) holds `family`, `dataset`,
 `table_name`, `reference_period`, `zip_sha256`, `source_file`, `source_line`
 (empty for member-level issues), `issue_type`, `detail` and `row_count`.

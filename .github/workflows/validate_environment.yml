@@ -12,7 +12,7 @@ permissions:
 jobs:
   validate:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,8 +22,9 @@ jobs:
           r-version: "4.5.1"
           use-public-rspm: false
       # renv reports false cycles (magrittr <-> testthat, curl <-> qpdf <->
-      # pdftools) when locked versions without a Windows binary are built from
-      # source; install them from their locked tarballs before the restore.
+      # pdftools, arrow <-> cpp11) when locked versions without a Windows binary
+      # are built from source; install them at the locked versions before the
+      # restore (scripts/ci_preinstall_locked.R).
       - name: Preinstall locked source-only packages
         run: Rscript scripts/ci_preinstall_locked.R
       - name: Restore locked dependencies

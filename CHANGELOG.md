@@ -1,5 +1,12 @@
 # Changelog
 
+## Fundos consolidados e inventário de layouts — 2026-11-11
+
+- Rodada completa da consolidação dos fundos: 102 arquivos, 12,16 milhões de linhas.
+  Inventário de layouts e resumo de qualidade em `docs/data_dictionary.md`.
+- CI: `scripts/ci_preinstall_locked.R` passa a usar o binário quando a versão travada ainda
+  está no CRAN e inclui `cpp11` e `arrow`; limite do job em 60 minutos.
+
 ## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11
 
 - Coleta dos fundos (FII, FIDC, FIP, FIAGRO; `decision_0029`):

@@ -1,5 +1,26 @@
 # TaxMiner — estado do projeto
 
+## Fundos consolidados em Parquet — 2026-11-11T09:30:00-03:00
+
+### Fase 1.3, Data P04 (`work_0021`)
+
+- **Rodada completa** (`test_0047`): por família, e o FIDC em lotes de até 12 arquivos, cada
+  lote num processo novo (pico de 174 MB).
+- **Resultado:** 102 arquivos, 3.094 membros e 12,16 milhões de linhas, em 404 MB de Parquet
+  em `C:\TaxMinerData\investment_fund_reports\processed\`.
+- **Inventário de layouts** em `docs/data_dictionary.md`:
+  - FII: quebra em 2021 em todas as tabelas;
+  - FIDC: quebras em 2020-11 e 2023-10;
+  - FIP: troca do informe trimestral pelo quadrimestral em 2024.
+- **Qualidade:** todos os CNPJs passaram nos dígitos verificadores. Foram registradas
+  13.603 linhas duplicadas (10.636 no FII) e 10 casos de reapresentação. As diferenças
+  frente aos dicionários vêm de layouts antigos, porque os dicionários descrevem só o atual.
+- **CI do `eb012e6`:** a pré-instalação passou, mas o `restore` acusou outro ciclo falso
+  (`arrow` e `cpp11`). `scripts/ci_preinstall_locked.R` agora usa o binário quando o CRAN
+  ainda oferece a versão travada e o tarball nos outros casos, e inclui `cpp11` e `arrow`.
+  O limite de tempo do job subiu para 60 minutos. A correção falta ser enviada.
+- **Próximo:** busca dos fundos (`work_0022`).
+
 ## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11T04:30:00-03:00
 
 ### Fase 1.3, Collect P05 (`work_0020`, `decision_0029`)

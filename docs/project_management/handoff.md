@@ -1,6 +1,6 @@
 # Retomada do TaxMiner
 
-Atualizado: 2026-11-11T04:30:00-03:00. Branch `main`. O histórico completo de
+Atualizado: 2026-11-11T09:30:00-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.
 
@@ -33,9 +33,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     (`docs/data_sources.md`); 102 de 102 arquivos coletados
     (`test_0042`, `test_0043`).
   - **Data P04 (`work_0021`):** consolidação implementada e testada
-    (`test_0044`). A primeira rodada completa foi interrompida por falta de
-    memória (`test_0045`) e revelou um bug, já corrigido. A nova rodada
-    aguarda autorização.
+    (`test_0044`). Rodada completa feita (`test_0047`): 12,16 milhões de
+    linhas; inventário de layouts em `docs/data_dictionary.md`. A primeira
+    tentativa (`test_0045`) revelou um bug, já corrigido.
   - `work_0022` (busca) e `work_0023` (aceite) não iniciados.
 - **Layout dos dados (`work_0025`, `decision_0028`):** uma pasta por família em
   `C:\TaxMinerData`. Fundos e notas já movidos; as DFP serão movidas depois da
@@ -81,10 +81,11 @@ Acompanhar a coleta das DFP (`C:\TaxMinerData\collect_dfp.log` e
 `docs/data_sources.md` (retoma de onde parou). Em paralelo, atualizar o Parquet
 das notas com `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla
 scripts/extract_financial_notes.R` (só processa pacotes novos). Com
-autorização: commit e push das mudanças pendentes; confirmar no CI o
-`scripts/ci_preinstall_locked.R`; rodar a consolidação dos fundos por família
-(`scripts/consolidate_fund_reports.R fiagro`, `fip`, `fii`, `fidc`) e montar o
-inventário de layouts. Depois da coleta das DFP: `scripts/organize_data_dir.R
+autorização: commit e push da correção do CI (`arrow` e `cpp11`) e confirmação
+no CI; busca dos fundos (`work_0022`). Para atualizar os fundos: coleta
+`scripts/collect_fund_reports.R history` e consolidação por família
+(`scripts/consolidate_fund_reports.R fidc`; o FIDC usa menos memória em lotes).
+Depois da coleta das DFP: `scripts/organize_data_dir.R
 dfp`, corrigir a decodificação do índice em `src/collect/` (`risk_0016`) e
 rodar a extração com `force`. ITR depende de mais
 armazenamento. Fase 1.1 retoma quando o desenvolvedor decidir os
