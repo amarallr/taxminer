@@ -1,6 +1,15 @@
 # TaxMiner — estado do projeto
 
-## Busca dos fundos — 2026-11-11T11:40:00-03:00
+## Interface dos fundos e horários — 2026-11-11T08:04:21-03:00
+
+- **Interface** (`decision_0033`): autocomplete nos filtros, leiaute paisagem mestre-detalhe,
+  ficha vertical com citação, estilo próprio. Conferida por capturas de tela em 1440×900.
+  68 testes da busca passam.
+- **Horários** dos registros corrigidos pelo horário dos commits (`decision_0032`).
+- **Notas:** extração incremental em andamento (385 de 689 pacotes novos às 08:04).
+- **CI do `1dc1d73`** aprovado.
+
+## Busca dos fundos — 2026-11-11T07:44:45-03:00
 
 ### Fase 1.3, busca (`work_0022`, `decision_0030`)
 
@@ -21,7 +30,7 @@
   `docs/integration/hybrid_document_processing_plan.md`; Python autorizado (`decision_0031`).
 - **Próximo:** aceite humano da Fase 1.3 (`work_0023`).
 
-## Fundos consolidados em Parquet — 2026-11-11T09:30:00-03:00
+## Fundos consolidados em Parquet — 2026-11-11T07:27:59-03:00
 
 ### Fase 1.3, Data P04 (`work_0021`)
 
@@ -42,7 +51,7 @@
   O limite de tempo do job subiu para 60 minutos. A correção falta ser enviada.
 - **Próximo:** busca dos fundos (`work_0022`).
 
-## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11T04:30:00-03:00
+## Fase 1.3 iniciada e dados organizados por fonte — 2026-11-11T00:18:31-03:00
 
 ### Fase 1.3, Collect P05 (`work_0020`, `decision_0029`)
 
@@ -95,7 +104,7 @@
 
 **Validador:** 5 + 27 + 22 + 55 + 31 + 34 + 27 + 29 testes.
 
-## Notas consolidadas em Parquet — 2026-11-11T02:30:00-03:00
+## Notas consolidadas em Parquet — 2026-11-10T23:23:55-03:00
 
 ### Fase 1.2, Data P03 (`work_0012`, `decision_0027`)
 
@@ -126,7 +135,7 @@
 
 **Validador:** 5 + 27 + 22 + 55 + 28 testes aprovados.
 
-## Extração das notas validada e rotinas comuns implementadas — 2026-11-11T00:10:00-03:00
+## Extração das notas validada e rotinas comuns implementadas — 2026-11-10T22:56:50-03:00
 
 ### Fase 1.2, Data P03 (`work_0012`)
 
@@ -163,7 +172,7 @@
 
 **Validador:** 5 + 27 + 22 + 55 testes aprovados.
 
-## Fases reorganizadas — 2026-11-10T23:00:00-03:00
+## Fases reorganizadas — 2026-11-10T21:35:26-03:00
 
 Por decisão do desenvolvedor (`decision_0025`), o MVP passa a ter duas fases:
 
@@ -186,7 +195,7 @@ O que mudou:
   README, panorama e site já usam a nova numeração.
 - **Histórico:** as entradas anteriores mantêm a numeração da época.
 
-## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10T22:30:00-03:00
+## Fundos de investimento como nova fonte (Fase 4) — 2026-11-10T21:24:00-03:00
 
 Por decisão do desenvolvedor (`decision_0024`), os informes de fundos da CVM
 (FII, FIDC, FIP e FIAGRO) passam a ser a família `investment_fund_reports`. Ela
@@ -205,7 +214,7 @@ Fase 4 do MVP, independente das Fases 1 a 3.
   - todos os prompts, mais os novos `collect_p05` e `data_p04`.
 - **Ainda não autorizado:** coleta, código e dependências.
 
-## Novas fontes de dados (Common P07): etapa 00 e gate 01 — 2026-11-10T21:50:00-03:00
+## Novas fontes de dados (Common P07): etapa 00 e gate 01 — 2026-11-10T20:56:40-03:00
 
 Começou a adição de novas fontes de dados: relatórios mensais de fundos FIDC e
 FII da CVM, a partir de uma implementação de referência do desenvolvedor
@@ -224,7 +233,7 @@ FII da CVM, a partir de uma implementação de referência do desenvolvedor
 - **Riscos:** `risk_0014` e `risk_0015`.
 - **Coleta das DFP:** intacta (pid 7068).
 
-## Extração das notas iniciada; apresentação reformulada — 2026-11-10T20:40:00-03:00
+## Extração das notas iniciada; apresentação reformulada — 2026-11-10T20:33:39-03:00
 
 Por pedido do desenvolvedor, `work_0012` (Data P03) passa a `in_progress`:
 protótipo de extração das notas em `src/data/extract_financial_notes.R`
@@ -272,7 +281,7 @@ editor, confirmado pelo desenvolvedor (`test_0030`). Aceite humano pendente.
 Common: 8 de 11 itens implementados; os 3 restantes são os aceites das fases.
 Riscos abertos: 5 de 10. Nenhum MVP iniciado.
 
-## CI e restauração limpa — 2026-11-10T18:00:00-03:00
+## CI e restauração limpa — 2026-11-10T17:59:13-03:00
 
 CI `validate_environment` aprovado no GitHub Actions após correção do falso
 ciclo `magrittr`/`testthat` (`decision_0015`, `test_0022`–`test_0024`). Primeira

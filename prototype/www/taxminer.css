@@ -1,0 +1,141 @@
+/* TaxMiner local interface: restrained consulting-report style. Fonts are
+   system fonts only, so the app works offline. */
+:root {
+  --tm-navy: #0b1f3a;
+  --tm-ink: #1c2430;
+  --tm-muted: #5b6573;
+  --tm-rule: #d9dee5;
+  --tm-accent: #1f5bd7;
+  --tm-bg: #ffffff;
+  --tm-panel: #f5f7fa;
+}
+
+body { background: var(--tm-bg); color: var(--tm-ink); }
+
+.navbar { background: var(--tm-navy) !important; border-bottom: 3px solid var(--tm-accent); }
+.navbar .navbar-brand { color: #fff !important; font-size: 1.35rem; font-family: Georgia, "Times New Roman", serif; letter-spacing: .02em; }
+.navbar .nav-link { color: rgba(255,255,255,.75) !important; font-size: .9rem; letter-spacing: .03em; }
+.navbar .nav-link.active, .navbar .nav-link:hover { color: #fff !important; }
+
+.tm-page { width: 100%; max-width: 1600px; margin: 0 auto; padding: 8px 24px 40px; }
+.tm-hero { padding: 28px 4px 20px; border-bottom: 1px solid var(--tm-rule); margin-bottom: 20px; }
+.tm-hero h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 2.1rem;
+              color: var(--tm-navy); margin: 4px 0 8px; }
+.tm-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--tm-accent);
+              font-weight: 600; }
+.tm-lede { color: var(--tm-muted); max-width: 760px; font-size: 1rem; margin: 0; }
+
+.tm-kpis { margin-bottom: 16px; }
+.tm-kpi { border-top: 3px solid var(--tm-navy); padding: 12px 4px 4px; }
+.tm-kpi-value { font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; color: var(--tm-navy);
+                line-height: 1.1; }
+.tm-kpi-label { text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; color: var(--tm-muted);
+                margin-top: 4px; }
+.tm-kpi-note { font-size: .75rem; color: var(--tm-muted); }
+
+.card { border: 1px solid var(--tm-rule); border-radius: 2px; box-shadow: none; }
+.card-header { background: var(--tm-bg); border-bottom: 1px solid var(--tm-rule); font-weight: 600;
+               color: var(--tm-navy); font-size: .9rem; letter-spacing: .02em; }
+
+.bslib-sidebar-layout > .sidebar { background: var(--tm-panel); border-right: 1px solid var(--tm-rule); }
+.bslib-sidebar-layout .sidebar-title { font-family: Georgia, "Times New Roman", serif; color: var(--tm-navy);
+                                       font-weight: 400; font-size: 1.2rem; }
+.control-label, .form-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em;
+                              color: var(--tm-muted); font-weight: 600; }
+.selectize-input, .form-control { border-radius: 2px; border-color: var(--tm-rule); box-shadow: none; }
+.selectize-input.focus { border-color: var(--tm-accent); }
+.selectize-dropdown .active { background: #e8eefc; color: var(--tm-ink); }
+.btn-primary { background: var(--tm-navy); border-color: var(--tm-navy); border-radius: 2px;
+               letter-spacing: .04em; }
+.btn-primary:hover { background: var(--tm-accent); border-color: var(--tm-accent); }
+.tm-link { display: inline-block; margin-top: 8px; font-size: .85rem; color: var(--tm-accent); }
+.tm-footnote, .tm-caption { font-size: .78rem; color: var(--tm-muted); }
+.tm-caption { margin-bottom: 8px; }
+
+.tm-table-wrap { overflow: auto; }
+.tm-page table.shiny-table { font-size: .82rem; border-collapse: collapse; width: 100%; }
+.tm-page table.shiny-table th { background: var(--tm-bg); color: var(--tm-navy); font-weight: 600;
+                                border-bottom: 2px solid var(--tm-navy) !important; white-space: nowrap;
+                                position: sticky; top: 0; z-index: 1; }
+.tm-page table.shiny-table td { border-top: 1px solid var(--tm-rule) !important; vertical-align: top; }
+.tm-page table.shiny-table tr:hover td { background: #f3f6fb; }
+.tm-page table.shiny-table a { color: var(--tm-accent); text-decoration: none; }
+.tm-page table.shiny-table a:hover { text-decoration: underline; }
+
+.tm-about { max-width: 760px; }
+
+/* Results list, detail card and report tables. */
+.tm-section { margin-bottom: 20px; }
+.tm-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tm-card-head .form-group { margin: 0; }
+.tm-card-title { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 1.1rem; }
+
+table.tm-results, table.tm-card-table, table.tm-wide, .tm-page table.shiny-table {
+  width: 100%; border-collapse: collapse; font-size: .84rem; }
+table.tm-results th, table.tm-card-table thead th, table.tm-wide th {
+  background: var(--tm-bg); color: var(--tm-navy); font-weight: 600; text-align: left; white-space: nowrap;
+  border-bottom: 2px solid var(--tm-navy); padding: 9px 12px; position: sticky; top: 0; z-index: 1; }
+table.tm-results td, table.tm-card-table td, table.tm-wide td {
+  border-top: 1px solid var(--tm-rule); padding: 8px 12px; vertical-align: top; }
+table.tm-results tbody tr { cursor: pointer; }
+table.tm-results tbody tr:hover td { background: #f3f6fb; }
+table.tm-results tbody tr.tm-selected td { background: #e8eefc; }
+table.tm-results tbody tr.tm-selected td:first-child { box-shadow: inset 3px 0 0 var(--tm-accent); }
+
+.tm-mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tm-num { text-align: right; font-variant-numeric: tabular-nums; }
+.tm-muted { color: var(--tm-muted); font-style: italic; }
+.tm-empty { padding: 28px; color: var(--tm-muted); text-align: center; }
+.tm-tag { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .06em; padding: 2px 7px;
+          border: 1px solid currentColor; border-radius: 2px; }
+.tm-tag-fii { color: #1f5bd7; } .tm-tag-fidc { color: #0b7a75; }
+.tm-tag-fip { color: #8a4b08; } .tm-tag-fiagro { color: #4d7c0f; }
+
+.card-footer.tm-pager { display: flex; justify-content: space-between; align-items: center;
+                        background: var(--tm-bg); font-size: .85rem; }
+.tm-pager a { color: var(--tm-accent); text-decoration: none; }
+
+.tm-detail .card-header { padding: 18px 20px 14px; }
+.tm-detail-title { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 1.5rem;
+                   color: var(--tm-navy); margin: 4px 0 8px; }
+.tm-detail-meta { display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: .85rem; color: var(--tm-muted); }
+.tm-detail-meta strong { color: var(--tm-ink); font-weight: 600; }
+
+table.tm-card-table th.tm-field { width: 32%; min-width: 220px; color: var(--tm-muted); font-weight: 500;
+                                  white-space: normal; background: var(--tm-panel); }
+table.tm-card-table tbody th.tm-field { border-top: 1px solid var(--tm-rule); padding: 7px 12px;
+                                        position: static; border-bottom: 0; font-size: .8rem; }
+table.tm-card-table thead th a, table.tm-wide a { color: var(--tm-accent); text-decoration: none;
+                                                  font-weight: 500; white-space: normal; }
+table.tm-card-table thead th { white-space: normal; font-size: .76rem; }
+table.tm-wide td { white-space: nowrap; }
+.tm-tall { max-height: 620px; overflow: auto; }
+.nav-underline { margin: 8px 0 12px; }
+.nav-underline .nav-link { color: var(--tm-muted); }
+.nav-underline .nav-link.active { color: var(--tm-navy); border-bottom-color: var(--tm-accent); }
+.card-header.tm-detail-head { display: block; }
+
+/* Landscape: compact header, list and fund card side by side, each scrolling
+   within the window height. Below 1200 px they stack. */
+.tm-hero { padding: 14px 4px 12px; margin-bottom: 14px; }
+.tm-hero h1 { font-size: 1.65rem; margin: 2px 0 4px; }
+.tm-lede { font-size: .9rem; }
+.tm-kpis { margin-bottom: 10px; }
+.tm-kpi { padding: 8px 4px 2px; }
+.tm-kpi-value { font-size: 1.5rem; }
+.tm-master-detail { align-items: stretch; }
+.tm-fund { font-weight: 500; color: var(--tm-ink); }
+.tm-admin { font-size: .74rem; color: var(--tm-muted); margin-top: 2px; }
+.tm-pane-wrap { min-width: 0; }
+.tm-pane-wrap .shiny-html-output:not(:empty) + .tm-hint { display: none; }
+@media (min-width: 1200px) {
+  .tm-pane { height: calc(100vh - 290px); min-height: 520px; display: flex; flex-direction: column;
+             margin-bottom: 0; }
+  .tm-pane .tm-scroll { flex: 1 1 auto; overflow: auto; }
+  .tm-detail.tm-pane > .card-body { flex: 1 1 auto; overflow: auto; }
+  .tm-detail .tm-tall { max-height: none; overflow: visible; }
+}
+.tm-id { display: flex; align-items: center; gap: 8px; font-size: .74rem; color: var(--tm-muted);
+         margin-bottom: 3px; }
+.tm-card-title { white-space: nowrap; }
+table.tm-results td.tm-mono { font-size: .76rem; color: var(--tm-muted); }

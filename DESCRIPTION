@@ -7,4 +7,4 @@ Description: Local development foundation for TaxMiner. This is a project
 Encoding: UTF-8
 Depends: R (>= 4.5.1)
 License: MIT (see LICENSE)
-Imports: arrow, base64enc, pdftools, renv, shiny, testthat, xml2
+Imports: arrow, base64enc, bslib, pdftools, renv, shiny, testthat, xml2

@@ -1,5 +1,17 @@
 # Changelog
 
+## Interface dos fundos e horários corrigidos — 2026-11-11
+
+- Interface em paisagem: filtros com autocomplete (fundo por CNPJ ou nome, administrador,
+  períodos), lista paginada e ordenável com seleção por clique, ficha do fundo lado a lado com
+  campos na vertical e citação em link, série completa em aba. Estilo próprio sóbrio
+  (`prototype/www/taxminer.css`), só com fontes do sistema.
+- `bslib` declarado no `DESCRIPTION` (já estava no `renv.lock`).
+- Nomes publicados sem letras ("NA", ",", "0") aparecem como "(sem nome publicado)" e vão
+  para o fim da lista; o dado guardado não muda.
+- Testes da busca: 68.
+- Horários dos registros de 10 e 11/11 corrigidos (`decision_0032`).
+
 ## Busca dos fundos e plano de processamento documental — 2026-11-11
 
 - Busca dos fundos (`work_0022`): `src/intelligence/search_fund_reports.R`, com diretório de

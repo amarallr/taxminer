@@ -175,7 +175,7 @@ CI mínimo em `.github/workflows/validate_environment.yml`, com permissão
 somente leitura, que revoga o adiamento de CI de decision_0004. Refatoração
 dos prompts segue adiada para o pacote 1.1, como recomendado.
 
-## decision_0015 — 2026-11-10T18:00:00-03:00 — Correção do CI
+## decision_0015 — 2026-11-10T17:59:13-03:00 — Correção do CI
 
 A primeira execução do CI falhou: `renv::restore()` acusou falso ciclo de
 dependência `magrittr` <-> `testthat` ao compilar `magrittr` 2.0.3 do código
@@ -261,7 +261,7 @@ e do repositório. ITR fica para quando houver mais armazenamento. Pipeline em
 manifesto e SHA-256 por membro (`test_0033`, `test_0034`). A coleta roda em
 processo próprio na estação de trabalho. `risk_0013` aberto.
 
-## decision_0023 — 2026-11-10T21:50:00-03:00 — Gate 01 do Common P07: novas fontes de dados
+## decision_0023 — 2026-11-10T20:56:40-03:00 — Gate 01 do Common P07: novas fontes de dados
 
 O desenvolvedor aceitou as seis recomendações do gate 01
 (`docs/integration/new_data_sources_gap_analysis.md`) e autorizou o commit da etapa 00.
@@ -284,7 +284,7 @@ sem citar o nome do projeto de origem. O prompt foi salvo como
 
 Por ora, nada além deste registro: a etapa 02 não começou.
 
-## decision_0024 — 2026-11-10T22:30:00-03:00 — Fundos de investimento como nova família de fontes
+## decision_0024 — 2026-11-10T21:24:00-03:00 — Fundos de investimento como nova família de fontes
 
 O desenvolvedor decidiu que os relatórios de fundos de investimento da CVM entram no TaxMiner
 como fonte de dados, no mesmo nível das Soluções de Consulta e das notas explicativas.
@@ -311,12 +311,12 @@ como fonte de dados, no mesmo nível das Soluções de Consulta e das notas expl
   - item 5: os IDs `req_0012`–`req_0014` passam para os requisitos dos fundos. Os requisitos
     das rotinas comuns receberão os próximos IDs livres na etapa 02.
 
-**Fontes.** Listagens da CVM verificadas em 2026-11-10T22:20-03:00; os detalhes estão em
+**Fontes.** Listagens da CVM verificadas em 2026-11-10T21:24-03:00; os detalhes estão em
 `docs/data_sources.md` e `config/investment_fund_report_sources.yml`.
 
 **Limites.** Nenhuma coleta, código ou dependência foi autorizado por esta decisão.
 
-## decision_0025 — 2026-11-10T23:00:00-03:00 — Fases reorganizadas: coleta (Fase 1) e inteligência cruzada (Fase 2)
+## decision_0025 — 2026-11-10T21:35:26-03:00 — Fases reorganizadas: coleta (Fase 1) e inteligência cruzada (Fase 2)
 
 O desenvolvedor reorganizou as fases do MVP em duas.
 
@@ -350,7 +350,7 @@ status e changelogs) mantêm a numeração da época. A suspensão da antiga Fas
 (`decision_0020`) vale agora para a subfase 1.1. A coleta da antiga Fase 2 vale para a
 subfase 1.2.
 
-## decision_0026 — 2026-11-11T00:40:00-03:00 — Dependências da extração das notas declaradas
+## decision_0026 — 2026-11-10T23:00:48-03:00 — Dependências da extração das notas declaradas
 
 O desenvolvedor autorizou declarar no `DESCRIPTION` as dependências usadas pela extração das
 notas (Fase 1.2, `work_0012`):
@@ -371,7 +371,7 @@ Detalhes:
 - **`arrow`:** continua não declarado. Entra quando o primeiro código de Parquet for escrito,
   conforme `docs/architecture.md`.
 
-## decision_0027 — 2026-11-11T02:30:00-03:00 — Notas consolidadas em Parquet
+## decision_0027 — 2026-11-10T23:23:55-03:00 — Notas consolidadas em Parquet
 
 O desenvolvedor pediu para seguir com o Parquet das notas (Fase 1.2, `work_0012`). Ficou
 decidido:
@@ -396,7 +396,7 @@ decidido:
 - **CI.** O workflow pré-instala `curl`, `qpdf` e `pdftools` nas versões travadas, porque o
   `renv::restore` acusa um ciclo falso entre eles (mesmo caso do `magrittr`).
 
-## decision_0028 — 2026-11-11T03:10:00-03:00 — Dados locais organizados por fonte
+## decision_0028 — 2026-11-11T00:18:31-03:00 — Dados locais organizados por fonte
 
 O desenvolvedor pediu: "organize a pasta C:\TaxMinerData de acordo com a fonte dos dados".
 Ficou decidido:
@@ -414,7 +414,7 @@ Ficou decidido:
 - **Nada é apagado.** O script nunca sobrescreve um destino existente; só remove pastas
   antigas vazias.
 
-## decision_0029 — 2026-11-11T03:10:00-03:00 — Fase 1.3 iniciada: coleta dos fundos
+## decision_0029 — 2026-11-11T00:18:31-03:00 — Fase 1.3 iniciada: coleta dos fundos
 
 O desenvolvedor disse: "pode iniciar também a fase 1.3". Depois disse: "vc tem autorização
 para continuar e executar as próximas etapas necessárias para a implementação do projeto".
@@ -432,7 +432,7 @@ commit ou push, que o `AGENTS.md` exige explícitos.
   rodada confere de novo o período mais recente de cada conjunto.
 - **Fora do escopo:** o `DFIN` do FII e as outras pastas de fundos do portal.
 
-## decision_0030 — 2026-11-11T11:40:00-03:00 — Busca dos fundos e primeira área do Shiny
+## decision_0030 — 2026-11-11T07:44:45-03:00 — Busca dos fundos e primeira área do Shiny
 
 O desenvolvedor disse: "sim, pode fazer commit e push e seguir com a busca" e depois "pode
 fechar a busca dos fundos e fazer commit e push". Ficou decidido:
@@ -451,7 +451,7 @@ fechar a busca dos fundos e fazer commit e push". Ficou decidido:
   das bibliotecas já instaladas pelo `scripts/setup_environment.R` (sem download).
 - **Limitação:** o FIP não publica o administrador.
 
-## decision_0031 — 2026-11-11T11:40:00-03:00 — Python autorizado para o processamento documental
+## decision_0031 — 2026-11-11T07:44:45-03:00 — Python autorizado para o processamento documental
 
 Perguntado se autorizava "instalar Python 3.12 só para o usuário, com .venv no projeto e
 MarkItDown fixado", o desenvolvedor respondeu "SIM!". Escopo: Python 3.12 instalado só para o
@@ -459,3 +459,24 @@ usuário, ambiente `.venv` dentro do projeto e `markitdown` 0.1.9 fixado com has
 `docs/integration/hybrid_document_processing_plan.md` (`work_0026`). Plugins, OCR e
 conversores do Azure ficam desligados. Não autoriza chamar LLM nem enviar documentos a
 serviços externos; o provedor ainda será decidido.
+
+## decision_0032 — 2026-11-11T08:04:21-03:00 — Horários dos registros corrigidos
+
+O desenvolvedor autorizou: "sim, pode atualizar as notas e corrigir os horários". Vários
+registros de 10 e 11/11 tinham horários estimados, à frente do relógio (até 4 horas). Regra
+aplicada: um registro não pode ser posterior ao commit que o introduziu. Cada horário
+posterior foi trocado pelo horário desse commit (`git log -S`), que é um limite superior
+verificável; 46 ocorrências em `data_sources.md`, `decision_log.md`, `handoff.md`,
+`project_status.md`, `requirements_register.csv`, `test_register.csv` e `work_items.csv`.
+O `test_0048` recebeu o horário real de término do CI (07:36:18). Daqui em diante os
+horários vêm do relógio do sistema no momento do registro.
+
+## decision_0033 — 2026-11-11T08:04:21-03:00 — Leiaute da interface
+
+Pedidos do desenvolvedor: autocomplete nos filtros, "estilo de pagina padrão profissional,
+semelhante aos utilizados pela mackinsey", leiaute melhor e "leiaute paisagem". Ficou
+decidido: estilo próprio sóbrio (azul-marinho, títulos serifados, linhas finas), sem nome,
+marca ou identidade de terceiros; fontes do sistema, para funcionar sem internet; leiaute
+mestre-detalhe em telas de 1200 px ou mais. Sem pacote novo: o `DT` foi descartado porque
+traria `rmarkdown`, `knitr` e `xfun` atrás do CRAN, com risco para o CI; a lista usa tabela
+HTML própria com clique por JavaScript.

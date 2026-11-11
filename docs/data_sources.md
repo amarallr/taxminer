@@ -138,7 +138,7 @@ Observed in the first packages:
 - **Registry:** `config/investment_fund_report_sources.yml` (human-readable) and
   `fund_report_sources` in `src/collect/discover_fund_reports.R` (used by the code).
 
-## Step 00 — verification (2026-11-11T02:40-03:00)
+## Step 00 — verification (2026-11-11T00:18-03:00)
 
 - **Access.** `robots.txt` of `dados.cvm.gov.br` allows `/dados/` and sets `Crawl-Delay: 10`;
   every request waited at least 10 s. All requests returned HTTP 200; none was refused.
@@ -166,7 +166,7 @@ Observed in the first packages:
   to `CNPJ_FUNDO_CLASSE` (four-monthly, from 2024), following the fund/class split of CVM
   Resolution 175. Data P04 must map both.
 
-## Step 01 — listings (2026-11-11T02:45-03:00)
+## Step 01 — listings (2026-11-11T00:18-03:00)
 
 The listings are nginx autoindex pages with name, timestamp (`dd-Mon-yyyy HH:MM`) and an
 approximate size. Discovery parsed 102 files plus 11 DFIN files:
@@ -202,7 +202,7 @@ Rscript --vanilla scripts/collect_fund_reports.R history   # every listed period
 - **Checks.** ZIP signature, member count and size limits, unsafe or duplicate member names
   and per-member SHA-256 (`validate_zip_archive`); CSV files must be `;`-separated and not
   HTML. Bad content and network errors are retried with backoff; 403/429 stop the run.
-- **Sample (2026-11-11T02:50-03:00).** Latest period of each of the 7 datasets: 7 of 7
+- **Sample (2026-11-11T00:18-03:00).** Latest period of each of the 7 datasets: 7 of 7
   downloaded (HTTP 200), all checks passed.
 - **Out of scope** unless the developer decides otherwise: FII `DFIN` (index of financial
   statement documents) and the other fund folders of the portal (`FI/`, `FIE/`, `ADM_FII/`).

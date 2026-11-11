@@ -14,23 +14,38 @@ data_dir <- resolve_data_dir()
 fund_root <- source_data_root(data_dir, "investment_fund_reports")
 fund_ready <- file.exists(fund_processed_paths(fund_root)$index)
 
-unavailable <- function(text) shiny::div(class = "alert alert-warning", text)
+theme <- bslib::bs_theme(
+  version = 5, bg = "#ffffff", fg = "#1c2430", primary = "#0b1f3a", secondary = "#5b6573",
+  base_font = bslib::font_collection("Segoe UI", "Helvetica Neue", "Arial", "sans-serif"),
+  heading_font = bslib::font_collection("Georgia", "Times New Roman", "serif"),
+  "border-radius" = "2px")
 
-ui <- shiny::navbarPage(
-  "TaxMiner",
-  shiny::tabPanel(
+unavailable <- function(text) {
+  shiny::div(class = "tm-page", shiny::div(class = "alert alert-warning mt-4", text))
+}
+
+ui <- bslib::page_navbar(
+  title = "TaxMiner", fillable = FALSE, fluid = TRUE,
+  navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
+  theme = theme,
+  header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css")),
+  bslib::nav_panel(
     "Fundos de investimento",
     if (fund_ready) fund_search_ui("funds")
     else unavailable("Fase 1.3 indisponível: rode a coleta e a consolidação dos fundos.")),
-  shiny::tabPanel(
-    "Fundos: cobertura",
+  bslib::nav_panel(
+    "Cobertura e qualidade",
     if (fund_ready) fund_coverage_ui("fund_coverage") else unavailable("Sem dados consolidados.")),
-  shiny::tabPanel(
+  bslib::nav_panel(
     "Sobre",
-    shiny::p("Dados públicos da CVM (dados.cvm.gov.br, licença ODbL), com valores como",
-             "publicados. Resultados são pesquisa, não conclusões fiscais."),
-    shiny::p("Fases 1.1 (Soluções de Consulta) e 1.2 (notas explicativas) ainda sem área",
-             "de busca.")))
+    shiny::div(class = "tm-page", shiny::div(
+      class = "tm-hero tm-about",
+      shiny::div(class = "tm-eyebrow", "Sobre o TaxMiner"),
+      shiny::h1("Pesquisa em fontes públicas"),
+      shiny::p(class = "tm-lede",
+               "Dados públicos da CVM (dados.cvm.gov.br, licença ODbL), com valores como publicados.",
+               "Os resultados são material de pesquisa, não conclusões fiscais. As Fases 1.1",
+               "(Soluções de Consulta) e 1.2 (notas explicativas) ainda não têm área de busca.")))))
 
 server <- function(input, output, session) {
   if (fund_ready) {

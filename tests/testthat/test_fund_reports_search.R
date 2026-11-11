@@ -166,15 +166,52 @@ test_that("the Shiny area searches, lists rows with linked citations and reports
   skip_if_not_installed("shiny")
   source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
   shiny::testServer(fund_search_server, args = list(root = root), {
-    session$setInputs(family = c("fii", "fidc", "fip"), cnpj = "00.332.266", name = "",
+    session$setInputs(family = c("fii", "fidc", "fip"), fund_query = "00.332.266",
                       administrator = "", period_from = "", period_to = "", search = 1)
     expect_match(output$summary, "^2 entradas")
-    session$setInputs(fund = "fii|00332266000131", table = "inf_mensal_fii_ativo_passivo")
-    expect_match(output$rows_summary, "^2 linhas")
-    expect_match(output$rows, "<a href=\"https://dados.cvm.gov.br/dados/FII/inf_mensal_fii_2026.zip\"",
+    expect_match(as.character(output$kpis$html), "tm-kpi-value\">1<", fixed = TRUE)
+    session$setInputs(fund_query = "são paulo", administrator = "OUTRA ADMINISTRADORA LTDA",
+                      search = 2)
+    expect_match(output$summary, "^1 entradas")
+    session$setInputs(fund_query = "00.332.266", administrator = "", search = 3)
+    expect_match(output$funds$html, "data-key=\"fii|00332266000131\"", fixed = TRUE)
+    expect_match(output$page, "^Página 1 de 1")
+    session$setInputs(pick = "fii|00332266000131", table = "inf_mensal_fii_ativo_passivo")
+    expect_match(output$detail$html, "FUNDO SÃO PAULO", fixed = TRUE)
+    expect_match(output$rows_summary, "^2 linhas em 2 períodos")
+    expect_match(output$rows$html, "<a href=\"https://dados.cvm.gov.br/dados/FII/inf_mensal_fii_2026.zip\"",
                  fixed = TRUE)
-    expect_match(output$rows, "-1.234,56", fixed = TRUE)
-    session$setInputs(period_from = "13/2026", search = 2)
+    expect_match(output$rows$html, "-1.234,56", fixed = TRUE)
+    session$setInputs(period = "2026-03-31")
+    expect_match(output$card$html, "0,00", fixed = TRUE)
+    expect_false(grepl("-1.234,56", output$card$html, fixed = TRUE))
+    session$setInputs(period_from = "13/2026", search = 4)
     expect_match(output$summary, "^Erro:")
   })
+})
+
+test_that("the fund field reads a CNPJ or part of a name, and choices cover every fund", {
+  skip_if_not_installed("shiny")
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  expect_equal(fund_query_filters("00.332.266/0001-31", directory), list(cnpj = "00.332.266/0001-31", name = NULL))
+  expect_equal(fund_query_filters("00332", directory), list(cnpj = "00332", name = NULL))
+  expect_equal(fund_query_filters("11.111.111/1111-11", directory)$cnpj, "11.111.111/1111-11")
+  expect_equal(fund_query_filters("fidc crédito", directory), list(cnpj = NULL, name = "fidc crédito"))
+  expect_equal(fund_query_filters("  ", directory), list(cnpj = NULL, name = NULL))
+  choices <- fund_choices(directory)
+  expect_equal(length(choices), length(unique(paste(directory$family, directory$fund_cnpj))))
+  expect_true("00.332.266/0001-31 · FUNDO SÃO PAULO (FII)" %in% names(choices))
+  periods <- period_choices(directory)
+  expect_true(all(c("2023", "2026-03", "2025-12") %in% periods))
+  expect_equal(periods[1], "2026-03")
+})
+
+test_that("placeholder fund names are shown as missing and sorted last", {
+  skip_if_not_installed("shiny")
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  expect_equal(has_name(c("NA", ",", "0", NA, "FUNDO A")), c(FALSE, FALSE, FALSE, FALSE, TRUE))
+  expect_equal(display_name(c(".", "FUNDO A")), c("(sem nome publicado)", "FUNDO A"))
+  r <- data.frame(fund_name = c("NA", "B FUNDO", ",", "a fundo"), last_period = "2026-01-31",
+                  fund_cnpj = "1", period_count = 1L)
+  expect_equal(sort_directory(r, "name")$fund_name[1:2], c("a fundo", "B FUNDO"))
 })
