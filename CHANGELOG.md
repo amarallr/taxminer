@@ -1,5 +1,32 @@
 # Changelog
 
+## Estilo executivo, PL nas listas e ordenação por PL — 2026-11-11
+
+- Listas de fundos (Fundos, FIDC, FII, FIP, FIAGRO) ganham as colunas PL (mês de referência do tipo;
+  fora dele, o último informe) e % (participação no PL total do tipo, mesma base do Panorama).
+- Toda lista abre ordenada por PL decrescente, também após mudar filtros; sem dados de PL, ordena
+  pelo nome.
+- Panorama: gráficos por tipo um terço mais baixos; rankings ganham o espaço.
+- Estilo executivo em todas as abas: texto sem serifa e títulos/indicadores com serifa, números
+  tabulares, filtros e combos menores e sem cantos arredondados, cabeçalhos e rótulos em caixa alta
+  pequena, filetes finos no lugar de caixas.
+- Ficha do fundo: rótulos e valores menores e uniformes; série completa com citação em uma linha
+  (texto completo ao passar o mouse) e ano/versão sem separador de milhar.
+
+## Panorama com filtros cruzados — 2026-11-11
+
+- Estado único de filtros no Panorama: competência (seletor ou clique no gráfico), tipo de fundo,
+  administradores e fundos (clique seleciona; Ctrl+clique soma). Filtros combinam por interseção;
+  cada filtro ativo aparece com botão de remover; "limpar seleções" e "limpar tudo".
+- KPIs, composição, painéis por tipo e os rankings Top 20 são recalculados sobre o mesmo universo
+  filtrado; cada gráfico ignora só a própria dimensão e mantém o item selecionado visível.
+- Administrador de cada fundo é o informado na competência exibida (vínculo histórico).
+- Pacote de dados `processed/metrics/panorama` (`src/intelligence/panorama_data.R`), em cache, usado
+  pelo app e pelo painel publicado; motor em `prototype/www/panorama.js`. Página do app passa de
+  1,2 MB para 51 KB.
+- Testes: dados do Panorama em R e motor de filtros em Node (`tests/testthat/panorama_engine_test.js`).
+- Diagnóstico e plano da plataforma de BI em `docs/bi_platform_plan.md`.
+
 ## Abas de fundos no painel publicado e Administradores em tela única — 2026-11-11
 
 - Painel publicado (GitHub Pages) ganha as abas Fundos, FIDC, FII, FIP e FIAGRO: lista com busca por

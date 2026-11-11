@@ -14,7 +14,7 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "prototype/charts.R",
+            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/static_funds.R")) {
   source(f, encoding = "UTF-8")
@@ -35,6 +35,7 @@ generated <- format(Sys.time(), "%Y-%m-%d %H:%M")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 fund_files <- write_static_fund_data(out_dir, data, ctx, generated)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
+panorama <- write_panorama_data(file.path(out_dir, "data", "panorama"), ctx, data$directory, data$master, generated)
 
 # Same one-screen layout as the app tab (fund_admin_ui); the 40 largest
 # administrators have a detail panel and a per-month fund file.
@@ -85,8 +86,8 @@ page <- bslib::page_navbar(
     shiny::tags$meta(name = "description",
                      content = "Panorama de FII, FIDC, FIP e FIAGRO a partir dos informes públicos da CVM."),
     shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), tm_app_script(),
-    shiny::tags$script(src = "taxminer_static.js", defer = NA)),
-  bslib::nav_panel("Panorama", fund_overview_ui("overview", ctx)),
+    shiny::tags$script(src = "panorama.js", defer = NA), shiny::tags$script(src = "taxminer_static.js", defer = NA)),
+  bslib::nav_panel("Panorama", panorama_ui("data/panorama/")),
   bslib::nav_panel("Administradores", admin_area),
   bslib::nav_panel("Fundos", static_funds_ui()),
   !!!lapply(family_tabs, function(f) bslib::nav_panel(toupper(f), static_funds_ui(f))),
@@ -98,6 +99,7 @@ unlink(file.path(out_dir, "lib"), recursive = TRUE)  # generated folder, rebuilt
 htmltools::save_html(page, file.path(out_dir, "index.html"), libdir = "lib", lang = "pt-BR")
 file.copy("prototype/www/taxminer.css", file.path(out_dir, "taxminer.css"), overwrite = TRUE)
 file.copy("prototype/static/taxminer_static.js", file.path(out_dir, "taxminer_static.js"), overwrite = TRUE)
+file.copy("prototype/www/panorama.js", file.path(out_dir, "panorama.js"), overwrite = TRUE)
 # The theme uses system fonts: the bundled web fonts and the source maps are
 # never loaded by the page.
 lib <- file.path(out_dir, "lib")
@@ -105,5 +107,5 @@ unlink(c(list.files(lib, pattern = "\\.map$", recursive = TRUE, full.names = TRU
          list.files(lib, pattern = "^font\\.css$", recursive = TRUE, full.names = TRUE),
          list.dirs(lib)[basename(list.dirs(lib)) == "fonts"]), recursive = TRUE)
 size <- sum(file.info(list.files(out_dir, recursive = TRUE, full.names = TRUE))$size)
-cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d series files).\n",
-            out_dir, size / 1024^2, length(keys), fund_files$funds, fund_files$chunks))
+cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files).\n",
+            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks))

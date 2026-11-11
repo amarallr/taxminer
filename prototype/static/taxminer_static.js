@@ -1,7 +1,7 @@
 /* TaxMiner — published (static) dashboard: fund tabs and the administrator
    month picker. Data files written by prototype/static_funds.R:
      data/funds.json            fund list, profile figures, denominations
-     data/series/{fam}_{c}.json monthly net assets and quotaholders
+     data/panorama/series/{fam}_{c}.json monthly series (src/intelligence/panorama_data.R)
      data/admins/{i}.json       funds of an administrator per month
    No server: everything runs in the browser. */
 (function ($) {
@@ -26,6 +26,9 @@
     if (v == null || isNaN(v)) return '—';
     var s = num(100 * v, d == null ? 1 : d) + '%';
     return sign !== false && v > 0 ? '+' + s : s;
+  }
+  function fmtShare(v) {
+    return v == null || isNaN(v) ? '—' : v > 0 && v < 0.00005 ? '< 0,01%' : fmtPct(v, 2, false);
   }
   function monthLabel(m) { return m ? MONTHS[parseInt(m.substr(5, 2), 10) - 1] + '/' + m.substr(0, 4) : '—'; }
   function esc(s) {
@@ -143,7 +146,7 @@
 
   // ---- Fund tabs (Fundos, FIDC, FII, FIP, FIAGRO) ----
   var F = {family: 0, entity: 1, cnpj: 2, key: 3, name: 4, names: 5, admin: 6, adminEntity: 7, adminCnpj: 8,
-           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18};
+           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18, share: 19};
   var PAGE = 25, data = null;
 
   function loadFunds() {
@@ -168,13 +171,17 @@
     {by: 'name', label: 'Fundo', dec: false},
     {by: 'period', label: 'Período', dec: true},
     {by: 'count', label: 'Informes', dec: true, num: true},
-    {by: 'pl', label: 'Patrimônio', dec: true, num: true}
+    {by: 'pl', label: 'PL', dec: true, num: true,
+     tip: 'Patrimônio líquido no mês de referência do tipo (último mês completo; para fundos fora dele, o último informe)'},
+    {by: 'share', label: '%', dec: true, num: true,
+     tip: 'Participação do fundo no patrimônio total do seu tipo no mês de referência (mesma base do Panorama)'}
   ];
 
   function FundTab(el) {
     this.el = el; this.family = el.attr('data-family') || '';
     this.families = this.family ? [this.family] : ['fidc', 'fii', 'fip', 'fiagro'];
     this.sort = {by: 'pl', dec: true}; this.page = 0; this.selected = null;
+    this.reset = function () { this.sort = {by: 'pl', dec: true}; this.page = 0; this.update(); };  // new filters: largest funds first
   }
   FundTab.prototype.render = function (d) {
     var t = this, fam = t.family, meta = d.meta;
@@ -195,10 +202,10 @@
       '<div class="tm-pager"></div></div>' +
       '<div class="tm-pane-wrap"><div class="card tm-section tm-detail tm-pane tm-static-detail"><div class="tm-empty">Selecione um fundo na lista.</div></div></div></div>');
     var timer;
-    t.el.on('input', '.tm-q, .tm-qa', function () { clearTimeout(timer); timer = setTimeout(function () { t.page = 0; t.update(); }, 180); });
-    t.el.on('change', '.tm-filter-family input', function () { t.page = 0; t.update(); });
+    t.el.on('input', '.tm-q, .tm-qa', function () { clearTimeout(timer); timer = setTimeout(function () { t.reset(); }, 180); });
+    t.el.on('change', '.tm-filter-family input', function () { t.reset(); });
     t.el.on('click', '.tm-filter-clear', function () {
-      t.el.find('.tm-q, .tm-qa').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.page = 0; t.update();
+      t.el.find('.tm-q, .tm-qa').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.reset();
     });
     t.el.on('click', 'th[data-sort]', function () {
       var by = $(this).attr('data-sort'), s = SORTS.filter(function (x) { return x.by === by; })[0];
@@ -235,7 +242,7 @@
     });
     var s = t.sort, dir = s.dec ? -1 : 1;
     function val(f) {
-      return s.by === 'name' ? fold(f[F.name]) : s.by === 'period' ? f[F.last] : s.by === 'count' ? f[F.count] : f[F.pl];
+      return s.by === 'name' ? fold(f[F.name]) : s.by === 'period' ? f[F.last] : s.by === 'count' ? f[F.count] : s.by === 'share' ? f[F.share] : f[F.pl];
     }
     rows.sort(function (a, b) {
       var x = val(a), y = val(b);
@@ -248,7 +255,7 @@
     var head = SORTS.map(function (c) {
       var on = s.by === c.by;
       return '<th class="tm-sortable' + (on ? ' tm-sorted' : '') + (c.num ? ' tm-num' : '') + '" data-sort="' + c.by +
-             '" title="Clique para ordenar; de novo para inverter">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') + '</th>';
+             '" title="' + esc(c.tip || 'Clique para ordenar; de novo para inverter') + '">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') + '</th>';
     }).join('');
     var body = slice.map(function (f, i) {
       var n = t.page * PAGE + i, sel = t.selected === f ? ' class="tm-selected"' : '';
@@ -257,7 +264,9 @@
              (f[F.names] > 1 ? '<span class="tm-names-badge" data-tip="Denominações diferentes ao longo do tempo; veja a aba Denominações.">' +
               f[F.names] + ' nomes</span>' : '') + '</div><div class="tm-fund">' + esc(f[F.name]) + '</div><div class="tm-admin">' +
              esc(f[F.admin] || 'administrador não publicado') + '</div></td><td class="tm-mono">' + esc(f[F.first]) + '<br>' + esc(f[F.last]) +
-             '</td><td class="tm-num">' + fmtInt(f[F.count]) + '</td><td class="tm-num">' + fmtBRL(f[F.pl]) + '</td></tr>';
+             '</td><td class="tm-num">' + fmtInt(f[F.count]) + '</td><td class="tm-num" data-tip="' +
+             (f[F.plMonth] ? 'PL em ' + monthLabel(f[F.plMonth]) : '') + '">' + fmtBRL(f[F.pl]) + '</td><td class="tm-num">' +
+             fmtShare(f[F.share]) + '</td></tr>';
     }).join('');
     t.el.find('.tm-list').html(rows.length ? '<table class="tm-results"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
                                            : '<div class="tm-empty">Nenhum fundo encontrado.</div>').scrollTop(0);
@@ -281,7 +290,7 @@
       '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-empty">Carregando série…</div></div>' +
       '<div data-pane-body="nomes" hidden>' + namesTable(names) + '</div></div></div>');
     var key = f[F.key];
-    getJSON('data/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
+    getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
       if (t.selected !== f) return;
       box.find('[data-pane-body="perfil"]').html(profile(f, s[key], color));
     }).fail(function () {

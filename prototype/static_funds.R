@@ -2,23 +2,8 @@
 # (prototype/static/taxminer_static.js renders them). Same sources as the app:
 # fund list and denominations from the entity catalog
 # (src/data/entity_resolution.R), profile figures from the derived metrics.
-# Raw report rows (Ficha, Série completa) stay in the local app.
-
-# Minimal JSON writers (base R; values are text, numbers or null).
-json_string <- function(x) {
-  x <- gsub("\\", "\\\\", x, fixed = TRUE)
-  x <- gsub("\"", "\\\"", x, fixed = TRUE)
-  x <- gsub("[[:cntrl:]]", " ", x)
-  ifelse(is.na(x), "null", paste0("\"", x, "\""))
-}
-json_number <- function(x, digits = 2L) {
-  out <- sprintf(paste0("%.", digits, "f"), x)
-  # Trailing decimal zeros only (never the zeros of the integer part).
-  if (digits > 0) out <- sub("\\.$", "", sub("(\\.[0-9]*?)0+$", "\\1", out))
-  out[out == "-0"] <- "0"
-  ifelse(is.na(x) | !is.finite(x), "null", out)
-}
-json_array <- function(...) paste0("[", paste(..., sep = ","), "]")
+# Raw report rows (Ficha, Série completa) stay in the local app. JSON writers
+# and the per-fund monthly series: src/intelligence/panorama_data.R.
 
 # Profile figures per fund (vectorized fund_profile): latest reported month,
 # 12-month change, rank and percentile within the family snapshot.
@@ -51,6 +36,7 @@ static_fund_index <- function(data, ctx) {
   k <- match(paste(l$family, l$fund_cnpj), paste(p$family, p$fund_cnpj))
   e <- data$master$entities
   a <- match(l$administrator_entity, e$entity_id)
+  pl <- attach_fund_net_assets(l, ctx$fund_pl)  # same PL and share as the app list
   data.frame(
     family = l$family, entity = l$fund_entity, cnpj = l$cnpj_formatted, key = l$fund_cnpj,
     name = display_name(l$fund_name), names = l$name_count,
@@ -58,7 +44,7 @@ static_fund_index <- function(data, ctx) {
     admin_entity = l$administrator_entity,
     admin_cnpj = ifelse(is.na(a), NA_character_, e$cnpj_formatted[a]),
     first = substr(l$first_period, 1, 7), last = substr(l$last_period, 1, 7), count = l$period_count,
-    pl = p$net_assets[k], pl_month = p$month[k], change12 = p$change12[k], rank = p$rank[k],
+    pl = pl$net_assets, pl_month = pl$net_assets_month, share = pl$net_assets_share, change12 = p$change12[k], rank = p$rank[k],
     peers = p$peers[k], percentile = p$percentile[k], quotaholders = p$quotaholders[k],
     stringsAsFactors = FALSE)
 }
@@ -70,7 +56,7 @@ static_fund_index_json <- function(index, master, meta) {
                      json_string(index$last), index$count, json_number(index$pl), json_string(index$pl_month),
                      json_number(index$change12, 4L), ifelse(is.na(index$rank), "null", index$rank),
                      ifelse(is.na(index$peers), "null", index$peers), json_number(index$percentile, 4L),
-                     json_number(index$quotaholders, 0L))
+                     json_number(index$quotaholders, 0L), json_number(index$share, 6L))
   # Every denomination of the listed funds (the Denominações tab and the search).
   h <- master$name_history[master$name_history$entity_id %in% index$entity, , drop = FALSE]
   n <- master$entity_names[match(h$name_id, master$entity_names$name_id), ]
@@ -85,29 +71,10 @@ static_fund_index_json <- function(index, master, meta) {
          "],\"names\":[", paste(names_rows, collapse = ",\n"), "]}")
 }
 
-# Monthly series per fund in chunks (family, first CNPJ character), loaded
-# on demand: {"key": [first month, [net assets], [quotaholders]]}, months
-# without a report are null (FIP reports every three or four months).
-static_series_chunks <- function(ctx) {
-  m <- ctx$m[!ctx$m$carried, c("family", "fund_cnpj", "month", "net_assets", "quotaholders")]
-  m <- m[order(m$family, m$fund_cnpj, m$month, method = "radix"), , drop = FALSE]
-  m$chunk <- paste0(m$family, "_", tolower(substr(m$fund_cnpj, 1, 1)))
-  lapply(split(m, m$chunk), function(c) {
-    funds <- split(c, c$fund_cnpj)
-    items <- vapply(funds, function(f) {
-      months <- format(seq(as.Date(paste0(f$month[1], "-01")), as.Date(paste0(f$month[nrow(f)], "-01")), by = "month"), "%Y-%m")
-      i <- match(months, f$month)
-      sprintf("%s:[%s,[%s],[%s]]", json_string(f$fund_cnpj[1]), json_string(months[1]),
-              paste(json_number(f$net_assets[i]), collapse = ","), paste(json_number(f$quotaholders[i], 0L), collapse = ","))
-    }, character(1))
-    paste0("{", paste(items, collapse = ",\n"), "}")
-  })
-}
-
 write_static_fund_data <- function(out_dir, data, ctx, generated) {
   dir <- file.path(out_dir, "data")
-  unlink(dir, recursive = TRUE)
-  dir.create(file.path(dir, "series"), recursive = TRUE)
+  dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  unlink(file.path(dir, c("funds.json", "admins", "series")), recursive = TRUE)
   index <- static_fund_index(data, ctx)
   meta <- list(generated = json_string(generated), rule_version = json_string(data$master$rule_version),
                colors = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_family_colors)),
@@ -115,9 +82,7 @@ write_static_fund_data <- function(out_dir, data, ctx, generated) {
                family_names = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_family_names)),
                                                          json_string(unname(fund_family_names))), collapse = ","), "}"))
   writeLines(enc2utf8(static_fund_index_json(index, data$master, meta)), file.path(dir, "funds.json"), useBytes = TRUE)
-  chunks <- static_series_chunks(ctx)
-  for (n in names(chunks)) writeLines(enc2utf8(chunks[[n]]), file.path(dir, "series", paste0(n, ".json")), useBytes = TRUE)
-  invisible(list(funds = nrow(index), chunks = length(chunks)))
+  invisible(list(funds = nrow(index)))
 }
 
 # Funds of one administrator per month (the points of its chart), for the

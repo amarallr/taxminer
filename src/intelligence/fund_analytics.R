@@ -231,6 +231,36 @@ administrator_series <- function(m, admins, administrator, complete) {
   out
 }
 
+# Net assets (PL) of every fund for the fund lists, with its share of the
+# family total. Funds in the snapshot (each family at its last complete month,
+# as in the Panorama) take that month's value and share; the others (ended, or
+# only in a month still being delivered) take their latest report and no
+# share. Never a sum across months.
+fund_net_assets <- function(m, snapshot) {
+  last <- m[!m$carried & !is.na(m$net_assets), c("family", "fund_cnpj", "month", "net_assets")]
+  last <- last[order(last$family, last$fund_cnpj, last$month, method = "radix"), , drop = FALSE]
+  last <- last[!duplicated(paste(last$family, last$fund_cnpj), fromLast = TRUE), , drop = FALSE]
+  s <- snapshot[!is.na(snapshot$net_assets), c("family", "fund_cnpj", "month", "net_assets")]
+  totals <- tapply(s$net_assets, s$family, sum)
+  s$share <- s$net_assets / as.numeric(totals[s$family])
+  out <- merge(last, s, by = c("family", "fund_cnpj"), all.x = TRUE, suffixes = c("_last", "_ref"))
+  ref <- !is.na(out$net_assets_ref)
+  data.frame(family = out$family, fund_cnpj = out$fund_cnpj,
+             net_assets = ifelse(ref, out$net_assets_ref, out$net_assets_last),
+             net_assets_month = ifelse(ref, out$month_ref, out$month_last),
+             net_assets_share = ifelse(ref, out$share, NA_real_),
+             in_reference = ref, stringsAsFactors = FALSE)
+}
+
+# Adds the PL columns of fund_net_assets() to fund list rows.
+attach_fund_net_assets <- function(rows, pl) {
+  k <- match(paste(rows$family, rows$fund_cnpj), paste(pl$family, pl$fund_cnpj))
+  rows$net_assets <- pl$net_assets[k]
+  rows$net_assets_month <- pl$net_assets_month[k]
+  rows$net_assets_share <- pl$net_assets_share[k]
+  rows
+}
+
 # Funds behind one point of administrator_series(): the administrator's
 # current funds with their net assets in `month` (largest first). `carried`
 # marks a value repeated from the fund's last report (FIP, quarterly).
@@ -270,4 +300,10 @@ format_int <- function(x) ifelse(is.na(x), "—", formatC(x, format = "d", big.m
 month_label <- function(month) {
   names <- c("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
   paste0(names[as.integer(substr(month, 6, 7))], "/", substr(month, 1, 4))
+}
+
+# Share of a total with two decimals; a positive share below 0,01% is shown as
+# "< 0,01%" (never a misleading zero).
+format_share <- function(x) {
+  ifelse(is.na(x), "—", ifelse(x > 0 & x < 0.00005, "< 0,01%", format_pct(x, digits = 2, sign = FALSE)))
 }

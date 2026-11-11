@@ -14,6 +14,7 @@ source(testthat::test_path("..", "..", "src", "intelligence", "fund_analytics.R"
 source(testthat::test_path("..", "..", "prototype", "charts.R"))
 source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"))
 source(testthat::test_path("..", "..", "prototype", "fund_dashboard_module.R"))
+source(testthat::test_path("..", "..", "src", "intelligence", "panorama_data.R"))
 source(testthat::test_path("helper_stored_zip.R"))
 
 # --- Derived metrics from consolidated members -------------------------------
@@ -265,47 +266,112 @@ test_that("the Administradores area ranks, filters by family and shows the picke
   })
 })
 
-# --- Panorama ---------------------------------------------------------------
+# --- Panorama (cross-filtering) -------------------------------------------------
+# Synthetic fixture: fund D changes administrator in 2025-07 (ADM UM until
+# June, ADM DOIS from July); E is in FIDC and, with the same CNPJ, in FII.
 
-test_that("the Panorama renders every family/administrator ranking for browser-side filtering", {
+panorama_fixture <- function() {
   directory <- data.frame(
-    family = c("fii", "fidc", "fidc"), fund_cnpj = c("A", "D", "E"),
-    fund_name = c("FUNDO A", "FIDC D", "FIDC E"),
-    administrator_name = c("ADM UM", "ADM DOIS", "ADM UM"),
-    administrator_cnpj = c("11111111000111", "22222222000122", "11111111000111"),
-    first_period = "2025-01-01", last_period = "2025-12-28", stringsAsFactors = FALSE)
-  rows <- rbind(metric_rows("fii", "A", months, rep(100, 12)), metric_rows("fidc", "D", months, rep(300, 12)),
-                metric_rows("fidc", "E", months, rep(50, 12)))
+    family = c("fii", "fidc", "fidc", "fidc", "fii"), fund_cnpj = c("A", "D", "D", "E", "E"),
+    fund_name = c("FUNDO A", "FIDC D", "FIDC D NOVO", "FIDC E", "FII E"),
+    administrator_name = c("ADM UM", "ADM UM", "ADM DOIS", "ADM UM", "ADM UM"),
+    administrator_cnpj = c("11111111000111", "11111111000111", "22222222000122", "11111111000111", "11111111000111"),
+    first_period = c("2025-01-28", "2025-01-28", "2025-07-28", "2025-01-28", "2025-01-28"),
+    last_period = c("2025-12-28", "2025-06-28", "2025-12-28", "2025-12-28", "2025-12-28"),
+    stringsAsFactors = FALSE)
+  rows <- rbind(metric_rows("fii", "A", months, rep(100, 12), 10), metric_rows("fidc", "D", months, rep(300, 12)),
+                metric_rows("fidc", "E", months, rep(50, 12)), metric_rows("fii", "E", months, rep(7, 12)))
   mm <- prepare_metrics(rows, today = as.Date("2026-11-11"))
   series <- family_monthly(mm)
   complete <- complete_months(series)
-  snapshot <- market_snapshot(mm, complete)
-  admins <- fund_administrators(directory)
-  ctx <- list(m = mm, series = series, complete = complete, overview = family_overview(series, complete),
-              snapshot = snapshot, admins = admins, ranking = administrator_ranking(snapshot, admins),
-              market_change = market_change(mm, complete))
-  html <- as.character(fund_overview_ui("overview", ctx, top = 20L))
-  expect_match(html, "20 maiores administradores", fixed = TRUE)
-  expect_match(html, "data-family=\"fidc\"", fixed = TRUE)
-  # One admin list per family filter; the "all" list is the visible one.
-  expect_match(html, "data-admins=\"all\">", fixed = TRUE)
-  expect_match(html, "data-admins=\"fidc\" hidden>", fixed = TRUE)
-  # Funds of ADM UM within FIDC: only E.
-  pos <- regexpr(paste0("data-funds=\"fidc|", entity_key("administrator", "11111111000111"), "\""), html, fixed = TRUE)
-  expect_gt(pos, 0)
-  block <- substr(html, pos, pos + 1500)
-  expect_match(block, "FIDC E", fixed = TRUE)
-  expect_false(grepl("FIDC D", sub("data-funds=.*", "", substr(block, 40, nchar(block))), fixed = TRUE))
-  expect_match(html, "data-funds=\"all|\">", fixed = TRUE)
+  list(directory = directory, ctx = list(m = mm, series = series, complete = complete, today = as.Date("2026-11-11")))
+}
+
+test_that("the Panorama facts carry the administrator of each month (historical link)", {
+  fx <- panorama_fixture()
+  facts <- panorama_facts(fx$ctx$m, fx$directory)
+  um <- entity_key("administrator", "11111111000111"); dois <- entity_key("administrator", "22222222000122")
+  d <- facts[facts$fund_cnpj == "D", ]
+  expect_equal(d$admin[d$month == "2025-06"], um)
+  expect_equal(d$admin[d$month == "2025-07"], dois)
+  expect_equal(d$admin[d$month == "2025-12"], dois)
+  # One row per family, fund and month: no duplicated net assets.
+  expect_equal(anyDuplicated(paste(facts$family, facts$fund_cnpj, facts$month)), 0L)
+  expect_equal(sum(facts$net_assets[facts$month == "2025-12"]), 100 + 300 + 50 + 7)
+})
+
+test_that("the Panorama data package is valid JSON with consistent dictionaries", {
+  fx <- panorama_fixture()
+  skip_if_not_installed("jsonlite")
+  dir <- withr::local_tempdir()
+  out <- write_panorama_data(dir, fx$ctx, fx$directory, generated = "2026-11-11 00:00", selectable = 3L)
+  files <- list.files(dir, pattern = "\\.json$", recursive = TRUE, full.names = TRUE)
+  for (f in files) expect_silent(jsonlite::fromJSON(f, simplifyVector = FALSE))
+  index <- jsonlite::fromJSON(file.path(dir, "index.json"), simplifyVector = FALSE)
+  expect_equal(length(index$funds), 4L)  # A (FII), E (FII), D (FIDC), E (FIDC)
+  expect_equal(unlist(index$months), c("2025-10", "2025-11", "2025-12"))
+  dec <- jsonlite::fromJSON(file.path(dir, "months", "2025-12.json"), simplifyVector = FALSE)$rows
+  expect_equal(sum(vapply(dec, function(r) r[[3]], numeric(1))), 457)
+  # D's administrator in December is ADM DOIS; in June it is ADM UM.
+  admin_of <- function(month) {
+    rows <- jsonlite::fromJSON(file.path(dir, "months", paste0(month, ".json")), simplifyVector = FALSE)$rows
+    d <- which(vapply(index$funds, function(f) f[[4]] == "D", logical(1))) - 1L
+    r <- Filter(function(x) x[[1]] == d, rows)[[1]]
+    index$admins[[r[[2]] + 1L]][[1]]
+  }
+  expect_equal(admin_of("2025-12"), entity_key("administrator", "22222222000122"))
+  sa <- jsonlite::fromJSON(file.path(dir, "series_admin.json"), simplifyVector = FALSE)
+  expect_true(all(names(sa) %in% as.character(seq_along(index$admins) - 1L)))
+  expect_gt(out$chunks, 0L)
+})
+
+test_that("the Panorama engine cross-filters every component from one state (Node)", {
+  node <- Sys.which("node")
+  if (!nzchar(node)) node <- file.path(Sys.getenv("LOCALAPPDATA"), "Programs", "TaxMiner", "node-v26.13.0-win-x64", "node.exe")
+  skip_if_not(file.exists(node), "Node.js not available")
+  script <- testthat::test_path("panorama_engine_test.js")
+  engine <- normalizePath(testthat::test_path("..", "..", "prototype", "www", "panorama.js"), winslash = "/")
+  out <- suppressWarnings(system2(node, c(shQuote(script), shQuote(engine)), stdout = TRUE, stderr = TRUE))
+  status <- attr(out, "status")
+  expect_true(is.null(status) || status == 0L, info = paste(out, collapse = "\n"))
+  expect_match(paste(out, collapse = "\n"), "all engine checks passed")
 })
 
 # --- Published (static) dashboard data ---------------------------------------
 
 test_that("the static JSON writers keep every digit and produce valid JSON", {
-  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), local = TRUE, encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "src", "intelligence", "panorama_data.R"), local = TRUE, encoding = "UTF-8")
   expect_equal(json_number(c(100, 0, 1.5, 120.1, NA, 1e9)), c("100", "0", "1.5", "120.1", "null", "1000000000"))
   expect_equal(json_number(c(65, 100, 0), 0L), c("65", "100", "0"))
   expect_equal(json_string(c("a \"b\" \\ c", NA)), c("\"a \\\"b\\\" \\\\ c\"", "null"))
   txt <- json_array(json_string("x"), json_number(1000), json_number(NA))
   expect_equal(txt, "[\"x\",1000,null]")
+})
+
+# --- PL and share in the fund lists --------------------------------------------
+
+test_that("fund lists take the PL of the reference month and the share of the family total", {
+  rows <- rbind(metric_rows("fii", "A", months, rep(100, 12)), metric_rows("fii", "B", months, rep(300, 12)),
+                metric_rows("fii", "OLD", "2025-03", 50), metric_rows("fidc", "D", months, rep(80, 12)))
+  mm <- prepare_metrics(rows, today = as.Date("2026-11-11"))
+  snap <- market_snapshot(mm, complete_months(family_monthly(mm)))
+  pl <- fund_net_assets(mm, snap)
+  a <- pl[pl$fund_cnpj == "A", ]
+  expect_equal(a$net_assets, 100)
+  expect_equal(a$net_assets_month, "2025-12")
+  expect_equal(a$net_assets_share, 0.25)          # 100 of 400 in FII
+  expect_equal(pl$net_assets_share[pl$fund_cnpj == "D"], 1)
+  old <- pl[pl$fund_cnpj == "OLD", ]               # ended fund: last report, no share
+  expect_equal(old$net_assets, 50)
+  expect_true(is.na(old$net_assets_share))
+  # Shares of one family add up to 100% (no duplicated rows).
+  expect_equal(sum(pl$net_assets_share[pl$family == "fii"], na.rm = TRUE), 1)
+  listed <- attach_fund_net_assets(data.frame(family = c("fii", "fidc"), fund_cnpj = c("B", "X")), pl)
+  expect_equal(listed$net_assets, c(300, NA))
+  html <- as.character(results_table(transform(listed, fund_name = "F", fund_cnpj_original = fund_cnpj,
+                                               first_period = "2025-01-01", last_period = "2025-12-01",
+                                               period_count = 12L, administrator_name = NA_character_), "pick"))
+  expect_match(html, "75,00%", fixed = TRUE)
+  expect_match(html, "R$ 300", fixed = TRUE)
+  expect_equal(format_share(c(0.00001, 0, NA)), c("< 0,01%", "0,00%", "—"))
 })

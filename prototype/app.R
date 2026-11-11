@@ -8,7 +8,7 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "prototype/charts.R",
+            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
 }
@@ -31,13 +31,11 @@ app_script <- tm_app_script()
 
 theme <- tm_theme()
 
-# The Panorama is about 1 MB of HTML that never changes while the app runs:
-# rendered once here instead of on every page load.
-prerender <- function(x) {
-  r <- htmltools::renderTags(x)
-  htmltools::attachDependencies(htmltools::HTML(r$html), r$dependencies)
+# Panorama data package (processed/metrics/panorama, rebuilt only when its
+# inputs change), read by www/panorama.js.
+if (fund_ready) {
+  shiny::addResourcePath("panorama-data", load_panorama_data(fund_root, fund_ctx, fund_data$directory, fund_data$master))
 }
-overview_html <- if (fund_ready) prerender(fund_overview_ui("overview", fund_ctx)) else NULL
 
 unavailable <- function(text) {
   shiny::div(class = "tm-page", shiny::div(class = "alert alert-warning mt-4", text))
@@ -47,10 +45,11 @@ ui <- bslib::page_navbar(
   title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs)), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
-  header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script),
+  header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,
+                           shiny::tags$script(src = "panorama.js", defer = NA)),
   bslib::nav_panel(
     "Panorama",
-    if (fund_ready) overview_html
+    if (fund_ready) panorama_ui("panorama-data/")
     else unavailable("Fase 1.3 indisponível: rode a coleta e a consolidação dos fundos.")),
   bslib::nav_panel(
     "Administradores",

@@ -78,8 +78,13 @@ fund_card_columns <- 6L
 
 # Sortable columns of the result list: header label and default direction
 # (names A-Z; most recent and most reports first).
-fund_sort_columns <- data.frame(by = c("name", "last", "count"), label = c("Fundo", "Informes", "Nº"),
-                                decreasing = c(FALSE, TRUE, TRUE), stringsAsFactors = FALSE)
+fund_sort_columns <- data.frame(by = c("name", "last", "count", "pl", "share"), label = c("Fundo", "Informes", "Nº", "PL", "%"),
+                                decreasing = c(FALSE, TRUE, TRUE, TRUE, TRUE), stringsAsFactors = FALSE)
+fund_sort_tips <- c(name = "Clique para ordenar; de novo para inverter",
+                    last = "Clique para ordenar; de novo para inverter",
+                    count = "Clique para ordenar; de novo para inverter",
+                    pl = "Patrimônio líquido no mês de referência do tipo (último mês completo; para fundos fora dele, o último informe). Clique para ordenar",
+                    share = "Participação do fundo no patrimônio total do seu tipo no mês de referência (mesma base do Panorama). Clique para ordenar")
 
 # Published names such as "NA", "," or "0" carry no letters: shown as missing,
 # sorted last, the stored value is unchanged.
@@ -91,10 +96,17 @@ sort_directory <- function(r, by, decreasing = NULL) {
     decreasing <- fund_sort_columns$decreasing[match(by, fund_sort_columns$by)]
     if (is.na(decreasing)) decreasing <- FALSE
   }
+  # Without PL data (no analytics context) the PL sorts fall back to the name.
+  if (by %in% c("pl", "share") && is.null(r[[if (by == "pl") "net_assets" else "net_assets_share"]])) {
+    by <- "name"; decreasing <- FALSE
+  }
   key <- switch(by,
     last = order(r$last_period, decreasing = decreasing, method = "radix"),
     cnpj = order(r$fund_cnpj, decreasing = decreasing, method = "radix"),
     count = order(r$period_count, decreasing = decreasing, method = "radix"),
+    # Funds without a value stay last in both directions.
+    pl = order(is.na(r$net_assets), r$net_assets, decreasing = c(FALSE, decreasing), method = "radix"),
+    share = order(is.na(r$net_assets_share), r$net_assets_share, decreasing = c(FALSE, decreasing), method = "radix"),
     # Missing names stay last in both directions.
     order(!has_name(r$fund_name), normalize_search_text(r$fund_name),
           decreasing = c(FALSE, decreasing), method = "radix"))
@@ -124,14 +136,20 @@ results_table <- function(r, input_id, selected = NULL, sort_input = NULL, sort 
         })),
       shiny::tags$td(class = "tm-mono", substr(r$first_period[i], 1, 7), shiny::br(),
                      substr(r$last_period[i], 1, 7)),
-      shiny::tags$td(class = "tm-num", format_count(r$period_count[i])))
+      shiny::tags$td(class = "tm-num", format_count(r$period_count[i])),
+      shiny::tags$td(class = "tm-num", `data-tip` = if (!is.null(r$net_assets_month) && !is.na(r$net_assets_month[i]))
+                       sprintf("PL em %s", month_label(r$net_assets_month[i])),
+                     if (is.null(r$net_assets)) "—" else format_brl(r$net_assets[i])),
+      shiny::tags$td(class = "tm-num",
+                     if (is.null(r$net_assets_share) || is.na(r$net_assets_share[i])) "—"
+                     else format_share(r$net_assets_share[i])))
   })
   header <- lapply(seq_len(nrow(fund_sort_columns)), function(k) {
     col <- fund_sort_columns[k, ]
     active <- !is.null(sort) && identical(sort$by, col$by)
     arrow <- if (active) (if (isTRUE(sort$decreasing)) " ▼" else " ▲") else ""
-    shiny::tags$th(class = paste("tm-sortable", if (active) "tm-sorted", if (col$by == "count") "tm-num"),
-                   `data-sort` = col$by, title = "Clique para ordenar; de novo para inverter",
+    shiny::tags$th(class = paste("tm-sortable", if (active) "tm-sorted", if (col$by %in% c("count", "pl", "share")) "tm-num"),
+                   `data-sort` = col$by, title = fund_sort_tips[[col$by]],
                    paste0(col$label, arrow))
   })
   shiny::tags$table(
@@ -231,9 +249,14 @@ wide_table <- function(r, descriptions = NULL, table_name = NULL) {
     shiny::tags$tbody(lapply(seq_len(nrow(shown)), function(i) {
       shiny::tags$tr(lapply(names(shown), function(n) {
         v <- shown[[n]][i]
+        # Citation on one line (full text on hover); period and layout are
+        # identifiers, not quantities, so no thousands separator.
         if (n == "citation" && !is.na(r$source_url[i])) {
-          shiny::tags$td(shiny::tags$a(href = r$source_url[i], target = "_blank", rel = "noopener", v))
-        } else if (n == "citation") shiny::tags$td(v) else value_cell(v, n)
+          shiny::tags$td(class = "tm-cite", title = v,
+                         shiny::tags$a(href = r$source_url[i], target = "_blank", rel = "noopener", v))
+        } else if (n == "citation") shiny::tags$td(class = "tm-cite", title = v, v)
+        else if (n %in% c("reference_period", "layout_version")) shiny::tags$td(if (is.na(v)) "" else as.character(v))
+        else value_cell(v, n)
       }))
     })))
 }
@@ -387,14 +410,16 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
           funds = resolve_entity_query(input$fund_query, master, "fund", data$rules),
           administrators = resolve_entity_query(input$administrator, master, "administrator", data$rules),
           period_from = input$period_from, period_to = input$period_to)
-        structure(fund_list(rows, master), rows = rows)
+        out <- fund_list(rows, master)
+        if (!is.null(analytics$fund_pl)) out <- attach_fund_net_assets(out, analytics$fund_pl)
+        structure(out, rows = rows)
       }, error = function(e) structure(fund_list(directory[0, ], master), rows = directory[0, ],
                                        error = conditionMessage(e)))
     })
 
     # Header clicks: a new column sorts in its default direction, the same
     # column again reverses it.
-    sort_state <- shiny::reactiveVal(list(by = "name", decreasing = FALSE))
+    sort_state <- shiny::reactiveVal(list(by = "pl", decreasing = TRUE))  # largest funds first
     shiny::observeEvent(input$sort_col, {
       s <- sort_state()
       by <- input$sort_col
@@ -420,6 +445,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
     shiny::observeEvent(input$pick, picked(input$pick))
     # A new search selects its first fund, so the detail is never stale.
     shiny::observeEvent(results(), {
+      sort_state(list(by = "pl", decreasing = TRUE))
       r <- sorted()
       picked(if (nrow(r)) paste(r$family[1], r$fund_cnpj[1], sep = "|") else NULL)
     })
