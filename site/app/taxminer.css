@@ -842,6 +842,18 @@ html.tm-loading, html.tm-loading body { cursor: progress; }
 .tm-trait.tm-trait-alert .tm-trait-value::before { content: "\26A0\FE0E  "; }
 
 /* Explanatory note of a field (fund_field_notes), below the fund characteristics */
-.tm-note { margin: 4px 0 2px; font-size: .72rem; color: var(--tm-ink); }
+.tm-note { margin: 8px 0 2px; max-width: 110ch; font-size: .74rem; color: var(--tm-ink); }
 .tm-note summary { cursor: pointer; color: var(--tm-navy); font-weight: 600; }
-.tm-note p { margin: 4px 0 0; max-width: 110ch; text-align: justify; hyphens: auto; }
+.tm-note-body { margin-top: 6px; padding: 9px 14px; background: #f5f8fb; border: 1px solid #dfe7ef;
+                border-left: 3px solid var(--tm-navy); border-radius: 3px;
+                font-weight: 400; letter-spacing: normal; text-transform: none; }
+.tm-note p, .tm-tip-note p { margin: 0 0 7px; line-height: 1.55; text-align: justify; text-justify: inter-word;
+                             hyphens: auto; -webkit-hyphens: auto; }
+.tm-note p:last-child, .tm-tip-note p:last-child { margin-bottom: 0; }
+.tm-note-lead { font-weight: 600; color: var(--tm-navy); }
+/* The same note inside a tooltip: wider box, separated from the field description. */
+.tm-tooltip.tm-tooltip-wide { max-width: 480px; white-space: normal; }
+.tm-tooltip.tm-tooltip-wide > div:first-child { white-space: pre-line; }
+.tm-tip-note { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--tm-rule); font-weight: 400; }
+.tm-tip-note-title { font-weight: 600; color: var(--tm-navy); margin-bottom: 4px; }
+.tm-tip-note b { font-weight: 600; }

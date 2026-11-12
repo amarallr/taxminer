@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-12 — governance master prompt 1.3 (prv_0004, decision_0048)
+- Common P08: prompt revisions go only through `propose-prompt` and `decide-prompt` (candidate and diff kept under `reports/governance/`); work item IDs follow the execution order of the phases. First revision applied through that flow.
+
 ## 2026-11-12 — governance master prompt 1.2 (prv_0003, decision_0046)
 - Common P08: registry timestamps come from the clock or the commit, never estimated; security-sensitive items need their own explicit confirmation; canonical test command named in phase 07.
 

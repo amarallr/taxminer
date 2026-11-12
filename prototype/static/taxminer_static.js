@@ -506,8 +506,12 @@
   function noteHtml(field, label) {
     var n = fieldNote(field);
     if (!n) return '';
-    return '<details class="tm-note"><summary>' + esc(n[0]) + '</summary>' +
-      n.slice(1).map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('') + '</details>';
+    // Each paragraph opens with its period ("Até 2023 (ICVM 578/579):") in bold.
+    return '<details class="tm-note"><summary>' + esc(n[0]) + '</summary><div class="tm-note-body">' +
+      n.slice(1).map(function (l) {
+        var m = /^([^:]{3,80}):\s+(.*)$/.exec(l);
+        return m ? '<p><span class="tm-note-lead">' + esc(m[1]) + ':</span> ' + esc(m[2]) + '</p>' : '<p>' + esc(l) + '</p>';
+      }).join('') + '</div></details>';
   }
   function fieldTip(x) { return x[0] + '\nCampo CVM: ' + x[1] + (x[2] ? ' (sem descrição no dicionário)' : '') + noteText(x[1]); }
   function fieldHead(x, tag, cls) {

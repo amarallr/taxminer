@@ -1,0 +1,36 @@
+--- prompts/common_p08_governance_master.txt (current)
++++ prompts/common_p08_governance_master.txt (prv_0004)
+@@ -1,5 +1,5 @@
+ # TAXMINER — COMMON P08 — GOVERNANCE MASTER PROMPT
+-Prompt Pack: 1.0 | Version: 1.2 (prv_0003, approved 2026-11-12; 1.1 = prv_0002; 1.0 = prv_0001, the developer text) | Status: Phases 01 and 02 accepted; Phase 06 authorized
++Prompt Pack: 1.0 | Version: 1.3 (prv_0004, approved 2026-11-12; earlier versions in prompt_revisions.csv) | Status: Phases 01, 02 and 06 accepted; Phase 04 authorized except its security-sensitive items
+ Revision log: docs/project_management/prompt_revisions.csv; diff: git diff of this file between the commits named there
+ Layers: A (immutable) = AGENTS.md and section 12 below; B (versioned) = this file; C (execution) = per-task prompts derived from it
+ Precedence: AGENTS.md and Common P01 prevail on conflict (see docs/governance_plan.md, section 2.5)
+@@ -7,7 +7,7 @@ Precedence: AGENTS.md and Common P01 prevail on conflict (see docs/governance_pl
+ # TAXMINER GOVERNANCE — MASTER PROMPT
+ ## Autonomous Requirements Engineering, AI Orchestration & Executive Command Center
+ 
+-**Version:** 1.2  
++**Version:** 1.3  
+ **Project:** TaxMiner  
+ **Module:** TaxMiner Governance  
+ **Methodology:** CO-STAR + SWEBOK + Incremental Delivery + Continuous Prompt Refinement  
+@@ -138,6 +138,8 @@ Não permitir que uma revisão automática altere as regras imutáveis.
+ 
+ Toda nova versão deverá possuir um diff verificável.
+ 
++Revisões deste prompt passam obrigatoriamente por `scripts/governance_registry.R propose-prompt` (guarda a versão candidata e o diff em `reports/governance/` e registra a revisão como `proposed`) e `decide-prompt` (decisão humana que aplica ou rejeita).
++
+ O agente poderá propor revisões automaticamente, mas alterações materiais no prompt mestre dependerão de aprovação humana.
+ 
+ Correções operacionais de baixo risco poderão ser aplicadas conforme política previamente autorizada.
+@@ -165,6 +167,8 @@ Padrões (Common P01: identificadores `lowercase_snake`, sem renumerar os existe
+ 
+ Garantir unicidade, persistência e integridade referencial.
+ 
++Os IDs de itens de trabalho seguem a ordem de execução das fases, não a numeração do catálogo inicial.
++
+ Uma solicitação poderá originar múltiplos requisitos.
+ 
+ Um requisito poderá possuir múltiplas tarefas.

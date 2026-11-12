@@ -7,6 +7,18 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 06 — 2026-11-12
+
+- Fase 06 implementada e testada (`work_0034`, `decision_0047`): `src/common/governance_prompts.R`;
+  camada imutável com linha de base em `immutable_rules.csv`; revisões do prompt em dois passos
+  (`propose-prompt`, `decide-prompt`); replanejamento (`add-plan`); histórico em
+  `reports/governance/prompt_evolution.md`. 129 testes passam.
+- Nota explicativa da entidade de investimento com formatação melhorada (`request_0004`, `req_0020`):
+  quadro com borda, parágrafos justificados com hifenização e o período de cada parágrafo em
+  negrito; a dica (tooltip) mostra a nota separada, mais larga e justificada. App e site atualizados.
+- **Aguardando:** aceite da Fase 06, melhorias P11–P12 e confirmação própria (P9) para a Fase 04
+  (hook de captura e leitura de tokens).
+
 ## TaxMiner Governance — Fase 02 — 2026-11-12
 
 - Fase 01 aprovada (`acc_0009`, `decision_0044`); prompt mestre 1.1 (`prv_0002`).

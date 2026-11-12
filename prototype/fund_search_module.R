@@ -160,7 +160,14 @@ fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
     col <- fund_attribute_specs$column[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family][1]
     n <- if (is.na(col)) NULL else fund_field_notes[[col]]
     if (is.null(n)) return(NULL)
-    shiny::tags$details(class = "tm-note", shiny::tags$summary(n[1]), lapply(n[-1], shiny::tags$p))
+    # Each paragraph opens with its period ("Até 2023 (ICVM 578/579):") in bold.
+    para <- function(l) {
+      m <- regmatches(l, regexec("^([^:]{3,80}):\\s+(.*)$", l))[[1]]
+      if (length(m) == 3L) shiny::tags$p(shiny::span(class = "tm-note-lead", paste0(m[2], ":")), " ", m[3])
+      else shiny::tags$p(l)
+    }
+    shiny::tags$details(class = "tm-note", shiny::tags$summary(n[1]),
+                        shiny::div(class = "tm-note-body", lapply(n[-1], para)))
   })
   shiny::tagList(
     shiny::div(class = "tm-traits",

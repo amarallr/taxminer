@@ -350,3 +350,71 @@ relação ao relógio. Eles foram substituídos pelos horários dos commits `c9f
 | P8 | Horários estimados pelo agente entraram nos registros | "Horários de registros vêm do relógio do sistema ou do commit; nunca estimados" (seção 10) | safe_operational |
 | P9 | Uma aprovação genérica ("aprovo") cobre itens de naturezas diferentes | itens sensíveis à segurança (hooks, leitura de transcrições) exigem confirmação própria, item a item (seção 19) | security_sensitive |
 | P10 | O comando de testes varia (`--vanilla` quebra `test_environment.R`) | nomear o comando canônico da suíte no prompt (seção 16, Fase 07) | safe_operational |
+
+## 14. Fase 06 — Prompt Evolution (executada em 2026-11-12)
+
+Autorizada em `decision_0046`; decisão `decision_0047`. Item `work_0034` (`req_0021`). No
+catálogo da seção 5, esta fase tinha o número provisório `work_0037`. Como as fases seguem a
+ordem do plano, e não a numérica, os IDs passaram a ser dados na ordem de execução.
+
+### Entregas
+
+- `src/common/governance_prompts.R`: impressões SHA-256 da camada imutável e checagem contra a
+  linha de base; nova linha de base só com uma decisão existente; proposta de revisão (versão
+  candidata e diff unificado guardados em `reports/governance/`); decisão humana que aplica ou
+  rejeita; replanejamento; relatório de evolução.
+- `docs/project_management/immutable_rules.csv`: linha de base inicial (`imm_0001`–`imm_0004`,
+  `decision_0047`), cobrindo `AGENTS.md`, `CLAUDE.md`, Common P01 e a seção 12 de Common P08.
+- `scripts/governance_registry.R`: comandos `baseline`, `propose-prompt`, `decide-prompt`,
+  `add-plan` e `prompt-report`. Agora `check` também confere a camada imutável.
+- `reports/governance/prompt_evolution.md`: histórico gerado (3 versões aprovadas, 0 pendentes,
+  3 revisões de planejamento).
+- `tests/testthat/test_governance_prompts.R`: 8 testes.
+
+### Controles do gate (regras imutáveis e controle de alterações)
+
+| Controle | Teste |
+| --- | --- |
+| Mudança na camada imutável sem decisão é acusada; fim de linha e linhas em branco finais não contam | baseline / detecção |
+| Nova linha de base exige decisão existente; regras inalteradas mantêm a data e a decisão originais | re-baseline |
+| Proposta guarda a versão candidata e o diff e não altera o prompt | proposta |
+| Só pessoa aprova (agente é recusado); aprovação aplica, rejeição não; decisão não se repete | aprovação |
+| Prompt alterado depois da proposta: aplicação recusada | proposta desatualizada |
+| Revisão que toca a seção 12 exige a classe `security_sensitive` e uma decisão, e refaz a linha de base | camada imutável |
+| Relatório lista versões, propostas pendentes e replanejamentos, e denuncia camada alterada | relatório |
+
+### Evidências
+
+- 129 testes, 0 falhas (121 anteriores + 8 novos) (`test_0059`, `test_0060`).
+- `check` nos registros reais: integridade ok e camada imutável intacta.
+- Registrados `request_0003`–`request_0005` (inclusive o pedido de formatação da nota e o de
+  religar o app), `work_0034`, `plan_0003` e as transições `trn_0014`–`trn_0024`.
+
+### Limitações
+
+- As versões 1.0 a 1.2 foram feitas antes deste mecanismo. Seus diffs estão no Git
+  (`c9fcb03`, `b7c392f`, `dc733fc`), não em `reports/governance/`.
+- A linha de base protege contra mudança silenciosa, mas não impede quem edita o arquivo: a proteção
+  é a detecção pelo `check` (e pelo teste da suíte), não um bloqueio de escrita.
+
+## 15. Checkpoint 3 (chk_0003)
+
+| Campo | Valor |
+| --- | --- |
+| Etapa | Fase 06 implementada e testada; aguarda aceite (`work_0034` `pending`) |
+| Requisitos | `req_0021` `in_progress` |
+| Fases | 01 e 02 aceitas; 06 implementada; pendentes 04, 05, 03, 07 e 08 (`plan_0003`, proposto) |
+| Testes | 129 passam |
+| Próxima ação autorizada | nenhuma; a Fase 04 envolve o hook de captura e a leitura de tokens, que pelo P9 exigem confirmação própria |
+
+## 16. Revisão da Fase 06 e melhorias propostas do prompt (não aplicadas)
+
+1. O mecanismo da seção 5 do prompt (versões, diffs, aprovação, camadas) ficou implementado.
+2. Retrabalho: um teste com expectativa errada (versão 1.0 → 1.0), corrigido; um script com
+   `\n` desfeito pelo heredoc do shell, corrigido.
+3. Tokens: indisponível.
+
+| # | Problema | Melhoria proposta | Classe |
+| --- | --- | --- | --- |
+| P11 | O prompt não diz como propor e aplicar uma revisão | citar `propose-prompt` e `decide-prompt` na seção 5 e exigir que revisões futuras passem por eles | safe_operational |
+| P12 | A seção 16 não diz que os IDs dos itens seguem a ordem de execução | registrar a regra na seção 6 | safe_operational |

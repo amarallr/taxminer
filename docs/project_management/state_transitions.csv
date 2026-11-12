@@ -12,3 +12,19 @@ trn_0010,req_0021,status,approved,in_progress,2026-11-12T17:33:06-03:00,claude_c
 trn_0011,work_0033,operations_status,not_started,not_applicable,2026-11-12T17:33:06-03:00,claude_code,registry is a library and command line
 trn_0012,work_0033,acceptance_status,pending,approved,2026-11-12T17:38:23-03:00,developer,acc_0010
 trn_0013,plan_0002,approval,proposed,approved,2026-11-12T17:38:23-03:00,developer,decision_0046
+trn_0014,imm_0001,sha256,,2a949f2a7514,2026-11-12T17:48:18-03:00,claude_code,decision_0047
+trn_0015,imm_0002,sha256,,2fc5cdf5b8c0,2026-11-12T17:48:18-03:00,claude_code,decision_0047
+trn_0016,imm_0003,sha256,,7ab4d17e10c5,2026-11-12T17:48:18-03:00,claude_code,decision_0047
+trn_0017,imm_0004,sha256,,9bc5554ad68d,2026-11-12T17:48:18-03:00,claude_code,decision_0047
+trn_0018,request_0003,status,,linked,2026-11-12T17:50:14-03:00,claude_code,request_register.csv
+trn_0019,request_0004,status,,linked,2026-11-12T17:50:14-03:00,claude_code,request_register.csv
+trn_0020,request_0005,status,,answered,2026-11-12T17:50:14-03:00,claude_code,request_register.csv
+trn_0021,work_0034,implementation_status,,not_started,2026-11-12T17:50:13-03:00,claude_code,work_items.csv
+trn_0022,work_0034,implementation_status,not_started,implemented,2026-11-12T17:50:13-03:00,claude_code,src/common/governance_prompts.R
+trn_0023,work_0034,test_status,not_run,passed,2026-11-12T17:50:13-03:00,claude_code,test_0059;test_0060
+trn_0024,plan_0003,approval,,proposed,2026-11-12T17:50:13-03:00,claude_code,planning_revisions.csv
+trn_0025,work_0034,acceptance_status,pending,approved,2026-11-12T17:51:54-03:00,developer,acc_0011
+trn_0026,plan_0003,approval,proposed,approved,2026-11-12T17:51:54-03:00,developer,decision_0048
+trn_0027,prv_0004,approval,,proposed,2026-11-12T17:51:54-03:00,claude_code,reports/governance/prv_0004.diff
+trn_0028,prv_0004,approval,proposed,approved,2026-11-12T17:51:54-03:00,developer,prompt_revisions.csv
+trn_0029,request_0006,status,,linked,2026-11-12T17:52:06-03:00,claude_code,request_register.csv

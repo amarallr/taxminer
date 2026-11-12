@@ -1,5 +1,16 @@
 # Changelog
 
+## Não incluído em versão — 2026-11-12
+
+- **Nota explicativa** da entidade de investimento: quadro com borda, parágrafos justificados com
+  hifenização e o período de cada parágrafo ("Até 2023 (ICVM 578/579):") em negrito. Na dica, a
+  nota aparece separada da descrição do campo, em caixa mais larga e justificada.
+- **TaxMiner Governance** (`req_0021`, `docs/governance_plan.md`):
+  - Fases 01 e 02 aceitas: registro de solicitações, trilha de transições e checagem de integridade
+    dos registros.
+  - Fase 06 implementada: camada imutável com linha de base, revisões do prompt mestre com diff e
+    aprovação humana, e histórico de evolução.
+
 ## Versão 1.0.2 — 2026-11-12
 
 Registra como `1.0.2` (arquivo `VERSION`, tag `v1.0.2`) as entregas posteriores à 1.0.1, descritas nas

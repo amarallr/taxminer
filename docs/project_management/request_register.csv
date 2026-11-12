@@ -1,3 +1,7 @@
 request_id,received_at,channel,agent,summary,classification,requirement_ids,status,updated_at
 request_0001,2026-11-12T17:33:06-03:00,claude_code,claude_code,Executar o prompt mestre do TaxMiner Governance (.claude/governance.txt); registrado em retrospecto,architecture,req_0021,linked,2026-11-12T17:33:06-03:00
 request_0002,2026-11-12T17:33:07-03:00,claude_code,claude_code,Aprovar a Fase 01; commit e push; seguir para a Fase 02,operational_command,req_0021,linked,2026-11-12T17:33:07-03:00
+request_0003,2026-11-12T17:50:14-03:00,claude_code,claude_code,Aceitar a Fase 02; commit e push; seguir para a Fase 06,operational_command,req_0021,linked,2026-11-12T17:50:14-03:00
+request_0004,2026-11-12T17:50:14-03:00,claude_code,claude_code,Nota explicativa da entidade de investimento sem formatação justificada; melhorar a formatação,ui_ux,req_0020,linked,2026-11-12T17:50:14-03:00
+request_0005,2026-11-12T17:50:14-03:00,claude_code,claude_code,O app local não está rodando,operational_command,,answered,2026-11-12T17:50:14-03:00
+request_0006,2026-11-12T17:52:06-03:00,claude_code,claude_code,Aceitar a Fase 06; commit e push; seguir para a Fase 04,operational_command,req_0021,linked,2026-11-12T17:52:06-03:00

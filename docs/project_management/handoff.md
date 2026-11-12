@@ -15,7 +15,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 - **TaxMiner Governance (`req_0021`, `decision_0043`–`decision_0045`):** Fase 01 aprovada; Fase 02
   implementada e testada (`work_0033`), com aceite pendente. Conferir os registros com
   `Rscript --vanilla scripts/governance_registry.R check`. Mudar estados só por
-  `scripts/governance_registry.R set` (gera a transição). Próxima fase: 06, ainda não autorizada.
+  `scripts/governance_registry.R set` (gera a transição). Fase 06 implementada e testada (`work_0034`, aceite pendente):
+  `check` também confere a camada imutável (`immutable_rules.csv`); revisões do prompt só por
+  `propose-prompt` e `decide-prompt`. Próxima fase: 04, que depende de confirmação própria (P9).
 - **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e

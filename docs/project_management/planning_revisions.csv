@@ -1,3 +1,4 @@
 plan_id,revised_at,phase,summary,reason,approval,evidence
 plan_0001,2026-11-12T17:28:09-03:00,governance_phase_01,Eight phases in the order 02 06 04 05 03 07 08; phase 02 authorized; phases 03 to 08 each need their own authorization,Initial governance plan,approved,docs/governance_plan.md
 plan_0002,2026-11-12T17:34:10-03:00,governance_phase_02,Phase 02 implemented and tested; order unchanged (next 06 then 04 05 03 07 08); phase 06 awaits authorization,Replanning at the end of phase 02,approved,docs/governance_plan.md section 12
+plan_0003,2026-11-12T17:50:13-03:00,governance_phase_06,Phase 06 implemented and tested; next 04 (agent integration) then 05 03 07 08; the capture hook and transcript token reading need item-level confirmation (P9),Replanning at the end of phase 06,approved,docs/governance_plan.md section 14

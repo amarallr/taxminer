@@ -22,7 +22,23 @@
   <script>
 $(function() {
   var tip = $('<div>').addClass('tm-tooltip').attr('role', 'tooltip').appendTo('body');
-  $(document).on('mouseenter', '[data-tip]', function() { tip.text($(this).attr('data-tip')).show(); })
+  // A blank line in a tip starts an explanatory note (fund_field_note_text):
+  // title in bold, justified paragraphs, period labels in bold, wider box.
+  function fill(t) {
+    var i = t.indexOf('\n\n');
+    tip.empty().toggleClass('tm-tooltip-wide', i >= 0);
+    if (i < 0) { tip.text(t); return; }
+    var lines = t.slice(i + 2).split('\n'), box = $('<div>').addClass('tm-tip-note');
+    tip.append($('<div>').text(t.slice(0, i)));
+    box.append($('<div>').addClass('tm-tip-note-title').text(lines[0]));
+    lines.slice(1).forEach(function(l) {
+      var m = /^([^:]{3,80}):\s+(.*)$/.exec(l), p = $('<p>');
+      if (m) p.append($('<b>').text(m[1] + ':'), document.createTextNode(' ' + m[2])); else p.text(l);
+      box.append(p);
+    });
+    tip.append(box);
+  }
+  $(document).on('mouseenter', '[data-tip]', function() { fill($(this).attr('data-tip')); tip.show(); })
     .on('mousemove', '[data-tip]', function(e) {
       var w = tip.outerWidth(), x = e.pageX + 14;
       if (x + w > $(window).scrollLeft() + $(window).width() - 8) x = e.pageX - w - 14;

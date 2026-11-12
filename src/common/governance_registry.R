@@ -68,7 +68,7 @@ governance_specs <- list(
   transitions = list(file = "state_transitions.csv", id = "transition_id", prefix = "trn",
                      columns = c("transition_id", "entity_id", "field", "from_status", "to_status", "changed_at",
                                  "actor", "evidence"),
-                     refs = list(entity_id = c("req", "work", "test", "acc", "risk", "request", "prv", "plan")),
+                     refs = list(entity_id = c("req", "work", "test", "acc", "risk", "request", "prv", "plan", "imm")),
                      times = "changed_at", quote = FALSE),
   prompt_revisions = list(file = "prompt_revisions.csv", id = "revision_id", prefix = "prv",
                           columns = c("revision_id", "prompt_file", "version", "previous_version", "revised_at",
@@ -80,7 +80,11 @@ governance_specs <- list(
   planning_revisions = list(file = "planning_revisions.csv", id = "plan_id", prefix = "plan",
                             columns = c("plan_id", "revised_at", "phase", "summary", "reason", "approval", "evidence"),
                             vocab = list(approval = c("proposed", "approved", "rejected")),
-                            times = "revised_at", quote = FALSE)
+                            times = "revised_at", quote = FALSE),
+  # Fingerprints of the immutable layer (phase 06, src/common/governance_prompts.R).
+  immutable_rules = list(file = "immutable_rules.csv", id = "rule_id", prefix = "imm",
+                         columns = c("rule_id", "file", "section", "sha256", "recorded_at", "decision"),
+                         times = "recorded_at", quote = FALSE)
 )
 
 # Reads every register as character columns ("" for empty). Missing optional

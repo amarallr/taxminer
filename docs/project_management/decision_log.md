@@ -734,3 +734,20 @@ Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seg
 - Fase 02 aceita (`acc_0010`, `work_0033`); replanejamento `plan_0002` aprovado.
 - Prompt mestre 1.2 (`prv_0003`) com as melhorias P8–P10: horários sempre do relógio ou do commit; confirmação item a item para itens sensíveis à segurança; comando canônico da suíte de testes.
 - Fase 06 (versionamento do prompt) autorizada. Pelo P9, o hook de captura e a leitura de transcrições continuam dependendo de confirmação própria.
+
+## decision_0047 — 2026-11-12 — TaxMiner Governance: Fase 06 (evolução do prompt mestre)
+
+Autorizada em `decision_0046`.
+
+- Camada imutável (camada A do prompt mestre): `AGENTS.md`, `CLAUDE.md`, Common P01 e a seção 12 de Common P08. Suas impressões SHA-256 ficam em `immutable_rules.csv`, e esta decisão é a linha de base inicial. `scripts/governance_registry.R check` acusa qualquer mudança que não tenha nova linha de base; a nova linha de base exige uma decisão já registrada neste arquivo.
+- Revisão de prompt em dois passos: `propose-prompt` guarda a versão candidata e o diff em `reports/governance/` e cria a revisão como `proposed`; `decide-prompt` aprova (e aplica) ou rejeita. Só uma pessoa decide; agentes não. Nada é aplicado automaticamente.
+- A aplicação é recusada se o prompt mudou depois da proposta. Uma revisão que altera a camada imutável exige a classe `security_sensitive` e uma decisão, que refaz a linha de base.
+- Replanejamento persistente com `add-plan` (revisões `proposed` em `planning_revisions.csv`). O histórico é gerado com `prompt-report` em `reports/governance/prompt_evolution.md`.
+
+## decision_0048 — 2026-11-12 — TaxMiner Governance: Fase 06 aceita; prompt mestre 1.3; Fase 04 autorizada em parte
+
+Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seguir para a Fase 04").
+
+- Fase 06 aceita (`acc_0011`, `work_0034`); replanejamento `plan_0003` aprovado.
+- Prompt mestre 1.3 (`prv_0004`, P11–P12), já aplicado pelo novo fluxo `propose-prompt`/`decide-prompt` (diff em `reports/governance/prv_0004.diff`).
+- Fase 04 autorizada. Pela regra P9 (prompt 1.2, seção 19), a aprovação genérica não cobre o hook de captura do Claude Code nem a leitura de tokens das transcrições locais: os dois ficam implementados e testados só com dados sintéticos, sem instalar o hook e sem ler transcrições reais, até confirmação própria do desenvolvedor.

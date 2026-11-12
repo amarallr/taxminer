@@ -7,10 +7,20 @@
 #       --channel=claude_code --agent=claude_code [--requirements=req_0021] [--status=linked]
 #   Rscript --vanilla scripts/governance_registry.R set --register=work_items --id=work_0033
 #       --field=implementation_status --value=in_progress --actor=claude_code [--evidence=...]
-# Reads and writes only docs/project_management/ (override with --dir=). Exit status 1 on
+# Prompt evolution (phase 06):
+#   Rscript --vanilla scripts/governance_registry.R baseline --decision_id=decision_0047
+#   Rscript --vanilla scripts/governance_registry.R propose-prompt --file=prompts/common_p08_governance_master.txt
+#       --candidate=path --reason="..." --class=safe_operational --improvements="..." [--requirements=req_0021]
+#   Rscript --vanilla scripts/governance_registry.R decide-prompt --id=prv_0004 --decision=approved
+#       --approver=developer [--decision_id=decision_00NN]
+#   Rscript --vanilla scripts/governance_registry.R add-plan --phase=... --summary="..." --reason="..."
+#   Rscript --vanilla scripts/governance_registry.R prompt-report   (writes reports/governance/prompt_evolution.md)
+# `check` also verifies the immutable layer (AGENTS.md, CLAUDE.md, Common P01, Common P08 section 12).
+# Reads and writes docs/project_management/ and reports/governance/ under --root (default "."). Exit status 1 on
 # integrity problems or invalid input.
 
 source("src/common/governance_registry.R")
+source("src/common/governance_prompts.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 command <- if (length(args)) args[1] else "check"
@@ -28,10 +38,11 @@ opt <- function(name, default = NULL) {
   }
   v
 }
-dir <- opt("dir", "docs/project_management")
+root <- opt("root", ".")
+dir <- governance_pm_dir(root)
 
 report_problems <- function() {
-  p <- governance_check(governance_read(dir))
+  p <- rbind(governance_check(governance_read(dir)), governance_immutable_check(root))
   if (nrow(p)) {
     cat(sprintf("%d integrity problem(s):\n", nrow(p)))
     print(p, row.names = FALSE)
@@ -67,6 +78,27 @@ if (command == "check") {
                             opt("evidence", ""))
   cat(if (is.null(t)) "No change\n" else paste("Recorded", t, "\n"))
   report_problems()
+} else if (command == "baseline") {
+  governance_record_baseline(root, opt("decision_id"), opt("actor", "developer"))
+  cat("Baseline recorded\n")
+  report_problems()
+} else if (command == "propose-prompt") {
+  id <- governance_propose_prompt(root, opt("file"), opt("candidate"), opt("reason"), opt("class"),
+                                  opt("improvements"), opt("requirements", ""), opt("actor", "claude_code"))
+  cat("Proposed", id, "- diff in reports/governance/", paste0(id, ".diff"), "\n")
+  report_problems()
+} else if (command == "decide-prompt") {
+  governance_decide_prompt(root, opt("id"), opt("decision"), opt("approver"), opt("decision_id", ""))
+  cat("Recorded", opt("decision"), "for", opt("id"), "\n")
+  report_problems()
+} else if (command == "add-plan") {
+  cat("Recorded", governance_add_plan_revision(root, opt("phase"), opt("summary"), opt("reason"), opt("evidence", "")), "\n")
+  report_problems()
+} else if (command == "prompt-report") {
+  out <- file.path(root, "reports", "governance", "prompt_evolution.md")
+  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
+  writeLines(enc2utf8(governance_prompt_report(root)), out, useBytes = TRUE)
+  cat("Written", out, "\n")
 } else {
   stop("Unknown command: ", command, call. = FALSE)
 }
