@@ -785,3 +785,21 @@ table.tm-series td.tm-num { max-width: none; }
 .tm-record-option:hover { background: #eef3fb; }
 .tm-static-record .tm-record-filters .form-select { font-size: .7rem; min-height: 28px; }
 .tm-static-record .tm-record { flex: 1 1 auto; min-height: 0; overflow: auto; margin-top: 6px; }
+
+/* Série completa: the table fills the rest of the detail card and scrolls
+   inside it, so the horizontal scrollbar sits at the card's bottom edge and is
+   always visible (not only after the last field); the period header and the
+   Campo column stay fixed while scrolling. App fund tabs, app FICHA tab,
+   published fund detail and published FICHA tab. */
+.tm-static-detail { display: flex; flex-direction: column; min-height: 0; }
+.tm-static-detail > .tm-detail-head { flex: none; }
+.tm-static-detail > .tm-detail-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.tm-detail-body > .tab-content:has(> [data-pane-body="serie"]:not([hidden])),
+.tm-detail-body .tab-content:has(> .tab-pane.active > .tm-tall) {
+  display: flex; flex-direction: column; overflow: hidden !important; }
+.tm-detail-body .tab-content > .tab-pane.active:has(> .tm-tall) {
+  flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.tm-detail-body .tab-content > .tab-pane.active:has(> .tm-tall) > * { flex: none; }
+.tm-detail-body .tab-content > .tab-pane.active > .tm-tall,
+.tm-detail-body > .tab-content > [data-pane-body="serie"] {
+  flex: 1 1 auto !important; min-height: 120px; max-height: none !important; overflow: auto !important; }

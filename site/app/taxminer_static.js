@@ -334,7 +334,7 @@
       // The file lists the main table of the family first.
       sel.html(fd.t.map(function (x, i) {
         return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
-      }).join('')).prop('disabled', fd.t.length < 2);
+      }).join('')).prop('disabled', false);
       var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
     });
     getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
@@ -376,7 +376,7 @@
     var periods = [];
     x.c.forEach(function (c) { if (periods.indexOf(c[0]) < 0) periods.push(c[0]); });
     t.el.find('.tm-ficha-period').html(periods.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join(''))
-      .prop('disabled', periods.length < 2);
+      .prop('disabled', false);
     box.find('.tm-ficha-summary').text(fmtInt(x.c.length) + ' linhas em ' + fmtInt(periods.length) +
       ' períodos · valores originais da CVM, cada coluna cita o arquivo de origem');
     box.find('[data-pane-body="serie"]').html(seriesTable(x, t.ficha.urls));
@@ -540,7 +540,7 @@
       t.ficha = {data: fd, urls: urls};
       sel.html(fd.t.map(function (x, i) {
         return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
-      }).join('')).prop('disabled', fd.t.length < 2);
+      }).join('')).prop('disabled', false);
       var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
     });
   };
