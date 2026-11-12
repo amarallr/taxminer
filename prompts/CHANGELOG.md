@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 — governance master prompt (Common P08)
+- Added `common_p08_governance_master.txt`: the developer's TaxMiner Governance master prompt, version 1.0, unchanged below a header that names its layers and precedence (`AGENTS.md` and Common P01 prevail).
+- Phase 01 report and the proposed revision 1.1 (not applied) are in `docs/governance_plan.md`, section 9.
+
 ## 2026-11-12 — protected areas renamed (decision_0040)
 - Every prompt now names the protected areas `.restricted/` and `.tmp/` (formerly `restricted/` and `tmp/`), confidential and never shared or published.
 

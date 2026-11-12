@@ -2,7 +2,7 @@
 
 **Release:** 1.0 (first baseline release of the prompts; not a claim of implemented software).
 
-19 detailed CO-STAR prompts, directly under `prompts/`, numbered independently per module. American English (`en-US`) technical naming (`snake_case`); developer-facing explanations may use Brazilian Portuguese. Source documents preserve their original language.
+20 detailed CO-STAR prompts, directly under `prompts/`, numbered independently per module. American English (`en-US`) technical naming (`snake_case`); developer-facing explanations may use Brazilian Portuguese. Source documents preserve their original language.
 
 ## Scope
 - `tax_consultation_decisions`: Receita Federal Solucoes de Consulta (Tax Consultation Decisions); Solucoes de Divergencia and other interpretive acts, if included, remain distinct document types, subject to verified sources.
@@ -21,6 +21,7 @@
 5. `common_p04_testing_quality.txt` and `common_p05_documentation_release.txt` apply to each subphase and phase; run `common_p01_lifecycle_management.txt` after every gate and during operations.
 6. **Post-MVP (not part of any MVP gate):** `collect_p03_incremental_updates.txt` (incremental refresh after a subphase's sample is accepted) and `intelligence_p01_legal_tax_enrichment.txt` (legal/tax enrichment after Phase 1.1 acceptance). Start only with explicit authorization.
 7. **New data sources (addendum):** `common_p07_new_data_sources.txt` covers the shared reliability primitives in `src/common/` and the acceptance-evidence pattern (`decision_0023`). The fund report family itself is Phase 1.3. Each stage needs its own authorization.
+8. **Governance (addendum, 2026-11-12):** `common_p08_governance_master.txt` is the developer's master prompt for TaxMiner Governance (requests, requirements, executions, evidence, executive dashboard and prompt evolution over Common P01). Phase 01 (discovery) produced `docs/governance_plan.md`; every later phase, and any revision of this prompt, needs explicit approval. `AGENTS.md` and Common P01 prevail on conflict.
 
 ## Naming and version labels
 - File names are canonical: `group_pNN_objective.txt`. Internal titles repeat the module and number (for example `# COMMON P03`).

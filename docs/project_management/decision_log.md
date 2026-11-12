@@ -685,3 +685,17 @@ Pedido do desenvolvedor: nota explicativa onde aparece o indicador de entidade d
   informe publica o campo), dica da característica "Entidade de investimento", dica do filtro de
   FIP e dica do campo `ENTID_INVEST` na Ficha e na Série completa (app e painel publicado).
 - O texto é do desenvolvedor, não da CVM; os valores do campo continuam como publicados.
+
+## decision_0043 — 2026-11-12 — TaxMiner Governance: Fase 01 e propostas pendentes
+
+Pedido do desenvolvedor: executar `.claude/governance.txt` (prompt mestre do TaxMiner Governance).
+
+- Executada só a Fase 01 (Discovery), como o próprio prompt determina; entregável
+  `docs/governance_plan.md`. O prompt foi guardado sem alterações como
+  `prompts/common_p08_governance_master.txt` (versão 1.0).
+- **Pendentes de decisão do desenvolvedor (nada aplicado):** arquitetura e plano das oito fases;
+  conflitos C1–C7 com as regras do projeto (IDs no padrão de Common P01, nomes das áreas
+  protegidas, nome do arquivo do prompt, local do código, estados, adaptadores somente leitura,
+  atualização do painel); hook de captura do Claude Code e leitura dos campos de tokens das
+  transcrições locais; revisão 1.1 do prompt (P1–P7).
+- Registrados `req_0021` (proposto), `work_0032` e os riscos `risk_0018` e `risk_0019`.

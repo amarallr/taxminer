@@ -7,6 +7,15 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 01 — 2026-11-12
+
+- Prompt mestre do desenvolvedor guardado como `prompts/common_p08_governance_master.txt` (v1.0).
+- Fase 01 (Discovery) concluída: `docs/governance_plan.md`, com diagnóstico, lacunas G1–G8,
+  conflitos C1–C7, catálogo (`req_0021`, `work_0032`), arquitetura, plano, riscos
+  (`risk_0018`, `risk_0019`), checkpoint e relatório de melhoria do prompt (`decision_0043`).
+- **Aguardando aprovação:** arquitetura e plano, conflitos C1–C7, hook de captura e leitura de
+  tokens, revisão 1.1 do prompt e início da Fase 02. Nenhum código foi criado.
+
 ## Versão 1.0.2 — 2026-11-12
 
 - **Versão `1.0.2`** (`VERSION`, tag `v1.0.2`, aba Sobre): nomes dos cedentes PJ pelos cadastros da

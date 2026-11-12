@@ -12,6 +12,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 
 ## Estado atual
 
+- **TaxMiner Governance (`req_0021`, `decision_0043`):** Fase 01 concluída
+  (`docs/governance_plan.md`); aguarda aprovação da arquitetura, dos conflitos C1–C7 e da Fase 02.
+  Nada implementado.
 - **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e
