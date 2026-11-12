@@ -83,7 +83,9 @@ write_static_fund_data <- function(out_dir, data, ctx, generated) {
                colors = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_family_colors)),
                                                    json_string(unname(fund_family_colors))), collapse = ","), "}"),
                family_names = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_family_names)),
-                                                         json_string(unname(fund_family_names))), collapse = ","), "}"))
+                                                         json_string(unname(fund_family_names))), collapse = ","), "}"),
+               tables = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_table_labels)),
+                                                   json_string(unname(fund_table_labels))), collapse = ","), "}"))
   writeLines(enc2utf8(static_fund_index_json(index, data$master, meta)), file.path(dir, "funds.json"), useBytes = TRUE)
   invisible(list(funds = nrow(index)))
 }
@@ -118,68 +120,85 @@ write_static_admin_months <- function(out_dir, ctx, keys, families = unname(admi
 }
 
 # --- Ficha and Série completa -------------------------------------------------
-# Main report tables of each family (the ones the local app opens first). The
-# other tables stay in the local app.
+# Main report tables of each family (the ones the local app opens first), in
+# data/fichas/. The other FIDC tables go compressed to data/fichas_x/ and are
+# read only when chosen (write_static_ficha_extras); the other tables of FII,
+# FIP and FIAGRO stay in the local app.
 static_ficha_tables <- list(
   fidc = "inf_mensal_fidc_tab_I",
   fii = c("inf_mensal_fii_geral", "inf_mensal_fii_complemento", "inf_mensal_fii_ativo_passivo"),
   fip = c("inf_trimestral_fip", "inf_quadrimestral_fip"),
   fiagro = "inf_mensal_fiagro")
+static_ficha_extra_tables <- list(
+  fidc = paste0("inf_mensal_fidc_tab_", c("II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+                                          "X_1", "X_1_1", "X_2", "X_3", "X_4", "X_5", "X_6", "X_7")))
+
+# One table of one family as JSON objects, one per fund: {"n": table, "c":
+# [[period, dataset, file, line, sha12, url index]] (most recent first), "f":
+# [[label, code, derived, numeric flags, [values]]]}. Values are already
+# formatted with the rules of the app (display_values) and labels come from the
+# CVM dictionary (field_labels), so both versions show the same text; empty
+# values are "". Fields empty in every row of the fund are left out. Returns
+# NULL when the table is missing.
+static_ficha_objects <- function(root, fam, tn, urls, descriptions) {
+  base <- fund_processed_paths(root)$base
+  if (!dir.exists(file.path(base, fam, tn))) return(NULL)
+  lineage <- c("citation", "source_url", "zip_sha256", "source_file", "source_line",
+               "fund_cnpj_normalized", "reference_period", "layout_version")
+  r <- as.data.frame(open_fund_table(root, fam, tn))
+  r <- r[!is.na(r$fund_cnpj_normalized), , drop = FALSE]
+  period <- row_periods(r)
+  o <- order(r$fund_cnpj_normalized, period, r$source_file, r$source_line,
+             decreasing = c(FALSE, TRUE, FALSE, FALSE), method = "radix")
+  r <- r[o, , drop = FALSE]; period <- period[o]
+  shown <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+  url <- match(r$zip_sha256, urls$file_sha256)
+  cols <- sprintf("[%s,%s,%s,%s,%s,%s]", json_string(shown), json_string(r$dataset), json_string(r$source_file),
+                  ifelse(is.na(r$source_line), "null", r$source_line), json_string(substr(r$zip_sha256, 1L, 12L)),
+                  ifelse(is.na(url), "null", url - 1L))
+  fields <- c("fund_cnpj_original", setdiff(names(r), c(lineage, fund_report_columns)))
+  labels <- field_labels(fields, descriptions, tn)
+  filled <- matrix(FALSE, nrow(r), length(fields))
+  text <- vector("list", length(fields)); num <- text
+  for (k in seq_along(fields)) {
+    v <- r[[fields[k]]]
+    filled[, k] <- !is.na(v) & nzchar(trimws(v))
+    d <- display_values(v, fields[k])
+    text[[k]] <- json_string(ifelse(filled[, k], d$text, ""))
+    num[[k]] <- ifelse(d$num, "1", "0")
+  }
+  head <- sprintf("[%s,%s,%d,", json_string(labels$label), json_string(labels$field), as.integer(labels$derived))
+  groups <- split(seq_len(nrow(r)), r$fund_cnpj_normalized)
+  obj <- vapply(groups, function(i) {
+    keep <- which(colSums(filled[i, , drop = FALSE]) > 0)
+    f <- vapply(keep, function(k) paste0(head[k], "\"", paste(num[[k]][i], collapse = ""), "\",[",
+                                         paste(text[[k]][i], collapse = ","), "]]"), character(1))
+    sprintf("{\"n\":%s,\"c\":[%s],\"f\":[%s]}", json_string(tn), paste(cols[i], collapse = ","), paste(f, collapse = ","))
+  }, character(1))
+  list(cnpj = names(groups), obj = unname(obj), rows = nrow(r), n = unname(lengths(groups)),
+       first = vapply(groups, function(i) shown[i[length(i)]], character(1), USE.NAMES = FALSE),
+       last = vapply(groups, function(i) shown[i[1L]], character(1), USE.NAMES = FALSE))
+}
 
 # One file per fund, data/fichas/{family}/{CNPJ digits}.json, read when the
-# fund is opened: {"t": [{"n": table, "c": [[period, dataset, file, line,
-# sha12, url index]] (most recent first), "f": [[label, code, derived, numeric
-# flags, [values]]]}]}. Values are already formatted with the rules of the app
-# (display_values) and labels come from the CVM dictionary (field_labels), so
-# both versions show the same text; empty values are "". Fields empty in every
-# row of the fund are left out. data/fichas/urls.json lists the CVM files.
+# fund is opened: {"t": [objects of static_ficha_objects]}.
+# data/fichas/urls.json lists the CVM files.
 write_static_fichas <- function(out_dir, root, data, tables = static_ficha_tables) {
   dir <- file.path(out_dir, "data", "fichas")
   unlink(dir, recursive = TRUE)
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   urls <- data$urls
-  base <- fund_processed_paths(root)$base
-  lineage <- c("citation", "source_url", "zip_sha256", "source_file", "source_line",
-               "fund_cnpj_normalized", "reference_period", "layout_version")
   parts <- new.env(parent = emptyenv())
   rows_total <- 0L
   for (fam in names(tables)) for (tn in tables[[fam]]) {
-    if (!dir.exists(file.path(base, fam, tn))) next
-    r <- as.data.frame(open_fund_table(root, fam, tn))
-    r <- r[!is.na(r$fund_cnpj_normalized), , drop = FALSE]
-    period <- row_periods(r)
-    o <- order(r$fund_cnpj_normalized, period, r$source_file, r$source_line,
-               decreasing = c(FALSE, TRUE, FALSE, FALSE), method = "radix")
-    r <- r[o, , drop = FALSE]; period <- period[o]
-    rows_total <- rows_total + nrow(r)
-    shown <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
-    url <- match(r$zip_sha256, urls$file_sha256)
-    cols <- sprintf("[%s,%s,%s,%s,%s,%s]", json_string(shown), json_string(r$dataset), json_string(r$source_file),
-                    ifelse(is.na(r$source_line), "null", r$source_line), json_string(substr(r$zip_sha256, 1L, 12L)),
-                    ifelse(is.na(url), "null", url - 1L))
-    fields <- c("fund_cnpj_original", setdiff(names(r), c(lineage, fund_report_columns)))
-    labels <- field_labels(fields, data$descriptions, tn)
-    filled <- matrix(FALSE, nrow(r), length(fields))
-    text <- vector("list", length(fields)); num <- text
-    for (k in seq_along(fields)) {
-      v <- r[[fields[k]]]
-      filled[, k] <- !is.na(v) & nzchar(trimws(v))
-      d <- display_values(v, fields[k])
-      text[[k]] <- json_string(ifelse(filled[, k], d$text, ""))
-      num[[k]] <- ifelse(d$num, "1", "0")
+    x <- static_ficha_objects(root, fam, tn, urls, data$descriptions)
+    if (is.null(x)) next
+    rows_total <- rows_total + x$rows
+    for (j in seq_along(x$cnpj)) {
+      key <- paste(fam, x$cnpj[j], sep = "/")
+      assign(key, c(parts[[key]], x$obj[j]), envir = parts)
     }
-    head <- sprintf("[%s,%s,%d,", json_string(labels$label), json_string(labels$field), as.integer(labels$derived))
-    groups <- split(seq_len(nrow(r)), r$fund_cnpj_normalized)
-    for (cnpj in names(groups)) {
-      i <- groups[[cnpj]]
-      keep <- which(colSums(filled[i, , drop = FALSE]) > 0)
-      f <- vapply(keep, function(k) paste0(head[k], "\"", paste(num[[k]][i], collapse = ""), "\",[",
-                                           paste(text[[k]][i], collapse = ","), "]]"), character(1))
-      key <- paste(fam, cnpj, sep = "/")
-      assign(key, c(parts[[key]], sprintf("{\"n\":%s,\"c\":[%s],\"f\":[%s]}", json_string(tn),
-                                          paste(cols[i], collapse = ","), paste(f, collapse = ","))), envir = parts)
-    }
-    rm(r, filled, text, num); invisible(gc())
+    rm(x); invisible(gc())
   }
   for (fam in names(tables)) dir.create(file.path(dir, fam), showWarnings = FALSE)
   keys <- ls(parts)
@@ -190,6 +209,56 @@ write_static_fichas <- function(out_dir, root, data, tables = static_ficha_table
   writeLines(enc2utf8(paste0("[", paste(json_string(urls$source_url), collapse = ","), "]")),
              file.path(dir, "urls.json"), useBytes = TRUE)
   invisible(list(funds = length(keys), rows = rows_total))
+}
+
+# Other tables of a family, gzip compressed (GitHub Pages limits the site to
+# 1 GB): data/fichas_x/{family}/{CNPJ digits}.json.gz holds {"t": [objects of
+# static_ficha_objects]} with every extra table of the fund, read only when one
+# of them is chosen; data/fichas_x/{family}/index.json.gz lists them per fund:
+# {"tables": [names], "funds": {"CNPJ": [[table index, first period, last
+# period, rows]]}}. One table is read at a time and each fund's objects are
+# appended to a temporary file, so memory stays at one table. Both files use
+# the same urls.json as data/fichas/.
+write_static_ficha_extras <- function(out_dir, root, data, tables = static_ficha_extra_tables) {
+  dir <- file.path(out_dir, "data", "fichas_x")
+  unlink(dir, recursive = TRUE)
+  tmp <- tempfile("fichas_x"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  funds <- 0L; rows_total <- 0L
+  for (fam in names(tables)) {
+    dir.create(file.path(dir, fam), recursive = TRUE, showWarnings = FALSE)
+    index <- new.env(parent = emptyenv())
+    for (ti in seq_along(tables[[fam]])) {
+      x <- static_ficha_objects(root, fam, tables[[fam]][ti], data$urls, data$descriptions)
+      if (is.null(x)) next
+      rows_total <- rows_total + x$rows
+      for (j in seq_along(x$cnpj)) {
+        cnpj <- x$cnpj[j]
+        first <- is.null(index[[cnpj]])
+        cat(if (first) "" else ",\n", x$obj[j], file = file.path(tmp, paste0(cnpj, ".part")), sep = "", append = !first)
+        assign(cnpj, c(index[[cnpj]], sprintf("[%d,%s,%s,%d]", ti - 1L, json_string(x$first[j]),
+                                              json_string(x$last[j]), x$n[j])), envir = index)
+      }
+      rm(x); invisible(gc())
+    }
+    keys <- sort(ls(index))
+    for (cnpj in keys) {
+      part <- file.path(tmp, paste0(cnpj, ".part"))
+      body <- readLines(part, warn = FALSE, encoding = "UTF-8")
+      con <- gzfile(file.path(dir, fam, paste0(cnpj, ".json.gz")), "wb", compression = 9)
+      writeLines(enc2utf8(paste0("{\"t\":[", paste(body, collapse = "\n"), "]}")), con, useBytes = TRUE)
+      close(con)
+      unlink(part)
+    }
+    con <- gzfile(file.path(dir, fam, "index.json.gz"), "wb", compression = 9)
+    writeLines(enc2utf8(paste0("{\"tables\":[", paste(json_string(tables[[fam]]), collapse = ","), "],\"funds\":{",
+                               paste(sprintf("%s:[%s]", json_string(keys),
+                                             vapply(keys, function(k) paste(index[[k]], collapse = ","), character(1))),
+                                     collapse = ","), "}}")), con, useBytes = TRUE)
+    close(con)
+    funds <- funds + length(keys)
+  }
+  invisible(list(funds = funds, rows = rows_total))
 }
 
 # FICHA tab: any fund's Ficha and Série completa (RecordTab in taxminer_static.js).

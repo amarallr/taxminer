@@ -1,10 +1,15 @@
 # Histórico de retomada (arquivado em 2026-11-10)
 
-Conteúdo integral do handoff.md anterior à revisão de 2026-11-10T17:32-03:00, preservado sem alterações abaixo desta nota.
+**Status:** arquivado (2026-11-10) ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Retomada vigente](handoff.md) ·
+[Estado atual](project_status.md)
 
-# Retomada do TaxMiner
+Conteúdo integral do handoff.md anterior à revisão de 2026-11-10T17:32-03:00, preservado sem alterações de conteúdo abaixo desta nota (títulos rebaixados um nível em 2026-11-12, para manter um único título principal).
 
-## Atualização geral e validação — 2026-11-10T17:10:29-03:00
+## Retomada do TaxMiner
+
+### Atualização geral e validação — 2026-11-10T17:10:29-03:00
 
 README, GitHub setup, changelogs e Common P02 foram reconciliados com a
 visibilidade pública. Gemini autenticou e respondeu a fixture sintético fora do
@@ -16,7 +21,7 @@ avisos de inicialização de locale e pacote `testthat` compilado em R 4.5.3
 permanecem. Evidência e registro `test_0019` em
 `reports/execution/environment_validation_20261110.txt`.
 
-## Visibilidade GitHub — 2026-11-10T17:07:00-03:00
+### Visibilidade GitHub — 2026-11-10T17:07:00-03:00
 
 Atendendo ao pedido explícito, `amarallr/taxminer` agora é público. Confirmação
 da API: `private=false`, `visibility=public`, branch padrão `main`. Quatro
@@ -24,7 +29,7 @@ commits existentes têm metadados de autoria com endereços não-noreply; esses
 dados ficaram visíveis. Nenhum caminho protegido estava rastreado. Alterações
 locais pendentes em outros arquivos não foram incluídas no envio.
 
-## Critérios propostos e estado do RStudio — 2026-11-10T17:00:00-03:00
+### Critérios propostos e estado do RStudio — 2026-11-10T17:00:00-03:00
 
 `docs/requirements.md` agora contém propostas mensuráveis para cobertura,
 integridade, extração, reprodutibilidade, relevância, citações, latência e
@@ -37,7 +42,7 @@ console do projeto: `source("scripts/smoke_test_agent_clis_rstudio.R")`.
 Depois confira `reports/execution/agent_cli_rstudio_smoke.txt` e atualize os
 registros somente com os resultados reais.
 
-## Revisão de arquitetura — 2026-11-10T16:50:00-03:00
+### Revisão de arquitetura — 2026-11-10T16:50:00-03:00
 
 Revisão técnica Codex concluída como feedback, sem aceite humano presumido.
 Contratos e separação de domínios estão coerentes para planejamento. Antes da
@@ -46,7 +51,7 @@ de identificadores de empresa, calibração de confiança e limiares quantitativ
 de cobertura, relevância, citação e desempenho. `work_0002` continua em
 andamento; requisitos e aceite seguem pendentes. Nenhum MVP foi iniciado.
 
-## Atualização — aceite P02, smoke test e arquitetura — 2026-11-10T16:30:00-03:00
+### Atualização — aceite P02, smoke test e arquitetura — 2026-11-10T16:30:00-03:00
 
 O usuário aceitou Common P02. `work_0001` e `work_0003` foram registrados com
 aceite `accepted`; os estados de release e operação permanecem separados e
@@ -64,7 +69,7 @@ Criadas propostas `docs/architecture.md`, `docs/requirements.md` e
 Próxima ação: desenvolvedor executar/revisar smoke test integrado via console
 RStudio; revisar arquitetura e critérios. Coleta e MVP seguem não iniciados.
 
-## Atualização — configurações dos agentes — 2026-11-10T16:30:00-03:00
+### Atualização — configurações dos agentes — 2026-11-10T16:30:00-03:00
 
 Codex 0.167.0 validado com `--strict-config doctor --summary`: carregou
 `.codex/config.toml`, sandbox de filesystem/rede restritos, política OnRequest,
@@ -82,7 +87,7 @@ As regras de instrução/exclusão não constituem barreira contra shell,
 subprocessos ou ferramentas externas. Não houve acesso às áreas protegidas,
 instalação, autenticação, mudança global, commit ou push.
 
-## Atualização — correção locale Windows — 2026-11-10T15:48:33-03:00
+### Atualização — correção locale Windows — 2026-11-10T15:48:33-03:00
 
 O validador agora ajusta `LC_CTYPE` somente dentro do próprio processo R se o
 Windows iniciou com locale `C`. O comando documentado direto foi executado com
@@ -95,7 +100,7 @@ Aceite do setup permanece pendente. Próximo passo local opcional: repetir o
 helper no terminal integrado da janela RStudio já aberta e revisar os avisos;
 nenhum login, instalação, commit ou push faz parte dessa validação.
 
-## Checkpoint vigente — revisão do ambiente — 2026-11-10T15:03:27-03:00
+### Checkpoint vigente — revisão do ambiente — 2026-11-10T15:03:27-03:00
 
 Branch `main`; HEAD no início da revisão:
 `a259a1e35088bb2a497b4775031d5782bf76611d`. Common P02 permanece tecnicamente
@@ -123,7 +128,7 @@ projeto aberto. Depois, desenvolvedor revisa a documentação e decide aceite ou
 rejeição explícita do setup. Common P03 permanece sem autorização/início; não
 inferir aprovação humana.
 
-## Atualização Copilot — confirmações recentes do usuário
+### Atualização Copilot — confirmações recentes do usuário
 
 Indexação global desligada; opção “Index project files with GitHub Copilot”
 em “Default” no projeto, herdando o estado global desligado. O usuário confirmou
@@ -134,7 +139,7 @@ Tela de licença/autenticação GitHub e aceitação da sugestão não verificad
 reports/execution/copilot_preferences_check.txt. Esta atualização supera o
 checkpoint Copilot histórico abaixo; demais estados do projeto não mudaram.
 
-## Atualização de ferramentas CLI
+### Atualização de ferramentas CLI
 
 Estado vigente: GitHub CLI 2.103.3 instalado por usuário em `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`; diretório no PATH do usuário e `gh --version` passou. Menções à cópia .local/ abaixo são históricas.
 
@@ -151,7 +156,7 @@ RStudio, autenticação Gemini e interação sintética; não inferir disponibil
 funcional completa. GitHub CLI 2.103.3 e Codex
 permanece instalado por usuário. Usuário decidiu manter os locais atuais.
 
-## Copilot solicitado — 2026-11-10T11:14:35-03:00
+### Copilot solicitado — 2026-11-10T11:14:35-03:00
 
 O usuário pediu Copilot; seu adiamento anterior está revogado. work_0007 volta
 a in_progress, teste blocked, aceite pending; demais estados inalterados.
@@ -180,8 +185,7 @@ Common P02 exige evidência própria de ativação, autenticação, teste e acei
 O fechamento do P02 deve incluir a revisão Copilot agora solicitada; P03 não iniciado.
 Fonte: https://docs.posit.co/ide/user/ide/guide/tools/copilot.html
 
-
-## Revisão técnica do Common P02 — 2026-11-10T11:09:17-03:00
+### Revisão técnica do Common P02 — 2026-11-10T11:09:17-03:00
 
 Fundação local implementada e testes do ambiente R aprovados: 5 verificações
 no RStudio, com aviso conhecido de testthat compilado no R 4.5.3 versus R 4.5.1.
@@ -224,8 +228,7 @@ Common P03 não foi iniciado. Regra de aceite: AGENTS.md exige Never infer
 approval; Common P01, Gate D, exige aprovação explícita de reviewer humano.
 Os checkpoints anteriores abaixo são históricos.
 
-
-## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
+### Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
 
 Autorização humana explícita: identidade Lucas Rodrigues Amaral
 <amaral.lr@gmail.com>, repositório privado, primeiro commit e envio.
@@ -273,8 +276,7 @@ Este registro será incluído em um commit documental de acompanhamento, com
 hash final disponível em git log e evidência local após o envio.
 Os checkpoints anteriores abaixo são históricos.
 
-
-## Autorização e configuração — 2026-11-10T11:00:26-03:00
+### Autorização e configuração — 2026-11-10T11:00:26-03:00
 
 Usuário confirmou: usar Lucas Rodrigues Amaral / amaral.lr@gmail.com,
 repositório privado e autorização para commit e envio. Identidade gravada
@@ -286,8 +288,7 @@ Commit e envio serão registrados após resultados reais; aceite do setup e
 MVPs continua pending. A tentativa adicional de teste GitHub no RStudio não
 gerou relatório; resultado não confirmado, sem alegação de teste aprovado.
 
-
-## Checkpoint mais recente — Git/GitHub em 2026-11-10T10:51:56-03:00
+### Checkpoint mais recente — Git/GitHub em 2026-11-10T10:51:56-03:00
 
 Escopo autorizado: concluir a preparação Git/GitHub do Common P02.
 Git 2.55.0.windows.4, branch main, HEAD ausente e nenhum remoto na consulta.
@@ -317,8 +318,7 @@ Próximas ações: (1) developer responder identidade local e destino/visibilida
 específica confirmada. Common P03 ainda não executado; sem aceite humano inferido.
 Os checkpoints anteriores abaixo são históricos.
 
-
-## Checkpoint mais recente — validação no RStudio em 2026-11-10T10:45:08-03:00
+### Checkpoint mais recente — validação no RStudio em 2026-11-10T10:45:08-03:00
 
 Common P02: validação executada no terminal integrado da janela original do
 TaxMiner, sem abrir outra instância nesta retomada. R 4.5.1; testthat 3.3.2;
@@ -345,8 +345,7 @@ Próximas ações: (1) developer revisar resultado e pendências de setup;
 da etapa. Nenhum aceite humano inferido desta solicitação de execução.
 Os checkpoints anteriores abaixo são históricos.
 
-
-## Checkpoint atual — 2026-11-10T10:29:15-03:00
+### Checkpoint atual — 2026-11-10T10:29:15-03:00
 
 Common P02 autorizado e executado até a fundação local. Branch `main`, sem
 commits/remotos; commit `unknown`. Projeto RStudio, exclusões, instruções para
@@ -374,17 +373,17 @@ P03 é a próxima etapa técnica após consolidar evidências mínimas do setup 
 documentar as pendências opcionais. Os três MVPs permanecem não iniciados.
 O histórico abaixo descreve o checkpoint anterior e não substitui este estado.
 
-## Histórico — checkpoint anterior
+### Histórico — checkpoint anterior
 
 Checkpoint: 2026-11-10T10:22:47-03:00. Fase: `planning`. Último commit verificado e branch: `unknown`; a pasta não é um repositório Git.
 
-## Estado e última ação
+### Estado e última ação
 
 Diagnóstico inicial concluído; criados seis registros mínimos com 11 requisitos propostos e 17 itens futuros. Corrigidos os trechos remanescentes de duas fases em Common P01/Common P06 e a atribuição de busca financeira em Intelligence P02. Changelog preserva a história superada e registra a correção. O ZIP histórico não foi aberto ou atualizado. Consultar project_status.md para contagens, dependências e limites das evidências.
 
 Nenhum ambiente configurado, código implementado, teste de software executado, documento coletado ou release publicado. Não há aceite humano dos requisitos/MVPs. O usuário autorizou os registros e as correções documentais; a próxima etapa de setup ainda não foi solicitada.
 
-## Próximo comando reproduzível
+### Próximo comando reproduzível
 
 Na raiz, ler o painel e os itens antes de qualquer mudança:
 
@@ -395,7 +394,7 @@ Import-Csv -LiteralPath '.\docs\project_management\work_items.csv'
 
 Depois de autorizada a etapa de setup, ler integralmente `prompts/common_p02_rstudio_project_setup.txt` e aplicar somente seu escopo permitido. Não tratar a presença deste comando ou dos registros como autorização de setup ou publicação. Detalhar evidências de instalação, autenticação, teste funcional e aceite por ferramenta à medida que forem verificadas.
 
-## Dependências e aprovações
+### Dependências e aprovações
 
 - Próximo trabalho: work_0001, setup local; depois work_0002, arquitetura e critérios de aceite.
 - Escopos das amostras e critérios quantitativos ainda precisam ser definidos/verificados; não presumir fontes ou cobertura.
@@ -404,7 +403,7 @@ Depois de autorizada a etapa de setup, ler integralmente `prompts/common_p02_rst
 - Nunca acessar, listar, percorrer, pesquisar ou operar `restricted/` e `tmp/`. Excluir ambas de comandos recursivos e de qualquer empacotamento. Não operar repositórios independentes dentro delas.
 - A configuração de sincronização deve ser verificada pelo desenvolvedor sem expor conteúdos ou metadados protegidos. O Git principal e suas exclusões ainda não foram configurados.
 
-## Verificações da sessão inicial
+### Verificações da sessão inicial
 
 - Inventário não recursivo da raiz permitida e de `prompts/`; leituras UTF-8 dos documentos permitidos.
 - `git status --short --untracked-files=no`, `git branch --show-current` e `git rev-parse HEAD`: falharam com `not a git repository`; isso é diagnóstico, não falha de teste de software.
@@ -412,7 +411,7 @@ Depois de autorizada a etapa de setup, ler integralmente `prompts/common_p02_rst
 - Em 2026-11-10T10:22:47-03:00, `Import-Csv` e validações PowerShell confirmaram 11 requisitos, 17 itens, 6 riscos, IDs de trabalho únicos, referências válidas a requisitos/dependências/evidências e os cinco estados iniciais. Resultado: comando concluído com código 0.
 - `Get-ChildItem -LiteralPath '.\prompts' -File -Filter '*.txt'` e leitura UTF-8 de cada arquivo confirmaram os títulos `**MVP Phase 1`, `**MVP Phase 2` e `**MVP Phase 3` em todos os 16 prompts. A busca complementar com `rg -n -i --glob '*.txt' --glob '*.md'` limitada a `prompts/` encontrou referências remanescentes a duas fases somente no changelog explicitamente histórico. Nenhum teste de software foi executado.
 
-## Revalidação no terminal do agente — 2026-11-10T10:40:10-03:00
+### Revalidação no terminal do agente — 2026-11-10T10:40:10-03:00
 
 Comando inicial: Rscript --vanilla scripts/validate_environment.R
 Resultado: código 1; 4 verificações aprovadas e 1 falha na comparação de texto
@@ -429,6 +428,6 @@ foi alterado. Execução no terminal do agente; abertura e terminal integrado do
 RStudio continuam não verificados. Setup em andamento; aceite pending;
 release not_released; operations not_started. Estados dos MVPs inalterados.
 
-## Tentativa de smoke test integrado RStudio — 2026-11-10T16:50:00-03:00
+### Tentativa de smoke test integrado RStudio — 2026-11-10T16:50:00-03:00
 
 Foi preparado e enviado à janela RStudio um helper de leitura sintética para Gemini/Codex. O relatório `reports/execution/agent_cli_rstudio_smoke.txt` não foi criado; a execução não está confirmada e o smoke test integrado permanece pendente. O smoke do Gemini executado fora do RStudio não comprova essa integração. Nenhum MVP foi iniciado.

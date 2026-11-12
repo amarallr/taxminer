@@ -1,5 +1,11 @@
 # Retomada do TaxMiner
 
+**Status:** vigente ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Estado atual](project_status.md) ·
+[Histórico de retomadas](handoff_history.md) ·
+[Revisão de 2026-11-10](review_update_plan.md)
+
 Atualizado: 2026-11-11T09:02:13-03:00. Branch `main`. O histórico completo de
 retomadas está em `handoff_history.md`; a revisão e sua execução, em
 `review_update_plan.md`.

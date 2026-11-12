@@ -1,5 +1,29 @@
 # TaxMiner — estado do projeto
 
+**Status:** vigente; entradas mais recentes primeiro ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Retomada](handoff.md) ·
+[Itens de trabalho](work_items.csv) ·
+[Registro de decisões](decision_log.md) ·
+[Panorama](../project_overview.md)
+
+## Tabelas do FIDC publicadas, `req_0020` e áreas protegidas — 2026-11-12
+
+- **Painel publicado (`decision_0039`):** todas as 18 tabelas do informe mensal do FIDC; as 17
+  extras em gzip por fundo (`site/app/data/fichas_x/fidc/`, 6.289 fundos, mediana de 17 KB,
+  índice de 265 KB), lidas só quando escolhidas. Site com 697 MB, abaixo do limite de 1 GB do
+  GitHub Pages. Os 6.289 arquivos foram validados contra o índice; a tabela X.6 foi conferida no
+  navegador.
+- **Nomes das tabelas:** combos mostram a seção do informe (`fund_table_labels`), no app e no site.
+- **Requisito `req_0020` e `work_0031`:** painel de fundos e site publicado; aceite pendente.
+- **Áreas protegidas (`decision_0040`):** `restricted/` e `tmp/` renomeadas para `.restricted/` e
+  `.tmp/`, sigilosas; regras e controles atualizados; mantidas no OneDrive por decisão do
+  desenvolvedor (`risk_0017`, aceito).
+- **Documentação:** README e `docs/` reformatados; panorama atualizado.
+- **Testes:** 105 testes R e o teste do Panorama passam.
+- **Fase 1.2:** coleta das DFP em execução (2.774 de 14.010 entregas); extração das notas
+  retomada de forma incremental.
+
 ## Cedentes dos FIDC e filtros — 2026-11-11
 
 - **Aba Cedentes (`decision_0038`):** app e painel publicado, após FIDC; 10.969 cedentes em 166
@@ -115,12 +139,12 @@
 - **Amostra** (`test_0042`): 7 de 7 arquivos, um por conjunto.
 - **Backfill histórico** (`test_0043`): 102 de 102 arquivos, sem falhas, 262 MB.
 
-| Subfamília | Arquivos | Períodos |
-|---|---:|---|
-| FII | 33 | 2016–2026 (mensal, trimestral e anual) |
-| FIDC | 34 | 2013–2024 (anual, `HIST/`) e 2025-01–2026-10 (mensal) |
-| FIP | 17 | 2010–2023 (trimestral) e 2024–2026 (quadrimestral) |
-| FIAGRO | 18 | 2025-05–2026-10 |
+| Subfamília | Arquivos | Períodos                                              |
+| ---------- | -------: | ----------------------------------------------------- |
+| FII        | 33       | 2016–2026 (mensal, trimestral e anual)                |
+| FIDC       | 34       | 2013–2024 (anual, `HIST/`) e 2025-01–2026-10 (mensal) |
+| FIP        | 17       | 2010–2023 (trimestral) e 2024–2026 (quadrimestral)    |
+| FIAGRO     | 18       | 2025-05–2026-10                                       |
 
 ### Fase 1.3, Data P04 (`work_0021`)
 
@@ -169,12 +193,12 @@
 - **Testes:** 28 testes sintéticos (`test_0038`).
 - **Rodada local** (`test_0039`) sobre os 250 pacotes baixados até então, em 628 s:
 
-| Situação | Pacotes |
-|---|---:|
-| `extracted` (completo) | 205 |
-| `extracted_partial` | 33 |
-| `no_note_structure` | 10 |
-| `image_only` (sem OCR) | 2 |
+| Situação               | Pacotes |
+| ---------------------- | ------: |
+| `extracted` (completo) | 205     |
+| `extracted_partial`    | 33      |
+| `no_note_structure`    | 10      |
+| `image_only` (sem OCR) | 2       |
 
   Resultado: 6.365 notas, cerca de 53 milhões de caracteres de texto e 20 MB de Parquet.
 - **Defeito do catálogo da coleta** (`risk_0016`): nomes de companhias cortados no primeiro
@@ -199,12 +223,12 @@
 - **Testes:** 22 testes sintéticos (`test_0035`).
 - **Rodada local** (`test_0037`) sobre 83 pacotes DFP já baixados:
 
-| Situação | Pacotes |
-|---|---:|
-| `extracted` (confiança alta) | 66 |
-| `extracted_partial` | 12 |
-| `image_only` (sem OCR) | 1 |
-| `no_note_structure` | 4 |
+| Situação                     | Pacotes |
+| ---------------------------- | ------: |
+| `extracted` (confiança alta) | 66      |
+| `extracted_partial`          | 12      |
+| `image_only` (sem OCR)       | 1       |
+| `no_note_structure`          | 4       |
 
 - **Limitações** (as dependências foram declaradas depois, na `decision_0026`):
   - os parciais têm lacunas de numeração ou conjuntos curtos;
@@ -564,7 +588,6 @@ Common P02 exige evidência própria de ativação, autenticação, teste e acei
 O fechamento do P02 deve incluir a revisão Copilot agora solicitada; P03 não iniciado.
 Fonte: https://docs.posit.co/ide/user/ide/guide/tools/copilot.html
 
-
 ## Revisão técnica do Common P02 — 2026-11-10T11:09:17-03:00
 
 Fundação local implementada e testes do ambiente R aprovados: 5 verificações
@@ -607,7 +630,6 @@ executar Common P03; (3) reavaliar integrações opcionais quando necessárias.
 Common P03 não foi iniciado. Regra de aceite: AGENTS.md exige Never infer
 approval; Common P01, Gate D, exige aprovação explícita de reviewer humano.
 Os checkpoints anteriores abaixo são históricos.
-
 
 ## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
 
@@ -657,7 +679,6 @@ Este registro será incluído em um commit documental de acompanhamento, com
 hash final disponível em git log e evidência local após o envio.
 Os checkpoints anteriores abaixo são históricos.
 
-
 ## Autorização e configuração — 2026-11-10T11:00:26-03:00
 
 Usuário confirmou: usar Lucas Rodrigues Amaral / amaral.lr@gmail.com,
@@ -669,7 +690,6 @@ Origin configurado como https://github.com/amarallr/taxminer.git.
 Commit e envio serão registrados após resultados reais; aceite do setup e
 MVPs continua pending. A tentativa adicional de teste GitHub no RStudio não
 gerou relatório; resultado não confirmado, sem alegação de teste aprovado.
-
 
 ## Checkpoint mais recente — Git/GitHub em 2026-11-10T10:51:56-03:00
 
@@ -701,7 +721,6 @@ Próximas ações: (1) developer responder identidade local e destino/visibilida
 específica confirmada. Common P03 ainda não executado; sem aceite humano inferido.
 Os checkpoints anteriores abaixo são históricos.
 
-
 ## Checkpoint mais recente — validação no RStudio em 2026-11-10T10:45:08-03:00
 
 Common P02: validação executada no terminal integrado da janela original do
@@ -729,7 +748,6 @@ Próximas ações: (1) developer revisar resultado e pendências de setup;
 da etapa. Nenhum aceite humano inferido desta solicitação de execução.
 Os checkpoints anteriores abaixo são históricos.
 
-
 ## Checkpoint atual — Common P02
 
 Atualização: 2026-11-10T10:29:15-03:00. Fase: `environment_setup`.
@@ -743,12 +761,12 @@ Uma falha anterior com duas causas foi corrigida e preservada no registro de
 testes. Reexecução do bootstrap manteve o hash do lockfile. Evidências completas
 em `docs/development_environment.md` e `reports/execution/environment_validation.txt`.
 
-| module | items | implementation_status | test_status | acceptance_status | release_status | operations_status |
-|---|---:|---|---|---|---|---|
-| common | 10 | not_started: 4; in_progress: 2; blocked: 4 | not_run: 5; passed: 1; blocked: 4 | pending: 10 | not_released: 10 | not_started: 10 |
-| collect | 2 | not_started: 2 | not_run: 2 | pending: 2 | not_released: 2 | not_started: 2 |
-| data | 2 | not_started: 2 | not_run: 2 | pending: 2 | not_released: 2 | not_started: 2 |
-| intelligence | 3 | not_started: 3 | not_run: 3 | pending: 3 | not_released: 3 | not_started: 3 |
+| module       | items | implementation_status                      | test_status                       | acceptance_status | release_status   | operations_status |
+| ------------ | ----: | ------------------------------------------ | --------------------------------- | ----------------- | ---------------- | ----------------- |
+| common       | 10    | not_started: 4; in_progress: 2; blocked: 4 | not_run: 5; passed: 1; blocked: 4 | pending: 10       | not_released: 10 | not_started: 10   |
+| collect      | 2     | not_started: 2                             | not_run: 2                        | pending: 2        | not_released: 2  | not_started: 2    |
+| data         | 2     | not_started: 2                             | not_run: 2                        | pending: 2        | not_released: 2  | not_started: 2    |
+| intelligence | 3     | not_started: 3                             | not_run: 3                        | pending: 3        | not_released: 3  | not_started: 3    |
 
 Common P02 permanece em andamento. Faltam abertura/teste no RStudio, identidade
 Git, commit local autorizado e validação das integrações opcionais. GitHub CLI,
@@ -761,11 +779,11 @@ de testes, aceite, release e operação; o teste de ambiente não altera seus es
 
 Próximas três ações:
 
-| priority | action | owner | dependency |
-|---:|---|---|---|
-| 1 | Abrir taxminer.Rproj e executar validação no terminal integrado | developer | fundação local disponível |
-| 2 | Definir identidade Git local; decidir instalações e ativação das integrações opcionais | developer | revisão da matriz de capacidades; autorização de mudanças fora do projeto |
-| 3 | Revisar o setup e detalhar Common P03 | codex; developer | evidências mínimas do ambiente; pendências opcionais explicitamente documentadas |
+| priority | action                                                                                 | owner            | dependency                                                                       |
+| -------: | -------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| 1        | Abrir taxminer.Rproj e executar validação no terminal integrado                        | developer        | fundação local disponível                                                        |
+| 2        | Definir identidade Git local; decidir instalações e ativação das integrações opcionais | developer        | revisão da matriz de capacidades; autorização de mudanças fora do projeto        |
+| 3        | Revisar o setup e detalhar Common P03                                                  | codex; developer | evidências mínimas do ambiente; pendências opcionais explicitamente documentadas |
 
 Nenhuma instalação global, commit, push, configuração global ou coleta foi
 realizada. Aprovações pendentes: aceite do setup, commit quando desejado,
@@ -789,12 +807,12 @@ Fase: `planning`. Escopo desta sessão: diagnóstico, registros mínimos e corre
 
 ## Painel inicial por módulo
 
-| module | items | implementation_status | test_status | acceptance_status | release_status | operations_status |
-|---|---:|---|---|---|---|---|
-| common | 10 | not_started: 10 | not_run: 10 | pending: 10 | not_released: 10 | not_started: 10 |
-| collect | 2 | not_started: 2 | not_run: 2 | pending: 2 | not_released: 2 | not_started: 2 |
-| data | 2 | not_started: 2 | not_run: 2 | pending: 2 | not_released: 2 | not_started: 2 |
-| intelligence | 3 | not_started: 3 | not_run: 3 | pending: 3 | not_released: 3 | not_started: 3 |
+| module       | items | implementation_status | test_status | acceptance_status | release_status   | operations_status |
+| ------------ | ----: | --------------------- | ----------- | ----------------- | ---------------- | ----------------- |
+| common       | 10    | not_started: 10       | not_run: 10 | pending: 10       | not_released: 10 | not_started: 10   |
+| collect      | 2     | not_started: 2        | not_run: 2  | pending: 2        | not_released: 2  | not_started: 2    |
+| data         | 2     | not_started: 2        | not_run: 2  | pending: 2        | not_released: 2  | not_started: 2    |
+| intelligence | 3     | not_started: 3        | not_run: 3  | pending: 3        | not_released: 3  | not_started: 3    |
 
 Evidência de implementação dos 17 itens futuros: ausente. Testes do software: não executados. Aceites humanos: pendentes. Releases e execuções operacionais: nenhum registrado; saúde operacional `unknown`. Nenhum estado positivo foi inferido da documentação criada.
 
@@ -802,11 +820,11 @@ Verificação documental em 2026-11-10T10:22:47-03:00: CSVs importados com suces
 
 ## Marco obrigatório: prototype_mvp
 
-| milestone | scope | dependencies | implementation | test | acceptance | release | operations |
-|---|---|---|---|---|---|---|---|
-| prototype_phase_1 | Soluções de Consulta: coleta, extração, Parquet e busca Shiny local com fonte oficial | work_0001; work_0002; work_0008; work_0009; work_0010; work_0015 | not_started | not_run | pending | not_released | not_started |
-| prototype_phase_2 | Notas explicativas: coleta, extração, Parquet e busca Shiny independente da fase 1 | work_0001; work_0002; work_0011; work_0012; work_0013; work_0016 | not_started | not_run | pending | not_released | not_started |
-| prototype_phase_3 | Relações entre as duas bases aceitas; citações lado a lado e incerteza | work_0014; work_0015; work_0016; work_0017 | not_started | not_run | pending | not_released | not_started |
+| milestone         | scope                                                                                 | dependencies                                                     | implementation | test    | acceptance | release      | operations  |
+| ----------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------- | ------- | ---------- | ------------ | ----------- |
+| prototype_phase_1 | Soluções de Consulta: coleta, extração, Parquet e busca Shiny local com fonte oficial | work_0001; work_0002; work_0008; work_0009; work_0010; work_0015 | not_started    | not_run | pending    | not_released | not_started |
+| prototype_phase_2 | Notas explicativas: coleta, extração, Parquet e busca Shiny independente da fase 1    | work_0001; work_0002; work_0011; work_0012; work_0013; work_0016 | not_started    | not_run | pending    | not_released | not_started |
+| prototype_phase_3 | Relações entre as duas bases aceitas; citações lado a lado e incerteza                | work_0014; work_0015; work_0016; work_0017                       | not_started    | not_run | pending    | not_released | not_started |
 
 Amostra proposta da fase 1: até 100 Soluções de Consulta públicas, condicionada à disponibilidade real, regras de acesso e aprovação do escopo. Amostra da fase 2: tamanho, empresas e períodos `unknown`, a definir após verificar as fontes. Busca semântica: proposta de adiamento para além do primeiro MVP, ainda sujeita à definição do escopo. Uma única interface Shiny deve ter áreas funcionais independentes.
 
@@ -828,11 +846,11 @@ Consultar `risk_register.csv` e `decision_log.md`. Principais pendências: ambie
 
 ## Próximas três ações
 
-| priority | action | owner | dependency |
-|---:|---|---|---|
-| 1 | Revisar o diagnóstico e detalhar Common P02 antes da configuração | codex | registros iniciais disponíveis; autorização da etapa de setup |
-| 2 | Executar o setup local autorizado e registrar evidências por ferramenta | codex; developer | work_0001; autenticação humana apenas quando necessária |
-| 3 | Definir arquitetura e critérios com Common P03 | codex; developer | evidências do setup; work_0002 |
+| priority | action                                                                  | owner            | dependency                                                    |
+| -------: | ----------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
+| 1        | Revisar o diagnóstico e detalhar Common P02 antes da configuração       | codex            | registros iniciais disponíveis; autorização da etapa de setup |
+| 2        | Executar o setup local autorizado e registrar evidências por ferramenta | codex; developer | work_0001; autenticação humana apenas quando necessária       |
+| 3        | Definir arquitetura e critérios com Common P03                          | codex; developer | evidências do setup; work_0002                                |
 
 Aprovações futuras: escopo e critérios das fases, aceites humanos independentes e autorização explícita antes de mudanças remotas/publicação. Autenticações devem usar os fluxos oficiais locais, sem segredos nos registros.
 

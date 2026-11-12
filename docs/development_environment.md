@@ -1,5 +1,11 @@
 # Ambiente de desenvolvimento
 
+**Status:** vigente; registros de validação por data ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [GitHub](github_setup.md) ·
+[README](../README.md) ·
+[Estado atual](project_management/project_status.md)
+
 ## Smoke test integrado no RStudio — 2026-11-10T18:28:17-03:00
 
 Esta sessão do Claude Code roda no terminal integrado do RStudio Desktop
@@ -78,18 +84,18 @@ revisada por allowlist e decisão do desenvolvedor.
 
 ### Ferramentas e caminhos confirmados
 
-| ferramenta | versão observada | caminho/configuração | situação |
-|---|---|---|---|
-| Windows PowerShell | 5.1.26100.9711 | sessão atual | observado |
-| R / Rscript | 4.5.1 | `%LOCALAPPDATA%/Programs/R/R-4.5.1/bin/x64` | disponível |
-| RStudio Desktop | 2024.04.0+735 | `C:/Program Files/RStudio/rstudio.exe` | versão do executável observada; esta revisão não abriu outra instância |
-| Git | 2.55.0.windows.4 | `%LOCALAPPDATA%/Programs/Git/cmd` | usuário PATH; disponível |
-| GitHub CLI | 2.103.3 | `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe` | usuário PATH; disponível |
-| Codex CLI | 0.167.0 | `%LOCALAPPDATA%/Programs/OpenAI/Codex/bin/codex.exe` | usuário PATH; teste de execução nesta revisão não realizado |
-| Gemini CLI | 0.67.0 | `%LOCALAPPDATA%/Programs/TaxMiner/gemini_cli`; Node mínimo `>=20` | usuário PATH; autenticação e interação continuam pendentes |
-| Node.js / npm | 26.13.0 / 11.20.0 | `%LOCALAPPDATA%/Programs/TaxMiner/node-v26.13.0-win-x64` | usuário PATH; prefix npm aponta para esta instalação |
-| Rtools / make | `make` encontrado no PATH do processo | Rtools 4.5 (`C:/rtools45`) | disponível nesta sessão; necessidade de compilação não testada |
-| Claude Code | desconhecida | `claude` não resolve pelo PATH consultado | instalação global não investigada |
+| ferramenta         | versão observada                      | caminho/configuração                                              | situação                                                               |
+| ------------------ | ------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Windows PowerShell | 5.1.26100.9711                        | sessão atual                                                      | observado                                                              |
+| R / Rscript        | 4.5.1                                 | `%LOCALAPPDATA%/Programs/R/R-4.5.1/bin/x64`                       | disponível                                                             |
+| RStudio Desktop    | 2024.04.0+735                         | `C:/Program Files/RStudio/rstudio.exe`                            | versão do executável observada; esta revisão não abriu outra instância |
+| Git                | 2.55.0.windows.4                      | `%LOCALAPPDATA%/Programs/Git/cmd`                                 | usuário PATH; disponível                                               |
+| GitHub CLI         | 2.103.3                               | `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`          | usuário PATH; disponível                                               |
+| Codex CLI          | 0.167.0                               | `%LOCALAPPDATA%/Programs/OpenAI/Codex/bin/codex.exe`              | usuário PATH; teste de execução nesta revisão não realizado            |
+| Gemini CLI         | 0.67.0                                | `%LOCALAPPDATA%/Programs/TaxMiner/gemini_cli`; Node mínimo `>=20` | usuário PATH; autenticação e interação continuam pendentes             |
+| Node.js / npm      | 26.13.0 / 11.20.0                     | `%LOCALAPPDATA%/Programs/TaxMiner/node-v26.13.0-win-x64`          | usuário PATH; prefix npm aponta para esta instalação                   |
+| Rtools / make      | `make` encontrado no PATH do processo | Rtools 4.5 (`C:/rtools45`)                                        | disponível nesta sessão; necessidade de compilação não testada         |
+| Claude Code        | desconhecida                          | `claude` não resolve pelo PATH consultado                         | instalação global não investigada                                      |
 
 As quatro entradas necessárias (Codex, Gemini CLI, Node.js e GitHub CLI) foram
 encontradas no PATH do usuário, sem duplicatas. Nenhuma entrada de TaxMiner ou
@@ -155,14 +161,14 @@ o comando detectado aponta para o alias do Windows, não valida um interpretador
 
 ## Matriz de capacidades
 
-| tool | version | installation_status | authentication_status | rstudio_integration_mode | validation_status | evidence | blockers | next_action |
-|---|---|---|---|---|---|---|---|---|
-| git | 2.55.0.windows.4 | installed | verified_https_via_gh | terminal integrado verificado | passed | reports/execution/github_rstudio_validation.txt; docs/github_setup.md | aceite humano pendente | revisar setup |
-| github_cli | 2.103.3 | installed_per_user | authenticated_amarallr | terminal integrado verificado | passed | reports/execution/github_rstudio_validation.txt; `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe` | aceite humano pendente | usar `gh` pelo PATH do usuário |
-| codex | 0.167.0 | installed_per_user | authenticated_chatgpt | terminal integrado RStudio verificado | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0027) | aceite humano pendente | `codex exec` exige leitura por comando de shell; sandbox read-only |
-| claude_code | 2.1.322 | installed_per_user (`~/.local/bin/claude`) | authenticated | terminal integrado RStudio verificado | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0028) | aceite humano pendente | regras deny em `.claude/settings.json` |
-| gemini_cli | 0.67.0 | installed_per_user | authenticated | terminal integrado RStudio verificado via `scripts/run_gemini.ps1` | passed | reports/execution/agent_cli_rstudio_smoke.txt (test_0029) | aceite humano pendente | `.geminiignore` não é isolamento técnico |
-| github_copilot | RStudio 2024.04.0+735 | native_integration | signed_in (confirmado pelo desenvolvedor) | RStudio Desktop nativo | passed | reports/execution/copilot_acceptance_check.txt (test_0030); reports/execution/copilot_preferences_check.txt | aceite humano pendente | manter indexação global desligada |
+| tool           | version               | installation_status                        | authentication_status                     | rstudio_integration_mode                                           | validation_status | evidence                                                                                                    | blockers               | next_action                                                        |
+| -------------- | --------------------- | ------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------ |
+| git            | 2.55.0.windows.4      | installed                                  | verified_https_via_gh                     | terminal integrado verificado                                      | passed            | reports/execution/github_rstudio_validation.txt; docs/github_setup.md                                       | aceite humano pendente | revisar setup                                                      |
+| github_cli     | 2.103.3               | installed_per_user                         | authenticated_amarallr                    | terminal integrado verificado                                      | passed            | reports/execution/github_rstudio_validation.txt; `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`   | aceite humano pendente | usar `gh` pelo PATH do usuário                                     |
+| codex          | 0.167.0               | installed_per_user                         | authenticated_chatgpt                     | terminal integrado RStudio verificado                              | passed            | reports/execution/agent_cli_rstudio_smoke.txt (test_0027)                                                   | aceite humano pendente | `codex exec` exige leitura por comando de shell; sandbox read-only |
+| claude_code    | 2.1.322               | installed_per_user (`~/.local/bin/claude`) | authenticated                             | terminal integrado RStudio verificado                              | passed            | reports/execution/agent_cli_rstudio_smoke.txt (test_0028)                                                   | aceite humano pendente | regras deny em `.claude/settings.json`                             |
+| gemini_cli     | 0.67.0                | installed_per_user                         | authenticated                             | terminal integrado RStudio verificado via `scripts/run_gemini.ps1` | passed            | reports/execution/agent_cli_rstudio_smoke.txt (test_0029)                                                   | aceite humano pendente | `.geminiignore` não é isolamento técnico                           |
+| github_copilot | RStudio 2024.04.0+735 | native_integration                         | signed_in (confirmado pelo desenvolvedor) | RStudio Desktop nativo                                             | passed            | reports/execution/copilot_acceptance_check.txt (test_0030); reports/execution/copilot_preferences_check.txt | aceite humano pendente | manter indexação global desligada                                  |
 
 Os aceites humanos das integrações permanecem `pending`. Não confundir ausência no
 PATH com prova de ausência em todo o computador. Não houve busca indiscriminada

@@ -3,6 +3,9 @@
 ## 2026-11-12 — protected areas renamed (decision_0040)
 - Every prompt now names the protected areas `.restricted/` and `.tmp/` (formerly `restricted/` and `tmp/`), confidential and never shared or published.
 
+## 2026-11-12 — fund panel requirement and other FIDC tables (decision_0039)
+- Common P06 (Phase 1.3) now names requirement `req_0020` (fund reports panel and published dashboard) and states that the published dashboard carries every other FIDC table as one gzip file per fund, read only when chosen, within the 1 GB GitHub Pages limit.
+
 ## 2026-11-11 — FIDC cedentes (decision_0038)
 - Common P06 (Phase 1.3) adds the Cedentes tab after FIDC (cedentes from report table I; CPF in full by developer decision; out-of-range shares flagged), the FIP investment entity filter and red negative values.
 

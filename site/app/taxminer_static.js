@@ -152,6 +152,7 @@
   function loadFunds() {
     if (!data) {
       data = getJSON('data/funds.json').then(function (d) {
+        TABLE_LABELS = d.meta.tables || {};
         var byEntity = {};
         d.names.forEach(function (n) { (byEntity[n[0]] = byEntity[n[0]] || []).push(n); });
         d.funds.forEach(function (f) {
@@ -295,7 +296,7 @@
     t.el.find('.tm-pager').html(pages > 1 ? (t.page ? '<a href="#" data-step="-1">‹ anterior</a>' : '<span></span>') +
       '<span>página ' + fmtInt(t.page + 1) + ' de ' + fmtInt(pages) + '</span>' +
       (t.page < pages - 1 ? '<a href="#" data-step="1">próxima ›</a>' : '<span></span>') : '');
-    t.el.find('.tm-strip').html('Dados gerados em ' + esc(d.meta.generated) + ' · Ficha e Série completa das tabelas principais; as demais tabelas no app local');
+    t.el.find('.tm-strip').html('Dados gerados em ' + esc(d.meta.generated) + ' · Ficha e Série completa: todas as tabelas do FIDC e as principais dos demais tipos (as outras no app local)');
     if (!t.selected && rows.length) { t.selected = rows[0]; t.detail(rows[0]); t.el.find('tr[data-row="0"]').addClass('tm-selected'); }
   };
   FundTab.prototype.detail = function (f) {
@@ -331,10 +332,9 @@
           '<div class="tm-empty">Sem linhas nas tabelas principais para este fundo. As demais tabelas estão no app local.</div>');
         return;
       }
-      // The file lists the main table of the family first.
-      sel.html(fd.t.map(function (x, i) {
-        return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
-      }).join('')).prop('disabled', false);
+      // The file lists the main table of the family first, then the other
+      // FIDC tables (read when chosen).
+      sel.html(tableOptions(fd)).prop('disabled', false);
       var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
     });
     getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
@@ -351,17 +351,92 @@
   var CARD_COLUMNS = 6;
   // Table opened first: the one with the most recent report (e.g. the
   // four-monthly FIP report after 2023), the first listed on a tie.
+  // Tables still to be read (other FIDC tables) are skipped.
   function latestTable(fd) {
-    var best = 0;
-    fd.t.forEach(function (x, i) { if (x.c[0][0] > fd.t[best].c[0][0]) best = i; });
-    return best;
+    var best = -1;
+    fd.t.forEach(function (x, i) { if (!x.lazy && (best < 0 || x.c[0][0] > fd.t[best].c[0][0])) best = i; });
+    return best < 0 ? 0 : best;
+  }
+  // Picker text: the report section (fund_table_labels in
+  // src/intelligence/search_fund_reports.R, sent in funds.json meta.tables);
+  // the CVM file name stays in the tooltip and in each citation.
+  var TABLE_LABELS = {};
+  function tableLabel(n) { return TABLE_LABELS[n] || n; }
+  function tableOptions(fd) {
+    return fd.t.map(function (x, i) {
+      var first = x.lazy ? x.first : x.c[x.c.length - 1][0], last = x.lazy ? x.last : x.c[0][0];
+      return '<option value="' + i + '" title="' + esc(x.n) + '">' + esc(tableLabel(x.n)) + '  (' + esc(first) + '–' + esc(last) + ')</option>';
+    }).join('');
+  }
+  // Other FIDC tables (data/fichas_x/{family}/, gzip, written by
+  // write_static_ficha_extras): index.json.gz lists them per fund and
+  // {CNPJ}.json.gz holds all of them for one fund, read only when one is
+  // chosen. GitHub Pages serves .gz as is, so the browser decompresses it.
+  var EXTRA_FAMILIES = {fidc: true}, gzCache = {};
+  function getGz(url, keep) {
+    if (gzCache[url]) return gzCache[url];
+    var done = $.Deferred();
+    if (keep) gzCache[url] = done.promise();
+    fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+      .then(function (buf) {
+        var b = new Uint8Array(buf);
+        if (b.length > 1 && b[0] === 0x1f && b[1] === 0x8b) {
+          if (typeof DecompressionStream === 'undefined') throw new Error('gzip');
+          return new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+        }
+        return new TextDecoder('utf-8').decode(b);
+      })
+      .then(function (s) { done.resolve(JSON.parse(s)); })
+      .catch(function (e) { delete gzCache[url]; done.reject(e); });
+    return done.promise();
+  }
+  function withExtras(fd, f, ix) {
+    var list = ix && ix.funds && ix.funds[f[F.key]];
+    if (!list) return fd;
+    var t = (fd ? fd.t : []).slice();
+    list.forEach(function (e) { t.push({n: ix.tables[e[0]], lazy: true, first: e[1], last: e[2], rows: e[3]}); });
+    return {t: t};
   }
   function loadFicha(f) {
-    var done = $.Deferred();
-    $.when(getJSON('data/fichas/urls.json'), getJSON('data/fichas/' + f[F.family] + '/' + f[F.key] + '.json'))
-      .done(function (u, d) { done.resolve(d[0], u[0]); })
-      .fail(function () { getJSON('data/fichas/urls.json').always(function (u) { done.resolve(null, $.isArray(u) ? u : []); }); });
+    var done = $.Deferred(), fam = f[F.family], index = $.Deferred();
+    if (EXTRA_FAMILIES[fam]) getGz('data/fichas_x/' + fam + '/index.json.gz', true)
+      .done(function (ix) { index.resolve(ix); }).fail(function () { index.resolve(null); });
+    else index.resolve(null);
+    $.when(getJSON('data/fichas/urls.json'), getJSON('data/fichas/' + fam + '/' + f[F.key] + '.json'))
+      .done(function (u, d) { index.done(function (ix) { done.resolve(withExtras(d[0], f, ix), u[0]); }); })
+      .fail(function () {
+        getJSON('data/fichas/urls.json').always(function (u) {
+          index.done(function (ix) { done.resolve(withExtras(null, f, ix), $.isArray(u) ? u : []); });
+        });
+      });
     return done.promise();
+  }
+  // A table still to be read: read the fund's file of other tables, replace
+  // every stub by its table and show the chosen one.
+  function loadExtraTable(t, k) {
+    var f = t.selected, data = t.ficha.data, x = data.t[k], box = t.el.find('.tm-static-detail');
+    t.el.find('.tm-ficha-period').html('').prop('disabled', true);
+    box.find('.tm-ficha-summary').text(fmtInt(x.rows) + ' linhas · carregando ' + tableLabel(x.n) + '…');
+    box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">Carregando ' + esc(tableLabel(x.n)) + '…</div>');
+    getGz('data/fichas_x/' + f[F.family] + '/' + f[F.key] + '.json.gz').done(function (xd) {
+      if (t.selected !== f || !t.ficha || t.ficha.data !== data) return;
+      data.t.forEach(function (y, i) {
+        if (!y.lazy) return;
+        var z = (xd.t || []).filter(function (w) { return w.n === y.n; })[0];
+        if (z) data.t[i] = z;
+      });
+      if (t.fichaIndex !== k) return;
+      if (data.t[k].lazy) {
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">' + esc(x.n) + ' não está no arquivo publicado deste fundo.</div>');
+        return;
+      }
+      t.fichaTable(k);
+    }).fail(function () {
+      if (t.selected !== f || t.fichaIndex !== k) return;
+      box.find('.tm-ficha-summary').text('');
+      box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">Não foi possível carregar ' + esc(x.n) +
+        (typeof DecompressionStream === 'undefined' ? ': este navegador não descomprime arquivos gzip; atualize o navegador ou use o app local.' : '.') + '</div>');
+    });
   }
   function citeText(c) { return 'CVM ' + c[1] + ', ' + c[2] + ', linha ' + c[3] + ', arquivo SHA-256 ' + c[4]; }
   function fieldTip(x) { return x[0] + '\nCampo CVM: ' + x[1] + (x[2] ? ' (sem descrição no dicionário)' : ''); }
@@ -373,6 +448,7 @@
   FundTab.prototype.fichaTable = function (k) {
     var t = this, box = t.el.find('.tm-static-detail'), x = t.ficha.data.t[k];
     t.fichaIndex = k;
+    if (x.lazy) { loadExtraTable(t, k); return; }
     var periods = [];
     x.c.forEach(function (c) { if (periods.indexOf(c[0]) < 0) periods.push(c[0]); });
     t.el.find('.tm-ficha-period').html(periods.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join(''))
@@ -475,7 +551,7 @@
     t.funds = d.funds.slice().sort(function (a, b) { return (b[F.pl] || -1) - (a[F.pl] || -1); });
     t.el.html(
       '<div class="tm-dash-head"><div><span class="tm-eyebrow">Fase 1.3 · Ficha do fundo</span><h1>Ficha e série completa</h1></div>' +
-      '<div class="tm-dash-meta">Valores originais dos informes da CVM; cada coluna cita o arquivo de origem · tabelas principais de cada tipo</div></div>' +
+      '<div class="tm-dash-meta">Valores originais dos informes da CVM; cada coluna cita o arquivo de origem · todas as tabelas do FIDC, as principais dos demais tipos</div></div>' +
       '<div class="tm-filterbar tm-record-filters"><div class="tm-record-search">' +
       '<input type="search" class="form-control form-control-sm tm-rq" placeholder="Fundo: CNPJ (com ou sem máscara) ou nome, de qualquer tipo">' +
       '<div class="tm-record-options" hidden></div></div>' +
@@ -538,9 +614,7 @@
         return;
       }
       t.ficha = {data: fd, urls: urls};
-      sel.html(fd.t.map(function (x, i) {
-        return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
-      }).join('')).prop('disabled', false);
+      sel.html(tableOptions(fd)).prop('disabled', false);
       var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
     });
   };

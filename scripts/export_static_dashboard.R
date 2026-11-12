@@ -6,8 +6,9 @@
 # FIAGRO), built from aggregated public CVM data (ODbL); no raw files. The fund
 # tabs read JSON files in the browser (prototype/static_funds.R,
 # prototype/static/taxminer_static.js); Ficha and Série completa read one file
-# per fund with the main report tables (write_static_fichas); the other
-# tables stay in the local app.
+# per fund with the main report tables (write_static_fichas) and, for FIDC,
+# one gzip file per fund with the other tables (write_static_ficha_extras);
+# the other FII, FIP and FIAGRO tables stay in the local app.
 # Writes site/app/index.html, taxminer.css, taxminer_static.js, data/ and lib/.
 
 if (!file.exists("taxminer.Rproj")) stop("Run from the TaxMiner project root.")
@@ -41,6 +42,11 @@ fund_files <- write_static_fund_data(out_dir, data, ctx, generated)
 fichas <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS")) && dir.exists(file.path(out_dir, "data", "fichas"))) {
   list(funds = length(list.files(file.path(out_dir, "data", "fichas"), pattern = "\\.json$", recursive = TRUE)) - 1L)
 } else write_static_fichas(out_dir, root, data)
+# Other FIDC tables, gzip compressed, read only when chosen (data/fichas_x/).
+# TAXMINER_KEEP_FICHAS_X=1 keeps them as they are.
+fichas_x <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS_X")) && dir.exists(file.path(out_dir, "data", "fichas_x"))) {
+  list(funds = length(list.files(file.path(out_dir, "data", "fichas_x"), pattern = "\\.json\\.gz$", recursive = TRUE)) - 1L)
+} else write_static_ficha_extras(out_dir, root, data)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
 cedentes <- write_cedente_data(file.path(out_dir, "data", "cedentes"), read_fidc_cedentes(root),
                                cedente_funds(data), data$master, unname(ctx$complete["fidc"]))
@@ -122,6 +128,6 @@ unlink(c(list.files(lib, pattern = "\\.map$", recursive = TRUE, full.names = TRU
          list.files(lib, pattern = "^font\\.css$", recursive = TRUE, full.names = TRUE),
          list.dirs(lib)[basename(list.dirs(lib)) == "fonts"]), recursive = TRUE)
 size <- sum(file.info(list.files(out_dir, recursive = TRUE, full.names = TRUE))$size)
-cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files, %d fund records, %d cedentes).\n",
-            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks, fichas$funds,
+cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files, %d fund records, %d with other FIDC tables, %d cedentes).\n",
+            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks, fichas$funds, fichas_x$funds,
             cedentes$cedentes))

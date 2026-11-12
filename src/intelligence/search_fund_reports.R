@@ -424,6 +424,73 @@ fund_quality_summary <- function(root) {
   out
 }
 
+# Names shown in the table pickers instead of the CVM file names. FIDC: the
+# sections of the monthly report (ICVM 489 / Res. CVM 175 form); X.7 has no
+# description in the CVM dictionary, its name comes from its fields
+# (TAB_X_PR_GARANTIA_DIRCRED, TAB_X_VL_GARANTIA_DIRCRED). The CVM name stays in
+# the tooltip and in each citation.
+fund_table_labels <- c(
+  inf_mensal_fidc_tab_I = "I – Aplicações",
+  inf_mensal_fidc_tab_II = "II – Carteira por segmento",
+  inf_mensal_fidc_tab_III = "III – Passivo",
+  inf_mensal_fidc_tab_IV = "IV – Patrimônio líquido",
+  inf_mensal_fidc_tab_V = "V – Carteira de direitos creditórios com aquisição substancial dos riscos e benefícios",
+  inf_mensal_fidc_tab_VI = "VI – Carteira de direitos creditórios sem aquisição substancial dos riscos e benefícios",
+  inf_mensal_fidc_tab_VII = "VII – Negócios com direitos creditórios realizados no mês",
+  inf_mensal_fidc_tab_VIII = "VIII – Valor devido dos 25 maiores devedores (sacados)",
+  inf_mensal_fidc_tab_IX = "IX – Taxas praticadas nos negócios com direitos creditórios do mês",
+  inf_mensal_fidc_tab_X = "X – Outras informações",
+  inf_mensal_fidc_tab_X_1 = "X.1 – Número de cotistas",
+  inf_mensal_fidc_tab_X_1_1 = "X.1.1 – Número de cotistas por classe e tipo de investidor",
+  inf_mensal_fidc_tab_X_2 = "X.2 – Descrição da série/classe",
+  inf_mensal_fidc_tab_X_3 = "X.3 – Rentabilidade apurada no mês",
+  inf_mensal_fidc_tab_X_4 = "X.4 – Captações, resgates e amortizações",
+  inf_mensal_fidc_tab_X_5 = "X.5 – Liquidez",
+  inf_mensal_fidc_tab_X_6 = "X.6 – Desempenho esperado (benchmark) e realizado",
+  inf_mensal_fidc_tab_X_7 = "X.7 – Garantias dos direitos creditórios",
+  inf_mensal_fii_geral = "Mensal – Geral",
+  inf_mensal_fii_complemento = "Mensal – Complemento",
+  inf_mensal_fii_ativo_passivo = "Mensal – Ativo e passivo",
+  inf_trimestral_fii_geral = "Trimestral – Geral",
+  inf_trimestral_fii_complemento = "Trimestral – Complemento",
+  inf_trimestral_fii_ativo = "Trimestral – Ativos",
+  inf_trimestral_fii_ativo_garantia_rentabilidade = "Trimestral – Ativos com garantia de rentabilidade",
+  inf_trimestral_fii_direito = "Trimestral – Direitos",
+  inf_trimestral_fii_imovel = "Trimestral – Imóveis",
+  inf_trimestral_fii_imovel_desempenho = "Trimestral – Desempenho dos imóveis",
+  inf_trimestral_fii_imovel_renda_acabado_contrato = "Trimestral – Imóveis para renda acabados: contratos",
+  inf_trimestral_fii_imovel_renda_acabado_inquilino = "Trimestral – Imóveis para renda acabados: inquilinos",
+  inf_trimestral_fii_terreno = "Trimestral – Terrenos",
+  inf_trimestral_fii_aquisicao_imovel = "Trimestral – Aquisição de imóveis",
+  inf_trimestral_fii_aquisicao_terreno = "Trimestral – Aquisição de terrenos",
+  inf_trimestral_fii_alienacao_imovel = "Trimestral – Alienação de imóveis",
+  inf_trimestral_fii_alienacao_terreno = "Trimestral – Alienação de terrenos",
+  inf_trimestral_fii_rentabilidade_efetiva = "Trimestral – Rentabilidade efetiva",
+  inf_trimestral_fii_resultado_contabil_financeiro = "Trimestral – Resultado contábil e financeiro",
+  inf_anual_fii_geral = "Anual – Geral",
+  inf_anual_fii_complemento = "Anual – Complemento",
+  inf_anual_fii_ativo_adquirido = "Anual – Ativos adquiridos",
+  inf_anual_fii_ativo_transacao = "Anual – Transações de ativos",
+  inf_anual_fii_ativo_valor_contabil = "Anual – Valor contábil dos ativos",
+  inf_anual_fii_distribuicao_cotistas = "Anual – Distribuição de cotistas",
+  inf_anual_fii_diretor_responsavel = "Anual – Diretor responsável",
+  inf_anual_fii_experiencia_profissional = "Anual – Experiência profissional",
+  inf_anual_fii_prestador_servico = "Anual – Prestadores de serviço",
+  inf_anual_fii_processo = "Anual – Processos",
+  inf_anual_fii_processo_semelhante = "Anual – Processos semelhantes",
+  inf_anual_fii_representante_cotista = "Anual – Representantes de cotistas",
+  inf_anual_fii_representante_cotista_fundo = "Anual – Representantes de cotistas (fundo)",
+  inf_trimestral_fip = "Informe trimestral",
+  inf_quadrimestral_fip = "Informe quadrimestral",
+  inf_mensal_fiagro = "Informe mensal",
+  inf_mensal_fiagro_subclasse = "Informe mensal – Subclasses")
+
+# Display name of each table; unknown tables keep their CVM name.
+fund_table_label <- function(table_name) {
+  out <- unname(fund_table_labels[table_name])
+  ifelse(is.na(out), table_name, out)
+}
+
 # Field descriptions from the CVM META dictionaries stored in <root>/meta
 # ("Campo: X" followed by "Descrição : ..."). One row per table and field;
 # tables are named as in the consolidation (meta_{table}.txt).

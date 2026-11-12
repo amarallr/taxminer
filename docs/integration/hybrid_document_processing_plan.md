@@ -1,5 +1,11 @@
 # Hybrid document processing and token budget — diagnosis and plan
 
+**Status:** proposed (`work_0026`) ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Architecture](../architecture.md) ·
+[New data sources gap analysis](new_data_sources_gap_analysis.md) ·
+[Work items](../project_management/work_items.csv)
+
 Status: **proposed** (`work_0026`). Requested on 2026-11-11 through
 `.claude/tunning.txt` (CO-STAR prompt: MarkItDown, Markdown + Parquet +
 metadata, selective retrieval, token budget). Only stages 01 (diagnosis) and
@@ -10,26 +16,26 @@ service, and no LLM was called.
 
 ### Tooling
 
-| Item | Finding |
-|---|---|
-| Python | Not installed. `python` resolves only to the Microsoft Store alias (`WindowsApps\python.exe`); `py` and `pip` absent. |
-| MarkItDown | Latest release `v0.1.9` (2026-10-21, GitHub and PyPI). Requires Python `>=3.10,<3.15`. Core deps: `beautifulsoup4`, `markdownify`, `magika`, `requests`, `defusedxml`, `charset-normalizer`, `certifi`. Extras used here: `[pdf]` (`pdfminer-six`, `pdfplumber`), `[docx]` (`mammoth`, `lxml`), `[xlsx]` (`openpyxl`, `pandas`), `[pptx]` (`python-pptx`). |
+| Item                       | Finding                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python                     | Not installed. `python` resolves only to the Microsoft Store alias (`WindowsApps\python.exe`); `py` and `pip` absent.                                                                                                                                                                                                                                                              |
+| MarkItDown                 | Latest release `v0.1.9` (2026-10-21, GitHub and PyPI). Requires Python `>=3.10,<3.15`. Core deps: `beautifulsoup4`, `markdownify`, `magika`, `requests`, `defusedxml`, `charset-normalizer`, `certifi`. Extras used here: `[pdf]` (`pdfminer-six`, `pdfplumber`), `[docx]` (`mammoth`, `lxml`), `[xlsx]` (`openpyxl`, `pandas`), `[pptx]` (`python-pptx`).                         |
 | MarkItDown limits (README) | Output is "meant to be consumed by text analysis tools", not high-fidelity conversion. Image captioning and audio transcription use web services; the `markitdown-ocr` plugin needs an LLM client; Azure converters are billable cloud calls. Plugins are off by default. It performs I/O with the process privileges; the README recommends `convert_local()`/`convert_stream()`. |
-| R side | `arrow` 25.0.1 declared. `duckdb`, `readxl`, `officer` are installed in the system library but not declared. `reticulate` not installed. |
-| Governance | `AGENTS.md`: dependencies explicit in `DESCRIPTION`, renv explicit snapshot, no installation, global setting change or new toolchain without explicit authorization. There is no Python environment policy yet. |
+| R side                     | `arrow` 25.0.1 declared. `duckdb`, `readxl`, `officer` are installed in the system library but not declared. `reticulate` not installed.                                                                                                                                                                                                                                           |
+| Governance                 | `AGENTS.md`: dependencies explicit in `DESCRIPTION`, renv explicit snapshot, no installation, global setting change or new toolchain without explicit authorization. There is no Python environment policy yet.                                                                                                                                                                    |
 
 ### What the project already does (do not duplicate)
 
-| Prompt layer | Existing component |
-|---|---|
-| A — originals | Content-addressed raw store with append-only manifests, SHA-256 per file and per ZIP member (`src/collect/`, Collect P04/P05). |
-| B — text | Note extraction from the PDF attachments embedded in the DFP XML, by page, with `pdftools` (`src/data/extract_financial_notes.R`, `decision_0026`); notes kept with page start/end. |
-| C — tables | Fund reports: 12.16 million rows in Parquet with lineage to file and line (`src/data/consolidate_fund_reports.R`). Notes: report and note tables in Parquet (`decision_0027`). **Note tables are not extracted yet** (handoff). |
-| D — metadata | Consolidation and extraction indexes, quality-issue tables, signatures (`src/common/signatures.R`), validated atomic writes (`safe_io.R`, `parquet_io.R`). |
-| Cache / incremental | Per-file hash + transformation signature skip (notes, funds, fund directory). |
-| Structured queries | `src/intelligence/search_fund_reports.R` (work_0022, in progress): deterministic filters with source-file citations; no LLM. |
-| Path safety | `validate_contained_path()`; protected `.restricted/` and `.tmp/` never read. |
-| LLM integration | **None.** Requirements make RAG optional (Intelligence P02); no provider, key or token measurement exists. |
+| Prompt layer        | Existing component                                                                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A — originals       | Content-addressed raw store with append-only manifests, SHA-256 per file and per ZIP member (`src/collect/`, Collect P04/P05).                                                                                                  |
+| B — text            | Note extraction from the PDF attachments embedded in the DFP XML, by page, with `pdftools` (`src/data/extract_financial_notes.R`, `decision_0026`); notes kept with page start/end.                                             |
+| C — tables          | Fund reports: 12.16 million rows in Parquet with lineage to file and line (`src/data/consolidate_fund_reports.R`). Notes: report and note tables in Parquet (`decision_0027`). **Note tables are not extracted yet** (handoff). |
+| D — metadata        | Consolidation and extraction indexes, quality-issue tables, signatures (`src/common/signatures.R`), validated atomic writes (`safe_io.R`, `parquet_io.R`).                                                                      |
+| Cache / incremental | Per-file hash + transformation signature skip (notes, funds, fund directory).                                                                                                                                                   |
+| Structured queries  | `src/intelligence/search_fund_reports.R` (work_0022, in progress): deterministic filters with source-file citations; no LLM.                                                                                                    |
+| Path safety         | `validate_contained_path()`; protected `.restricted/` and `.tmp/` never read.                                                                                                                                                   |
+| LLM integration     | **None.** Requirements make RAG optional (Intelligence P02); no provider, key or token measurement exists.                                                                                                                      |
 
 ### Source formats that matter
 
@@ -66,7 +72,7 @@ service, and no LLM was called.
 Markdown is an intermediate text representation, never a replacement for
 Parquet. Each layer stays where the project already puts it:
 
-```
+```text
 Collect (raw store, manifests, SHA-256)
   └─ Data
        ├─ text:   PDF/DOCX/PPTX/HTML ──► Markdown per document (MarkItDown or pdftools)
@@ -93,18 +99,18 @@ with a pinned `requirements.lock` (hashes), never global.
 
 ## 3. Plan (increments, each with its own authorization)
 
-| # | Increment | Needs | Output |
-|---|---|---|---|
-| 0 | This diagnosis and plan | — | This file, `work_0026` |
-| 1 | **Spike, no install:** compare the current `pdftools` note text with what a table-aware extractor would need; pick 5 public DFP packages already collected; record where tables are lost | Nothing new | Measured gap list (pages, tables) |
-| 2 | Python toolchain decision and local install: Python 3.12 user-level, project `.venv`, `markitdown[pdf,docx,xlsx,pptx]==0.1.9` pinned with hashes; plugins, OCR and Azure off | **Developer authorization** (installation, new toolchain) | `decision_*`, `requirements.lock`, setup script, CI step |
-| 3 | MarkItDown spike on the same 5 packages: Markdown quality, page boundaries, tables recovered vs `pdftools`, run time | Increment 2 | Benchmark table in this doc; go/no-go for MarkItDown on notes |
-| 4 | Statement line items in Parquet: verify the CVM DFP CSV source (or parse the DFP XML), explicit schema (company, CNPJ, period, scope, account code, label, value as text and as decimal, scale, sign, version, lineage) | Source verification only; same family `financial_disclosures` | Parquet + tests (negative values, scale, nulls vs zero, restated versions) |
-| 5 | Note tables (pending in Data P03): from MarkItDown/pdfplumber or `pdftools` layout, to Parquet with page and table ids | Increment 3 decision | `financial_note_tables/` |
-| 6 | Chunking of note Markdown and keyword/metadata search; deterministic query layer over line items and funds | Declaring `duckdb` in `DESCRIPTION` (already installed; renv snapshot) | `src/intelligence/` modules + tests |
-| 7 | Context builder with budget modes and evidence classes; token counts as characters + labelled estimates | — | Module + tests |
-| 8 | Token measurement and LLM call | **Developer authorization**: provider, model, key handling, which data may leave the machine (public CVM data only) | Measured tokens/cost; scenarios A–C |
-| 9 | Benchmark A–C and fidelity/coverage metrics on an adjudicated question set | Questions and answers adjudicated by the developer | Report; homologation request |
+| #   | Increment                                                                                                                                                                                                               | Needs                                                                                                               | Output                                                                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 0   | This diagnosis and plan                                                                                                                                                                                                 | —                                                                                                                   | This file, `work_0026`                                                     |
+| 1   | **Spike, no install:** compare the current `pdftools` note text with what a table-aware extractor would need; pick 5 public DFP packages already collected; record where tables are lost                                | Nothing new                                                                                                         | Measured gap list (pages, tables)                                          |
+| 2   | Python toolchain decision and local install: Python 3.12 user-level, project `.venv`, `markitdown[pdf,docx,xlsx,pptx]==0.1.9` pinned with hashes; plugins, OCR and Azure off                                            | **Developer authorization** (installation, new toolchain)                                                           | `decision_*`, `requirements.lock`, setup script, CI step                   |
+| 3   | MarkItDown spike on the same 5 packages: Markdown quality, page boundaries, tables recovered vs `pdftools`, run time                                                                                                    | Increment 2                                                                                                         | Benchmark table in this doc; go/no-go for MarkItDown on notes              |
+| 4   | Statement line items in Parquet: verify the CVM DFP CSV source (or parse the DFP XML), explicit schema (company, CNPJ, period, scope, account code, label, value as text and as decimal, scale, sign, version, lineage) | Source verification only; same family `financial_disclosures`                                                       | Parquet + tests (negative values, scale, nulls vs zero, restated versions) |
+| 5   | Note tables (pending in Data P03): from MarkItDown/pdfplumber or `pdftools` layout, to Parquet with page and table ids                                                                                                  | Increment 3 decision                                                                                                | `financial_note_tables/`                                                   |
+| 6   | Chunking of note Markdown and keyword/metadata search; deterministic query layer over line items and funds                                                                                                              | Declaring `duckdb` in `DESCRIPTION` (already installed; renv snapshot)                                              | `src/intelligence/` modules + tests                                        |
+| 7   | Context builder with budget modes and evidence classes; token counts as characters + labelled estimates                                                                                                                 | —                                                                                                                   | Module + tests                                                             |
+| 8   | Token measurement and LLM call                                                                                                                                                                                          | **Developer authorization**: provider, model, key handling, which data may leave the machine (public CVM data only) | Measured tokens/cost; scenarios A–C                                        |
+| 9   | Benchmark A–C and fidelity/coverage metrics on an adjudicated question set                                                                                                                                              | Questions and answers adjudicated by the developer                                                                  | Report; homologation request                                               |
 
 Synthetic fixtures (multi-sheet XLSX with formulas and merged cells, PPTX with
 a table, long DOCX, scanned PDF) are written by the tests. No protected or

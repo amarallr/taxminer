@@ -1,5 +1,20 @@
 # Changelog
 
+## Todas as tabelas do FIDC no painel publicado e nomes das tabelas — 2026-11-12
+
+- **Painel publicado:** Ficha e Série completa das 17 demais tabelas do informe mensal do FIDC (II a X.7),
+  além da tab_I (`decision_0039`). Um arquivo gzip por fundo em `site/app/data/fichas_x/fidc/`, baixado só
+  quando uma dessas tabelas é escolhida, e um índice por fundo; o navegador descomprime. Site com 697 MB
+  (limite de 1 GB do GitHub Pages); as tabelas extras ocupam 190 MB comprimidas (cerca de 2,3 GB sem
+  compressão).
+- **Nomes das tabelas nos combos:** a seção do informe ("I – Aplicações", "X.6 – Desempenho esperado
+  (benchmark) e realizado") em vez do nome do arquivo da CVM, no app e no painel publicado
+  (`fund_table_labels`); o nome da CVM fica na dica e em cada citação.
+- **Requisito `req_0020`:** painel de fundos e site publicado formalizados como requisito da Fase 1.3
+  (`work_0031`); `docs/requirements.md` passa a listar `req_0015` a `req_0020`.
+- **Documentação:** README e `docs/` reformatados (sumário, alertas do GitHub, diagramas Mermaid, cabeçalho
+  de metadados, tabelas alinhadas, links validados); panorama do projeto atualizado.
+
 ## Áreas protegidas renomeadas — 2026-11-12
 
 - `restricted/` e `tmp/` passam a ser `.restricted/` e `.tmp/` (`decision_0040`): sigilosas, inacessíveis

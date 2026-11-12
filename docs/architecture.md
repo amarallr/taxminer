@@ -1,5 +1,12 @@
 # TaxMiner architecture
 
+**Status:** accepted (`acc_0003`, 2026-11-10); sections marked "Implemented" track delivery ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Requirements](requirements.md) ·
+[Data dictionary](data_dictionary.md) ·
+[Data sources](data_sources.md) ·
+[Decision log](project_management/decision_log.md)
+
 ## Scope and status
 
 This document defines the proposed architecture for the product phases:
@@ -11,14 +18,15 @@ release. Requirements and phase criteria remain subject to developer review.
 
 ## Logical modules and contracts
 
-TaxMiner uses one repository and one local Shiny application with independent
-areas. `src/collect/` discovers and acquires permitted public source records;
-`src/data/` extracts and normalizes documents; `src/intelligence/` serves
-search, analysis, and cited relationships; `src/common/` contains shared
-contracts and validation that do not couple the source-specific schemas.
+TaxMiner uses one repository and one local Shiny application with independent areas:
 
-Collect emits a source manifest and immutable raw-document references. Each
-record carries its source family, source URL, retrieval time, content hash,
+- **`src/collect/`** discovers and acquires permitted public source records;
+- **`src/data/`** extracts and normalizes documents;
+- **`src/intelligence/`** serves search, analysis, and cited relationships;
+- **`src/common/`** contains shared contracts and validation that do not couple the
+  source-specific schemas.
+
+Collect emits a source manifest and immutable raw-document references. Each record carries its source family, source URL, retrieval time, content hash,
 source version when available, retrieval outcome, and retry/resume metadata.
 Data consumes those records and emits versioned source-specific tables plus
 quality results and field-level lineage. Intelligence consumes accepted,
@@ -26,8 +34,11 @@ versioned tables through read-only contracts and returns results with direct
 citations to source documents and pages. Optional model services cannot be a
 dependency for collection, extraction, or deterministic search.
 
-No module may read `.restricted/` or `.tmp/`. Raw and derived pipeline inputs are
-limited to verified public records and synthetic fixtures. The architecture
+> [!WARNING]
+> No module may read `.restricted/` or `.tmp/`. Raw and derived pipeline inputs are limited
+> to verified public records and synthetic fixtures.
+
+The architecture
 does not select a storage engine or vector provider yet; those choices require
 measured criteria and an explicit dependency decision.
 
@@ -61,7 +72,7 @@ once and writes `financial_reports` and `financial_notes` as Parquet parts per
 package with `arrow`. An extraction index keyed by package SHA-256 and the
 extraction signature (`src/common/signatures.R`) makes reruns incremental, so
 consolidation can run while the collection is still adding packages. Layout in
-`docs/data_dictionary.md`.
+[`docs/data_dictionary.md`](data_dictionary.md).
 
 ### Investment fund reports
 
@@ -69,12 +80,12 @@ The `investment_fund_reports` domain (`decision_0024`) is independent of
 decisions and financial disclosures. It covers four CVM fund families, each a
 separate namespace with its own manifest, schema versions, coverage and quality:
 
-| Family | CVM open-data datasets (verified 2026-11-10) |
-|---|---|
-| `fii` (real estate funds) | `INF_MENSAL`, `INF_TRIMESTRAL`, `INF_ANUAL` (yearly ZIPs since 2016), `DFIN` (yearly CSV index of financial statements) |
-| `fidc` (receivables funds) | `INF_MENSAL` (monthly ZIPs, older years under `HIST/`) |
-| `fip` (private equity funds) | `INF_TRIMESTRAL` (yearly CSV 2010–2023), `INF_QUADRIMESTRAL` (yearly CSV since 2024) |
-| `fiagro` (agribusiness funds) | `INF_MENSAL` (monthly ZIPs since 2025-05) |
+| Family                        | CVM open-data datasets (verified 2026-11-10)                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `fii` (real estate funds)     | `INF_MENSAL`, `INF_TRIMESTRAL`, `INF_ANUAL` (yearly ZIPs since 2016), `DFIN` (yearly CSV index of financial statements) |
+| `fidc` (receivables funds)    | `INF_MENSAL` (monthly ZIPs, older years under `HIST/`)                                                                  |
+| `fip` (private equity funds)  | `INF_TRIMESTRAL` (yearly CSV 2010–2023), `INF_QUADRIMESTRAL` (yearly CSV since 2024)                                    |
+| `fiagro` (agribusiness funds) | `INF_MENSAL` (monthly ZIPs since 2025-05)                                                                               |
 
 Conceptual entities: `funds`, `fund_reports`, `fund_report_files`,
 `fund_report_tables`, `fund_report_rows`, `fund_collection_events` and
@@ -103,9 +114,7 @@ and new content becomes a new version. Entry point:
 
 `document_relationships` is a separate intelligence domain that may
 consume only Phase 1 datasets (subphases 1.1–1.3) that have explicit human
-acceptance; it is MVP Phase 2 (`decision_0025`).
-Every relationship is a
-cited hypothesis with typed source and target IDs, relationship type, evidence
+acceptance; it is MVP Phase 2 (`decision_0025`). Every relationship is a cited hypothesis with typed source and target IDs, relationship type, evidence
 spans/pages, confidence, uncertainty, method/version, and human review state.
 It does not state or infer misconduct, liability, or legal effect.
 
@@ -125,8 +134,11 @@ Phases were restructured by `decision_0025`.
    use only datasets whose subphase has explicit human acceptance.
 
 Each subphase and phase has separate implementation, testing, human
-acceptance, release, and operations states. No downstream phase starts until its prerequisites and
-human gates are met. This planning document is not phase acceptance.
+acceptance, release, and operations states. No downstream phase starts until its
+prerequisites and human gates are met.
+
+> [!NOTE]
+> This planning document is not phase acceptance.
 
 ## Shared contracts in `src/common/` (Common P07 stage 02)
 
@@ -161,7 +173,7 @@ Collected and processed data live outside the repository and OneDrive, under
 `TAXMINER_DATA_DIR`, with one folder per source family
 (`src/common/data_layout.R`):
 
-```
+```text
 <TAXMINER_DATA_DIR>/
   tax_consultation_decisions/   Phase 1.1 (created when it resumes)
   financial_disclosures/        Phase 1.2: catalog.csv, manifest.csv, index/, raw/,
@@ -183,8 +195,10 @@ Source terms, availability, rate limits, coverage, and document integrity are
 verified before acquisition. Schemas are versioned; source values and original
 classifications are retained alongside normalized values. Failures and
 uncertainty are first-class records. Tests use public or synthetic inputs.
-Logs exclude credentials and protected content. External AI processing requires
-a separate privacy review and authorization.
+Logs exclude credentials and protected content.
+
+> [!IMPORTANT]
+> External AI processing requires a separate privacy review and authorization.
 
 ## Open design decisions
 
@@ -194,8 +208,8 @@ a separate privacy review and authorization.
   public samples and validating required R packages.
 - Define quantitative coverage, search relevance, citation accuracy, and
   performance thresholds with the developer before implementation. Draft
-  measurable thresholds for review are in `docs/requirements.md` and remain
-  unaccepted.
+  measurable thresholds for review are in [`docs/requirements.md`](requirements.md) and
+  remain unaccepted.
 - Decide company-identity evidence rules and human-review thresholds before
   financial matching or cross-source relationship work.
 
@@ -235,7 +249,7 @@ close the three items from the review above so that `req_0003` can be decided.
    a categorical `evidence_level` (`explicit_citation`, `shared_legal_basis`,
    `topic_similarity`), not a probability. A numeric score is introduced only
    after calibrating on the adjudicated set of at least 50 links defined in
-   `docs/requirements.md`.
+   [`docs/requirements.md`](requirements.md).
 4. **Storage (proposal for the Phase 1.1 sample).** Parquet files written with
    `arrow`, queried with `duckdb`; full-text search through DuckDB's `fts`
    extension. Re-evaluate against the latency threshold before scaling. Adding
@@ -249,6 +263,6 @@ close the three items from the review above so that `req_0003` can be decided.
 ## Acceptance — 2026-11-10T17:46:38-03:00
 
 The developer explicitly accepted this architecture, the proposed resolutions
-above and the thresholds in `docs/requirements.md` (`acc_0003`,
+above and the thresholds in [`docs/requirements.md`](requirements.md) (`acc_0003`,
 `decision_0014`). Acceptance closes Common P03 planning; it does not authorize
 bulk collection, release, or any MVP acceptance.

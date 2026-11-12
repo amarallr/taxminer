@@ -329,6 +329,44 @@ test_that("the published fund records carry the series of the app, formatted the
   expect_equal(unlist(x$f[[match("fund_cnpj_original", codes)]][[5]]), c("00.332.266/0001-31", "00.332.266/0001-31"))
 })
 
+test_that("other tables go gzip compressed, one file per fund, with an index", {
+  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), encoding = "UTF-8")
+  out <- tempfile("site")
+  data <- list(urls = fund_source_urls(root), descriptions = fund_field_descriptions(root))
+  res <- write_static_ficha_extras(out, root, data,
+                                   tables = list(fii = c("inf_mensal_fii_ativo_passivo", "tabela_ausente", "inf_mensal_fii_geral")))
+  dir <- file.path(out, "data", "fichas_x", "fii")
+  expect_true(file.exists(file.path(dir, "00332266000131.json.gz")))
+  raw <- readBin(file.path(dir, "00332266000131.json.gz"), "raw", 2L)
+  expect_equal(raw, as.raw(c(0x1f, 0x8b)))  # gzip, decompressed by the browser
+  f <- jsonlite::fromJSON(gzfile(file.path(dir, "00332266000131.json.gz")), simplifyVector = FALSE)
+  names_in <- vapply(f$t, function(x) x$n, "")
+  expect_true("inf_mensal_fii_ativo_passivo" %in% names_in)
+  x <- f$t[[match("inf_mensal_fii_ativo_passivo", names_in)]]
+  # Same objects as the main files.
+  main <- tempfile("site")
+  write_static_fichas(main, root, data, tables = list(fii = "inf_mensal_fii_ativo_passivo"))
+  y <- jsonlite::fromJSON(file.path(main, "data", "fichas", "fii", "00332266000131.json"), simplifyVector = FALSE)$t[[1]]
+  expect_identical(x, y)
+  ix <- jsonlite::fromJSON(gzfile(file.path(dir, "index.json.gz")), simplifyVector = FALSE)
+  expect_equal(unlist(ix$tables), c("inf_mensal_fii_ativo_passivo", "tabela_ausente", "inf_mensal_fii_geral"))
+  e <- ix$funds[["00332266000131"]][[1]]
+  expect_equal(e[[1]], 0L)                   # table index
+  expect_equal(c(e[[2]], e[[3]]), c("2026-01", "2026-03"))
+  expect_equal(e[[4]], 2L)                   # rows
+  expect_equal(res$funds, length(ix$funds))
+})
+
+test_that("table pickers show the report section, not the CVM file name", {
+  expect_equal(fund_table_label("inf_mensal_fidc_tab_I"), "I – Aplicações")
+  expect_equal(fund_table_label("inf_mensal_fidc_tab_X_6"), "X.6 – Desempenho esperado (benchmark) e realizado")
+  expect_equal(fund_table_label("tabela_nova"), "tabela_nova")
+  expect_true(all(paste0("inf_mensal_fidc_tab_", c("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "X_1",
+                                                   "X_1_1", "X_2", "X_3", "X_4", "X_5", "X_6", "X_7")) %in% names(fund_table_labels)))
+  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), encoding = "UTF-8")
+  expect_true(all(unlist(static_ficha_extra_tables) %in% names(fund_table_labels)))
+})
+
 test_that("the Ficha tab opens any fund with its Ficha and Série completa", {
   source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
   source(testthat::test_path("..", "..", "src", "intelligence", "fund_analytics.R"), encoding = "UTF-8")

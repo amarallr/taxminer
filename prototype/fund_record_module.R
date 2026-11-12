@@ -71,7 +71,7 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
       keep <- if (identical(input$table, NULL) || !input$table %in% t$table_name)
                 fund_record_default_table(data$tables, f$family) else input$table
       shiny::updateSelectizeInput(session, "table", selected = keep, choices = stats::setNames(
-        t$table_name, sprintf("%s  (%s–%s)", t$table_name, t$first_period, t$last_period)))
+        t$table_name, sprintf("%s  (%s–%s)", fund_table_label(t$table_name), t$first_period, t$last_period)))
     })
 
     rows <- shiny::reactive({

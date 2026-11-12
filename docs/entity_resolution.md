@@ -1,13 +1,19 @@
 # Resolução de entidades e normalização de denominações
 
+**Status:** implementado (`work_0028`, `decision_0036`); aceite pendente ·
+**Última atualização:** 2026-11-11 ·
+**Documentos relacionados:** [Dicionário de dados](data_dictionary.md) ·
+[Arquitetura](architecture.md) ·
+[Plano de BI](bi_platform_plan.md)
+
 Serviço central, determinístico e auditável que separa três conceitos em todo
 o TaxMiner:
 
-| Conceito | Chave | Onde vive |
-|---|---|---|
-| **Identidade cadastral** | `entity_id` = tipo + CNPJ canônico | `entities` |
-| **Denominação** | `name_id` = entidade + grupo de nomes equivalentes | `entity_names` |
-| **Representação textual** | o nome exatamente como publicado | `name_history` (`original_name`) |
+| Conceito                  | Chave                                              | Onde vive                        |
+| ------------------------- | -------------------------------------------------- | -------------------------------- |
+| **Identidade cadastral**  | `entity_id` = tipo + CNPJ canônico                 | `entities`                       |
+| **Denominação**           | `name_id` = entidade + grupo de nomes equivalentes | `entity_names`                   |
+| **Representação textual** | o nome exatamente como publicado                   | `name_history` (`original_name`) |
 
 Código: `src/data/entity_resolution.R`. Dicionário de regras:
 `config/entity_name_rules.csv`. Testes: `tests/testthat/test_entity_resolution.R`
@@ -15,13 +21,13 @@ Código: `src/data/entity_resolution.R`. Dicionário de regras:
 
 ## 1. Camadas
 
-| Camada | No TaxMiner | Efeito da resolução |
-|---|---|---|
-| RAW | ZIPs da CVM em `raw/` | nenhum: nada é alterado |
-| CURATED | tabelas consolidadas em `processed/{família}/` com `fund_cnpj_original` e `fund_cnpj_normalized` | nenhum: valores e nomes como publicados |
-| MASTER DATA | `processed/master/` (este serviço) | catálogos de entidades, denominações, histórico, revisão e qualidade |
-| ANALYTICS | diretório de busca, métricas, Panorama, Administradores | chaves `entity_id`; nomes do catálogo |
-| PRESENTATION | app Shiny e exportação estática | filtros e listas consomem o catálogo; CNPJ com máscara |
+| Camada       | No TaxMiner                                                                                      | Efeito da resolução                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| RAW          | ZIPs da CVM em `raw/`                                                                            | nenhum: nada é alterado                                              |
+| CURATED      | tabelas consolidadas em `processed/{família}/` com `fund_cnpj_original` e `fund_cnpj_normalized` | nenhum: valores e nomes como publicados                              |
+| MASTER DATA  | `processed/master/` (este serviço)                                                               | catálogos de entidades, denominações, histórico, revisão e qualidade |
+| ANALYTICS    | diretório de busca, métricas, Panorama, Administradores                                          | chaves `entity_id`; nomes do catálogo                                |
+| PRESENTATION | app Shiny e exportação estática                                                                  | filtros e listas consomem o catálogo; CNPJ com máscara               |
 
 Os catálogos são construídos a partir do diretório de fundos
 (`processed/search/fund_directory.parquet`), que agrega as tabelas
@@ -150,18 +156,18 @@ linhas; os testes verificam totais antes e depois da junção.
 Relatório `processed/master/quality.parquet` gerado pela rodada local
 (`rule_version` 367725858f55):
 
-| Indicador | Valor |
-|---|---|
-| Fundos (CNPJ) | 11.650 |
-| Fundos com mais de um nome publicado | 1.601 |
-| Grafias absorvidas por equivalência (fundos) | 591 |
-| Fundos que seguem com denominações diferentes | 1.400 |
-| Administradores (CNPJ) | 156 (49 com CNPJ inválido no dado publicado) |
-| Grafias absorvidas por equivalência (administradores) | 114 |
-| Pares em revisão (contém / grafia próxima) | 1.209 / 114 |
-| Grupos de homônimos (CNPJs diferentes, mesmo nome) | 110 |
-| CNPJs de fundo em mais de uma família | 227 |
-| Duplicidades de chave | 0 |
+| Indicador                                             | Valor                                        |
+| ----------------------------------------------------- | -------------------------------------------- |
+| Fundos (CNPJ)                                         | 11.650                                       |
+| Fundos com mais de um nome publicado                  | 1.601                                        |
+| Grafias absorvidas por equivalência (fundos)          | 591                                          |
+| Fundos que seguem com denominações diferentes         | 1.400                                        |
+| Administradores (CNPJ)                                | 156 (49 com CNPJ inválido no dado publicado) |
+| Grafias absorvidas por equivalência (administradores) | 114                                          |
+| Pares em revisão (contém / grafia próxima)            | 1.209 / 114                                  |
+| Grupos de homônimos (CNPJs diferentes, mesmo nome)    | 110                                          |
+| CNPJs de fundo em mais de uma família                 | 227                                          |
+| Duplicidades de chave                                 | 0                                            |
 
 ## 8. Limitações e pendências
 

@@ -600,7 +600,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
             col_widths = c(8, 4), class = "tm-detail-tools",
             shiny::selectizeInput(ns("table"), NULL, width = "100%",
                                   choices = stats::setNames(t$table_name, sprintf(
-                                    "%s  (%s–%s)", t$table_name, t$first_period, t$last_period)),
+                                    "%s  (%s–%s)", fund_table_label(t$table_name), t$first_period, t$last_period)),
                                   selected = t$table_name[grepl("geral|tab_I$|fip$|fiagro$",
                                                                 t$table_name)][1]),
             shiny::selectizeInput(ns("period"), NULL, choices = NULL, width = "100%",

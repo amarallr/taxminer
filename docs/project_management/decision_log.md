@@ -1,5 +1,11 @@
 # Registro de decisões
 
+**Status:** vigente; registro cronológico, entradas não reescritas ·
+**Última atualização:** 2026-11-12 ·
+**Documentos relacionados:** [Estado atual](project_status.md) ·
+[Aceites](acceptance_register.csv) ·
+[Requisitos](../requirements.md)
+
 ## Revisão documental — 2026-11-10T15:03:27-03:00
 
 Revistos os caminhos por usuário, as entradas de PATH, dependências locais,
@@ -330,12 +336,12 @@ O desenvolvedor reorganizou as fases do MVP em duas.
   - Uma relação só pode usar bases com aceite humano explícito.
   - Ao contrário da antiga Fase 3, a Fase 2 também alcança os fundos.
 
-| Antes | Agora |
-|---|---|
-| Fase 1 — Soluções de Consulta | Fase 1.1 |
-| Fase 2 — Notas explicativas | Fase 1.2 |
+| Antes                                             | Agora    |
+| ------------------------------------------------- | -------- |
+| Fase 1 — Soluções de Consulta                     | Fase 1.1 |
+| Fase 2 — Notas explicativas                       | Fase 1.2 |
 | Fase 4 — Fundos de investimento (`decision_0024`) | Fase 1.3 |
-| Fase 3 — Inteligência cruzada | Fase 2 |
+| Fase 3 — Inteligência cruzada                     | Fase 2   |
 
 **Registros.** Os IDs não mudam; só títulos e textos foram ajustados.
 
@@ -355,11 +361,11 @@ subfase 1.2.
 O desenvolvedor autorizou declarar no `DESCRIPTION` as dependências usadas pela extração das
 notas (Fase 1.2, `work_0012`):
 
-| Pacote | Versão | Uso |
-|---|---|---|
-| `pdftools` | 3.9.0 | texto do PDF |
-| `xml2` | 1.5.1 | XML do pacote ENET |
-| `base64enc` | 0.1-6 | anexo PDF em base64 |
+| Pacote      | Versão | Uso                 |
+| ----------- | ------ | ------------------- |
+| `pdftools`  | 3.9.0  | texto do PDF        |
+| `xml2`      | 1.5.1  | XML do pacote ENET  |
+| `base64enc` | 0.1-6  | anexo PDF em base64 |
 
 Detalhes:
 
@@ -586,6 +592,29 @@ física completo, como publicado pela CVM (dado público), no app e no painel pu
 - Também nesta data: filtro de FIP por `ENTID_INVEST`, % na lista de fundos dos Administradores e
   valores negativos em vermelho em todas as telas.
 
+## decision_0039 — 2026-11-12 — Demais tabelas do FIDC no painel publicado; requisito req_0020
+
+Pedido do desenvolvedor: publicar no site também as outras tabelas do FIDC e formalizar o painel
+de fundos como requisito do projeto.
+
+- Tabelas: além da tab_I, as 17 demais tabelas do informe mensal do FIDC (II a X_7) ficam no
+  painel publicado, em Ficha e Série completa e na aba Ficha.
+- Formato (escolha do desenvolvedor, "gzip, sob demanda"): no formato JSON das tabelas
+  principais o site passaria de cerca de 522 MB para cerca de 2,9 GB, acima do limite de 1 GB do
+  GitHub Pages. As tabelas extras vão comprimidas em `site/app/data/fichas_x/fidc/`: um
+  `{CNPJ}.json.gz` por fundo com todas as tabelas extras dele, baixado só quando uma delas é
+  escolhida, e `index.json.gz` com a lista por fundo (períodos e linhas), lido uma vez para
+  montar o combo. O navegador descomprime (`DecompressionStream`); navegadores sem esse recurso
+  recebem uma mensagem e o app local continua com todas as tabelas.
+- Mesmo conteúdo e mesmas funções de formatação das tabelas principais
+  (`static_ficha_objects`, `write_static_ficha_extras`); a geração lê uma tabela por vez para não
+  esgotar a memória. As tabelas principais seguem em JSON sem compressão.
+- Alternativas descartadas: gzip também nas tabelas principais (mudança maior, sem necessidade
+  agora) e só os últimos 24 meses das tabelas extras (série incompleta no site).
+- `req_0020` registra o painel de fundos e o site publicado (abas, regras de exibição, citação
+  da fonte, carregamento sob demanda, limite do GitHub Pages); `work_0031` acompanha a entrega.
+  O ID `req_0015` já pertencia à gravação atômica de `src/common`.
+
 ## decision_0040 — 2026-11-12 — Áreas protegidas renomeadas para `.restricted/` e `.tmp/`
 
 Pedido do desenvolvedor: as pastas `restricted/` e `tmp/` foram renomeadas para `.restricted/` e
@@ -604,3 +633,6 @@ ninguém.
   nem aparece no histórico (`git ls-files`, `git log --all`), e `git check-ignore --no-index`
   confirma que os quatro são ignorados.
 - Registros históricos (decisões, handoffs e changelogs anteriores) mantêm os nomes da época.
+- Decisão do desenvolvedor (2026-11-12): `.restricted/` e `.tmp/` permanecem na pasta do projeto
+  e na sincronização do OneDrive; não serão movidas nem excluídas da sincronização. Os agentes
+  continuam sem acesso a elas, e as regras de não compartilhar nem publicar valem integralmente.

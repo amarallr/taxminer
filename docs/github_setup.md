@@ -1,5 +1,11 @@
 # Configuração Git e GitHub
 
+**Status:** vigente; registros por data ·
+**Última atualização:** 2026-11-10 ·
+**Documentos relacionados:** [Ambiente de desenvolvimento](development_environment.md) ·
+[README](../README.md) ·
+[Registro de decisões](project_management/decision_log.md)
+
 ## Visibilidade atual — 2026-11-10
 
 O repositório `amarallr/taxminer` está público por solicitação explícita do
@@ -70,7 +76,6 @@ Common P03 não foi iniciado. Regra de aceite: AGENTS.md exige Never infer
 approval; Common P01, Gate D, exige aprovação explícita de reviewer humano.
 Os checkpoints anteriores abaixo são históricos.
 
-
 ## Checkpoint mais recente — Git/GitHub publicado em 2026-11-10T11:02:28-03:00
 
 Autorização humana explícita: identidade Lucas Rodrigues Amaral
@@ -119,7 +124,6 @@ Este registro será incluído em um commit documental de acompanhamento, com
 hash final disponível em git log e evidência local após o envio.
 Os checkpoints anteriores abaixo são históricos.
 
-
 Histórico: antes da decisão humana posterior, identidade Git, primeiro commit,
 destino remoto e envio ainda estavam pendentes.
 
@@ -149,6 +153,7 @@ destino remoto e envio ainda estavam pendentes.
 ## Configuração vigente do GitHub CLI — 2026-11-10
 
 O executável está em `%LOCALAPPDATA%/Programs/TaxMiner/github_cli/bin/gh.exe`, e esse diretório consta no PATH do usuário. `gh --version` foi conferido e retornou 2.103.3. No terminal do RStudio, reinicie o terminal se ele foi aberto antes da alteração do PATH; depois use `gh --version` e `gh auth status`. Os comandos e caminhos absolutos no checkpoint histórico abaixo descrevem a localização anterior e não são instruções atuais; use `gh` pelo PATH do usuário.
+
 ## Uso no terminal integrado do RStudio
 
 Da raiz do projeto:

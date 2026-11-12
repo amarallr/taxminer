@@ -1,4 +1,12 @@
-# Financial disclosure sources (Collect P04, step 00)
+# Data sources (Collect P04 and P05)
+
+**Status:** sources verified (Collect P04 and P05); collections running ·
+**Última atualização:** 2026-11-11 ·
+**Documentos relacionados:** [Architecture](architecture.md) ·
+[Data dictionary](data_dictionary.md) ·
+[Decision log](project_management/decision_log.md)
+
+## Financial disclosure sources (Collect P04, step 00)
 
 Family: `financial_disclosures` (MVP Phase 1.2; numbered Phase 2 before `decision_0025`). Probe run: 2026-11-10T19:00
 -03:00, `scripts/probe_financial_sources.R`
@@ -8,47 +16,47 @@ Downloaded: listings, the company register, the smallest yearly DFP ZIP (2026,
 243 KB) and one filing document (13.5 MB). No bulk download was made. The
 machine-readable registry is `config/financial_disclosure_sources.yml`.
 
-## Summary
+### Summary
 
-| Need | Source | Verified |
-|---|---|---|
-| Filing index (company, CNPJ, period, version, link) | CVM open data, DFP/ITR yearly ZIP, `*_cia_aberta_{year}.csv` | Yes |
-| Structured statements (BP, DRE, DFC, DMPL, DVA) | Same ZIPs, one CSV per statement and scope (`_con`, `_ind`) | Yes |
-| **Explanatory notes** | **Not in the open-data ZIPs.** Available in the filing document from RAD/ENET (`LINK_DOC`) | Yes, for one filing |
-| Company identity | CVM register `cad_cia_aberta.csv` | Yes |
+| Need                                                | Source                                                                                     | Verified            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------- |
+| Filing index (company, CNPJ, period, version, link) | CVM open data, DFP/ITR yearly ZIP, `*_cia_aberta_{year}.csv`                               | Yes                 |
+| Structured statements (BP, DRE, DFC, DMPL, DVA)     | Same ZIPs, one CSV per statement and scope (`_con`, `_ind`)                                | Yes                 |
+| **Explanatory notes**                               | **Not in the open-data ZIPs.** Available in the filing document from RAD/ENET (`LINK_DOC`) | Yes, for one filing |
+| Company identity                                    | CVM register `cad_cia_aberta.csv`                                                          | Yes                 |
 
-## CVM open data (dados.cvm.gov.br)
+### CVM open data (dados.cvm.gov.br)
 
-| Item | Observed |
-|---|---|
-| URLs | `https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_{year}.zip`, `.../ITR/DADOS/itr_cia_aberta_{year}.zip`, `.../CAD/DADOS/cad_cia_aberta.csv` |
-| robots.txt | `Crawl-Delay: 10`; disallows `/api/`, `/dataset/*/history`, `/revision/`, `/dataset/rate/`; `/dados/` allowed |
-| License | ODbL (Open Data Commons), as shown on the dataset page `dataset/cia_aberta-doc-dfp` |
-| Update policy | Dataset page: weekly updates with resubmissions; history since 2010 |
-| Files | DFP 2010–2026 (8–13 MB; 2026: 238 KB); ITR up to 2026 (21–31 MB for 2024–2026) |
-| DFP ZIP members (2026) | Index `dfp_cia_aberta_2026.csv`; `BPA`, `BPP`, `DRE`, `DRA`, `DVA`, `DMPL`, `DFC_MD`, `DFC_MI` in `_con` and `_ind`; `composicao_capital`; `parecer` (auditor's report). 19 files, no notes |
-| Index columns | `CNPJ_CIA`, `DT_REFER`, `VERSAO`, `DENOM_CIA`, `CD_CVM`, `CATEG_DOC`, `ID_DOC`, `DT_RECEB`, `LINK_DOC` |
-| Encoding | Latin-1, `;` separator |
-| Company register | 2,679 rows: 756 `ATIVO`, 1,916 `CANCELADA`, 7 suspended; 2,532 distinct CNPJs (147 repeated rows). Contains names and contacts of responsible officers: personal data, never copied to fixtures or reports |
+| Item                   | Observed                                                                                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| URLs                   | `https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_{year}.zip`, `.../ITR/DADOS/itr_cia_aberta_{year}.zip`, `.../CAD/DADOS/cad_cia_aberta.csv`                                         |
+| robots.txt             | `Crawl-Delay: 10`; disallows `/api/`, `/dataset/*/history`, `/revision/`, `/dataset/rate/`; `/dados/` allowed                                                                                              |
+| License                | ODbL (Open Data Commons), as shown on the dataset page `dataset/cia_aberta-doc-dfp`                                                                                                                        |
+| Update policy          | Dataset page: weekly updates with resubmissions; history since 2010                                                                                                                                        |
+| Files                  | DFP 2010–2026 (8–13 MB; 2026: 238 KB); ITR up to 2026 (21–31 MB for 2024–2026)                                                                                                                             |
+| DFP ZIP members (2026) | Index `dfp_cia_aberta_2026.csv`; `BPA`, `BPP`, `DRE`, `DRA`, `DVA`, `DMPL`, `DFC_MD`, `DFC_MI` in `_con` and `_ind`; `composicao_capital`; `parecer` (auditor's report). 19 files, no notes                |
+| Index columns          | `CNPJ_CIA`, `DT_REFER`, `VERSAO`, `DENOM_CIA`, `CD_CVM`, `CATEG_DOC`, `ID_DOC`, `DT_RECEB`, `LINK_DOC`                                                                                                     |
+| Encoding               | Latin-1, `;` separator                                                                                                                                                                                     |
+| Company register       | 2,679 rows: 756 `ATIVO`, 1,916 `CANCELADA`, 7 suspended; 2,532 distinct CNPJs (147 repeated rows). Contains names and contacts of responsible officers: personal data, never copied to fixtures or reports |
 
 The 2026 DFP index lists 9 filings (fiscal years ending in 2026, e.g.
 31/03/2026). Most annual filings for calendar years are under the year of
 `DT_REFER` (2025 for fiscal year 2025).
 
-## Filing documents (RAD/ENET)
+### Filing documents (RAD/ENET)
 
-| Item | Observed |
-|---|---|
-| URL | `LINK_DOC` = `http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento={ID_DOC}`; HTTP 302 to the same path over HTTPS |
-| robots.txt | Absent (HTTP 404). No explicit crawler policy found |
-| Response | HTTP 200, `Content-Type: text/html` but `Content-Disposition: attachment; filename={cd_cvm}{yyyymmdd}{n}.zip`; the body is a ZIP. Check content by signature, not by the declared type |
-| Members (ID_DOC 159112) | `{cd_cvm}DFP{dd-mm-yyyy}v{version}.xml` (8.9 MB, structured statements and attachments), a PDF generated by ENET (16 MiB), `DadosDocumento.xlsx`, `FormularioCadastral.xml`, `FormularioDemonstracaoFinanceiraDFP.xml` |
-| Notes | The XML embeds the company's PDF attachments in base64 (`XmlDemonstracoesFinanceirasDadosDFPAnexoDocumento`, with `NomeArquivoPdf` and `ImagemObjetoArquivoPdf`). In this filing: management report, the financial statements with explanatory notes (20 pages, numbered notes such as "1. Contexto operacional", "17. Instrumentos financeiros", "24. Partes relacionadas"), projections, capital budget. The ENET PDF also contains the notes |
-| Text layer | The attached statements PDF has a text layer (extracted with `pdftotext`; no OCR needed in this case) |
-| Stability | Downloading the same `ID_DOC` twice gave different ZIP hashes (the generated PDF name carries a timestamp) but identical SHA-256 for the XML, XLSX and form XML members. Checksums must be kept per member as well as per download |
-| Anomaly | The ENET PDF is exactly 16,777,216 bytes, with about 9.6 MB of content followed by zero padding; `pdftotext` reports a damaged xref table and reconstructs it. Prefer the attachments in the XML; treat the generated PDF as secondary |
+| Item                    | Observed                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| URL                     | `LINK_DOC` = `http://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento={ID_DOC}`; HTTP 302 to the same path over HTTPS                                                                                                                                                                                                                                                                    |
+| robots.txt              | Absent (HTTP 404). No explicit crawler policy found                                                                                                                                                                                                                                                                                                                                                                                             |
+| Response                | HTTP 200, `Content-Type: text/html` but `Content-Disposition: attachment; filename={cd_cvm}{yyyymmdd}{n}.zip`; the body is a ZIP. Check content by signature, not by the declared type                                                                                                                                                                                                                                                          |
+| Members (ID_DOC 159112) | `{cd_cvm}DFP{dd-mm-yyyy}v{version}.xml` (8.9 MB, structured statements and attachments), a PDF generated by ENET (16 MiB), `DadosDocumento.xlsx`, `FormularioCadastral.xml`, `FormularioDemonstracaoFinanceiraDFP.xml`                                                                                                                                                                                                                          |
+| Notes                   | The XML embeds the company's PDF attachments in base64 (`XmlDemonstracoesFinanceirasDadosDFPAnexoDocumento`, with `NomeArquivoPdf` and `ImagemObjetoArquivoPdf`). In this filing: management report, the financial statements with explanatory notes (20 pages, numbered notes such as "1. Contexto operacional", "17. Instrumentos financeiros", "24. Partes relacionadas"), projections, capital budget. The ENET PDF also contains the notes |
+| Text layer              | The attached statements PDF has a text layer (extracted with `pdftotext`; no OCR needed in this case)                                                                                                                                                                                                                                                                                                                                           |
+| Stability               | Downloading the same `ID_DOC` twice gave different ZIP hashes (the generated PDF name carries a timestamp) but identical SHA-256 for the XML, XLSX and form XML members. Checksums must be kept per member as well as per download                                                                                                                                                                                                              |
+| Anomaly                 | The ENET PDF is exactly 16,777,216 bytes, with about 9.6 MB of content followed by zero padding; `pdftotext` reports a damaged xref table and reconstructs it. Prefer the attachments in the XML; treat the generated PDF as secondary                                                                                                                                                                                                          |
 
-## Identity and versions (input to step 01)
+### Identity and versions (input to step 01)
 
 - `report_id`: `cvm:{CATEG_DOC}:{CD_CVM}:{DT_REFER}:v{VERSAO}`, with `ID_DOC` kept
   as the source document number. Resubmissions get a new `VERSAO` and
@@ -62,23 +70,23 @@ The 2026 DFP index lists 9 filings (fiscal years ending in 2026, e.g.
 - `report_type`: `DFP` (annual) and `ITR` (quarterly); other CVM documents (FRE,
   IPE) are out of scope unless approved.
 
-## Proposed Phase 1.2 sample (needs authorization)
+### Proposed Phase 1.2 sample (needs authorization)
 
 Collect P04 step 02 should start with up to 20 filing packages (about 15 MB
 each, about 300 MB in total, 10 s between requests):
 
-| Stratum | Filings |
-|---|---:|
-| DFP fiscal year 2025, active companies, different sectors | 10 |
-| ITR 2026 (latest quarter), same companies when available | 5 |
-| DFP fiscal year 2011, to check older formats | 3 |
-| Resubmission (`VERSAO` > 1) | 2 |
+| Stratum                                                   | Filings |
+| --------------------------------------------------------- | ------: |
+| DFP fiscal year 2025, active companies, different sectors | 10      |
+| ITR 2026 (latest quarter), same companies when available  | 5       |
+| DFP fiscal year 2011, to check older formats              | 3       |
+| Resubmission (`VERSAO` > 1)                               | 2       |
 
 Raw packages stay local under `data/raw/financial_disclosures/` and are never
 published. The yearly index ZIPs needed for selection (about 13 MB each) are
 downloaded once per year used.
 
-## Open questions
+### Open questions
 
 1. Whether older filings (e.g. 2010–2012) embed notes the same way; one recent
    filing was inspected.
@@ -90,16 +98,16 @@ downloaded once per year used.
 4. Why the ENET PDF is zero-padded to 16 MiB, and whether larger filings are
    truncated.
 
-## Full collection (authorized 2026-11-10)
+### Full collection (authorized 2026-11-10)
 
 The developer asked to download everything available. The catalog built from
 all yearly index ZIPs (DFP 2010–2026, ITR 2011–2026; `itr_cia_aberta_2010.zip`
 returns 404) has **49,908 filing packages** from 1,230 companies:
 
 | Form | Packages | Resubmissions (`VERSAO` > 1) |
-|---|---:|---:|
-| DFP | 14,015 | 3,149 |
-| ITR | 35,893 | 4,412 |
+| ---- | -------: | ---------------------------: |
+| DFP  | 14,015   | 3,149                        |
+| ITR  | 35,893   | 4,412                        |
 
 Measured packages range from 3.3 MB (DFP 2011) to 22 MB (DFP 2026), with 17–21 s
 of server time each. All forms would need about 450 GB and about 16 days at
@@ -114,9 +122,10 @@ $env:TAXMINER_DATA_DIR = 'C:\TaxMinerData'
 Rscript --vanilla scripts/collect_financial_reports.R dfp 2010-2026 Inf
 ```
 
-The script refuses a data folder inside OneDrive and stops when free space
-falls below 20 GB. Raw packages, the catalog and the manifest stay in the data
-folder and are never committed or published.
+> [!WARNING]
+> The script refuses a data folder inside OneDrive and stops when free space falls below
+> 20 GB. Raw packages, the catalog and the manifest stay in the data folder and are never
+> committed or published.
 
 Observed in the first packages:
 
@@ -131,14 +140,14 @@ Observed in the first packages:
   raw store (it is moved to `quarantine/`).
 - The ENET-generated PDF is padded to a power of two (8 MiB, 16 MiB).
 
-# Investment fund report sources (Collect P05)
+## Investment fund report sources (Collect P05)
 
 - **Family:** `investment_fund_reports` (MVP Phase 1.3, `decision_0024`, `decision_0025`,
   `decision_0029`).
 - **Registry:** `config/investment_fund_report_sources.yml` (human-readable) and
   `fund_report_sources` in `src/collect/discover_fund_reports.R` (used by the code).
 
-## Step 00 — verification (2026-11-11T00:18-03:00)
+### Step 00 — verification (2026-11-11T00:18-03:00)
 
 - **Access.** `robots.txt` of `dados.cvm.gov.br` allows `/dados/` and sets `Crawl-Delay: 10`;
   every request waited at least 10 s. All requests returned HTTP 200; none was refused.
@@ -149,16 +158,16 @@ Observed in the first packages:
   `<TAXMINER_DATA_DIR>/investment_fund_reports/meta/` (Latin-1 text, one block per field with
   description, domain, type and size):
 
-| Dataset | META file | SHA-256 (12) | Tables | Fund identifier | Period field |
-|---|---|---|---:|---|---|
-| FII `INF_MENSAL` | `meta_inf_mensal_fii.zip` | `d9a4a78941ca` | 3 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
-| FII `INF_TRIMESTRAL` | `meta_inf_trimestral_fii.zip` | `e270e15b47d5` | 16 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
-| FII `INF_ANUAL` | `meta_inf_anual_fii.zip` | `182afa5ecd36` | 13 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
-| FII `DFIN` | `meta_dfin_fii.txt` | `3c4e13039eb3` | 1 | `CNPJ_Fundo_Classe` | `Data_Referencia` |
-| FIDC `INF_MENSAL` | `meta_inf_mensal_fidc_txt.zip` | `5fb2b329aadf` | 18 (`tab_I`–`tab_X_7`) | `CNPJ_FUNDO_CLASSE` (some tables `CNPJ_FUNDO`) | `DT_COMPTC` |
-| FIP `INF_TRIMESTRAL` | `meta_inf_trimestral_fip.txt` | `b2a5fc31e13f` | 1 | `CNPJ_FUNDO` | `DT_COMPTC` |
-| FIP `INF_QUADRIMESTRAL` | `meta_inf_quadrimestral_fip.txt` | `1cab9fb27223` | 1 | `CNPJ_FUNDO_CLASSE` | `DT_COMPTC` |
-| FIAGRO `INF_MENSAL` | `meta_inf_mensal_fiagro.zip` | `f7d9ce7a4c34` | 2 | `CNPJ_Classe` | `Data_Referencia` |
+| Dataset                 | META file                        | SHA-256 (12)   | Tables                 | Fund identifier                                | Period field      |
+| ----------------------- | -------------------------------- | -------------- | ---------------------: | ---------------------------------------------- | ----------------- |
+| FII `INF_MENSAL`        | `meta_inf_mensal_fii.zip`        | `d9a4a78941ca` | 3                      | `CNPJ_Fundo_Classe`                            | `Data_Referencia` |
+| FII `INF_TRIMESTRAL`    | `meta_inf_trimestral_fii.zip`    | `e270e15b47d5` | 16                     | `CNPJ_Fundo_Classe`                            | `Data_Referencia` |
+| FII `INF_ANUAL`         | `meta_inf_anual_fii.zip`         | `182afa5ecd36` | 13                     | `CNPJ_Fundo_Classe`                            | `Data_Referencia` |
+| FII `DFIN`              | `meta_dfin_fii.txt`              | `3c4e13039eb3` | 1                      | `CNPJ_Fundo_Classe`                            | `Data_Referencia` |
+| FIDC `INF_MENSAL`       | `meta_inf_mensal_fidc_txt.zip`   | `5fb2b329aadf` | 18 (`tab_I`–`tab_X_7`) | `CNPJ_FUNDO_CLASSE` (some tables `CNPJ_FUNDO`) | `DT_COMPTC`       |
+| FIP `INF_TRIMESTRAL`    | `meta_inf_trimestral_fip.txt`    | `b2a5fc31e13f` | 1                      | `CNPJ_FUNDO`                                   | `DT_COMPTC`       |
+| FIP `INF_QUADRIMESTRAL` | `meta_inf_quadrimestral_fip.txt` | `1cab9fb27223` | 1                      | `CNPJ_FUNDO_CLASSE`                            | `DT_COMPTC`       |
+| FIAGRO `INF_MENSAL`     | `meta_inf_mensal_fiagro.zip`     | `f7d9ce7a4c34` | 2                      | `CNPJ_Classe`                                  | `Data_Referencia` |
 
 - **Administrator.** `CNPJ_Administrador` appears in the FII `geral` tables and FIAGRO;
   `CNPJ_ADMIN` in FIDC `tab_I`. FIP has no administrator CNPJ in the dictionary.
@@ -166,28 +175,28 @@ Observed in the first packages:
   to `CNPJ_FUNDO_CLASSE` (four-monthly, from 2024), following the fund/class split of CVM
   Resolution 175. Data P04 must map both.
 
-## Step 01 — listings (2026-11-11T00:18-03:00)
+### Step 01 — listings (2026-11-11T00:18-03:00)
 
 The listings are nginx autoindex pages with name, timestamp (`dd-Mon-yyyy HH:MM`) and an
 approximate size. Discovery parsed 102 files plus 11 DFIN files:
 
-| Subfamily | Listing | Files | Periods |
-|---|---|---:|---|
-| `fii` | `FII/DOC/INF_MENSAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
-| `fii` | `FII/DOC/INF_TRIMESTRAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
-| `fii` | `FII/DOC/INF_ANUAL/DADOS/` | 11 | 2016–2026 (yearly ZIP) |
-| `fii` | `FII/DOC/DFIN/DADOS/` | 11 | 2016–2026 (CSV index; outside the collection scopes) |
-| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/` | 22 | 2025-01–2026-10 (monthly ZIP) |
-| `fidc` | `FIDC/DOC/INF_MENSAL/DADOS/HIST/` | 12 | 2013–2024 (yearly ZIP) |
-| `fip` | `FIP/DOC/INF_TRIMESTRAL/DADOS/` | 14 | 2010–2023 (yearly CSV) |
-| `fip` | `FIP/DOC/INF_QUADRIMESTRAL/DADOS/` | 3 | 2024–2026 (yearly CSV) |
-| `fiagro` | `FIAGRO/DOC/INF_MENSAL/DADOS/` | 18 | 2025-05–2026-10 (monthly ZIP) |
+| Subfamily | Listing                            | Files | Periods                                              |
+| --------- | ---------------------------------- | ----: | ---------------------------------------------------- |
+| `fii`     | `FII/DOC/INF_MENSAL/DADOS/`        | 11    | 2016–2026 (yearly ZIP)                               |
+| `fii`     | `FII/DOC/INF_TRIMESTRAL/DADOS/`    | 11    | 2016–2026 (yearly ZIP)                               |
+| `fii`     | `FII/DOC/INF_ANUAL/DADOS/`         | 11    | 2016–2026 (yearly ZIP)                               |
+| `fii`     | `FII/DOC/DFIN/DADOS/`              | 11    | 2016–2026 (CSV index; outside the collection scopes) |
+| `fidc`    | `FIDC/DOC/INF_MENSAL/DADOS/`       | 22    | 2025-01–2026-10 (monthly ZIP)                        |
+| `fidc`    | `FIDC/DOC/INF_MENSAL/DADOS/HIST/`  | 12    | 2013–2024 (yearly ZIP)                               |
+| `fip`     | `FIP/DOC/INF_TRIMESTRAL/DADOS/`    | 14    | 2010–2023 (yearly CSV)                               |
+| `fip`     | `FIP/DOC/INF_QUADRIMESTRAL/DADOS/` | 3     | 2024–2026 (yearly CSV)                               |
+| `fiagro`  | `FIAGRO/DOC/INF_MENSAL/DADOS/`     | 18    | 2025-05–2026-10 (monthly ZIP)                        |
 
 Every listing timestamp is on or after 2026-11-07: the CVM rewrites the files, including old
 periods. A new timestamp makes a file pending again; identical content is recorded as
 `unchanged_content` without a second copy.
 
-## Steps 02–03 — collection
+### Steps 02–03 — collection
 
 ```powershell
 $env:TAXMINER_DATA_DIR = "C:\TaxMinerData"
