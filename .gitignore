@@ -1,4 +1,7 @@
-# Legally protected boundaries: never inspect or operate these directories.
+# Legally protected boundaries: never inspect, operate, share or publish these
+# directories (renamed from restricted/ and tmp/; the old names stay protected).
+/.restricted/
+/.tmp/
 /restricted/
 /tmp/
 /.agents/

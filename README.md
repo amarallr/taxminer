@@ -407,8 +407,10 @@ Dados coletados, intermediários e processados nunca são versionados
 
 ## 16. Segurança e privacidade
 
-- `restricted/` e `tmp/` são áreas protegidas, inacessíveis aos agentes, e
-  nunca são publicadas. O atalho `doit` lê `.claude/doit.txt`, arquivo local
+- `.restricted/` e `.tmp/` (antes `restricted/` e `tmp/`, nomes que continuam
+  protegidos) são áreas protegidas e sigilosas, inacessíveis aos agentes, inclusive
+  conteúdo e metadados. Nunca são compartilhadas, enviadas a serviços externos,
+  versionadas, empacotadas nem publicadas. O atalho `doit` lê `.claude/doit.txt`, arquivo local
   ignorado pelo Git.
 - `.gitignore` e `.renvignore` não substituem controle de acesso nem a
   exclusão de sincronização em nuvem; o desenvolvedor verifica essas

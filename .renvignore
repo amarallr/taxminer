@@ -1,3 +1,5 @@
+/.restricted/
+/.tmp/
 /restricted/
 /tmp/
 /.git/

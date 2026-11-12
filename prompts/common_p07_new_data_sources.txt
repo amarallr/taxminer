@@ -42,8 +42,8 @@ Important differences: FIDC/FII fund reports are NOT within any current TaxMiner
 the reference repository has no LICENSE file while TaxMiner is MIT; the source depends on
 `data.table`, `httr2`, `digest`, `jsonlite`, `dotenv` (and optional `arrow`); its CI runs on
 Windows and Linux, TaxMiner's on Windows; its tests use `p02_testar.R`, TaxMiner's use
-`scripts/validate_environment.R` and `tests/testthat/test_*.R`; in the source, `tmp/` holds
-local instructions, while in TaxMiner `tmp/` is a protected area.
+`scripts/validate_environment.R` and `tests/testthat/test_*.R`; in the source, `.tmp/` holds
+local instructions, while in TaxMiner `.tmp/` is a protected area.
 
 ## O — OBJECTIVE
 Add new data sources to TaxMiner, reusing what the reference implementation proves, in a governed, traceable and
@@ -80,14 +80,14 @@ Execute only the stage the developer authorized. Stop at every gate.
 
 ### 00 — Read-only inventory and gap analysis (no code changes)
 - Clone or fetch the source repository read-only into a location OUTSIDE the TaxMiner
-  checkout and outside `restricted/`/`tmp/` of both projects (for example a sibling folder or
+  checkout and outside `.restricted/`/`.tmp/` of both projects (for example a sibling folder or
   the session workspace). Never place it inside TaxMiner, never add it as a remote, submodule
   or subtree at this stage.
 - Use explicit allowlists of public tracked files only: `README.md`, `CHANGELOG.md`,
   `renv.lock`, `prompts/*.txt`, `prompts/README.md`, `docs/*.md`, `docs/references/cvm/*.csv`,
   `src/{orchestration,utils,validation,configuration,download,consolidation,acceptance}/*`
   (tracked files only), `tests/testthat/*.R`, `.github/workflows/testes.yml`. Never read or
-  request ignored/private paths of the source (`restricted/`, `data/restricted/`, `tmp/`,
+  request ignored/private paths of the source (`.restricted/`, `data/restricted/`, `.tmp/`,
   `src/consolidation/private/`, `locais/`, `data/`, `outputs/`, `config/`, `logs/`, local
   `AGENTS.md`) — the FIDC movements products and their code are private and out of scope.
 - Run the source suite read-only in that external location if dependencies are available
@@ -114,7 +114,7 @@ Execute only the stage the developer authorized. Stop at every gate.
      TaxMiner `TAXMINER_DATA_DIR`/`raw|interim|processed/investment_fund_reports/{fidc,fii}`
      (outside the repository and OneDrive), configuration in
      `config/investment_fund_report_sources.yml`;
-  g) conflicts and risks (scope, license, naming, CI matrix, `tmp/` semantics, interaction
+  g) conflicts and risks (scope, license, naming, CI matrix, `.tmp/` semantics, interaction
      with the running DFP collection, CVM terms/rate limits for `/dados/FIDC` and `/dados/FII`).
 - Governance: add a work item (next free `work_NNNN`, module `common`, type `review`,
   status `in_progress`), and, if needed, risks; update `project_status.md` and `handoff.md`.
@@ -202,7 +202,7 @@ authorization; no push without authorization.
 
 ## GOVERNANCE, SECURITY AND HANDOFF
 Follow `AGENTS.md` and `common_p01_lifecycle_management.txt`. Never read, enumerate, traverse,
-modify, index or transmit `restricted/` or `tmp/` of either repository. Use public or
+modify, index or transmit `.restricted/` or `.tmp/` of either repository. Use public or
 synthetic fixtures only. Request authentication only through official local flows, never
 secrets in chat. Do not run another assistant or delegate unless the user asks. Cite exact
 source URLs, commit SHAs, file paths and timestamps for every claim.
@@ -221,5 +221,5 @@ blockers; invariant checks; updated governance statuses; next action awaiting au
 - **MVP Phase 2 — Cross-Source Intelligence:** evidence-based relationships between the bases accepted in Phase 1, always as cited hypotheses with side-by-side source citations, confidence/uncertainty, traceability, tests and human review. It consumes only subphase datasets that have explicit human acceptance. No automatic findings of misconduct.
 Track implementation, testing, human acceptance, release and operational health separately FOR EACH subphase and phase. Subphases 1.1–1.3 run independently; Phase 2 work may start before every subphase is accepted only when its documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
 Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `investment_fund_reports` (subfamilies `fii`, `fidc`, `fip`, `fiagro`) for CVM fund reports; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
-Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.
+Protected `.restricted/` and `.tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.
 Anything shared from the reference implementation is a `common` capability; it never produces findings of misconduct.

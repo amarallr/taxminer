@@ -26,7 +26,7 @@ versioned tables through read-only contracts and returns results with direct
 citations to source documents and pages. Optional model services cannot be a
 dependency for collection, extraction, or deterministic search.
 
-No module may read `restricted/` or `tmp/`. Raw and derived pipeline inputs are
+No module may read `.restricted/` or `.tmp/`. Raw and derived pipeline inputs are
 limited to verified public records and synthetic fixtures. The architecture
 does not select a storage engine or vector provider yet; those choices require
 measured criteria and an explicit dependency decision.

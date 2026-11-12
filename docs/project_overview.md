@@ -113,6 +113,6 @@ R 4.5.1 · RStudio 2024.04.0 · renv com snapshot explícito · testthat 3.3.2 �
 validação local 5/5 · GitHub Actions com restauração limpa aprovada ·
 Git 2.55 · gh 2.103 · Codex, Claude Code, Gemini CLI e Copilot testados no RStudio.
 
-As pastas `restricted/` e `tmp/` são locais e nunca são lidas nem publicadas.
+As pastas `.restricted/` e `.tmp/` são locais e nunca são lidas nem publicadas.
 Este panorama é um retrato do momento; o estado vigente está em
 `docs/project_management/project_status.md`.

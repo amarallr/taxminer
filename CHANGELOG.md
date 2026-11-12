@@ -1,5 +1,12 @@
 # Changelog
 
+## Áreas protegidas renomeadas — 2026-11-12
+
+- `restricted/` e `tmp/` passam a ser `.restricted/` e `.tmp/` (`decision_0040`): sigilosas, inacessíveis
+  aos agentes e nunca compartilhadas nem publicadas. Regras atualizadas em `AGENTS.md`, `CLAUDE.md`,
+  `CODEX.md`, `GEMINI.md`, README, prompts e documentos; `.gitignore`, `.renvignore`, `.geminiignore` e
+  `.claude/settings.json` protegem os nomes novos e os antigos.
+
 ## Cedentes, aba Ficha, filtro de FIP e negativos em vermelho — 2026-11-11
 
 - **Aba Cedentes** (app e painel publicado), logo após FIDC: os cedentes dos FIDC como publicados na

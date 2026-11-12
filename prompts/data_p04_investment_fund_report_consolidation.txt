@@ -64,7 +64,7 @@ Acceptance of Phase 1.3 requires explicit human sign-off and is never inferred f
 - Follow `common_p01_lifecycle_management.txt`.
 - Track implementation, tests, acceptance, release and operations separately.
 - Use public or synthetic fixtures only.
-- Never read, enumerate, traverse, modify, index or transmit `restricted/` or `tmp/`.
+- Never read, enumerate, traverse, modify, index or transmit `.restricted/` or `.tmp/`.
 - No data or raw files in Git.
 
 ## RESPONSE FORMAT
@@ -87,4 +87,4 @@ Present, in this order:
 - **MVP Phase 2 — Cross-Source Intelligence:** evidence-based relationships between the bases accepted in Phase 1, always as cited hypotheses with side-by-side source citations, confidence/uncertainty, traceability, tests and human review. It consumes only subphase datasets that have explicit human acceptance. No automatic findings of misconduct.
 Track implementation, testing, human acceptance, release and operational health separately FOR EACH subphase and phase. Subphases 1.1–1.3 run independently; Phase 2 work may start before every subphase is accepted only when its documented dependencies are satisfied; no phase can be marked accepted without human sign-off. Keep one local Shiny interface with independently enabled functional areas.
 Naming: `tax_consultation_decisions` is the technical document family for Solucoes de Consulta; `financial_disclosures`/`financial_notes` for corporate reports and notes; `investment_fund_reports` (subfamilies `fii`, `fidc`, `fip`, `fiagro`) for CVM fund reports; `document_relationships` for cross-source evidence. Preserve the original Portuguese legal title and document type. Do not equate Solucoes de Divergencia, Pareceres Normativos or other administrative acts with Solucoes de Consulta: use separate typed classifications under a broader `tax_interpretive_decisions` umbrella if scope expands. Do not use `tax_rulings`, `ruling_id`, or 'Tax Rulings' in newly authored artifacts.
-Protected `restricted/` and `tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.
+Protected `.restricted/` and `.tmp/` stay inaccessible to Codex and other remote agents; local-only independent Git history may be managed by the developer, but must never be synchronized or published.

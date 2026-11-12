@@ -9,8 +9,14 @@ separately. Never infer approval or fabricate evidence.
 ## Inaccessible boundaries
 
 - Never read, list, traverse, search, index, copy, modify, delete or transmit
-  restricted/ or tmp/, including their contents and metadata. Never operate
+  .restricted/ or .tmp/ (renamed from restricted/ and tmp/ on 2026-11-12; the
+  old names stay protected if they reappear), including their contents and
+  metadata. They are confidential: never share them with anyone, never send
+  them to any external service, model or tool, never commit, package, upload
+  or publish them, and never mention their contents. Never operate
   developer-owned independent repositories inside these paths.
+- Dot-prefixed names do not make these paths safe to touch: tools that skip or
+  include hidden entries must still exclude them explicitly.
 - No exceptions. When the user types `doit`, read `.claude/doit.txt` (local,
   ignored by Git, outside the protected paths) and follow its instructions
   subject to every other rule in this file.

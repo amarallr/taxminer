@@ -585,3 +585,22 @@ física completo, como publicado pela CVM (dado público), no app e no painel pu
   Tabela I ou o catálogo mudam) e o painel publicado (`site/app/data/cedentes/`, 7,2 MB).
 - Também nesta data: filtro de FIP por `ENTID_INVEST`, % na lista de fundos dos Administradores e
   valores negativos em vermelho em todas as telas.
+
+## decision_0040 — 2026-11-12 — Áreas protegidas renomeadas para `.restricted/` e `.tmp/`
+
+Pedido do desenvolvedor: as pastas `restricted/` e `tmp/` foram renomeadas para `.restricted/` e
+`.tmp/` e devem continuar sigilosas, inacessíveis e nunca compartilhadas ou publicadas com
+ninguém.
+
+- Regras atualizadas: `AGENTS.md` (autoridade), `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, README,
+  prompts e documentos vigentes. Os novos nomes são sigilosos: nunca lidos, listados, indexados,
+  copiados, enviados a serviços externos, versionados, empacotados nem publicados, inclusive
+  metadados. O prefixo de ponto não torna os caminhos seguros: ferramentas que tratam itens
+  ocultos devem excluí-los explicitamente.
+- Controles técnicos: `.gitignore`, `.renvignore` e `.geminiignore` listam `/.restricted/` e
+  `/.tmp/`; `.claude/settings.json` nega `Read`, `Edit` e `Write` nos dois caminhos. Os nomes
+  antigos continuam em todos esses controles, caso voltem a existir.
+- Verificação feita sem acessar as pastas: nenhum dos quatro caminhos está rastreado pelo Git
+  nem aparece no histórico (`git ls-files`, `git log --all`), e `git check-ignore --no-index`
+  confirma que os quatro são ignorados.
+- Registros históricos (decisões, handoffs e changelogs anteriores) mantêm os nomes da época.

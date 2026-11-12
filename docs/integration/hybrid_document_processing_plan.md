@@ -28,7 +28,7 @@ service, and no LLM was called.
 | D — metadata | Consolidation and extraction indexes, quality-issue tables, signatures (`src/common/signatures.R`), validated atomic writes (`safe_io.R`, `parquet_io.R`). |
 | Cache / incremental | Per-file hash + transformation signature skip (notes, funds, fund directory). |
 | Structured queries | `src/intelligence/search_fund_reports.R` (work_0022, in progress): deterministic filters with source-file citations; no LLM. |
-| Path safety | `validate_contained_path()`; protected `restricted/` and `tmp/` never read. |
+| Path safety | `validate_contained_path()`; protected `.restricted/` and `.tmp/` never read. |
 | LLM integration | **None.** Requirements make RAG optional (Intelligence P02); no provider, key or token measurement exists. |
 
 ### Source formats that matter

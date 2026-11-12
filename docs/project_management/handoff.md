@@ -117,5 +117,5 @@ pontos de `docs/feasibility.md`.
 
 ## Regras permanentes
 
-Nunca acessar `restricted/` nem `tmp/`. Não inferir aceites, não fabricar
+Nunca acessar `.restricted/` nem `.tmp/` (antes `restricted/` e `tmp/`); são sigilosas e nunca são compartilhadas nem publicadas. Não inferir aceites, não fabricar
 evidências, não fazer commit ou push sem autorização explícita.

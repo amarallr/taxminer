@@ -1,10 +1,18 @@
 {
   "permissions": {
     "deny": [
+      "Read(./.restricted/**)",
+      "Read(./.tmp/**)",
+      "Edit(./.restricted/**)",
+      "Edit(./.tmp/**)",
+      "Write(./.restricted/**)",
+      "Write(./.tmp/**)",
       "Read(./restricted/**)",
       "Read(./tmp/**)",
       "Edit(./restricted/**)",
-      "Edit(./tmp/**)"
+      "Edit(./tmp/**)",
+      "Write(./restricted/**)",
+      "Write(./tmp/**)"
     ]
   }
 }

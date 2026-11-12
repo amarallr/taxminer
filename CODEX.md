@@ -9,7 +9,9 @@ and delivery requirements.
 ## Protected paths
 
 - Never read, list, search, traverse, index, copy, modify, delete, or transmit
-  `restricted/` or `tmp/`, including their contents and metadata.
+  `.restricted/` or `.tmp/` (formerly `restricted/` and `tmp/`, still protected),
+  including their contents and metadata. They are confidential: never share,
+  transmit, commit, package or publish them.
 - Use explicit file and directory allowlists. Do not recursively scan the
   repository root, follow links into protected paths, or use broad staging or
   packaging commands.

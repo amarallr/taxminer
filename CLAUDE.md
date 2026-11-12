@@ -4,7 +4,9 @@ Read and follow `AGENTS.md` as the authoritative project policy before acting.
 It governs scope, security boundaries, architecture, validation, and delivery.
 If instructions conflict, follow `AGENTS.md` and report the conflict.
 
-Do not access `restricted/` or `tmp/`, including contents and metadata. The `doit` shortcut reads `.claude/doit.txt`
+Do not access `.restricted/` or `.tmp/` (formerly `restricted/` and `tmp/`, still
+protected), including contents and metadata. They are confidential: never share,
+transmit, commit, package or publish them. The `doit` shortcut reads `.claude/doit.txt`
 as defined in `AGENTS.md`. Use only
 explicit file and directory allowlists; never recursively scan the repository
 root or follow links into protected paths. Use public or synthetic fixtures.
