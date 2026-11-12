@@ -751,3 +751,11 @@ Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seg
 - Fase 06 aceita (`acc_0011`, `work_0034`); replanejamento `plan_0003` aprovado.
 - Prompt mestre 1.3 (`prv_0004`, P11–P12), já aplicado pelo novo fluxo `propose-prompt`/`decide-prompt` (diff em `reports/governance/prv_0004.diff`).
 - Fase 04 autorizada. Pela regra P9 (prompt 1.2, seção 19), a aprovação genérica não cobre o hook de captura do Claude Code nem a leitura de tokens das transcrições locais: os dois ficam implementados e testados só com dados sintéticos, sem instalar o hook e sem ler transcrições reais, até confirmação própria do desenvolvedor.
+
+## decision_0049 — 2026-11-12T18:01:29-03:00 — TaxMiner Governance: Fase 04 (integração com agentes)
+
+Autorizada em `decision_0048`.
+
+- Registro de execuções (`execution_register.csv`) com a máquina de estados do prompt. Os tokens são os informados pelo agente; vazio quer dizer indisponível e nunca é estimado.
+- Adaptadores somente leitura e matriz de capacidades declarada. Nenhum agente é executado; o despacho de tarefas não é usado.
+- O hook do Claude Code (`scripts/governance_hook.R`) e o leitor de tokens das transcrições ficam implementados e testados só com dados sintéticos. O hook não está instalado e nenhuma transcrição real foi lida. Cada um depende de confirmação própria do desenvolvedor (P9). O leitor exige ainda uma decisão registrada neste arquivo.

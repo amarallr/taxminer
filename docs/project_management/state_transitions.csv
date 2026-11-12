@@ -28,3 +28,8 @@ trn_0026,plan_0003,approval,proposed,approved,2026-11-12T17:51:54-03:00,develope
 trn_0027,prv_0004,approval,,proposed,2026-11-12T17:51:54-03:00,claude_code,reports/governance/prv_0004.diff
 trn_0028,prv_0004,approval,proposed,approved,2026-11-12T17:51:54-03:00,developer,prompt_revisions.csv
 trn_0029,request_0006,status,,linked,2026-11-12T17:52:06-03:00,claude_code,request_register.csv
+trn_0030,request_0007,status,,answered,2026-11-12T18:01:29-03:00,claude_code,request_register.csv
+trn_0031,work_0035,implementation_status,,not_started,2026-11-12T18:01:29-03:00,claude_code,work_items.csv
+trn_0032,work_0035,implementation_status,not_started,implemented,2026-11-12T18:01:29-03:00,claude_code,src/common/governance_agents.R
+trn_0033,work_0035,test_status,not_run,passed,2026-11-12T18:01:29-03:00,claude_code,test_0061;test_0062
+trn_0034,plan_0004,approval,,proposed,2026-11-12T18:01:29-03:00,claude_code,planning_revisions.csv

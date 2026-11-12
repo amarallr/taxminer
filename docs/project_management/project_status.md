@@ -7,6 +7,15 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 04 — 2026-11-12
+
+- Fase 04 implementada e testada (`work_0035`, `decision_0049`): `src/common/governance_agents.R`;
+  registro de execuções com máquina de estados; matriz de capacidades em
+  `reports/governance/capability_matrix.md`; hook do Claude Code e leitor de tokens só com dados
+  sintéticos. 139 testes passam.
+- **Aguardando:** aceite da Fase 04; confirmação própria (P9) para instalar o hook e para ler os
+  tokens das transcrições locais.
+
 ## TaxMiner Governance — Fase 06 — 2026-11-12
 
 - Fase 06 implementada e testada (`work_0034`, `decision_0047`): `src/common/governance_prompts.R`;

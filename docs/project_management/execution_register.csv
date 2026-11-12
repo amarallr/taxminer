@@ -1,0 +1,1 @@
+execution_id,work_item_id,request_id,agent,model,session,started_at,ended_at,state,input_tokens,output_tokens,cached_tokens,reported_cost,retries,outcome,evidence

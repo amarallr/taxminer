@@ -15,12 +15,20 @@
 #       --approver=developer [--decision_id=decision_00NN]
 #   Rscript --vanilla scripts/governance_registry.R add-plan --phase=... --summary="..." --reason="..."
 #   Rscript --vanilla scripts/governance_registry.R prompt-report   (writes reports/governance/prompt_evolution.md)
+# Agent integration (phase 04):
+#   Rscript --vanilla scripts/governance_registry.R add-execution --agent=codex [--model=...] [--work_item=work_0035]
+#       [--request=request_0007] [--state=running]
+#   Rscript --vanilla scripts/governance_registry.R update-execution --id=exec_0001 --state=completed --actor=developer
+#       [--outcome=...] [--input_tokens=N] [--output_tokens=N] [--cached_tokens=N] [--reported_cost=X]
+#   Rscript --vanilla scripts/governance_registry.R reconcile [--max_hours=12]   (open executions without end -> unknown)
+#   Rscript --vanilla scripts/governance_registry.R capability-report   (writes reports/governance/capability_matrix.md)
 # `check` also verifies the immutable layer (AGENTS.md, CLAUDE.md, Common P01, Common P08 section 12).
 # Reads and writes docs/project_management/ and reports/governance/ under --root (default "."). Exit status 1 on
 # integrity problems or invalid input.
 
 source("src/common/governance_registry.R")
 source("src/common/governance_prompts.R")
+source("src/common/governance_agents.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 command <- if (length(args)) args[1] else "check"
@@ -94,6 +102,29 @@ if (command == "check") {
 } else if (command == "add-plan") {
   cat("Recorded", governance_add_plan_revision(root, opt("phase"), opt("summary"), opt("reason"), opt("evidence", "")), "\n")
   report_problems()
+} else if (command == "add-execution") {
+  id <- governance_start_execution(dir, opt("agent"), opt("model", ""), opt("session", ""), opt("work_item", ""),
+                                   opt("request", ""), opt("state", "running"), opt("evidence", "manual"))
+  cat("Registered", id, "\n")
+  report_problems()
+} else if (command == "update-execution") {
+  tokens <- list()
+  for (f in c("input_tokens", "output_tokens", "cached_tokens", "reported_cost")) {
+    if (!is.null(opts[[f]])) tokens[[f]] <- opts[[f]]
+  }
+  governance_update_execution(dir, opt("id"), opt("state"), opt("actor"), opts$outcome, tokens,
+                              opt("evidence", ""))
+  cat("Updated", opt("id"), "\n")
+  report_problems()
+} else if (command == "reconcile") {
+  stale <- governance_reconcile_executions(dir, as.numeric(opt("max_hours", "12")))
+  cat("Marked unknown:", if (length(stale)) paste(stale, collapse = " ") else "none", "\n")
+  report_problems()
+} else if (command == "capability-report") {
+  out <- file.path(root, "reports", "governance", "capability_matrix.md")
+  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
+  writeLines(enc2utf8(governance_capability_report()), out, useBytes = TRUE)
+  cat("Written", out, "\n")
 } else if (command == "prompt-report") {
   out <- file.path(root, "reports", "governance", "prompt_evolution.md")
   dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)

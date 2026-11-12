@@ -60,7 +60,7 @@ governance_specs <- list(
                   vocab = list(classification = c("feature", "bug", "refactoring", "performance", "security",
                                                   "documentation", "data_engineering", "analytics", "ui_ux",
                                                   "testing", "research", "question", "operational_command",
-                                                  "architecture", "technical_debt"),
+                                                  "architecture", "technical_debt", "unclassified"),
                                status = c("captured", "under_analysis", "linked", "answered", "rejected",
                                           "cancelled"),
                                channel = c("claude_code", "codex", "github_copilot", "gemini_cli", "manual")),
@@ -68,7 +68,8 @@ governance_specs <- list(
   transitions = list(file = "state_transitions.csv", id = "transition_id", prefix = "trn",
                      columns = c("transition_id", "entity_id", "field", "from_status", "to_status", "changed_at",
                                  "actor", "evidence"),
-                     refs = list(entity_id = c("req", "work", "test", "acc", "risk", "request", "prv", "plan", "imm")),
+                     refs = list(entity_id = c("req", "work", "test", "acc", "risk", "request", "prv", "plan", "imm",
+                                               "exec")),
                      times = "changed_at", quote = FALSE),
   prompt_revisions = list(file = "prompt_revisions.csv", id = "revision_id", prefix = "prv",
                           columns = c("revision_id", "prompt_file", "version", "previous_version", "revised_at",
@@ -81,6 +82,18 @@ governance_specs <- list(
                             columns = c("plan_id", "revised_at", "phase", "summary", "reason", "approval", "evidence"),
                             vocab = list(approval = c("proposed", "approved", "rejected")),
                             times = "revised_at", quote = FALSE),
+  # Agent executions (phase 04, src/common/governance_agents.R). Token fields
+  # stay empty when unavailable; they are never estimated.
+  executions = list(file = "execution_register.csv", id = "execution_id", prefix = "exec",
+                    columns = c("execution_id", "work_item_id", "request_id", "agent", "model", "session",
+                                "started_at", "ended_at", "state", "input_tokens", "output_tokens",
+                                "cached_tokens", "reported_cost", "retries", "outcome", "evidence"),
+                    refs = list(work_item_id = "work", request_id = "request"),
+                    vocab = list(state = c("queued", "running", "paused", "failed", "completed", "interrupted",
+                                           "unknown"),
+                                 agent = c("claude_code", "codex", "github_copilot", "gemini_cli", "developer")),
+                    counts = c("input_tokens", "output_tokens", "cached_tokens", "retries"),
+                    times = c("started_at", "ended_at"), quote = FALSE),
   # Fingerprints of the immutable layer (phase 06, src/common/governance_prompts.R).
   immutable_rules = list(file = "immutable_rules.csv", id = "rule_id", prefix = "imm",
                          columns = c("rule_id", "file", "section", "sha256", "recorded_at", "decision"),
@@ -147,6 +160,11 @@ governance_check <- function(regs) {
     for (col in spec$times) {
       v <- x[[col]]
       for (k in which(nzchar(v) & !is_iso_timestamp(v))) add(n, ids[k], sprintf("%s: '%s' is not ISO 8601", col, v[k]))
+    }
+    # Counts are empty (unavailable) or non-negative integers, never estimates.
+    for (col in spec$counts) {
+      v <- x[[col]]
+      for (k in which(nzchar(v) & !grepl("^\\d+$", v))) add(n, ids[k], sprintf("%s: '%s' is not a count", col, v[k]))
     }
   }
   # Common P01: an approved work item needs an approved acceptance row.

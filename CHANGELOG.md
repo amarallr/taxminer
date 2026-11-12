@@ -8,8 +8,10 @@
 - **TaxMiner Governance** (`req_0021`, `docs/governance_plan.md`):
   - Fases 01 e 02 aceitas: registro de solicitações, trilha de transições e checagem de integridade
     dos registros.
-  - Fase 06 implementada: camada imutável com linha de base, revisões do prompt mestre com diff e
+  - Fase 06 aceita: camada imutável com linha de base, revisões do prompt mestre com diff e
     aprovação humana, e histórico de evolução.
+  - Fase 04 implementada: registro de execuções de agentes, matriz de capacidades, hook do Claude
+    Code e leitor de tokens (ainda não ativados).
 
 ## Versão 1.0.2 — 2026-11-12
 

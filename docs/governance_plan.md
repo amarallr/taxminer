@@ -418,3 +418,74 @@ ordem do plano, e não a numérica, os IDs passaram a ser dados na ordem de exec
 | --- | --- | --- | --- |
 | P11 | O prompt não diz como propor e aplicar uma revisão | citar `propose-prompt` e `decide-prompt` na seção 5 e exigir que revisões futuras passem por eles | safe_operational |
 | P12 | A seção 16 não diz que os IDs dos itens seguem a ordem de execução | registrar a regra na seção 6 | safe_operational |
+
+## 17. Fase 04 — Agent Integration (executada em 2026-11-12)
+
+Autorizada em `decision_0048`; decisão `decision_0049`. Item `work_0035` (`req_0021`).
+
+### Entregas
+
+- `src/common/governance_agents.R`:
+  - registro de execuções (`execution_register.csv`, IDs `exec_`) com a máquina de estados da
+    seção 10 do prompt; cada mudança de estado vira uma transição;
+  - tokens e custo copiados do que o agente informa, nunca estimados; vazio significa
+    "indisponível", e `check` recusa qualquer valor que não seja inteiro;
+  - reconciliação: execução aberta há mais de 12 h sem evento de fim passa a `unknown`;
+  - matriz de capacidades declarada (oito capacidades × quatro agentes) e verificação de presença
+    no PATH, sem executar nenhum agente;
+  - adaptador do hook do Claude Code (`UserPromptSubmit` registra a solicitação com resumo
+    minimizado e abre a execução; `Stop`/`SessionEnd` a encerram); nunca falha a sessão;
+  - leitor de tokens das transcrições: exige uma decisão registrada (P9) e uma pasta permitida, lê
+    só os campos numéricos de `usage`, deduplica por `requestId` e não guarda texto.
+- `scripts/governance_hook.R`: ponto de entrada do hook, **não instalado**. Não escreve nada na
+  saída padrão e sai sempre com status 0.
+- `scripts/governance_registry.R`: comandos `add-execution`, `update-execution`, `reconcile` e
+  `capability-report` (gera `reports/governance/capability_matrix.md`).
+- `tests/testthat/test_governance_agents.R`: 10 testes, todos com dados sintéticos.
+
+### Controles do gate (integração e segurança)
+
+| Controle | Teste |
+| --- | --- |
+| Estados fora da máquina, estado terminal reaberto, agente ou item inexistente: recusados | máquina de estados |
+| Contagem estimada ou negativa recusada; vazio permanece indisponível no resumo | tokens |
+| Execução sem fim vira `unknown`, não `completed` | reconciliação |
+| Resumo da solicitação: uma linha, até 160 caracteres, sem e-mail e sem caminho protegido | minimização |
+| Hook registra e encerra só a sessão certa; ignora outros eventos; entrada inválida não gera erro | adaptador |
+| Script do hook em subprocesso: status 0 e nada na saída padrão, mesmo com entrada inválida | integração |
+| Leitura de tokens sem decisão ou fora da pasta permitida: recusada; nenhum texto retorna | leitor de tokens |
+| Tokens por turno = acumulado da sessão menos o já registrado | hook com tokens |
+| Despacho de tarefas `not_used` para todos os agentes | matriz |
+
+### Evidências
+
+- 139 testes, 0 falhas (129 anteriores + 10 novos) (`test_0061`, `test_0062`).
+- `check` nos registros reais: integridade ok; camada imutável intacta.
+- Registros: `request_0007`, `work_0035`, `plan_0004`, transições até `trn_0031`.
+
+### Limitações
+
+- Nenhuma execução real foi capturada: o hook não está instalado e `execution_register.csv` está
+  vazio. Execuções de outros agentes entram por `add-execution` (manual).
+- A matriz é declarada. `documented` e `to_verify` não foram exercitados aqui. Só a presença
+  dos comandos no PATH foi verificada (os quatro estão presentes).
+- O hook não recebe o modelo. O leitor de tokens o obtém da transcrição, se habilitado.
+
+## 18. Checkpoint 4 (chk_0004)
+
+| Campo | Valor |
+| --- | --- |
+| Etapa | Fase 04 implementada e testada; aguarda aceite (`work_0035` `pending`) |
+| Requisitos | `req_0021` `in_progress` |
+| Fases | 01, 02 e 06 aceitas; 04 implementada; pendentes 05, 03, 07 e 08 (`plan_0004`, proposto) |
+| Testes | 139 passam |
+| Confirmações pendentes (P9) | (a) instalar o hook em `.claude/settings.local.json`; (b) habilitar a leitura de tokens das transcrições locais |
+
+## 19. Revisão da Fase 04
+
+1. A seção 9 do prompt (adaptadores somente leitura, matriz de capacidades) e a Fase 04 ficaram
+   implementadas, exceto a captura real, que depende do P9.
+2. Retrabalho: a função de atualização não gravava o novo estado (o teste acusou, corrigido); um
+   `expect_match` avaliava a chamada duas vezes, trocado por atribuição.
+3. Tokens: indisponível.
+4. Sem melhorias de prompt propostas nesta fase.
