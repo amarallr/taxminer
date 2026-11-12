@@ -828,15 +828,20 @@ html.tm-loading, html.tm-loading body { cursor: progress; }
 .tm-trait-label { color: var(--tm-muted); }
 .tm-trait-value { color: var(--tm-ink); font-weight: 600; }
 .tm-trait-value.tm-muted { color: var(--tm-muted); font-weight: 400; font-style: italic; }
+/* Informed characteristic: discreet blue-gray tint; absent one (não informado,
+   não consta do informe): gray. The FIP alert below overrides both. */
+.tm-trait:has(.tm-trait-value:not(.tm-muted)) { background: #e5eef7; border-color: #b5c9dd; }
+.tm-trait:has(.tm-trait-value:not(.tm-muted)) .tm-trait-value { color: #1f4466; }
+.tm-trait:has(.tm-trait-value.tm-muted) { background: #f3f3f3; border-color: #dedede; }
 /* Unified net assets + quotaholders chart: title and key on one line. */
 .tm-subhead-key { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; }
 .tm-subhead-key .tm-chart-key { margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; }
 /* Highlighted characteristic: FIP that is not an investment entity. */
-.tm-trait.tm-trait-alert { border-color: #c98a00; background: #fff4d6; box-shadow: inset 3px 0 0 #c98a00; }
-.tm-trait.tm-trait-alert .tm-trait-value { color: #7a4f00; font-weight: 700; }
+.tm-trait.tm-trait-alert, .tm-trait.tm-trait-alert:has(.tm-trait-value) { border-color: #c98a00; background: #fff4d6; box-shadow: inset 3px 0 0 #c98a00; }
+.tm-trait.tm-trait-alert .tm-trait-value, .tm-trait.tm-trait-alert:has(.tm-trait-value) .tm-trait-value { color: #7a4f00; font-weight: 700; }
 .tm-trait.tm-trait-alert .tm-trait-value::before { content: "\26A0\FE0E  "; }
 
 /* Explanatory note of a field (fund_field_notes), below the fund characteristics */
 .tm-note { margin: 4px 0 2px; font-size: .72rem; color: var(--tm-ink); }
 .tm-note summary { cursor: pointer; color: var(--tm-navy); font-weight: 600; }
-.tm-note p { margin: 4px 0 0; max-width: 110ch; }
+.tm-note p { margin: 4px 0 0; max-width: 110ch; text-align: justify; hyphens: auto; }
