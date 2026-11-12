@@ -1,5 +1,13 @@
 # Changelog
 
+## Versão 1.0.2 — 2026-11-12
+
+Registra como `1.0.2` (arquivo `VERSION`, tag `v1.0.2`) as entregas posteriores à 1.0.1, descritas nas
+seções abaixo até "Ficha e Série completa no painel publicado": Ficha e Série completa no painel publicado;
+Cedentes, aba Ficha, filtro de FIP e negativos em vermelho; áreas protegidas renomeadas; todas as tabelas do
+FIDC no painel publicado; nomes dos cedentes (CVM e Receita Federal), características dos fundos, aba
+Cedentes com filtro cruzado e fundo corrente compartilhado por todas as abas.
+
 ## Nomes dos cedentes, características dos fundos e Ficha que segue a aba — 2026-11-12
 
 - **Nomes dos cedentes PJ** (`decision_0041`): catálogo de entidades, cadastros da CVM (companhias abertas,
