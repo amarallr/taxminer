@@ -265,3 +265,88 @@ da aprovação das linhas acima.
    transcrições locais (R3).
 4. Aprovar ou rejeitar as melhorias P1–P7 do prompt mestre.
 5. Autorizar a Fase 02.
+
+## 11. Fase 02 — Requirements Registry (executada em 2026-11-12)
+
+Autorizada em `decision_0044`. Item `work_0033` (`req_0021`).
+
+### Entregas
+
+- `src/common/governance_registry.R`: especificação dos nove registros (colunas, prefixo de ID,
+  referências e vocabulários); leitura; checagem de integridade; geração de IDs; registro de
+  solicitações com resumo minimizado; mudança de campo com trilha de transições; rastreio de um
+  ID; contagens.
+- `scripts/governance_registry.R`: linha de comando (`check`, `summary`, `trace`,
+  `add-request`, `set`).
+- `docs/project_management/request_register.csv` (novo) e `state_transitions.csv` (trilha de
+  auditoria; nada é apagado).
+- `tests/testthat/test_governance_registry.R`: 11 testes.
+
+### Regras implementadas
+
+| Regra | Como |
+| --- | --- |
+| IDs únicos, no padrão e imutáveis | `id outside the pattern`, `duplicated id`; `governance_set_field` recusa mudar o ID; `governance_next_id` nunca reaproveita número |
+| Integridade referencial | requisito → itens; item → dependências; teste, aceite → item; solicitação → requisitos; transição → qualquer entidade; revisão de prompt → requisitos |
+| Estados | vocabulários de Common P01 nas cinco dimensões; ciclo de vida do requisito (com `proposed` e `accepted` legados); estados da solicitação |
+| Aceite exige registro | item `approved` sem linha aprovada em `acceptance_register.csv` é erro |
+| Toda transição registrada | `governance_set_field` grava o registro e acrescenta a linha em `state_transitions.csv` |
+| Minimização (`risk_0018`) | resumo de uma linha, até 200 caracteres, sem caminho de área protegida e sem e-mail |
+| Formato preservado | cada registro é regravado no próprio formato (todas as colunas entre aspas em `work_items.csv`; sem aspas nos demais, que recusam vírgula) e conferido por releitura antes da troca atômica |
+
+### Evidências
+
+- Checagem nos registros reais: 0 problemas; os nove registros são regravados idênticos byte a
+  byte (`test_0058`).
+- Suíte completa: 121 testes, 0 falhas (110 anteriores + 11 novos) (`test_0057`, `test_0058`).
+  A suíte roda com `Rscript -e` (sem `--vanilla`), porque `test_environment.R` exige o renv
+  ativado pelo `.Rprofile`. Com `--vanilla` esse teste falha (3 verificações), como já
+  acontecia antes.
+- A fase foi registrada com o próprio registro: `request_0001`, `request_0002`, `work_0033`,
+  `test_0057`, `test_0058` e as transições `trn_0005`–`trn_0011`.
+
+### Correção registrada
+
+Na Fase 01 e na aprovação, gravei horários estimados (18:00 e 18:30) que estavam no futuro em
+relação ao relógio. Eles foram substituídos pelos horários dos commits `c9fcb03` (17:26:24) e
+`b7c392f` (17:28:09). A partir da Fase 02, todos os horários vêm do relógio do sistema
+(`governance_now()`).
+
+### Limitações
+
+- Solicitações anteriores a 2026-11-12 não foram reconstruídas. `request_0001` foi registrada em
+  retrospecto, com o horário do registro.
+- `release_status` continua `not_released` em todos os itens, apesar das tags publicadas (G6).
+  Fica para quando houver `release_register.csv`.
+- Não há trava contra duas sessões gravando o mesmo registro ao mesmo tempo. A troca atômica evita
+  arquivo corrompido, não uma perda de atualização concorrente.
+
+## 12. Checkpoint 2 (chk_0002)
+
+| Campo | Valor |
+| --- | --- |
+| Etapa | Fase 02 implementada e testada; aguarda aceite humano (`work_0033` `pending`) |
+| Requisitos | `req_0021` `in_progress` |
+| Tarefas concluídas | Fases 01 (aceita) e 02 (implementada, testada) |
+| Tarefas pendentes | Fases 06, 04, 05, 03, 07 e 08, nessa ordem (`plan_0001`) |
+| Agente | Claude Code (Opus 5.5) |
+| Estado da execução | Completed (Fase 02) |
+| Arquivos | `src/common/governance_registry.R`, `scripts/governance_registry.R`, `tests/testthat/test_governance_registry.R`, registros em `docs/project_management/` |
+| Testes | 121 passam (`test_0057`, `test_0058`) |
+| Problemas conhecidos | G6; ausência de trava de concorrência |
+| Próxima ação autorizada | nenhuma; aguarda aceite da Fase 02 e autorização da Fase 06 |
+
+## 13. Revisão da Fase 02 e melhorias propostas do prompt (não aplicadas)
+
+1. O prompt foi compreendido? Sim. A Fase 02 coube no modelo de arquivos do Common P01, sem
+   plataforma nova.
+2. Retrabalho: dois casos. As âncoras de edição falharam por fim de linha CRLF, e houve a correção
+   dos horários estimados.
+3. Leituras desnecessárias: nenhuma relevante. Os registros foram lidos por contagem e cabeçalho.
+4. Tokens: indisponível.
+
+| # | Problema | Melhoria proposta | Classe |
+| --- | --- | --- | --- |
+| P8 | Horários estimados pelo agente entraram nos registros | "Horários de registros vêm do relógio do sistema ou do commit; nunca estimados" (seção 10) | safe_operational |
+| P9 | Uma aprovação genérica ("aprovo") cobre itens de naturezas diferentes | itens sensíveis à segurança (hooks, leitura de transcrições) exigem confirmação própria, item a item (seção 19) | security_sensitive |
+| P10 | O comando de testes varia (`--vanilla` quebra `test_environment.R`) | nomear o comando canônico da suíte no prompt (seção 16, Fase 07) | safe_operational |

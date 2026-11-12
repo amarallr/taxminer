@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-12 — governance master prompt 1.2 (prv_0003, decision_0046)
+- Common P08: registry timestamps come from the clock or the commit, never estimated; security-sensitive items need their own explicit confirmation; canonical test command named in phase 07.
+
 ## 2026-11-12 — governance master prompt 1.1 (prv_0002, decision_0044)
 - Common P08 aligned with `AGENTS.md` and Common P01 after developer approval: lowercase_snake IDs, current protected-area names, read-only agent adapters, state mapping onto the Common P01 status dimensions, location of the immutable layer, and "unavailable" accepted for token estimates. Revisions are logged in `docs/project_management/prompt_revisions.csv`.
 

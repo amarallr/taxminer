@@ -1,5 +1,5 @@
 # TAXMINER — COMMON P08 — GOVERNANCE MASTER PROMPT
-Prompt Pack: 1.0 | Version: 1.1 (prv_0002, approved 2026-11-12; v1.0 = prv_0001, the developer text) | Status: Phase 01 approved; Phase 02 authorized
+Prompt Pack: 1.0 | Version: 1.2 (prv_0003, approved 2026-11-12; 1.1 = prv_0002; 1.0 = prv_0001, the developer text) | Status: Phases 01 and 02 accepted; Phase 06 authorized
 Revision log: docs/project_management/prompt_revisions.csv; diff: git diff of this file between the commits named there
 Layers: A (immutable) = AGENTS.md and section 12 below; B (versioned) = this file; C (execution) = per-task prompts derived from it
 Precedence: AGENTS.md and Common P01 prevail on conflict (see docs/governance_plan.md, section 2.5)
@@ -7,7 +7,7 @@ Precedence: AGENTS.md and Common P01 prevail on conflict (see docs/governance_pl
 # TAXMINER GOVERNANCE — MASTER PROMPT
 ## Autonomous Requirements Engineering, AI Orchestration & Executive Command Center
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Project:** TaxMiner  
 **Module:** TaxMiner Governance  
 **Methodology:** CO-STAR + SWEBOK + Incremental Delivery + Continuous Prompt Refinement  
@@ -371,6 +371,8 @@ Regras:
 
 Registrar cada transição.
 
+Horários de registros vêm do relógio do sistema (`governance_now()`) ou do commit correspondente; nunca são estimados.
+
 # 11. EXECUTIVE COMMAND CENTER
 
 Criar uma página denominada:
@@ -724,7 +726,7 @@ Implementar:
 
 Executar:
 
-- Testes unitários.
+- Testes unitários (suíte canônica, a partir da raiz: `Rscript -e "testthat::test_dir('tests/testthat')"`, sem `--vanilla`, porque `test_environment.R` exige o renv ativado pelo `.Rprofile`; registros: `Rscript --vanilla scripts/governance_registry.R check`).
 - Testes de integração.
 - Testes de segurança.
 - Testes de recuperação.
@@ -832,6 +834,8 @@ Você não está automaticamente autorizado a:
 - Homologar suas próprias entregas.
 - Ampliar o escopo aprovado.
 - Executar etapas sujeitas a autorização ainda não concedida.
+
+Uma aprovação genérica não cobre itens sensíveis à segurança (hooks de captura, leitura de transcrições ou de dados do perfil do usuário, alteração da camada imutável): cada um exige confirmação própria e explícita.
 
 # 20. STARTUP INSTRUCTIONS
 

@@ -7,6 +7,14 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 02 — 2026-11-12
+
+- Fase 01 aprovada (`acc_0009`, `decision_0044`); prompt mestre 1.1 (`prv_0002`).
+- Fase 02 implementada e testada (`work_0033`, `decision_0045`): `src/common/governance_registry.R`,
+  `scripts/governance_registry.R check|summary|trace|add-request|set`, `request_register.csv`,
+  `state_transitions.csv`. 121 testes passam; integridade dos registros sem problemas.
+- Fase 02 aceita (`acc_0010`, `decision_0046`); prompt mestre 1.2 (`prv_0003`); Fase 06 autorizada.
+
 ## TaxMiner Governance — Fase 01 — 2026-11-12
 
 - Prompt mestre do desenvolvedor guardado como `prompts/common_p08_governance_master.txt` (v1.0).

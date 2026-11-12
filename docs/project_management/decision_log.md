@@ -700,7 +700,7 @@ Pedido do desenvolvedor: executar `.claude/governance.txt` (prompt mestre do Tax
   transcrições locais; revisão 1.1 do prompt (P1–P7).
 - Registrados `req_0021` (proposto), `work_0032` e os riscos `risk_0018` e `risk_0019`.
 
-## decision_0044 — 2026-11-12T18:30:00-03:00 — TaxMiner Governance: Fase 01 aprovada; prompt mestre 1.1; Fase 02 autorizada
+## decision_0044 — 2026-11-12T17:28:09-03:00 — TaxMiner Governance: Fase 01 aprovada; prompt mestre 1.1; Fase 02 autorizada
 
 Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seguir para a Fase 02").
 
@@ -712,3 +712,25 @@ Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seg
 - Novos registros: `state_transitions.csv`, `prompt_revisions.csv` e `planning_revisions.csv`.
 - Fase 02 autorizada. O hook de captura do Claude Code e a leitura de tokens das transcrições
   pertencem à Fase 04 e serão confirmados quando ela começar.
+- Correção (registrada na Fase 02): os horários desta decisão e dos registros da Fase 01 tinham sido
+  estimados (18:00 e 18:30), no futuro em relação ao relógio; foram trocados pelos horários dos commits
+  `c9fcb03` e `b7c392f`.
+
+## decision_0045 — 2026-11-12 — TaxMiner Governance: Fase 02 (registro de requisitos)
+
+- Implementado em `src/common/` (transversal, resolução C4): `governance_registry.R`, com linha de
+  comando em `scripts/governance_registry.R`. Registros novos: `request_register.csv` e
+  `state_transitions.csv`.
+- Os registros continuam em CSV no formato de cada um, regravados sem diferença de bytes; toda mudança
+  de estado feita pelo registro gera uma transição; nada é apagado.
+- Horários vêm do relógio do sistema. Solicitações anteriores à governança não foram reconstruídas.
+- `work_0033` implementado e testado (`test_0057`, `test_0058`); aceite humano pendente.
+- Melhorias P8–P10 do prompt propostas, não aplicadas (`docs/governance_plan.md`, seção 13).
+
+## decision_0046 — 2026-11-12T17:38:23-03:00 — TaxMiner Governance: Fase 02 aceita; prompt mestre 1.2; Fase 06 autorizada
+
+Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seguir para a Fase 06").
+
+- Fase 02 aceita (`acc_0010`, `work_0033`); replanejamento `plan_0002` aprovado.
+- Prompt mestre 1.2 (`prv_0003`) com as melhorias P8–P10: horários sempre do relógio ou do commit; confirmação item a item para itens sensíveis à segurança; comando canônico da suíte de testes.
+- Fase 06 (versionamento do prompt) autorizada. Pelo P9, o hook de captura e a leitura de transcrições continuam dependendo de confirmação própria.

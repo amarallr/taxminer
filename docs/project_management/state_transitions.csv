@@ -1,5 +1,14 @@
 transition_id,entity_id,field,from_status,to_status,changed_at,actor,evidence
-trn_0001,req_0021,status,,proposed,2026-11-12T18:00:00-03:00,claude_code,docs/governance_plan.md
-trn_0002,work_0032,implementation_status,,implemented,2026-11-12T18:00:00-03:00,claude_code,docs/governance_plan.md
-trn_0003,work_0032,acceptance_status,pending,approved,2026-11-12T18:30:00-03:00,developer,acc_0009
-trn_0004,req_0021,status,proposed,approved,2026-11-12T18:30:00-03:00,developer,decision_0044
+trn_0001,req_0021,status,,proposed,2026-11-12T17:26:24-03:00,claude_code,docs/governance_plan.md
+trn_0002,work_0032,implementation_status,,implemented,2026-11-12T17:26:24-03:00,claude_code,docs/governance_plan.md
+trn_0003,work_0032,acceptance_status,pending,approved,2026-11-12T17:28:09-03:00,developer,acc_0009
+trn_0004,req_0021,status,proposed,approved,2026-11-12T17:28:09-03:00,developer,decision_0044
+trn_0005,request_0001,status,,linked,2026-11-12T17:33:06-03:00,claude_code,request_register.csv
+trn_0006,request_0002,status,,linked,2026-11-12T17:33:07-03:00,claude_code,request_register.csv
+trn_0007,work_0033,implementation_status,,not_started,2026-11-12T17:33:06-03:00,claude_code,work_items.csv
+trn_0008,work_0033,implementation_status,not_started,implemented,2026-11-12T17:33:06-03:00,claude_code,src/common/governance_registry.R
+trn_0009,work_0033,test_status,not_run,passed,2026-11-12T17:33:06-03:00,claude_code,test_0057;test_0058
+trn_0010,req_0021,status,approved,in_progress,2026-11-12T17:33:06-03:00,claude_code,work_0033
+trn_0011,work_0033,operations_status,not_started,not_applicable,2026-11-12T17:33:06-03:00,claude_code,registry is a library and command line
+trn_0012,work_0033,acceptance_status,pending,approved,2026-11-12T17:38:23-03:00,developer,acc_0010
+trn_0013,plan_0002,approval,proposed,approved,2026-11-12T17:38:23-03:00,developer,decision_0046
