@@ -835,3 +835,8 @@ html.tm-loading, html.tm-loading body { cursor: progress; }
 .tm-trait.tm-trait-alert { border-color: #c98a00; background: #fff4d6; box-shadow: inset 3px 0 0 #c98a00; }
 .tm-trait.tm-trait-alert .tm-trait-value { color: #7a4f00; font-weight: 700; }
 .tm-trait.tm-trait-alert .tm-trait-value::before { content: "\26A0\FE0E  "; }
+
+/* Explanatory note of a field (fund_field_notes), below the fund characteristics */
+.tm-note { margin: 4px 0 2px; font-size: .72rem; color: var(--tm-ink); }
+.tm-note summary { cursor: pointer; color: var(--tm-navy); font-weight: 600; }
+.tm-note p { margin: 4px 0 0; max-width: 110ch; }

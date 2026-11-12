@@ -12,8 +12,9 @@
 - **Versão `1.0.2`** (`VERSION`, tag `v1.0.2`, aba Sobre): nomes dos cedentes PJ pelos cadastros da
   CVM e pela base de CNPJ da Receita Federal (10.272 de 10.274), características dos fundos, aba Cedentes
   com cedentes e FIDCs filtrando um ao outro e fundo corrente compartilhado por todas as abas
-  (`decision_0041`). Site publicado com 699 MB.
-- **Testes:** 109 testes R passam; navegação conferida no app e no site com capturas de tela.
+  (`decision_0041`); nota explicativa da entidade de investimento (`decision_0042`). Site publicado com
+  699 MB.
+- **Testes:** 110 testes R passam; navegação conferida no app e no site com capturas de tela.
 - **Pendências:** aceite humano de `req_0020`; preencher condomínio, exclusivo e entidade de
   investimento pelos cadastros da CVM quando o informe não publica (não feito).
 

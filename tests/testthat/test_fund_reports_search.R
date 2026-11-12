@@ -434,3 +434,13 @@ test_that("fund characteristics keep the latest published value and say when the
   expect_equal(meta$order, static_trait_order)
   expect_equal(meta$columns$fidc$single_interest, "COTST_INTERESSE")
 })
+
+test_that("explanatory field notes reach the tooltips and the published metadata", {
+  expect_identical(fund_field_note_text(c("X", NA)), c("", ""))
+  tip <- fund_field_note_text("ENTID_INVEST")
+  expect_match(tip, "^\n\nEntidade de investimento — Nota explicativa\n")
+  expect_match(tip, "Até 2023 (ICVM 578/579)", fixed = TRUE)
+  expect_match(tip, "Lei nº 14.754/2023 e Resolução CVM nº 175", fixed = TRUE)
+  meta <- jsonlite::fromJSON(static_traits_meta())
+  expect_identical(meta$notes$ENTID_INVEST, fund_field_notes$ENTID_INVEST)
+})

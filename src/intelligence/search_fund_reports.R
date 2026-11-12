@@ -131,6 +131,31 @@ fund_attribute_labels <- c(
   investment_entity = "Entidade de investimento",
   family_link = "Cotistas com vínculo familiar ou societário familiar")
 
+# Explanatory notes on CVM fields (text of the developer, decision_0042),
+# shown wherever the field appears: characteristics, filters, Ficha and Série
+# completa, in the app and on the published site (static_traits_meta).
+fund_field_notes <- list(ENTID_INVEST = c(
+  "Entidade de investimento — Nota explicativa",
+  paste("Até 2023 (ICVM 578/579): A classificação como entidade de investimento possuía finalidade",
+        "predominantemente contábil e regulatória, influenciando especialmente os critérios de reconhecimento e",
+        "mensuração dos investimentos, incluindo a utilização do valor justo e, quando aplicável, do método de",
+        "equivalência patrimonial (MEP). Sua relação com a tributação dependia do regime fiscal específico de cada",
+        "modalidade de fundo."),
+  paste("A partir de 2024 (Lei nº 14.754/2023 e Resolução CVM nº 175): A classificação passou a apresentar",
+        "relevância tributária expressa, constituindo um dos requisitos para a aplicação do regime específico de",
+        "tributação de determinadas categorias de fundos, especialmente FIP, FIDC e ETF abrangidos pela legislação,",
+        "com possível afastamento da tributação periódica (come-cotas). O enquadramento deve observar os demais",
+        "requisitos legais e regulamentares, considerando a classe, a modalidade do fundo e a legislação vigente em",
+        "cada competência.")))
+
+# Note of each field as text appended to a tooltip ("" when there is none).
+fund_field_note_text <- function(fields) {
+  vapply(fields, function(f) {
+    n <- if (is.na(f)) NULL else fund_field_notes[[f]]
+    if (is.null(n)) "" else paste0("\n\n", paste(n, collapse = "\n"))
+  }, character(1), USE.NAMES = FALSE)
+}
+
 # Families whose report has each field (the rest show "não consta do informe").
 fund_attribute_families <- function(attribute) {
   unique(fund_attribute_specs$family[fund_attribute_specs$attribute == attribute])

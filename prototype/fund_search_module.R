@@ -150,15 +150,25 @@ fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
     x <- fund_attribute_text(attributes, family, cnpj, a)
     spec <- fund_attribute_specs[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family, , drop = FALSE]
     tip <- if (!nrow(spec)) sprintf("O informe da CVM de %s não tem este campo.", toupper(family))
-           else sprintf("%s (%s)%s", fund_attribute_labels[[a]], spec$column[1],
-                        if (is.na(x$period)) " · não preenchido nos informes" else paste0(" · informe de ", x$period))
+           else paste0(sprintf("%s (%s)%s", fund_attribute_labels[[a]], spec$column[1],
+                               if (is.na(x$period)) " · não preenchido nos informes" else paste0(" · informe de ", x$period)),
+                       fund_field_note_text(spec$column[1]))
     trait(fund_attribute_labels[[a]], x$text, tip, alert = a == "investment_entity" && x$text == "não")
   })
-  shiny::div(class = "tm-traits",
-             trait("Cotistas", if (is.null(holders)) "não informado" else format_int(holders$quotaholders),
-                   if (is.null(holders)) "Quantidade de cotistas não publicada nos informes."
-                   else paste0("Quantidade de cotistas · informe de ", month_label(holders$month))),
-             items)
+  # Explanatory notes of the fields this family publishes, below the characteristics.
+  notes <- lapply(shown, function(a) {
+    col <- fund_attribute_specs$column[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family][1]
+    n <- if (is.na(col)) NULL else fund_field_notes[[col]]
+    if (is.null(n)) return(NULL)
+    shiny::tags$details(class = "tm-note", shiny::tags$summary(n[1]), lapply(n[-1], shiny::tags$p))
+  })
+  shiny::tagList(
+    shiny::div(class = "tm-traits",
+               trait("Cotistas", if (is.null(holders)) "não informado" else format_int(holders$quotaholders),
+                     if (is.null(holders)) "Quantidade de cotistas não publicada nos informes."
+                     else paste0("Quantidade de cotistas · informe de ", month_label(holders$month))),
+               items),
+    notes)
 }
 
 
@@ -285,8 +295,9 @@ ficha_grid <- function(r, labels) {
     v <- r[[labels$field[k]]][1]
     shiny::div(class = "tm-ficha-item",
                shiny::div(class = if (labels$derived[k]) "tm-ficha-label tm-derived" else "tm-ficha-label",
-                          `data-tip` = sprintf("%s\nCampo CVM: %s%s", labels$label[k], labels$field[k],
-                                               if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                          `data-tip` = paste0(sprintf("%s\nCampo CVM: %s%s", labels$label[k], labels$field[k],
+                                                       if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                                               fund_field_note_text(labels$field[k])),
                           labels$label[k]),
                {
                  d <- display_value(v, labels$field[k])
@@ -315,8 +326,9 @@ report_card <- function(r, descriptions = NULL, table_name = NULL) {
   body <- lapply(seq_len(nrow(labels)), function(k) {
     f <- labels$field[k]
     shiny::tags$tr(shiny::tags$th(class = if (labels$derived[k]) "tm-field tm-derived" else "tm-field",
-                                  `data-tip` = sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
-                                                       if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                                  `data-tip` = paste0(sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
+                                                               if (labels$derived[k]) " (sem descrição no dicionário)" else ""),
+                                                       fund_field_note_text(f)),
                                   labels$label[k]),
                    lapply(r[[f]], function(v) value_cell(v, f)))
   })
@@ -350,8 +362,8 @@ wide_table <- function(r, descriptions = NULL, table_name = NULL) {
   body <- vapply(seq_len(nrow(labels)), function(k) {
     f <- labels$field[k]
     d <- display_values(r[[f]], f)
-    tip <- sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
-                   if (labels$derived[k]) " (sem descrição no dicionário)" else "")
+    tip <- paste0(sprintf("%s\nCampo CVM: %s%s", labels$label[k], f,
+                          if (labels$derived[k]) " (sem descrição no dicionário)" else ""), fund_field_note_text(f))
     paste0('<tr><th class="', if (labels$derived[k]) "tm-field tm-derived" else "tm-field", '" data-tip="',
            escape_html(tip), '">', escape_html(labels$label[k]), "</th>",
            paste0("<td", ifelse(d$num, ' class="tm-num"', ""), ">", escape_html(d$text), "</td>", collapse = ""),
@@ -407,7 +419,9 @@ fund_search_ui <- function(id, family = NULL) {
                  shiny::selectizeInput(ns("administrator"), NULL, choices = NULL, width = "100%", multiple = TRUE,
                                        options = entity_autocomplete_options("Administrador: CNPJ ou nome"))),
       if (identical(family, "fip")) shiny::div(
-        class = "tm-filter tm-filter-period", title = "Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)",
+        class = "tm-filter tm-filter-period",
+        `data-tip` = paste0("Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)",
+                            fund_field_note_text("ENTID_INVEST")),
         shiny::selectInput(ns("investment_entity"), NULL, width = "100%", selectize = FALSE,
                            choices = c("Entidade de investimento: todos" = "", "Entidade de investimento: sim" = "S",
                                        "Entidade de investimento: não" = "N", "Entidade de investimento: não informado" = "NA"))),

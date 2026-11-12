@@ -670,3 +670,18 @@ Ficha com o fundo corrente da aba anterior.
   mostra a participação publicada. Só o duplo clique em um FIDC abre o fundo na aba FIDC.
 - Pendência: os cadastros da CVM também trazem condomínio, exclusivo e entidade de investimento e
   podem preencher os campos que o informe não publica; não implementado.
+
+## decision_0042 — 2026-11-12 — Nota explicativa da entidade de investimento
+
+Pedido do desenvolvedor: nota explicativa onde aparece o indicador de entidade de investimento
+(`ENTID_INVEST`), com texto fornecido por ele ("considere somente esse texto").
+
+- Texto em `fund_field_notes` (`src/intelligence/search_fund_reports.R`), única fonte para o app e
+  o painel publicado (metadado `traits.notes` de `funds.json`): até 2023 (ICVM 578/579), finalidade
+  predominantemente contábil e regulatória; a partir de 2024 (Lei nº 14.754/2023 e Resolução CVM
+  nº 175), relevância tributária expressa, com possível afastamento do come-cotas, observados os
+  demais requisitos de cada competência.
+- Onde aparece: nota recolhível abaixo das características do fundo (FIP, única família cujo
+  informe publica o campo), dica da característica "Entidade de investimento", dica do filtro de
+  FIP e dica do campo `ENTID_INVEST` na Ficha e na Série completa (app e painel publicado).
+- O texto é do desenvolvedor, não da CVM; os valores do campo continuam como publicados.

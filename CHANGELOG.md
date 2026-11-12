@@ -6,7 +6,14 @@ Registra como `1.0.2` (arquivo `VERSION`, tag `v1.0.2`) as entregas posteriores 
 seções abaixo até "Ficha e Série completa no painel publicado": Ficha e Série completa no painel publicado;
 Cedentes, aba Ficha, filtro de FIP e negativos em vermelho; áreas protegidas renomeadas; todas as tabelas do
 FIDC no painel publicado; nomes dos cedentes (CVM e Receita Federal), características dos fundos, aba
-Cedentes com filtro cruzado e fundo corrente compartilhado por todas as abas.
+Cedentes com filtro cruzado, fundo corrente compartilhado por todas as abas e nota explicativa da entidade
+de investimento.
+
+## Nota explicativa da entidade de investimento — 2026-11-12
+
+- Nota explicativa do indicador de entidade de investimento (`ENTID_INVEST`, `decision_0042`): recolhível
+  abaixo das características dos FIP e nas dicas da característica, do filtro de FIP e do campo na Ficha e na
+  Série completa, no app e no painel publicado.
 
 ## Nomes dos cedentes, características dos fundos e Ficha que segue a aba — 2026-11-12
 

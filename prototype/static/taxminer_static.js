@@ -230,7 +230,8 @@
       '<div class="tm-filterbar">' + chips +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-q" placeholder="Fundo: nome atual ou anterior, ou CNPJ (com ou sem máscara)"></div>' +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-qa" placeholder="Administrador: nome ou CNPJ"></div>' +
-      (fam === 'fip' ? '<div title="Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)">' +
+      (fam === 'fip' ? '<div data-tip="' + esc('Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)' +
+        noteText('ENTID_INVEST')) + '">' +
         '<select class="form-select form-select-sm tm-qe"><option value="">Entidade de investimento: todos</option>' +
         '<option value="S">Entidade de investimento: sim</option><option value="N">Entidade de investimento: não</option>' +
         '<option value="NA">Entidade de investimento: não informado</option></select></div>' : '') +
@@ -496,7 +497,19 @@
     });
   }
   function citeText(c) { return 'CVM ' + c[1] + ', ' + c[2] + ', linha ' + c[3] + ', arquivo SHA-256 ' + c[4]; }
-  function fieldTip(x) { return x[0] + '\nCampo CVM: ' + x[1] + (x[2] ? ' (sem descrição no dicionário)' : ''); }
+  // Explanatory note of a CVM field (fund_field_notes, meta.traits.notes): lines or null.
+  function fieldNote(field) {
+    var m = window.TM_FUNDS_META, n = m && m.traits && m.traits.notes;
+    return n && n[field] ? n[field] : null;
+  }
+  function noteText(field) { var n = fieldNote(field); return n ? '\n\n' + n.join('\n') : ''; }
+  function noteHtml(field, label) {
+    var n = fieldNote(field);
+    if (!n) return '';
+    return '<details class="tm-note"><summary>' + esc(n[0]) + '</summary>' +
+      n.slice(1).map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('') + '</details>';
+  }
+  function fieldTip(x) { return x[0] + '\nCampo CVM: ' + x[1] + (x[2] ? ' (sem descrição no dicionário)' : '') + noteText(x[1]); }
   function fieldHead(x, tag, cls) {
     return '<' + tag + ' class="' + cls + (x[2] ? ' tm-derived' : '') + '" data-tip="' + esc(fieldTip(x)) + '">' + esc(x[0]) + '</' + tag + '>';
   }
@@ -585,9 +598,12 @@
       if (!cols[a]) { text = 'não consta do informe'; tip = 'O informe da CVM de ' + fam.toUpperCase() + ' não tem este campo.'; }
       else if (!v) { text = 'não informado'; tip = label + ' (' + cols[a] + ') · não preenchido nos informes'; }
       else { text = v[0] === 'S' ? 'sim' : v[0] === 'N' ? 'não' : String(v[0]).toLowerCase(); tip = label + ' (' + cols[a] + ') · informe de ' + v[1]; }
+      if (cols[a]) tip += noteText(cols[a]);
       out.push(item(label, text, tip, a === 'investment_entity' && text === 'não'));
     });
-    return '<div class="tm-traits">' + out.join('') + '</div>';
+    // Explanatory notes of the fields this family publishes.
+    var notes = meta.order.map(function (a) { return cols[a] ? noteHtml(cols[a], meta.labels[a]) : ''; }).join('');
+    return '<div class="tm-traits">' + out.join('') + '</div>' + notes;
   }
   function profile(f, s, color) {
     if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';

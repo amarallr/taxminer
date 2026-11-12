@@ -105,7 +105,10 @@ static_traits_meta <- function() {
                                                                            json_string(x$column)), collapse = ","), "}"), character(1))
   paste0("{\"order\":[", paste(json_string(static_trait_order), collapse = ","), "],\"labels\":{",
          paste(sprintf("%s:%s", json_string(names(fund_attribute_labels)), json_string(unname(fund_attribute_labels))), collapse = ","),
-         "},\"columns\":{", paste(sprintf("%s:%s", json_string(names(cols)), cols), collapse = ","), "}}")
+         "},\"columns\":{", paste(sprintf("%s:%s", json_string(names(cols)), cols), collapse = ","), "}",
+         ",\"notes\":{", paste(sprintf("%s:[%s]", json_string(names(fund_field_notes)),
+                                        vapply(fund_field_notes, function(n) paste(json_string(n), collapse = ","), "")),
+                                collapse = ","), "}}")
 }
 
 write_static_fund_data <- function(out_dir, data, ctx, generated) {
