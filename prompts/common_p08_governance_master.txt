@@ -1,12 +1,13 @@
 # TAXMINER — COMMON P08 — GOVERNANCE MASTER PROMPT
-Prompt Pack: 1.0 | Version: 1.0 | Status: received from the developer on 2026-11-12; Phase 01 executed; revisions proposed in docs/governance_plan.md (section 9), none applied
+Prompt Pack: 1.0 | Version: 1.1 (prv_0002, approved 2026-11-12; v1.0 = prv_0001, the developer text) | Status: Phase 01 approved; Phase 02 authorized
+Revision log: docs/project_management/prompt_revisions.csv; diff: git diff of this file between the commits named there
 Layers: A (immutable) = AGENTS.md and section 12 below; B (versioned) = this file; C (execution) = per-task prompts derived from it
 Precedence: AGENTS.md and Common P01 prevail on conflict (see docs/governance_plan.md, section 2.5)
 
 # TAXMINER GOVERNANCE — MASTER PROMPT
 ## Autonomous Requirements Engineering, AI Orchestration & Executive Command Center
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Project:** TaxMiner  
 **Module:** TaxMiner Governance  
 **Methodology:** CO-STAR + SWEBOK + Incremental Delivery + Continuous Prompt Refinement  
@@ -102,9 +103,9 @@ Criar um mecanismo de versionamento do prompt mestre.
 
 Local sugerido, respeitando a organização existente:
 
-`prompts/common_p_governance_master.txt`
+`prompts/common_p08_governance_master.txt` (padrão `group_pNN_objective.txt` do pacote; decisão `decision_0044`).
 
-Caso a convenção existente exija outro nome, utilizar o padrão do projeto e registrar a decisão.
+O histórico de revisões fica em `docs/project_management/prompt_revisions.csv`.
 
 Manter:
 
@@ -123,7 +124,7 @@ Separar três camadas:
 
 **A. Immutable Governance Rules**
 
-Instruções de segurança, autorização, auditoria e rastreabilidade que não podem ser alteradas automaticamente.
+Instruções de segurança, autorização, auditoria e rastreabilidade que não podem ser alteradas automaticamente. Ficam em `AGENTS.md`, `CLAUDE.md`, `prompts/common_p01_lifecycle_management.txt` e na seção 12 deste prompt; alterá-las exige decisão registrada no `decision_log.md`.
 
 **B. Versioned Master Prompt**
 
@@ -147,19 +148,20 @@ Implementar registro centralizado e persistente de solicitações.
 
 Cada solicitação deverá receber um ID único e imutável.
 
-Padrões sugeridos:
+Padrões (Common P01: identificadores `lowercase_snake`, sem renumerar os existentes):
 
 | Entity | ID |
 |---|---|
-| Request | REQ-2026-00001 |
-| Requirement | RQ-2026-00001 |
-| Task | TASK-2026-00001 |
-| Test | TEST-2026-00001 |
-| Evidence | EVD-2026-00001 |
-| Execution | RUN-2026-00001 |
-| Architecture Decision | ADR-2026-00001 |
-| Prompt Revision | PRV-2026-00001 |
-| Planning Revision | PLAN-2026-00001 |
+| Request | request_0001 |
+| Requirement | req_0001 |
+| Task | work_0001 |
+| Test / Evidence | test_0001 |
+| Acceptance | acc_0001 |
+| Execution | exec_0001 (`run_` fica para as rodadas operacionais de Common P01) |
+| Architecture Decision | decision_0001 |
+| Prompt Revision | prv_0001 |
+| Planning Revision | plan_0001 |
+| State Transition | trn_0001 |
 
 Garantir unicidade, persistência e integridade referencial.
 
@@ -299,7 +301,7 @@ Não fabricar métricas indisponíveis.
 
 # 9. MULTI-AGENT ORCHESTRATION
 
-Criar adaptadores para:
+Criar adaptadores somente leitura (captura de solicitações, status e métricas; nunca despacho automático de tarefas, que `AGENTS.md` proíbe sem pedido explícito) para:
 
 - Claude Code.
 - OpenAI Codex.
@@ -331,7 +333,7 @@ Não executar automaticamente tarefas de alto risco.
 
 # 10. EXECUTION STATE MACHINE
 
-Separar estados de requisitos, execuções, testes, homologação e release.
+Separar estados de requisitos, execuções, testes, homologação e release. Os itens de trabalho mantêm as cinco dimensões independentes de Common P01 (implementação, teste, aceite, release, operação); o ciclo de vida abaixo vale para o campo `status` do requisito, e cada mudança de qualquer campo é registrada em `state_transitions.csv`.
 
 Estados dos requisitos:
 
@@ -504,9 +506,7 @@ Preservar as fronteiras de segurança do TaxMiner.
 
 As pastas:
 
-`restricted/`
-
-`tmp/`
+`.restricted/` e `.tmp/` (e os nomes antigos `restricted/` e `tmp/`, caso reapareçam; `decision_0040`)
 
 são protegidas.
 
@@ -850,7 +850,7 @@ Siga esta sequência:
 9. Proponha a arquitetura do TaxMiner Governance.
 10. Elabore o plano incremental das oito fases.
 11. Identifique riscos e dependências.
-12. Estime esforço e consumo de tokens quando possível.
+12. Estime esforço e consumo de tokens quando possível; quando o agente não tiver acesso à contagem, registre "indisponível".
 13. Apresente a versão inicial do planejamento.
 14. Prepare o primeiro checkpoint.
 15. Apresente o relatório da Phase 01.

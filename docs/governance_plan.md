@@ -1,6 +1,6 @@
 # TaxMiner Governance — Fase 01 (Discovery)
 
-**Status:** proposto; aguarda aprovação do desenvolvedor (gate da Fase 01) ·
+**Status:** aprovado pelo desenvolvedor em 2026-11-12 (`acc_0009`, `decision_0044`): arquitetura, plano, resoluções C1–C7 e melhorias P1–P7 (prompt 1.1); Fase 02 autorizada ·
 **Última atualização:** 2026-11-12 ·
 **Origem:** `.claude/governance.txt` (prompt mestre do desenvolvedor, versão 1.0), cópia versionada em
 `prompts/common_p08_governance_master.txt` ·

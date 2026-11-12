@@ -1,0 +1,2 @@
+plan_id,revised_at,phase,summary,reason,approval,evidence
+plan_0001,2026-11-12T18:30:00-03:00,governance_phase_01,Eight phases in the order 02 06 04 05 03 07 08; phase 02 authorized; phases 03 to 08 each need their own authorization,Initial governance plan,approved,docs/governance_plan.md

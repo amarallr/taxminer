@@ -699,3 +699,16 @@ Pedido do desenvolvedor: executar `.claude/governance.txt` (prompt mestre do Tax
   atualização do painel); hook de captura do Claude Code e leitura dos campos de tokens das
   transcrições locais; revisão 1.1 do prompt (P1–P7).
 - Registrados `req_0021` (proposto), `work_0032` e os riscos `risk_0018` e `risk_0019`.
+
+## decision_0044 — 2026-11-12T18:30:00-03:00 — TaxMiner Governance: Fase 01 aprovada; prompt mestre 1.1; Fase 02 autorizada
+
+Aprovação explícita do desenvolvedor ("aprovo, pode fazer commit e push e seguir para a Fase 02").
+
+- Aprovados (`acc_0009`): relatório da Fase 01 (`docs/governance_plan.md`), arquitetura e plano
+  (`plan_0001`), resoluções dos conflitos C1–C7 e melhorias P1–P7 do prompt.
+- Prompt mestre na versão 1.1 (`prv_0002`): identificadores no padrão de Common P01, nomes atuais das
+  áreas protegidas, adaptadores somente leitura, mapeamento de estados, local da camada imutável e
+  "indisponível" para tokens. O diff verificável é `git diff c9fcb03 -- prompts/common_p08_governance_master.txt`.
+- Novos registros: `state_transitions.csv`, `prompt_revisions.csv` e `planning_revisions.csv`.
+- Fase 02 autorizada. O hook de captura do Claude Code e a leitura de tokens das transcrições
+  pertencem à Fase 04 e serão confirmados quando ela começar.

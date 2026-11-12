@@ -1,0 +1,5 @@
+transition_id,entity_id,field,from_status,to_status,changed_at,actor,evidence
+trn_0001,req_0021,status,,proposed,2026-11-12T18:00:00-03:00,claude_code,docs/governance_plan.md
+trn_0002,work_0032,implementation_status,,implemented,2026-11-12T18:00:00-03:00,claude_code,docs/governance_plan.md
+trn_0003,work_0032,acceptance_status,pending,approved,2026-11-12T18:30:00-03:00,developer,acc_0009
+trn_0004,req_0021,status,proposed,approved,2026-11-12T18:30:00-03:00,developer,decision_0044

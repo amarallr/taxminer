@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-12 — governance master prompt 1.1 (prv_0002, decision_0044)
+- Common P08 aligned with `AGENTS.md` and Common P01 after developer approval: lowercase_snake IDs, current protected-area names, read-only agent adapters, state mapping onto the Common P01 status dimensions, location of the immutable layer, and "unavailable" accepted for token estimates. Revisions are logged in `docs/project_management/prompt_revisions.csv`.
+
 ## 2026-11-12 — governance master prompt (Common P08)
 - Added `common_p08_governance_master.txt`: the developer's TaxMiner Governance master prompt, version 1.0, unchanged below a header that names its layers and precedence (`AGENTS.md` and Common P01 prevail).
 - Phase 01 report and the proposed revision 1.1 (not applied) are in `docs/governance_plan.md`, section 9.
