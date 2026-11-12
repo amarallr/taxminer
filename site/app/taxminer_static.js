@@ -131,7 +131,7 @@
       if (!list.data('reference')) list.data('reference', list.html());
       list.html(head + (rows.length ? barList(rows.map(function (r) {
         var f = a.funds[r[0]];
-        return {label: f[0] + (r[2] ? ' *' : ''), value: r[1], text: fmtBRL(r[1]), color: colors[f[1]] || '#2a78d6',
+        return {label: f[0] + (r[2] ? ' *' : ''), value: r[1], text: fmtBRL(r[1]) + ' · ' + fmtPct(total ? r[1] / total : null, 1, false), color: colors[f[1]] || '#2a78d6',
                 sub: f[1].toUpperCase() + ' · ' + f[2], tip: f[0] + '\n' + fmtPct(total ? r[1] / total : null, 1, false) + ' do total'};
       })) : '<div class="tm-empty">Sem fundos neste mês.</div>'));
       list.scrollTop(0);
@@ -146,7 +146,7 @@
 
   // ---- Fund tabs (Fundos, FIDC, FII, FIP, FIAGRO) ----
   var F = {family: 0, entity: 1, cnpj: 2, key: 3, name: 4, names: 5, admin: 6, adminEntity: 7, adminCnpj: 8,
-           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18, share: 19};
+           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18, share: 19, entInv: 20};
   var PAGE = 25, data = null;
 
   function loadFunds() {
@@ -200,6 +200,10 @@
       '<div class="tm-filterbar">' + chips +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-q" placeholder="Fundo: nome atual ou anterior, ou CNPJ (com ou sem máscara)"></div>' +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-qa" placeholder="Administrador: nome ou CNPJ"></div>' +
+      (fam === 'fip' ? '<div title="Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)">' +
+        '<select class="form-select form-select-sm tm-qe"><option value="">Entidade de investimento: todos</option>' +
+        '<option value="S">Entidade de investimento: sim</option><option value="N">Entidade de investimento: não</option>' +
+        '<option value="NA">Entidade de investimento: não informado</option></select></div>' : '') +
       '<button type="button" class="btn btn-link btn-sm tm-filter-clear">Limpar</button></div>' +
       '<div class="tm-master-detail tm-static-grid">' +
       '<div class="card tm-section tm-pane"><div class="card-header tm-card-head"><span class="tm-count"></span>' +
@@ -208,9 +212,9 @@
       '<div class="tm-pane-wrap"><div class="card tm-section tm-detail tm-pane tm-static-detail"><div class="tm-empty">Selecione um fundo na lista.</div></div></div></div>');
     var timer;
     t.el.on('input', '.tm-q, .tm-qa', function () { clearTimeout(timer); timer = setTimeout(function () { t.reset(); }, 180); });
-    t.el.on('change', '.tm-filter-family input', function () { t.reset(); });
+    t.el.on('change', '.tm-filter-family input, .tm-qe', function () { t.reset(); });
     t.el.on('click', '.tm-filter-clear', function () {
-      t.el.find('.tm-q, .tm-qa').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.reset();
+      t.el.find('.tm-q, .tm-qa, .tm-qe').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.reset();
     });
     t.el.on('click', 'th[data-sort]', function () {
       var by = $(this).attr('data-sort'), s = SORTS.filter(function (x) { return x.by === by; })[0];
@@ -245,11 +249,14 @@
     var words = q ? q.split(' ') : [], awords = qa ? qa.split(' ') : [];
     var s = t.sort, dir = s.dec ? -1 : 1;
     // A page change reuses the filtered, sorted list; only the slice is redrawn.
-    var key = [fams.join(','), q, qd, qa, qad, s.by, s.dec].join('|');
+    var qe = t.el.find('.tm-qe').val() || '';
+    var key = [fams.join(','), q, qd, qa, qad, qe, s.by, s.dec].join('|');
     var rows = t.rowsKey === key ? t.rows : null;
     if (!rows) {
       rows = d.funds.filter(function (f) {
         if (fams.indexOf(f[F.family]) < 0) return false;
+        // FIP "entidade de investimento": latest published value (S/N) or not published.
+        if (qe && f[F.family] === 'fip' && (qe === 'NA' ? f[F.entInv] != null : f[F.entInv] !== qe)) return false;
         if (words.length && !(qd.length >= 4 && f[F.key].indexOf(qd) === 0) &&
             !words.every(function (w) { return f.search.indexOf(w) >= 0; })) return false;
         if (awords.length && !(qad.length >= 4 && f.adminDigits.indexOf(qad) === 0) &&
@@ -298,7 +305,10 @@
       '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2><div class="tm-detail-meta"><span><strong>Administrador: </strong>' +
       esc(f[F.admin] || 'não publicado') + (f[F.adminCnpj] ? ' · ' + esc(f[F.adminCnpj]) : '') + '</span><span><strong>Informes: </strong>' +
-      fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span></div></div>' +
+      fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span>' +
+      (f[F.family] === 'fip' ? '<span><strong>Entidade de investimento: </strong>' +
+        (f[F.entInv] === 'S' ? 'sim' : f[F.entInv] === 'N' ? 'não' : f[F.entInv] == null ? 'não informado' : esc(f[F.entInv])) + '</span>' : '') +
+      '</div></div>' +
       '<div class="tm-detail-body"><div class="tm-static-tools"><select class="form-select form-select-sm tm-ficha-table" disabled>' +
       '<option>Carregando informes…</option></select><select class="form-select form-select-sm tm-ficha-period" disabled></select></div>' +
       '<div class="tm-caption tm-ficha-summary"></div>' +

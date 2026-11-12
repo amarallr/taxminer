@@ -45,6 +45,14 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
     consolidação muda); `test_0051`, `test_0052`.
   - **Painel publicado (`decision_0035`):** https://amarallr.github.io/taxminer/app/;
     regerar com `scripts/export_static_dashboard.R` e publicar `site/app/`.
+  - **Fichas (`decision_0037`):** aba Ficha no app local (`prototype/fund_record_module.R`);
+    no painel publicado, Ficha e Série completa das tabelas principais em
+    `site/app/data/fichas/` (`write_static_fichas` em `prototype/static_funds.R`). A
+    exportação lê as tabelas inteiras: rodar com o app local parado se a memória estiver curta.
+    `TAXMINER_KEEP_FICHAS=1` mantém as fichas já exportadas quando a consolidação não mudou.
+  - **Cedentes (`decision_0038`):** `src/intelligence/cedente_data.R` gera o pacote JSON;
+    `prototype/www/cedentes.js` exibe no app (`processed/metrics/cedentes`) e no site
+    (`site/app/data/cedentes/`). CPF completo por decisão do desenvolvedor.
   - **Resolução de entidades (`work_0028`, `decision_0036`):** catálogos em
     `processed/master/`, regras em `config/entity_name_rules.csv`, documentação em
     `docs/entity_resolution.md`; testes `test_0053`, `test_0054`. Revisão humana da fila

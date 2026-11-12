@@ -1,5 +1,27 @@
 # TaxMiner — estado do projeto
 
+## Cedentes dos FIDC e filtros — 2026-11-11
+
+- **Aba Cedentes (`decision_0038`):** app e painel publicado, após FIDC; 10.969 cedentes em 166
+  competências (2013-01 a 2026-10), CPF completo como publicado; participações acima de 100% (cerca
+  de 10% em set/2026) marcadas como inconsistência do informe.
+- **FIP:** filtro por entidade de investimento (`ENTID_INVEST`). **Administradores:** % de cada fundo.
+  **Negativos** em vermelho em todas as telas.
+
+## Fichas dos fundos e desempenho — 2026-11-11
+
+- **Aba Ficha (app local, `decision_0037`):** entre FIAGRO e Cobertura e qualidade; escolhe
+  qualquer fundo (CNPJ ou nome, maiores primeiro), tabela e período, com Ficha e Série
+  completa na largura toda (`prototype/fund_record_module.R`).
+- **Painel publicado:** abas de fundos com Perfil, Ficha, Série completa e Denominações; Ficha
+  e Série completa das tabelas principais de cada tipo (`write_static_fichas`,
+  `data/fichas/{tipo}/{CNPJ}.json`, 11.879 fundos, 513 MB, mediana 28 KB por fundo).
+- **Desempenho:** índice administrador × fundo e cache de linhas por fundo no app (trocar de
+  administrador de ~3,1 s para ~0,6 s); lista do painel publicado reaproveitada na troca de
+  página (~30 ms). Versão `1.0.1` na aba Sobre.
+- **Limite:** abrir um fundo pela primeira vez no app ainda lê o Parquet (~0,5 s), porque os
+  arquivos não estão ordenados por CNPJ.
+
 ## Resolução de entidades — 2026-11-11T10:08:45-03:00
 
 - **Serviço central (`work_0028`, `decision_0036`):** `src/data/entity_resolution.R` com

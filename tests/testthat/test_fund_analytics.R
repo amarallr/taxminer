@@ -256,6 +256,7 @@ test_that("the Administradores area ranks, filters by family and shows the picke
     expect_match(output$detail$html, "ADM UM")
     expect_match(output$detail$html, "data-month=\"2025-06\"")
     expect_match(output$funds$html, "FIDC E")
+    expect_match(output$funds$html, "· 33,3%", fixed = TRUE)
     expect_match(output$funds$html, "mês de referência")
     # A month clicked on the chart lists the funds of that month.
     session$setInputs(month = "2025-06")
@@ -394,4 +395,51 @@ test_that("the Sobre tab shows the version from the VERSION file", {
   expect_match(as.character(version_label(dir, at)), ">v.1.2.3 · 2026-11-11 15:42</div>", fixed = TRUE)
   expect_match(as.character(version_label(dir, "2026-01-02 03:04")), ">v.1.2.3 · 2026-01-02 03:04<", fixed = TRUE)
   expect_match(readLines(testthat::test_path("..", "..", "VERSION"), n = 1L), "^[0-9]+[.][0-9]+[.][0-9]+$")
+})
+
+test_that("negative values are marked for red (Node)", {
+  node <- Sys.which("node")
+  if (!nzchar(node)) node <- file.path(Sys.getenv("LOCALAPPDATA"), "Programs", "TaxMiner", "node-v26.13.0-win-x64", "node.exe")
+  skip_if_not(file.exists(node), "Node.js not available")
+  js <- as.character(tm_app_script())
+  re <- regmatches(js, regexpr("var NEG = /[^\n]*/;", js))
+  expect_length(re, 1L)
+  f <- tempfile(fileext = ".js")
+  writeLines(c(re, "var s = ['-1.234,56', ' -3,2%', 'R$ -1,2 bi', '\u22125', '0,00', 'R$ 1,2 bi', '—', '-', 'Provisão (-)', '12-31'];",
+               "console.log(s.map(function (x) { return NEG.test(x) ? 1 : 0; }).join(''));"), f)
+  expect_equal(system2(node, f, stdout = TRUE), "1111000000")
+})
+
+test_that("FIDC cedentes keep CPF and CNPJ as published, one line per position", {
+  source(testthat::test_path("..", "..", "src", "intelligence", "cedente_data.R"), encoding = "UTF-8")
+  df <- data.frame(
+    fund_cnpj_normalized = c("11111111000111", "11111111000111", "11111111000111", "22222222000122"),
+    DT_COMPTC = c("2025-01-31", "2025-01-31", "2025-02-28", "2025-02-28"),
+    source_file = "f.csv", source_line = 1:4,
+    TAB_I2A12_CPF_CNPJ_CEDENTE_1 = c("6018364000185", "33000167000101", "52998224725", "0"),
+    TAB_I2A12_PR_CEDENTE_1 = c("10", "93.53", "189,72", ""),
+    TAB_I2A12_CPF_CNPJ_CEDENTE_2 = c(NA, "123", "", "33.000.167/0001-01"),
+    TAB_I2A12_PR_CEDENTE_2 = c(NA, "5", "", "1.5"),
+    stringsAsFactors = FALSE)
+  r <- fidc_cedente_rows(df)
+  # Fund 1 reported twice in 2025-01: the last line wins; "0" is not a cedente.
+  expect_equal(nrow(r), 4L)
+  expect_equal(r$cedente[r$month == "2025-01"], c("33.000.167/0001-01", "123"))
+  expect_equal(r$type[r$month == "2025-01"], c("PJ", "?"))
+  expect_equal(r$cedente[r$month == "2025-02" & r$fund_cnpj == "11111111000111"], "529.982.247-25")
+  expect_equal(r$share[r$cedente == "529.982.247-25"], "189,72")   # as published
+  expect_equal(cedente_share_number(c("93.53", "189,72", "1.234,5", NA)), c(93.53, 189.72, 1234.5, NA))
+  dir <- tempfile("ced")
+  funds <- data.frame(fund_cnpj = c("11111111000111", "22222222000122"), fund_name = c("FIDC UM", "FIDC DOIS"))
+  out <- write_cedente_data(dir, r, funds, reference = "2025-01")
+  expect_equal(out$months, 2L)
+  idx <- jsonlite::fromJSON(file.path(dir, "index.json"), simplifyVector = FALSE)
+  expect_equal(idx$reference, "2025-01")
+  expect_equal(unlist(idx$months), c("2025-02", "2025-01"))
+  ced <- vapply(idx$cedentes, function(x) x[[1]], "")
+  k <- match("33.000.167/0001-01", ced)
+  expect_equal(idx$cedentes[[k]][[6]], 2L)                       # months with the cedente
+  feb <- jsonlite::fromJSON(file.path(dir, "months", "2025-02.json"), simplifyVector = FALSE)$rows
+  expect_length(feb, 2L)
+  expect_true(all(vapply(feb, function(x) x[[5]], "") %in% c("189,72", "1.5")))
 })

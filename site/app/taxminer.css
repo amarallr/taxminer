@@ -741,11 +741,38 @@ table.tm-series td { max-width: 70px; }
 table.tm-series td.tm-num { max-width: none; letter-spacing: -.01em; }
 table.tm-series th.tm-col-period { letter-spacing: 0; }
 table.tm-series th.tm-field { min-width: 180px; max-width: 220px; padding: 3px 8px; }
-/* Cell values 30% smaller (developer request 2026-11-11): .6rem -> .42rem. */
-table.tm-series td { font-size: .42rem; line-height: 1.35; max-width: 52px; }
+/* Cell values the size of the period headers (.42rem was too small to read). */
+table.tm-series td { font-size: .6rem; line-height: 1.35; max-width: 118px; min-width: 110px; padding: 3px 6px;
+  overflow-wrap: normal; word-break: normal; }
 table.tm-series td.tm-num { max-width: none; }
 
 /* Published fund tabs: table and period pickers above Ficha / Série completa */
 .tm-static-tools { display: grid; grid-template-columns: 2fr 1fr; gap: 6px; margin-bottom: 2px; }
 .tm-static-tools .form-select { font-size: .66rem; padding: 2px 24px 2px 8px; min-height: 26px; }
 .tm-static-detail [data-pane-body="serie"] { overflow: auto; }
+
+/* FICHA tab: fund search wide, table and period beside it */
+.tm-record-filters { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) 170px; gap: 8px; }
+.tm-record-filters > div { min-width: 0; }
+
+/* Negative values always in red (marked tm-neg by tm_app_script in prototype/charts.R) */
+:root { --tm-negative: #c62828; }
+.tm-neg, .tm-neg a, table td.tm-neg, .tm-ficha-value.tm-neg, .tm-kpi-value.tm-neg, .tm-bar-value.tm-neg { color: var(--tm-negative) !important; }
+
+/* FIP filter: room for "Entidade de investimento: ..." */
+#funds_fip-investment_entity, .tm-qe { min-width: 250px; }
+.tm-filterbar .tm-filter:has(#funds_fip-investment_entity) { flex: 0 0 260px; }
+
+/* CEDENTES tab */
+.tm-ced-filters { display: grid; grid-template-columns: 210px minmax(0, 2fr) 200px minmax(0, 1.4fr) auto; gap: 8px; align-items: center; }
+.tm-ced-filters .form-select, .tm-ced-filters .form-control { font-size: .7rem; min-height: 28px; }
+.tm-ced-kpis { margin: 6px 0; }
+.tm-ced-row { cursor: pointer; }
+.tm-ced-row.tm-selected { background: #eef3fb; box-shadow: inset 3px 0 0 var(--tm-navy); }
+.tm-tag-ced { font-size: .56rem; letter-spacing: .06em; border: 1px solid var(--tm-rule); padding: 0 4px; margin-left: 4px; color: var(--tm-muted); }
+.tm-ced-detail .tm-detail-body { overflow: auto; }
+.tm-ced-table td a { color: var(--tm-navy); font-weight: 600; text-decoration: none; }
+.tm-ced-table td a:hover { text-decoration: underline; }
+
+/* Published value outside its range (e.g. share above 100%): shown as published, flagged */
+.tm-warn { color: #9a6700; background: #fff8e1; }

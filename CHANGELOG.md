@@ -1,5 +1,23 @@
 # Changelog
 
+## Cedentes, aba Ficha, filtro de FIP e negativos em vermelho — 2026-11-11
+
+- **Aba Cedentes** (app e painel publicado), logo após FIDC: os cedentes dos FIDC como publicados na
+  Tabela I do informe mensal (9 maiores de cada bloco: I.2.a.12 e I.2.b.12 desde nov/2019; I.2.b.1 até
+  out/2019), por competência. Ranking por número de FIDCs, filtros por cedente ou FIDC, pessoa física ou
+  jurídica e bloco; detalhe com os FIDCs, posição e participação; clique no FIDC abre a ficha na aba FIDC.
+  CPF completo, como publicado (`decision_0038`). Participações acima de 100% (cerca de 10% dos valores)
+  são inconsistências do próprio informe: aparecem como publicadas, marcadas com ⚠. Mesmo pacote JSON
+  nos dois (`src/intelligence/cedente_data.R`, `prototype/www/cedentes.js`).
+- **Aba Ficha** (app local), entre FIAGRO e Cobertura e qualidade: qualquer fundo, com Ficha e Série
+  completa na largura toda (`prototype/fund_record_module.R`).
+- **FIP:** filtro "Entidade de investimento" (sim, não, não informado), pelo último informe que publicou
+  `ENTID_INVEST`; o detalhe do fundo mostra o valor e o mês do informe.
+- **Administradores:** a lista de fundos mostra PL e % do total do administrador.
+- **Valores negativos sempre em vermelho**, no app e no painel publicado (células, KPIs, barras, ficha).
+- Série completa: valores no tamanho do cabeçalho das competências, CNPJ e números sem quebra.
+- `TAXMINER_KEEP_FICHAS=1` na exportação mantém `data/fichas/` quando a consolidação não mudou.
+
 ## Ficha e Série completa no painel publicado — 2026-11-11
 
 - As abas de fundos do painel publicado (Fundos, FIDC, FII, FIP, FIAGRO) ganham Ficha e Série completa,

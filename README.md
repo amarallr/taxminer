@@ -301,7 +301,7 @@ acompanhados separadamente.
 | Assistentes (Codex, Claude Code, Gemini CLI, GitHub Copilot) | Testados no RStudio e aceitos. |
 | Fase 1.1 — Soluções de Consulta | **Suspensa** por decisão do desenvolvedor, com as fontes já verificadas. |
 | Fase 1.2 — Notas explicativas | **Em andamento:** fontes verificadas; pipeline de coleta implementado e testado; coleta das 14.015 entregas DFP (2010–2026) em execução; extração das notas em desenvolvimento. |
-| Fase 1.3 — Fundos de investimento | **Em andamento** (`decision_0029`): fontes verificadas e 102 arquivos da CVM coletados (FII, FIDC, FIP, FIAGRO); consolidação em Parquet concluída (12,16 milhões de linhas, inventário de layouts); busca e painel analítico (Panorama, Administradores, perfil do fundo) no Shiny; aceite humano pendente. |
+| Fase 1.3 — Fundos de investimento | **Em andamento** (`decision_0029`): fontes verificadas e 102 arquivos da CVM coletados (FII, FIDC, FIP, FIAGRO); consolidação em Parquet concluída (12,16 milhões de linhas, inventário de layouts); busca e painel analítico no Shiny (Panorama, Administradores, Fundos, uma aba por tipo — FIDC, Cedentes, FII, FIP, FIAGRO — e a aba Ficha com ficha e série completa de qualquer fundo); aceite humano pendente. |
 | Fase 2 — Inteligência cruzada | Não iniciada. |
 
 Itens de trabalho: 24 registrados, sendo 10 implementados, 2 em andamento,
@@ -325,10 +325,14 @@ passos estão em [`project_status.md`](docs/project_management/project_status.md
   validador no Windows (`.github/workflows/validate_environment.yml`).
 - **Página do projeto:** GitHub Pages publicado a partir de `site/`
   (`.github/workflows/pages.yml`).
-- **Painel publicado:** [https://amarallr.github.io/taxminer/app/](https://amarallr.github.io/taxminer/app/), versão estática das áreas Panorama e
-  Administradores do app, gerada por `scripts/export_static_dashboard.R` em `site/app/` a
-  partir de dados públicos agregados da CVM (ODbL). A busca completa nos informes roda no
-  app local (`scripts/run_prototype.R`).
+- **Painel publicado:** [https://amarallr.github.io/taxminer/app/](https://amarallr.github.io/taxminer/app/), versão estática do app
+  (Panorama, Administradores, Fundos, abas FIDC, FII, FIP, FIAGRO com Perfil, Ficha, Série
+  completa e Denominações, e a aba Cedentes dos FIDC), gerada por `scripts/export_static_dashboard.R` em `site/app/` a
+  partir de dados públicos da CVM (ODbL). A Ficha e a Série completa publicadas cobrem as
+  tabelas principais de cada tipo (FIDC tab_I; FII geral, complemento e ativo/passivo
+  mensais; FIP trimestral e quadrimestral; FIAGRO mensal), um arquivo por fundo baixado só
+  quando o fundo é aberto. As demais tabelas e a aba Ficha (qualquer fundo, largura total)
+  rodam no app local (`scripts/run_prototype.R`).
 
 ## 13. Instalação e configuração
 

@@ -31,7 +31,7 @@ na máquina, mas não é dependência declarada).
 | Panorama: PL por tipo, top 20 administradores e fundos, filtro cruzado por família e administrador | **existente** | `fund_overview_ui` |
 | Concentração (HHI, participação dos 5/10 maiores), ranking de administradores, série por administrador, drill por competência | **existente** | Administradores |
 | Perfil do fundo: PL, variação 12 meses, cotistas, posição e percentil | **existente** | Perfil |
-| Ficha: leitura de cada tabela do informe por competência, com rótulos do dicionário | **parcial**: mostra os valores, sem análise por ficha | aba Ficha |
+| Ficha: leitura de cada tabela do informe por competência, com rótulos do dicionário | **parcial**: mostra os valores, sem análise por ficha; aba Ficha própria no app e Ficha/Série completa das tabelas principais no painel publicado (`decision_0037`) | aba Ficha |
 | Competência, universo e cobertura nos KPIs | **parcial**: mês de referência e meses completos; sem regra de agregação explícita | Panorama, Cobertura |
 | Camada semântica / catálogo de métricas | **ausente** | — |
 | Ativo, passivo, carteira, DC, inadimplência, captações, resgates, amortizações, rentabilidade | **ausente** nas métricas (os campos existem nas tabelas) | ver 1.3 |
@@ -167,5 +167,5 @@ pessoa jurídica.
    tudo o mais.
 2. Ordem depois de P0: **P1.1 Panorama** e **P1.2 fichas FIDC** (as duas
    instruções), em sequência ou em paralelo.
-3. Tratamento dos CPFs de cedentes na Ficha I: excluir, mascarar ou usar só
-   cedentes pessoa jurídica.
+3. ~~Tratamento dos CPFs de cedentes na Ficha I~~ — **decidido (`decision_0038`):** CPF
+   completo, como publicado pela CVM, com máscara de formatação, no app e no painel publicado.

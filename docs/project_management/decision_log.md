@@ -548,3 +548,39 @@ sistema deve recuperar todos os registros associados ao CNPJ". Ficou decidido (`
 - Pendências: tela de decisão da fila de revisão; uso nas demonstrações financeiras (Fase 1.2)
   quando forem consolidadas; granularidade fundo/classe da Resolução CVM 175 limitada ao CNPJ
   publicado.
+
+## decision_0037 — 2026-11-11 — Fichas dos fundos: aba própria e painel publicado
+
+Pedido do desenvolvedor: Ficha e Série completa no painel publicado e uma aba FICHA, entre
+FIAGRO e Cobertura e qualidade, com as fichas e a série completa.
+
+- App local: aba Ficha (`prototype/fund_record_module.R`) com busca de qualquer fundo (CNPJ ou
+  nome, maiores primeiro), tabela e período; Ficha e Série completa na largura toda, com as
+  mesmas funções das abas de fundos (`report_card`, `wide_table`, cache `fund_rows_cache`).
+- Painel publicado: Ficha e Série completa nas abas de fundos para as tabelas principais de cada
+  tipo (FIDC tab_I; FII geral, complemento e ativo/passivo mensais; FIP trimestral e
+  quadrimestral; FIAGRO mensal). Um arquivo JSON por fundo (`site/app/data/fichas/`), baixado
+  só quando o fundo é aberto; valores e rótulos gerados em R pelas funções do app, para que as
+  duas versões mostrem o mesmo texto; cada coluna cita arquivo, linha e SHA-256 da CVM.
+- Alternativa descartada: carregar todos os informes na abertura da página (513 MB no painel
+  publicado; ~520 MB de Parquet em memória no app, que já sofre falta de memória).
+- Limites: as demais tabelas seguem só no app local; a aba Ficha ainda não está no painel
+  publicado.
+
+## decision_0038 — 2026-11-11 — Cedentes dos FIDC com CPF completo
+
+Pedido do desenvolvedor: aba CEDENTES após FIDC com os cedentes dos FIDC. Decisão do
+desenvolvedor (pendência 3 de `docs/bi_platform_plan.md`): mostrar o CPF dos cedentes pessoa
+física completo, como publicado pela CVM (dado público), no app e no painel publicado.
+
+- Fonte: Tabela I do informe mensal do FIDC, 9 maiores cedentes por bloco (I.2.a.12 e I.2.b.12
+  desde nov/2019; I.2.b.1 até out/2019), com CPF ou CNPJ e percentual; o informe não traz o nome
+  (nome mostrado só quando o CNPJ está no catálogo de entidades).
+- Regras: posições preenchidas com zeros não são cedentes; fundo informado duas vezes na mesma
+  competência fica com a última linha publicada; percentuais como publicados, inclusive acima de
+  100% (inconsistências marcadas, não corrigidas).
+- Um único pacote JSON por competência (`write_cedente_data`) e um único código de exibição
+  (`prototype/www/cedentes.js`) para o app (cache em `processed/metrics/cedentes`, refeito quando a
+  Tabela I ou o catálogo mudam) e o painel publicado (`site/app/data/cedentes/`, 7,2 MB).
+- Também nesta data: filtro de FIP por `ENTID_INVEST`, % na lista de fundos dos Administradores e
+  valores negativos em vermelho em todas as telas.

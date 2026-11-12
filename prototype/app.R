@@ -8,8 +8,10 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R", "prototype/charts.R",
-            "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R")) {
+            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
+            "src/intelligence/cedente_data.R", "prototype/charts.R",
+            "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
+            "prototype/fund_record_module.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
 }
 
@@ -35,6 +37,8 @@ theme <- tm_theme()
 # inputs change), read by www/panorama.js.
 if (fund_ready) {
   shiny::addResourcePath("panorama-data", load_panorama_data(fund_root, fund_ctx, fund_data$directory, fund_data$master))
+  # FIDC cedentes (processed/metrics/cedentes), read by www/cedentes.js.
+  shiny::addResourcePath("cedentes-data", load_cedente_data(fund_root, fund_data, unname(fund_ctx$complete["fidc"])))
 }
 
 unavailable <- function(text) {
@@ -42,11 +46,12 @@ unavailable <- function(text) {
 }
 
 ui <- bslib::page_navbar(
-  title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs)), fluid = TRUE, lang = "pt-BR",
+  title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,
-                           shiny::tags$script(src = "panorama.js", defer = NA)),
+                           shiny::tags$script(src = "panorama.js", defer = NA),
+                           shiny::tags$script(src = "cedentes.js", defer = NA)),
   bslib::nav_panel(
     "Panorama",
     if (fund_ready) panorama_ui("panorama-data/")
@@ -58,10 +63,20 @@ ui <- bslib::page_navbar(
     "Fundos",
     if (fund_ready) fund_search_ui("funds")
     else unavailable("Fase 1.3 indisponível: rode a coleta e a consolidação dos fundos.")),
-  !!!lapply(family_tabs, function(f) bslib::nav_panel(
-    toupper(f),
-    if (fund_ready) fund_search_ui(paste0("funds_", f), family = f)
-    else unavailable("Sem dados consolidados."))),
+  # One tab per fund type; CEDENTES right after FIDC.
+  !!!unlist(lapply(family_tabs, function(f) c(
+    list(bslib::nav_panel(
+      toupper(f),
+      if (fund_ready) fund_search_ui(paste0("funds_", f), family = f)
+      else unavailable("Sem dados consolidados."))),
+    if (f == "fidc") list(bslib::nav_panel(
+      "Cedentes",
+      if (fund_ready) cedentes_ui("cedentes-data/") else unavailable("Sem dados consolidados."))))),
+    recursive = FALSE),
+  # Ficha and Série completa of any fund on the whole width.
+  bslib::nav_panel(
+    "Ficha",
+    if (fund_ready) fund_record_ui("record") else unavailable("Sem dados consolidados.")),
   bslib::nav_panel(
     "Cobertura e qualidade",
     if (fund_ready) fund_coverage_ui("fund_coverage") else unavailable("Sem dados consolidados.")),
@@ -83,6 +98,7 @@ server <- function(input, output, session) {
     fund_search_server("funds", fund_root, fund_ctx, data = fund_data)
     lapply(family_tabs, function(f) fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
                                                        data = fund_data, families = f))
+    fund_record_server("record", fund_root, fund_data, fund_ctx)
     fund_admin_server("admins", fund_ctx)
     fund_coverage_server("fund_coverage", fund_root)
   }

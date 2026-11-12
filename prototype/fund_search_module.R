@@ -374,6 +374,11 @@ fund_search_ui <- function(id, family = NULL) {
       shiny::div(class = "tm-filter tm-filter-wide",
                  shiny::selectizeInput(ns("administrator"), NULL, choices = NULL, width = "100%", multiple = TRUE,
                                        options = entity_autocomplete_options("Administrador: CNPJ ou nome"))),
+      if (identical(family, "fip")) shiny::div(
+        class = "tm-filter tm-filter-period", title = "Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)",
+        shiny::selectInput(ns("investment_entity"), NULL, width = "100%", selectize = FALSE,
+                           choices = c("Entidade de investimento: todos" = "", "Entidade de investimento: sim" = "S",
+                                       "Entidade de investimento: não" = "N", "Entidade de investimento: não informado" = "NA"))),
       shiny::div(class = "tm-filter tm-filter-period",
                  shiny::selectizeInput(ns("period_from"), NULL, choices = NULL, width = "100%",
                                        options = autocomplete_options("De (aaaa-mm)"))),
@@ -408,7 +413,7 @@ fund_search_data <- function(root, directory = load_fund_directory(root), rules 
   urls <- fund_source_urls(root)
   list(directory = annotate_directory_entities(directory), master = master, rules = rules,
        tables = fund_tables(root), urls = urls, report_rows = fund_rows_cache(root, urls),
-       descriptions = fund_field_descriptions(root))
+       descriptions = fund_field_descriptions(root), investment_entity = fund_investment_entity(root))
 }
 
 # Denominations of an entity over time: a separate analytical view; the
@@ -468,6 +473,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
       for (field in c("fund_query", "administrator", "period_from", "period_to")) {
         shiny::updateSelectizeInput(session, field, selected = character())
       }
+      shiny::updateSelectInput(session, "investment_entity", selected = "")
     })
 
     # Filters apply as soon as a value is chosen (no search button). Any
@@ -482,6 +488,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
           administrators = resolve_entity_query(input$administrator, master, "administrator", data$rules),
           period_from = input$period_from, period_to = input$period_to)
         out <- fund_list(rows, master)
+        if (!is.null(data$investment_entity)) out <- filter_investment_entity(out, data$investment_entity, input$investment_entity)
         if (!is.null(analytics$fund_pl)) out <- attach_fund_net_assets(out, analytics$fund_pl)
         structure(out, rows = rows)
       }, error = function(e) structure(fund_list(directory[0, ], master), rows = directory[0, ],
@@ -578,7 +585,15 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
                                  sprintf("%s a %s", substr(min(s$info$first_period), 1, 7),
                                          substr(max(s$info$last_period), 1, 7))),
                      if (isTRUE(ent$name_count > 1L))
-                       shiny::span(shiny::strong("Denominações: "), ent$name_count))),
+                       shiny::span(shiny::strong("Denominações: "), ent$name_count),
+                     if (s$family == "fip" && !is.null(data$investment_entity)) {
+                       k <- match(s$cnpj, data$investment_entity$fund_cnpj)
+                       v <- data$investment_entity$investment_entity[k]
+                       shiny::span(shiny::strong("Entidade de investimento: "),
+                                   if (is.na(v)) "não informado"
+                                   else paste0(switch(v, S = "sim", N = "não", v), " (informe de ",
+                                               data$investment_entity$investment_entity_period[k], ")"))
+                     })),
         bslib::card_body(
           fillable = FALSE, class = "tm-detail-body",
           bslib::layout_columns(

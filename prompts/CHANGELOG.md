@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 — FIDC cedentes (decision_0038)
+- Common P06 (Phase 1.3) adds the Cedentes tab after FIDC (cedentes from report table I; CPF in full by developer decision; out-of-range shares flagged), the FIP investment entity filter and red negative values.
+
+## 2026-11-11 — fund record views (decision_0037)
+- Common P06 (Phase 1.3) now describes the fund record views: a Ficha tab in the local app (any fund; Ficha and full series on the whole width) and the Ficha and full series of each family's main tables in the published dashboard, one file per fund loaded on demand, with the same formatting and citations as the app.
+
 ## 2026-11-11 — per-family data layout (decision_0028)
 - Collect P05 and Data P04 now place raw and processed fund report files under `TAXMINER_DATA_DIR/investment_fund_reports/{raw,processed}/`. Data P04 writes Parquet, since `arrow` is declared (`decision_0027`).
 

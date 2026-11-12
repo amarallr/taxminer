@@ -207,7 +207,10 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
                                "voltar ao mês de referência")),
     if (!nrow(f)) shiny::div(class = "tm-empty", "Sem fundos neste mês.")
     else bar_list(paste0(names, ifelse(f$carried, " *", "")), f$net_assets,
-                  format_brl(f$net_assets), colors = unname(fund_family_colors[f$family]),
+                  # PL and share of the administrator's total, as in the Panorama lists.
+                  paste(format_brl(f$net_assets), "·",
+                        format_pct(if (isTRUE(total > 0)) f$net_assets / total else NA_real_, sign = FALSE)),
+                  colors = unname(fund_family_colors[f$family]),
                   sub = sprintf("%s · %s", toupper(f$family), format_cnpj(f$fund_cnpj)),
                   tips = sprintf("%s\n%s do total", names, format_pct(f$net_assets / total, sign = FALSE))))
 }

@@ -328,3 +328,40 @@ test_that("the published fund records carry the series of the app, formatted the
   expect_match(as.character(wide_table(rows)), "-1.234,56", fixed = TRUE)
   expect_equal(unlist(x$f[[match("fund_cnpj_original", codes)]][[5]]), c("00.332.266/0001-31", "00.332.266/0001-31"))
 })
+
+test_that("the Ficha tab opens any fund with its Ficha and Série completa", {
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "src", "intelligence", "fund_analytics.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "prototype", "fund_record_module.R"), encoding = "UTF-8")
+  data <- fund_search_data(root, rules = rules)
+  choices <- fund_record_choices(data)
+  expect_true("fii|00332266000131" %in% choices)
+  expect_match(names(choices)[choices == "fii|00332266000131"], "^FII · 00.332.266/0001-31 — ")
+  expect_equal(fund_record_default_table(data$tables, "fii"), "inf_mensal_fii_geral")
+  shiny::testServer(fund_record_server, args = list(root = root, data = data), {
+    session$setInputs(fund = "fii|00332266000131", table = "inf_mensal_fii_ativo_passivo")
+    expect_equal(nrow(rows()), 2L)
+    expect_match(output$summary, "2 linhas em 2 períodos")
+    session$setInputs(period = "2026-01-31")
+    expect_match(output$card$html, "-1.234,56", fixed = TRUE)
+    expect_match(output$rows$html, "tm-series")
+  })
+})
+
+test_that("FIPs filter by the latest published investment entity indicator", {
+  rows <- data.frame(
+    fund_cnpj_normalized = c("11", "11", "22", "33", NA),
+    ENTID_INVEST = c("S", " n ", "", "N", "S"),
+    DT_COMPTC = c("2023-12-31", "2025-08-31", "2025-08-31", "2020-03-31", "2025-08-31"),
+    stringsAsFactors = FALSE)
+  e <- latest_investment_entity(rows)
+  expect_equal(e$fund_cnpj, c("11", "33"))           # 22 never published a value
+  expect_equal(e$investment_entity, c("N", "N"))     # most recent period wins, trimmed
+  expect_equal(e$investment_entity_period, c("2025-08", "2020-03"))
+  funds <- data.frame(family = c("fip", "fip", "fip", "fidc"), fund_cnpj = c("11", "22", "33", "44"))
+  expect_equal(filter_investment_entity(funds, e, "N")$fund_cnpj, c("11", "33", "44"))
+  expect_equal(filter_investment_entity(funds, e, "S")$fund_cnpj, "44")
+  expect_equal(filter_investment_entity(funds, e, "NA")$fund_cnpj, c("22", "44"))
+  expect_equal(nrow(filter_investment_entity(funds, e, "")), 4L)
+  expect_equal(nrow(fund_investment_entity(root)), 0L)  # fixture FIP has no ENTID_INVEST column
+})

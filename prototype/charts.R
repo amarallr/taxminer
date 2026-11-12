@@ -229,6 +229,30 @@ $(function() {
         $('[data-detail]').filter(function() { return $(this).attr('data-detail') === key; }).removeAttr('hidden');
       }
     });
+  // Negative values always in red: every value cell or figure whose text
+  // starts with a minus sign (-1.234,56; -3,2%; R$ -1,2 bi) gets tm-neg, also
+  // when Shiny or the published page redraws it.
+  var NEG = /^\\s*(R\\$\\s*)?[-\\u2212]\\s*\\d/;
+  var VALUES = 'td, .tm-num, .tm-kpi-value, .tm-kpi-note, .tm-bar-value, .tm-ficha-value, .tm-big, .tm-legend-value';
+  function markNegative(root) {
+    var list = root.querySelectorAll ? root.querySelectorAll(VALUES) : [];
+    for (var i = 0; i < list.length; i++) list[i].classList.toggle('tm-neg', NEG.test(list[i].textContent));
+    if (root.matches && root.matches(VALUES)) root.classList.toggle('tm-neg', NEG.test(root.textContent));
+  }
+  markNegative(document.body);
+  var pending = [], queued = false;
+  new MutationObserver(function(records) {
+    for (var i = 0; i < records.length; i++) {
+      var n = records[i].target;
+      pending.push(n.nodeType === 1 ? n : n.parentElement);
+    }
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function() {
+      var seen = pending; pending = []; queued = false;
+      for (var j = 0; j < seen.length; j++) if (seen[j]) markNegative(seen[j].closest(VALUES) || seen[j]);
+    });
+  }).observe(document.body, {childList: true, subtree: true, characterData: true});
 });"))
 }
 

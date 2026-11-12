@@ -46,6 +46,8 @@ static_fund_index <- function(data, ctx) {
     first = substr(l$first_period, 1, 7), last = substr(l$last_period, 1, 7), count = l$period_count,
     pl = pl$net_assets, pl_month = pl$net_assets_month, share = pl$net_assets_share, change12 = p$change12[k], rank = p$rank[k],
     peers = p$peers[k], percentile = p$percentile[k], quotaholders = p$quotaholders[k],
+    investment_entity = if (is.null(data$investment_entity)) NA_character_ else ifelse(
+      l$family == "fip", data$investment_entity$investment_entity[match(l$fund_cnpj, data$investment_entity$fund_cnpj)], NA_character_),
     stringsAsFactors = FALSE)
 }
 
@@ -56,7 +58,8 @@ static_fund_index_json <- function(index, master, meta) {
                      json_string(index$last), index$count, json_number(index$pl), json_string(index$pl_month),
                      json_number(index$change12, 4L), ifelse(is.na(index$rank), "null", index$rank),
                      ifelse(is.na(index$peers), "null", index$peers), json_number(index$percentile, 4L),
-                     json_number(index$quotaholders, 0L), json_number(index$share, 6L))
+                     json_number(index$quotaholders, 0L), json_number(index$share, 6L),
+                     json_string(index$investment_entity))
   # Every denomination of the listed funds (the Denominações tab and the search).
   h <- master$name_history[master$name_history$entity_id %in% index$entity, , drop = FALSE]
   n <- master$entity_names[match(h$name_id, master$entity_names$name_id), ]

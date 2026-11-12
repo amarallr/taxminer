@@ -73,6 +73,51 @@ read_fund_columns <- function(root, family, table_name, columns, filter = NULL) 
   as.data.frame(scan$Finish()$ToTable())
 }
 
+# FIP "entidade de investimento" indicator (ENTID_INVEST: S or N, as
+# published): the most recent non-empty value of each fund across the
+# quarterly (until 2023) and four-monthly (from 2024) reports. Funds that never
+# published it are left out (shown as "não informado"); values other than S
+# and N are kept as published.
+fund_investment_entity_tables <- c("inf_trimestral_fip", "inf_quadrimestral_fip")
+
+latest_investment_entity <- function(rows) {
+  v <- trimws(rows$ENTID_INVEST)
+  rows <- rows[!is.na(v) & nzchar(v) & !is.na(rows$fund_cnpj_normalized), , drop = FALSE]
+  v <- toupper(trimws(rows$ENTID_INVEST))
+  period <- row_period(rows)
+  o <- order(rows$fund_cnpj_normalized, period, decreasing = c(FALSE, TRUE), na.last = TRUE, method = "radix")
+  rows <- rows[o, , drop = FALSE]; v <- v[o]; period <- period[o]
+  first <- !duplicated(rows$fund_cnpj_normalized)
+  data.frame(fund_cnpj = rows$fund_cnpj_normalized[first], investment_entity = v[first],
+             investment_entity_period = substr(period[first], 1L, 7L), stringsAsFactors = FALSE)
+}
+
+fund_investment_entity <- function(root) {
+  base <- fund_processed_paths(root)$base
+  parts <- lapply(fund_investment_entity_tables, function(t) {
+    if (!dir.exists(file.path(base, "fip", t))) return(NULL)
+    df <- read_fund_columns(root, "fip", t, c("fund_cnpj_normalized", "ENTID_INVEST", fund_period_columns))
+    if (!"ENTID_INVEST" %in% names(df)) return(NULL)
+    for (column in setdiff(fund_period_columns, names(df))) df[[column]] <- NA_character_
+    df[, c("fund_cnpj_normalized", "ENTID_INVEST", fund_period_columns), drop = FALSE]
+  })
+  rows <- do.call(rbind, parts)
+  if (is.null(rows) || !nrow(rows)) {
+    return(data.frame(fund_cnpj = character(), investment_entity = character(),
+                      investment_entity_period = character()))
+  }
+  latest_investment_entity(rows)
+}
+
+# Keeps the FIPs whose latest indicator is `value` ("S", "N" or "NA" for not
+# published); other families are not affected by the filter.
+filter_investment_entity <- function(rows, entity, value) {
+  if (is.null(value) || !length(value) || !nzchar(value[1])) return(rows)
+  v <- entity$investment_entity[match(rows$fund_cnpj, entity$fund_cnpj)]
+  keep <- rows$family != "fip" | (if (value[1] == "NA") is.na(v) else !is.na(v) & v == value[1])
+  rows[keep, , drop = FALSE]
+}
+
 fund_directory_signature <- function(root) {
   index <- read_rds_recoverable(fund_processed_paths(root)$index, is.data.frame)
   family <- sub("^cvm:([^:]+):.*$", "\\1", index$source_id)

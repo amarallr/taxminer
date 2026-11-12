@@ -15,7 +15,8 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R", "prototype/charts.R",
+            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
+            "src/intelligence/cedente_data.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/static_funds.R")) {
   source(f, encoding = "UTF-8")
@@ -35,8 +36,14 @@ generated <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 fund_files <- write_static_fund_data(out_dir, data, ctx, generated)
-fichas <- write_static_fichas(out_dir, root, data)
+# TAXMINER_KEEP_FICHAS=1 keeps data/fichas/ as is (the slowest part, it reads
+# every main report table); use it only when the consolidation did not change.
+fichas <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS")) && dir.exists(file.path(out_dir, "data", "fichas"))) {
+  list(funds = length(list.files(file.path(out_dir, "data", "fichas"), pattern = "\\.json$", recursive = TRUE)) - 1L)
+} else write_static_fichas(out_dir, root, data)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
+cedentes <- write_cedente_data(file.path(out_dir, "data", "cedentes"), read_fidc_cedentes(root),
+                               cedente_funds(data), data$master, unname(ctx$complete["fidc"]))
 panorama <- write_panorama_data(file.path(out_dir, "data", "panorama"), ctx, data$directory, data$master, generated)
 
 # Same one-screen layout as the app tab (fund_admin_ui); the 40 largest
@@ -82,18 +89,21 @@ about_area <- shiny::div(
 
 page <- bslib::page_navbar(
   title = "TaxMiner", window_title = "TaxMiner · Painel de fundos",
-  fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs)), fluid = TRUE,
+  fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes"), fluid = TRUE,
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = tm_theme(),
   header = shiny::tags$head(
     shiny::tags$meta(name = "description",
                      content = "Panorama de FII, FIDC, FIP e FIAGRO a partir dos informes públicos da CVM."),
     shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), tm_app_script(),
-    shiny::tags$script(src = "panorama.js", defer = NA), shiny::tags$script(src = "taxminer_static.js", defer = NA)),
+    shiny::tags$script(src = "panorama.js", defer = NA), shiny::tags$script(src = "taxminer_static.js", defer = NA),
+    shiny::tags$script(src = "cedentes.js", defer = NA)),
   bslib::nav_panel("Panorama", panorama_ui("data/panorama/")),
   bslib::nav_panel("Administradores", admin_area),
   bslib::nav_panel("Fundos", static_funds_ui()),
-  !!!lapply(family_tabs, function(f) bslib::nav_panel(toupper(f), static_funds_ui(f))),
+  !!!unlist(lapply(family_tabs, function(f) c(
+    list(bslib::nav_panel(toupper(f), static_funds_ui(f))),
+    if (f == "fidc") list(bslib::nav_panel("Cedentes", cedentes_ui("data/cedentes/"))))), recursive = FALSE),
   bslib::nav_panel("Sobre", about_area),
   bslib::nav_spacer(),
   bslib::nav_item(shiny::tags$a(class = "nav-link", href = "../", "Página do projeto")))
@@ -103,6 +113,7 @@ htmltools::save_html(page, file.path(out_dir, "index.html"), libdir = "lib", lan
 file.copy("prototype/www/taxminer.css", file.path(out_dir, "taxminer.css"), overwrite = TRUE)
 file.copy("prototype/static/taxminer_static.js", file.path(out_dir, "taxminer_static.js"), overwrite = TRUE)
 file.copy("prototype/www/panorama.js", file.path(out_dir, "panorama.js"), overwrite = TRUE)
+file.copy("prototype/www/cedentes.js", file.path(out_dir, "cedentes.js"), overwrite = TRUE)
 # The theme uses system fonts: the bundled web fonts and the source maps are
 # never loaded by the page.
 lib <- file.path(out_dir, "lib")
@@ -110,5 +121,6 @@ unlink(c(list.files(lib, pattern = "\\.map$", recursive = TRUE, full.names = TRU
          list.files(lib, pattern = "^font\\.css$", recursive = TRUE, full.names = TRUE),
          list.dirs(lib)[basename(list.dirs(lib)) == "fonts"]), recursive = TRUE)
 size <- sum(file.info(list.files(out_dir, recursive = TRUE, full.names = TRUE))$size)
-cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files, %d fund records).\n",
-            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks, fichas$funds))
+cat(sprintf("Static dashboard written to %s (%.1f MB, %d administrator panels, %d funds, %d Panorama months, %d series files, %d fund records, %d cedentes).\n",
+            out_dir, size / 1024^2, length(keys), fund_files$funds, panorama$months, panorama$chunks, fichas$funds,
+            cedentes$cedentes))
