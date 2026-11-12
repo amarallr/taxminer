@@ -129,6 +129,38 @@ kpi <- function(label, value, note = NULL) {
              if (!is.null(note)) shiny::div(class = "tm-kpi-note", note))
 }
 
+# Characteristics of one fund in the detail header: number of quotaholders
+# (latest report that published it) and the fields of fund_attribute_specs,
+# as published in the latest report that filled them. Fields that the report
+# of this family does not have read "não consta do informe".
+fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
+  if (is.null(attributes)) return(NULL)
+  trait <- function(label, text, tip, alert = FALSE) {
+    shiny::span(class = if (alert) "tm-trait tm-trait-alert" else "tm-trait", `data-tip` = tip, shiny::span(class = "tm-trait-label", label),
+                shiny::span(class = if (text %in% c("não informado", "não consta do informe")) "tm-trait-value tm-muted"
+                                    else "tm-trait-value", text))
+  }
+  holders <- if (is.null(profile)) NULL else {
+    d <- profile$series[!is.na(profile$series$quotaholders), , drop = FALSE]
+    if (nrow(d)) d[nrow(d), ] else NULL
+  }
+  shown <- c("condominium", "exclusive", "investment_entity", "single_interest",
+             if (family %in% fund_attribute_families("family_link")) "family_link")
+  items <- lapply(shown, function(a) {
+    x <- fund_attribute_text(attributes, family, cnpj, a)
+    spec <- fund_attribute_specs[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family, , drop = FALSE]
+    tip <- if (!nrow(spec)) sprintf("O informe da CVM de %s não tem este campo.", toupper(family))
+           else sprintf("%s (%s)%s", fund_attribute_labels[[a]], spec$column[1],
+                        if (is.na(x$period)) " · não preenchido nos informes" else paste0(" · informe de ", x$period))
+    trait(fund_attribute_labels[[a]], x$text, tip, alert = a == "investment_entity" && x$text == "não")
+  })
+  shiny::div(class = "tm-traits",
+             trait("Cotistas", if (is.null(holders)) "não informado" else format_int(holders$quotaholders),
+                   if (is.null(holders)) "Quantidade de cotistas não publicada nos informes."
+                   else paste0("Quantidade de cotistas · informe de ", month_label(holders$month))),
+             items)
+}
+
 
 fund_page_size <- 25L
 fund_card_columns <- 6L
@@ -413,7 +445,8 @@ fund_search_data <- function(root, directory = load_fund_directory(root), rules 
   urls <- fund_source_urls(root)
   list(directory = annotate_directory_entities(directory), master = master, rules = rules,
        tables = fund_tables(root), urls = urls, report_rows = fund_rows_cache(root, urls),
-       descriptions = fund_field_descriptions(root), investment_entity = fund_investment_entity(root))
+       descriptions = fund_field_descriptions(root), investment_entity = fund_investment_entity(root),
+       attributes = fund_attributes(root))
 }
 
 # Denominations of an entity over time: a separate analytical view; the
@@ -585,15 +618,9 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
                                  sprintf("%s a %s", substr(min(s$info$first_period), 1, 7),
                                          substr(max(s$info$last_period), 1, 7))),
                      if (isTRUE(ent$name_count > 1L))
-                       shiny::span(shiny::strong("Denominações: "), ent$name_count),
-                     if (s$family == "fip" && !is.null(data$investment_entity)) {
-                       k <- match(s$cnpj, data$investment_entity$fund_cnpj)
-                       v <- data$investment_entity$investment_entity[k]
-                       shiny::span(shiny::strong("Entidade de investimento: "),
-                                   if (is.na(v)) "não informado"
-                                   else paste0(switch(v, S = "sim", N = "não", v), " (informe de ",
-                                               data$investment_entity$investment_entity_period[k], ")"))
-                     })),
+                       shiny::span(shiny::strong("Denominações: "), ent$name_count)),
+          fund_traits_ui(data$attributes, s$family, s$cnpj,
+                         if (!is.null(analytics)) fund_profile(analytics$m, analytics$snapshot, s$family, s$cnpj))),
         bslib::card_body(
           fillable = FALSE, class = "tm-detail-body",
           bslib::layout_columns(
@@ -671,6 +698,8 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
           collapse = " ")),
         tab)
     })
+    # Selected fund ("family|CNPJ"), read by the FICHA tab (prototype/app.R).
+    picked
   })
 }
 fund_coverage_ui <- function(id) {

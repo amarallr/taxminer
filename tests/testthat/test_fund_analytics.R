@@ -442,4 +442,86 @@ test_that("FIDC cedentes keep CPF and CNPJ as published, one line per position",
   feb <- jsonlite::fromJSON(file.path(dir, "months", "2025-02.json"), simplifyVector = FALSE)$rows
   expect_length(feb, 2L)
   expect_true(all(vapply(feb, function(x) x[[5]], "") %in% c("189,72", "1.5")))
+  # Names from the CVM registries: exact CNPJ, else the same CNPJ root; CPFs never.
+  source(testthat::test_path("..", "..", "src", "data", "cvm_registry_names.R"), encoding = "UTF-8")
+  registry <- data.frame(cnpj = c("33000167000101", "52998224000199"), name = c("PETROLEO BRASILEIRO S.A.", "OUTRA S.A."),
+                         source = c("cia", "fund"), stringsAsFactors = FALSE)
+  r2 <- rbind(r, transform(r[1, ], cedente = "33.000.167/0099-55"))
+  write_cedente_data(dir, r2, funds, reference = "2025-01", registry = registry)
+  idx <- jsonlite::fromJSON(file.path(dir, "index.json"), simplifyVector = FALSE)
+  by <- stats::setNames(idx$cedentes, vapply(idx$cedentes, function(x) x[[1]], ""))
+  expect_equal(by[["33.000.167/0001-01"]][[3]], "PETROLEO BRASILEIRO S.A.")
+  expect_equal(by[["33.000.167/0001-01"]][[7]], "Cadastro de companhias abertas (CVM)")
+  expect_equal(by[["33.000.167/0099-55"]][[3]], "PETROLEO BRASILEIRO S.A.")
+  expect_match(by[["33.000.167/0099-55"]][[7]], "pela raiz do CNPJ (33.000.167/0001-01)", fixed = TRUE)
+  expect_null(by[["529.982.247-25"]][[3]])                      # a CPF is not matched by root
+  # Receita Federal companies (by root) come after the exact CVM name and
+  # before the CVM root match.
+  companies <- data.frame(root = c("33000167", "52998224"), name = c("RAZAO RFB PETROBRAS", "RAZAO RFB OUTRA"),
+                          month = "2026-10", stringsAsFactors = FALSE)
+  write_cedente_data(dir, r2, funds, reference = "2025-01", registry = registry, companies = companies)
+  idx <- jsonlite::fromJSON(file.path(dir, "index.json"), simplifyVector = FALSE)
+  by <- stats::setNames(idx$cedentes, vapply(idx$cedentes, function(x) x[[1]], ""))
+  expect_equal(by[["33.000.167/0001-01"]][[3]], "PETROLEO BRASILEIRO S.A.")
+  expect_equal(by[["33.000.167/0099-55"]][[3]], "RAZAO RFB PETROBRAS")
+  expect_match(by[["33.000.167/0099-55"]][[7]], "Receita Federal (dados abertos, 2026-10)", fixed = TRUE)
+})
+
+test_that("Receita Federal company names are read from the zips keeping only the requested roots", {
+  for (f in c("collect_rfb_cnpj.R")) source(testthat::test_path("..", "..", "src", "collect", f), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "src", "data", "rfb_company_names.R"), encoding = "UTF-8")
+  root <- tempfile("rfb"); month <- "2026-10"
+  dir <- file.path(root, "raw", "rfb_cnpj", month); dir.create(dir, recursive = TRUE)
+  lines <- c('"33000167";"PETRÓLEO BRASILEIRO S.A. PETROBRAS";"2038";"10";"205431960490,52";"05";""',
+             '"11111111";"OUTRA LTDA";"2062";"49";"1000,00";"01";""',
+             '"52998224";"FULANO DE TAL 52998224725";"2135";"50";"5000,00";"01";""')
+  for (i in 0:9) {
+    body <- iconv(paste0(paste(if (i == 3) lines else lines[2], collapse = "\r\n"), "\r\n"), "UTF-8", "latin1")
+    write_stored_zip(file.path(dir, sprintf("Empresas%d.zip", i)), stats::setNames(list(body), sprintf("K%d.EMPRECSV", i)))
+  }
+  for (i in 0:9) append_rfb_manifest(root, data.frame(month = month, file_name = sprintf("Empresas%d.zip", i), source_url = "u",
+                                                     outcome = "downloaded", http_status = "200", bytes = "1", file_sha256 = "x",
+                                                     raw_path = "r", error = "", retrieved_at = "t"))
+  expect_equal(rfb_companies_month(root), month)
+  n <- build_rfb_company_names(root, c("33000167", "52998224", "99999999"))
+  expect_equal(n$root, c("33000167", "52998224"))
+  expect_equal(n$name[1], "PETRÓLEO BRASILEIRO S.A. PETROBRAS")      # Latin-1 read as UTF-8, kept as published
+  expect_equal(unique(n$month), month)
+  expect_true(rfb_refused(429L) && rfb_refused(403L) && rfb_refused(401L) && !rfb_refused(200L))
+})
+
+test_that("CVM registry names keep the published name by source priority", {
+  source(testthat::test_path("..", "..", "src", "data", "cvm_registry_names.R"), encoding = "UTF-8")
+  d <- tempfile("reg"); dir.create(d)
+  latin <- function(lines, path) writeBin(iconv(paste0(paste(lines, collapse = "\r\n"), "\r\n"), "UTF-8", "latin1", toRaw = TRUE)[[1]], path)
+  latin(c("CNPJ_CIA;DENOM_SOCIAL", "33.000.167/0001-01;PETRÓLEO BRASILEIRO S.A."), file.path(d, "cia.csv"))
+  latin(c("CNPJ_FUNDO;DENOM_SOCIAL;CNPJ_ADMIN;ADMIN;PF_PJ_GESTOR;CPF_CNPJ_GESTOR;GESTOR;CNPJ_AUDITOR;AUDITOR;CNPJ_CUSTODIANTE;CUSTODIANTE;CNPJ_CONTROLADOR;CONTROLADOR",
+          "11.111.111/0001-11;FUNDO \"ALFA\";33.000.167/0001-01;OUTRO NOME;PF;123.456.789-09;PESSOA;;;;;;",
+          "22.222.222/0001-22;FUNDO BETA;44.444.444/0001-44;ADMINISTRADORA;PJ;55.555.555/0001-55;GESTORA;;;;;;"),
+        file.path(d, "cad.csv"))
+  files <- c(cad_fi.csv = file.path(d, "cad.csv"), registro_fundo_classe.zip = NA, cad_cia_aberta.csv = file.path(d, "cia.csv"))
+  n <- build_cvm_registry_names(files)
+  expect_equal(n$name[n$cnpj == "33000167000101"], "PETRÓLEO BRASILEIRO S.A.")   # company register first, accents kept
+  expect_equal(n$source[n$cnpj == "33000167000101"], "cia")
+  expect_equal(n$name[n$cnpj == "11111111000111"], "FUNDO \"ALFA\"")             # stray quote kept as published
+  expect_equal(n$source[n$cnpj == "55555555000155"], "provider")
+  expect_false("12345678909" %in% sub("^000", "", n$cnpj))                         # natural-person manager left out
+  expect_equal(anyDuplicated(n$cnpj), 0L)
+})
+
+test_that("the loading bar waits, stays a minimum time, follows real progress and is in both versions", {
+  node <- Sys.which("node")
+  if (!nzchar(node)) node <- file.path(Sys.getenv("LOCALAPPDATA"), "Programs", "TaxMiner", "node-v26.13.0-win-x64", "node.exe")
+  skip_if_not(file.exists(node), "Node.js not available")
+  root <- testthat::test_path("..", "..")
+  out <- suppressWarnings(system2(node, c(shQuote(testthat::test_path("loadbar_test.js")),
+                                          shQuote(file.path(root, "prototype", "www", "loadbar.js"))),
+                                  stdout = TRUE, stderr = TRUE))
+  expect_equal(tail(out, 1), "ok")
+  # Loaded by the app header and by the published page, before the other scripts.
+  expect_match(paste(readLines(file.path(root, "prototype", "app.R"), encoding = "UTF-8"), collapse = "\n"),
+               "loadbar.js\", defer = NA),\\s+shiny::tags\\$script\\(src = \"panorama.js\"")
+  export <- paste(readLines(file.path(root, "scripts", "export_static_dashboard.R"), encoding = "UTF-8"), collapse = "\n")
+  expect_match(export, "src = \"loadbar.js\"", fixed = TRUE)
+  expect_match(export, "prototype/www/loadbar.js", fixed = TRUE)
 })

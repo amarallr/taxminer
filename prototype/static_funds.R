@@ -16,6 +16,11 @@ static_fund_profiles <- function(ctx) {
   before <- match(paste(lkey, vapply(last$month, shift_month, character(1), -12L)), paste(key, m$month))
   last$change12 <- ifelse(is.na(before), NA_real_, (last$net_assets - m$net_assets[before]) / m$net_assets[before])
   last$change12[!is.finite(last$change12)] <- NA_real_
+  # Latest month with a published number of quotaholders (fund characteristics).
+  h <- m[!is.na(m$quotaholders), , drop = FALSE]
+  h <- h[!duplicated(paste(h$family, h$fund_cnpj), fromLast = TRUE), , drop = FALSE]
+  k <- match(lkey, paste(h$family, h$fund_cnpj))
+  last$holders_last <- h$quotaholders[k]; last$holders_month <- h$month[k]
   last$rank <- NA_integer_; last$peers <- NA_integer_; last$percentile <- NA_real_
   for (f in unique(last$family)) {
     s <- sort(ctx$snapshot$net_assets[ctx$snapshot$family == f & !is.na(ctx$snapshot$net_assets)])
@@ -48,7 +53,24 @@ static_fund_index <- function(data, ctx) {
     peers = p$peers[k], percentile = p$percentile[k], quotaholders = p$quotaholders[k],
     investment_entity = if (is.null(data$investment_entity)) NA_character_ else ifelse(
       l$family == "fip", data$investment_entity$investment_entity[match(l$fund_cnpj, data$investment_entity$fund_cnpj)], NA_character_),
+    traits = static_fund_traits(data$attributes, l$family, l$fund_cnpj),
+    holders_last = p$holders_last[k], holders_month = p$holders_month[k],
     stringsAsFactors = FALSE)
+}
+
+# Characteristics of each fund as a JSON array in static_trait_order: each item
+# is [value, "YYYY-MM"] (latest report that filled it) or null.
+static_trait_order <- c("condominium", "exclusive", "investment_entity", "single_interest", "family_link")
+static_fund_traits <- function(attributes, family, cnpj) {
+  if (is.null(attributes)) return(rep("null", length(family)))
+  key <- paste(family, cnpj)
+  items <- vapply(static_trait_order, function(a) {
+    x <- attributes[attributes$attribute == a, , drop = FALSE]
+    k <- match(key, paste(x$family, x$fund_cnpj))
+    ifelse(is.na(k), "null", sprintf("[%s,%s]", json_string(x$value[k]), json_string(x$period[k])))
+  }, character(length(family)))
+  if (!is.matrix(items)) items <- matrix(items, nrow = length(family))
+  sprintf("[%s]", apply(items, 1, paste, collapse = ","))
 }
 
 static_fund_index_json <- function(index, master, meta) {
@@ -59,7 +81,8 @@ static_fund_index_json <- function(index, master, meta) {
                      json_number(index$change12, 4L), ifelse(is.na(index$rank), "null", index$rank),
                      ifelse(is.na(index$peers), "null", index$peers), json_number(index$percentile, 4L),
                      json_number(index$quotaholders, 0L), json_number(index$share, 6L),
-                     json_string(index$investment_entity))
+                     json_string(index$investment_entity), index$traits,
+                     json_number(index$holders_last, 0L), json_string(index$holders_month))
   # Every denomination of the listed funds (the Denominações tab and the search).
   h <- master$name_history[master$name_history$entity_id %in% index$entity, , drop = FALSE]
   n <- master$entity_names[match(h$name_id, master$entity_names$name_id), ]
@@ -74,6 +97,17 @@ static_fund_index_json <- function(index, master, meta) {
          "],\"names\":[", paste(names_rows, collapse = ",\n"), "]}")
 }
 
+# Labels and CVM columns of the characteristics, per family, for the browser:
+# {"order":[...],"labels":{...},"columns":{"fidc":{"condominium":"CONDOM"},...}}.
+static_traits_meta <- function() {
+  sp <- fund_attribute_specs[!duplicated(paste(fund_attribute_specs$family, fund_attribute_specs$attribute)), ]
+  cols <- vapply(split(sp, sp$family), function(x) paste0("{", paste(sprintf("%s:%s", json_string(x$attribute),
+                                                                           json_string(x$column)), collapse = ","), "}"), character(1))
+  paste0("{\"order\":[", paste(json_string(static_trait_order), collapse = ","), "],\"labels\":{",
+         paste(sprintf("%s:%s", json_string(names(fund_attribute_labels)), json_string(unname(fund_attribute_labels))), collapse = ","),
+         "},\"columns\":{", paste(sprintf("%s:%s", json_string(names(cols)), cols), collapse = ","), "}}")
+}
+
 write_static_fund_data <- function(out_dir, data, ctx, generated) {
   dir <- file.path(out_dir, "data")
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
@@ -85,7 +119,8 @@ write_static_fund_data <- function(out_dir, data, ctx, generated) {
                family_names = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_family_names)),
                                                          json_string(unname(fund_family_names))), collapse = ","), "}"),
                tables = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_table_labels)),
-                                                   json_string(unname(fund_table_labels))), collapse = ","), "}"))
+                                                   json_string(unname(fund_table_labels))), collapse = ","), "}"),
+               traits = static_traits_meta())
   writeLines(enc2utf8(static_fund_index_json(index, data$master, meta)), file.path(dir, "funds.json"), useBytes = TRUE)
   invisible(list(funds = nrow(index)))
 }

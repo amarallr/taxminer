@@ -131,8 +131,9 @@
       var x = idx.cedentes[g.ced], w = Math.max(0.4, 100 * g.n / top);
       return '<div class="tm-bar-row tm-ced-row' + (st.picked === g.ced ? ' tm-selected' : '') + '" data-ced="' + g.ced + '">' +
         '<span class="tm-bar-rank">' + (i + 1) + '</span><div class="tm-bar-label"><div class="tm-bar-name">' + esc(x[0]) +
-        ' <span class="tm-tag tm-tag-ced">' + (x[1] === '?' ? 'inválido' : x[1]) + '</span></div><div class="tm-bar-sub">' +
-        esc(x[2] || 'nome não publicado no informe') + '</div></div><div class="tm-bar-track"><div class="tm-bar" style="width:' +
+        ' <span class="tm-tag tm-tag-ced">' + (x[1] === '?' ? 'inválido' : x[1]) + '</span></div><div class="tm-bar-sub"' +
+        (x[6] ? ' title="Fonte do nome: ' + esc(x[6]) + '"' : '') + '>' +
+        esc(x[2] || 'nome não encontrado no informe nem nos cadastros da CVM') + '</div></div><div class="tm-bar-track"><div class="tm-bar" style="width:' +
         w.toFixed(2) + '%;background:#e8692c"></div></div><div class="tm-bar-value">' + int(g.n) + (g.n === 1 ? ' FIDC' : ' FIDCs') + '</div></div>';
     }).join('') + '</div>' : '<div class="tm-empty">Nenhum cedente com esses filtros.</div>');
     if (st.picked == null || !by[st.picked]) st.picked = list.length ? list[0].ced : null;
@@ -146,9 +147,9 @@
     var rows = g.rows.slice().sort(function (a, b) { return (shareNumber(b[4]) || 0) - (shareNumber(a[4]) || 0); });
     box.html(
       '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + esc(TYPES[x[1]]) + ' · ' + esc(x[0]) + '</div>' +
-      '<h2 class="tm-detail-title">' + esc(x[2] || 'Nome não publicado no informe') + '</h2>' +
+      '<h2 class="tm-detail-title">' + esc(x[2] || 'Nome não encontrado no informe nem nos cadastros da CVM') + '</h2>' +
       '<div class="tm-detail-meta"><span><strong>Em ' + monthLabel(c.state.month) + ': </strong>' + int(g.n) + (g.n === 1 ? ' FIDC' : ' FIDCs') + '</span>' +
-      '<span><strong>Informado em: </strong>' + int(x[5]) + (x[5] === 1 ? ' competência' : ' competências') + ' (' + monthLabel(x[3]) + ' a ' + monthLabel(x[4]) + ')</span></div></div>' +
+      (x[6] ? '<span><strong>Fonte do nome: </strong>' + esc(x[6]) + '</span>' : '') + '<span><strong>Informado em: </strong>' + int(x[5]) + (x[5] === 1 ? ' competência' : ' competências') + ' (' + monthLabel(x[3]) + ' a ' + monthLabel(x[4]) + ')</span></div></div>' +
       '<div class="tm-detail-body"><table class="tm-card-table tm-ced-table"><thead><tr><th>FIDC</th><th>Bloco da Tabela I</th>' +
       '<th class="tm-num">Posição</th><th class="tm-num">Participação</th></tr></thead><tbody>' + rows.map(function (r) {
         var f = idx.funds[r[1]];

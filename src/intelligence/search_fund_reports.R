@@ -109,6 +109,83 @@ fund_investment_entity <- function(root) {
   latest_investment_entity(rows)
 }
 
+# Fund characteristics shown in the fund tabs: the most recent non-empty value
+# of each field per fund, as published (S/N fields upper-cased and trimmed,
+# other values kept). Each family only has the fields its CVM report carries;
+# the others are "not in the report" (see fund_attribute_families).
+fund_attribute_specs <- data.frame(
+  attribute = c("condominium", "exclusive", "single_interest", "exclusive", "exclusive",
+                "family_link", "family_link", "investment_entity", "investment_entity", "family_link"),
+  family = c("fidc", "fidc", "fidc", "fii", "fii", "fii", "fii", "fip", "fip", "fiagro"),
+  table_name = c("inf_mensal_fidc_tab_I", "inf_mensal_fidc_tab_I", "inf_mensal_fidc_tab_I",
+                 "inf_mensal_fii_geral", "inf_trimestral_fii_geral", "inf_mensal_fii_geral",
+                 "inf_trimestral_fii_geral", "inf_trimestral_fip", "inf_quadrimestral_fip", "inf_mensal_fiagro"),
+  column = c("CONDOM", "FUNDO_EXCLUSIVO", "COTST_INTERESSE", "Fundo_Exclusivo", "Fundo_Exclusivo",
+             "Cotistas_Vinculo_Familiar", "Cotistas_Vinculo_Familiar", "ENTID_INVEST", "ENTID_INVEST",
+             "Cotistas_Vinculo_Familiar"),
+  stringsAsFactors = FALSE)
+
+fund_attribute_labels <- c(
+  condominium = "Condomínio", exclusive = "Fundo exclusivo",
+  single_interest = "Cotistas com interesse único e indissociável",
+  investment_entity = "Entidade de investimento",
+  family_link = "Cotistas com vínculo familiar ou societário familiar")
+
+# Families whose report has each field (the rest show "não consta do informe").
+fund_attribute_families <- function(attribute) {
+  unique(fund_attribute_specs$family[fund_attribute_specs$attribute == attribute])
+}
+
+# rows: fund_cnpj_normalized, value, period columns; one result row per fund.
+latest_attribute <- function(rows) {
+  v <- trimws(rows$value)
+  rows <- rows[!is.na(v) & nzchar(v) & !is.na(rows$fund_cnpj_normalized), , drop = FALSE]
+  v <- trimws(rows$value)
+  v <- ifelse(toupper(v) %in% c("S", "N"), toupper(v), v)
+  period <- row_period(rows)
+  o <- order(rows$fund_cnpj_normalized, period, decreasing = c(FALSE, TRUE), na.last = TRUE, method = "radix")
+  rows <- rows[o, , drop = FALSE]; v <- v[o]; period <- period[o]
+  first <- !duplicated(rows$fund_cnpj_normalized)
+  data.frame(fund_cnpj = rows$fund_cnpj_normalized[first], value = v[first],
+             period = substr(period[first], 1L, 7L), stringsAsFactors = FALSE)
+}
+
+# Long table: family, fund_cnpj, attribute, value, period.
+fund_attributes <- function(root, specs = fund_attribute_specs) {
+  base <- fund_processed_paths(root)$base
+  out <- list()
+  for (key in unique(paste(specs$family, specs$attribute))) {
+    s <- specs[paste(specs$family, specs$attribute) == key, , drop = FALSE]
+    parts <- lapply(seq_len(nrow(s)), function(i) {
+      if (!dir.exists(file.path(base, s$family[i], s$table_name[i]))) return(NULL)
+      df <- read_fund_columns(root, s$family[i], s$table_name[i],
+                              c("fund_cnpj_normalized", s$column[i], fund_period_columns))
+      if (!s$column[i] %in% names(df)) return(NULL)
+      for (column in setdiff(fund_period_columns, names(df))) df[[column]] <- NA_character_
+      data.frame(fund_cnpj_normalized = df$fund_cnpj_normalized, value = as.character(df[[s$column[i]]]),
+                 df[, fund_period_columns, drop = FALSE], stringsAsFactors = FALSE)
+    })
+    rows <- do.call(rbind, parts)
+    if (is.null(rows) || !nrow(rows)) next
+    l <- latest_attribute(rows)
+    if (nrow(l)) out[[key]] <- data.frame(family = s$family[1], fund_cnpj = l$fund_cnpj, attribute = s$attribute[1],
+                                          value = l$value, period = l$period, stringsAsFactors = FALSE)
+  }
+  if (!length(out)) return(data.frame(family = character(), fund_cnpj = character(), attribute = character(),
+                                      value = character(), period = character()))
+  do.call(rbind, unname(out))
+}
+
+# Display text of one characteristic of one fund ("sim", "não", "fechado",
+# "não informado" or "não consta do informe").
+fund_attribute_text <- function(attributes, family, cnpj, attribute) {
+  if (!family %in% fund_attribute_families(attribute)) return(list(text = "não consta do informe", period = NA_character_))
+  k <- which(attributes$family == family & attributes$fund_cnpj == cnpj & attributes$attribute == attribute)
+  if (!length(k)) return(list(text = "não informado", period = NA_character_))
+  v <- attributes$value[k[1]]
+  list(text = switch(v, S = "sim", N = "não", tolower(v)), period = attributes$period[k[1]])
+}
+
 # Keeps the FIPs whose latest indicator is `value` ("S", "N" or "NA" for not
 # published); other families are not affected by the filter.
 filter_investment_entity <- function(rows, entity, value) {

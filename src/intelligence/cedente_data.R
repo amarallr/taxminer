@@ -1,12 +1,16 @@
 # FIDC cedentes (assignors) as published in the monthly report, table I: for
 # each fund and month, the 9 largest cedentes of each block with their CPF or
 # CNPJ and their share (percent, as published). The report has no cedente
-# name; a name is shown only when the CNPJ is a known entity of the catalog.
+# name; a name is shown when the CNPJ is a known entity of the catalog or,
+# failing that, is in the CVM registries (src/data/cvm_registry_names.R, exact
+# CNPJ), in the Receita Federal CNPJ open data (src/data/rfb_company_names.R,
+# corporate name of the CNPJ root) or, last, in the CVM registries under the
+# same CNPJ root (another branch of the company).
 # CPFs are shown in full (public CVM data; developer decision 2026-11-11).
 # Read by the CEDENTES tab of the app and of the published dashboard through
 # the same JSON files (prototype/www/cedentes.js).
 
-cedente_data_version <- "1"
+cedente_data_version <- "2"
 
 # Blocks of table I that list cedentes (CVM dictionary codes).
 cedente_blocks <- data.frame(
@@ -66,7 +70,8 @@ cedente_share_number <- function(x) {
 
 # JSON package: index.json (months, blocks, cedentes, FIDCs) and
 # months/{yyyy-mm}.json with rows [cedente, fund, block, position, share text].
-write_cedente_data <- function(dir, rows, funds, master = NULL, reference = NULL) {
+write_cedente_data <- function(dir, rows, funds, master = NULL, reference = NULL, registry = NULL,
+                               companies = NULL) {
   unlink(dir, recursive = TRUE)
   dir.create(file.path(dir, "months"), recursive = TRUE, showWarnings = FALSE)
   ced <- unique(rows[, c("cedente", "type")])
@@ -77,6 +82,32 @@ write_cedente_data <- function(dir, rows, funds, master = NULL, reference = NULL
     e <- master$entities
     k <- match(ced$cedente, e$cnpj_formatted)
     name <- ifelse(ced$type == "PJ" & !is.na(k), e$display_name[k], NA_character_)
+  }
+  source <- ifelse(is.na(name), NA_character_, "Catálogo de entidades do TaxMiner")
+  d <- gsub("\\D", "", ced$cedente)
+  pj <- ced$type == "PJ"
+  if (!is.null(registry) && nrow(registry)) {
+    k <- match(d, registry$cnpj)
+    hit <- pj & is.na(name) & !is.na(k)
+    name[hit] <- registry$name[k[hit]]
+    source[hit] <- unname(cvm_registry_name_sources[registry$source[k[hit]]])
+  }
+  # Receita Federal CNPJ open data: corporate name of the CNPJ root.
+  if (!is.null(companies) && nrow(companies)) {
+    k <- match(substr(d, 1, 8), companies$root)
+    hit <- pj & is.na(name) & !is.na(k)
+    name[hit] <- companies$name[k[hit]]
+    source[hit] <- sprintf("Base de CNPJ da Receita Federal (dados abertos, %s), razão social da raiz %s",
+                           companies$month[k[hit]], companies$root[k[hit]])
+  }
+  if (!is.null(registry) && nrow(registry)) {
+    # Same CNPJ root (another branch of the same company): the company name.
+    roots <- registry[!duplicated(substr(registry$cnpj, 1, 8)), , drop = FALSE]
+    r <- match(substr(d, 1, 8), substr(roots$cnpj, 1, 8))
+    hit <- pj & is.na(name) & !is.na(r)
+    name[hit] <- roots$name[r[hit]]
+    source[hit] <- paste0(unname(cvm_registry_name_sources[roots$source[r[hit]]]),
+                          ", pela raiz do CNPJ (", format_cnpj(roots$cnpj[r[hit]]), ")")
   }
   ci <- match(rows$cedente, ced$cedente) - 1L
   span <- tapply(rows$month, ci, range)
@@ -93,9 +124,9 @@ write_cedente_data <- function(dir, rows, funds, master = NULL, reference = NULL
     "{\"version\":", json_string(cedente_data_version), ",\"reference\":", json_string(reference),
     ",\"months\":[", paste(json_string(months), collapse = ","), "]",
     ",\"blocks\":[", paste(json_string(cedente_blocks$label), collapse = ","), "]",
-    ",\"cedentes\":[", paste(sprintf("[%s,%s,%s,%s,%s,%s]", json_string(ced$cedente), json_string(ced$type),
+    ",\"cedentes\":[", paste(sprintf("[%s,%s,%s,%s,%s,%s,%s]", json_string(ced$cedente), json_string(ced$type),
                                      json_string(name), json_string(first[key]), json_string(last[key]),
-                                     as.integer(nmonths[key])), collapse = ",\n"), "]",
+                                     as.integer(nmonths[key]), json_string(source)), collapse = ",\n"), "]",
     ",\"funds\":[", paste(sprintf("[%s,%s,%s]", json_string(fund_keys), json_string(format_cnpj(fund_keys)),
                                   json_string(ifelse(is.na(fk), NA_character_, funds$fund_name[fk]))),
                           collapse = ",\n"), "]}")
@@ -108,7 +139,7 @@ write_cedente_data <- function(dir, rows, funds, master = NULL, reference = NULL
                                                         json_string(rows$share[i])), collapse = ",")),
                file.path(dir, "months", paste0(m, ".json")), useBytes = TRUE)
   }
-  invisible(list(months = length(months), cedentes = nrow(ced), rows = nrow(rows)))
+  invisible(list(months = length(months), cedentes = nrow(ced), rows = nrow(rows), named = sum(!is.na(name))))
 }
 
 # FIDC names for the package: the list of the fund tabs (catalog names).
@@ -117,28 +148,39 @@ cedente_funds <- function(data) {
   l[, c("fund_cnpj", "fund_name")]
 }
 
-cedente_data_signature <- function(root, master = NULL) {
+cedente_data_signature <- function(root, master = NULL, registry = NULL, rfb_month = NA) {
   index <- read_rds_recoverable(fund_processed_paths(root)$index, is.data.frame)
   keep <- grepl("^cvm:fidc:", index$source_id) & index$table_name == "inf_mensal_fidc_tab_I"
   compute_signature_hash(list(
     version = cedente_data_version, parts = sort(index$output_sha256[keep]),
     directory = fund_directory_signature(root), rules = if (is.null(master)) NA else master$rule_version,
+    registry = if (is.null(registry)) NA else compute_signature_hash(registry), rfb_month = rfb_month,
     functions = transformation_signature(list(
       fidc_cedente_rows = fidc_cedente_rows, read_fidc_cedentes = read_fidc_cedentes,
       write_cedente_data = write_cedente_data, format_tax_id = format_tax_id, format_cpf = format_cpf))))
 }
 
-# App: the package under processed/metrics/cedentes, rebuilt only when table I
-# or the catalog changes.
-load_cedente_data <- function(root, data, reference = NULL, rebuild = FALSE) {
+# Names of the PJ cedentes from the Receita Federal CNPJ open data, when the
+# Empresas files were collected under rfb_root (src/data/rfb_company_names.R).
+cedente_company_names <- function(rows, rfb_root) {
+  if (is.null(rfb_root) || is.na(rfb_companies_month(rfb_root))) return(NULL)
+  load_rfb_company_names(rfb_root, substr(gsub("\\D", "", rows$cedente[rows$type == "PJ"]), 1, 8))
+}
+
+# App: the package under processed/metrics/cedentes, rebuilt only when table I,
+# the catalog or the name sources change.
+load_cedente_data <- function(root, data, reference = NULL, rebuild = FALSE, registry = NULL, rfb_root = NULL) {
   dir <- file.path(fund_processed_paths(root)$base, "metrics", "cedentes")
-  sig <- paste(cedente_data_signature(root, data$master), if (is.null(reference)) "" else reference)
+  rfb_month <- if (is.null(rfb_root)) NA else rfb_companies_month(rfb_root)
+  sig <- paste(cedente_data_signature(root, data$master, registry, rfb_month), if (is.null(reference)) "" else reference)
   stamp <- file.path(dir, "signature.txt")
   if (!rebuild && file.exists(stamp) && identical(readLines(stamp, warn = FALSE), sig) &&
       file.exists(file.path(dir, "index.json"))) {
     return(dir)
   }
-  write_cedente_data(dir, read_fidc_cedentes(root), cedente_funds(data), data$master, reference)
+  rows <- read_fidc_cedentes(root)
+  write_cedente_data(dir, rows, cedente_funds(data), data$master, reference, registry,
+                     companies = cedente_company_names(rows, rfb_root))
   writeLines(sig, stamp)
   dir
 }

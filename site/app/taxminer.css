@@ -803,3 +803,33 @@ table.tm-series td.tm-num { max-width: none; }
 .tm-detail-body .tab-content > .tab-pane.active > .tm-tall,
 .tm-detail-body > .tab-content > [data-pane-body="serie"] {
   flex: 1 1 auto !important; min-height: 120px; max-height: none !important; overflow: auto !important; }
+
+/* Loading bar (prototype/www/loadbar.js): thin bar on the top edge while data
+   loads, in a lighter tone of the accent so it reads on the navy header. */
+.tm-loadbar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 2000; pointer-events: none;
+  background: rgba(31, 79, 209, .15); }
+.tm-loadbar[hidden] { display: none; }
+.tm-loadbar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #1f4fd1, #6f9bff);
+  box-shadow: 0 0 6px rgba(111, 155, 255, .7); transition: width .2s ease-out; }
+.tm-loadbar-done { opacity: 0; transition: opacity .25s ease .1s; }
+html.tm-loading, html.tm-loading body { cursor: progress; }
+@media (prefers-reduced-motion: reduce) {
+  .tm-loadbar-fill { transition: none; width: 100% !important; box-shadow: none; }
+  .tm-loadbar-done { transition: none; }
+}
+
+/* Fund characteristics under the detail title (cotistas, condomínio,
+   exclusivo, entidade de investimento, interesse único). */
+.tm-traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tm-trait { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 8px; border: 1px solid var(--tm-rule);
+            border-radius: 4px; background: var(--tm-panel); font-size: .7rem; line-height: 1.5; cursor: default; }
+.tm-trait-label { color: var(--tm-muted); }
+.tm-trait-value { color: var(--tm-ink); font-weight: 600; }
+.tm-trait-value.tm-muted { color: var(--tm-muted); font-weight: 400; font-style: italic; }
+/* Unified net assets + quotaholders chart: title and key on one line. */
+.tm-subhead-key { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; }
+.tm-subhead-key .tm-chart-key { margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; }
+/* Highlighted characteristic: FIP that is not an investment entity. */
+.tm-trait.tm-trait-alert { border-color: #c98a00; background: #fff4d6; box-shadow: inset 3px 0 0 #c98a00; }
+.tm-trait.tm-trait-alert .tm-trait-value { color: #7a4f00; font-weight: 700; }
+.tm-trait.tm-trait-alert .tm-trait-value::before { content: "\26A0\FE0E  "; }

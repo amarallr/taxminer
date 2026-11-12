@@ -9,7 +9,9 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
             "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
-            "src/intelligence/cedente_data.R", "prototype/charts.R",
+            "src/intelligence/cedente_data.R", "src/collect/download_fund_reports.R",
+            "src/collect/collect_cvm_registries.R", "src/data/cvm_registry_names.R",
+            "src/collect/collect_rfb_cnpj.R", "src/data/rfb_company_names.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/fund_record_module.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
@@ -38,7 +40,11 @@ theme <- tm_theme()
 if (fund_ready) {
   shiny::addResourcePath("panorama-data", load_panorama_data(fund_root, fund_ctx, fund_data$directory, fund_data$master))
   # FIDC cedentes (processed/metrics/cedentes), read by www/cedentes.js.
-  shiny::addResourcePath("cedentes-data", load_cedente_data(fund_root, fund_data, unname(fund_ctx$complete["fidc"])))
+  # Names of cedentes without a catalog entity: CVM registries
+  # (scripts/collect_cvm_registries.R), when collected.
+  shiny::addResourcePath("cedentes-data", load_cedente_data(fund_root, fund_data, unname(fund_ctx$complete["fidc"]),
+                                                            registry = load_cvm_registry_names(cvm_registry_root(data_dir)),
+                                                            rfb_root = cvm_registry_root(data_dir)))
 }
 
 unavailable <- function(text) {
@@ -46,10 +52,11 @@ unavailable <- function(text) {
 }
 
 ui <- bslib::page_navbar(
-  title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
+  id = "nav", title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,
+                           shiny::tags$script(src = "loadbar.js", defer = NA),
                            shiny::tags$script(src = "panorama.js", defer = NA),
                            shiny::tags$script(src = "cedentes.js", defer = NA)),
   bslib::nav_panel(
@@ -95,10 +102,18 @@ ui <- bslib::page_navbar(
 
 server <- function(input, output, session) {
   if (fund_ready) {
-    fund_search_server("funds", fund_root, fund_ctx, data = fund_data)
-    lapply(family_tabs, function(f) fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
-                                                       data = fund_data, families = f))
-    fund_record_server("record", fund_root, fund_data, fund_ctx)
+    picked <- list(Fundos = fund_search_server("funds", fund_root, fund_ctx, data = fund_data))
+    for (f in family_tabs) picked[[toupper(f)]] <- fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
+                                                                     data = fund_data, families = f)
+    open_record <- fund_record_server("record", fund_root, fund_data, fund_ctx)
+    # FICHA opens on the fund selected in the tab that was active before it.
+    previous <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$nav, {
+      if (identical(input$nav, "Ficha") && !is.null(previous()) && previous() %in% names(picked)) {
+        open_record(shiny::isolate(picked[[previous()]]()))
+      }
+      previous(input$nav)
+    })
     fund_admin_server("admins", fund_ctx)
     fund_coverage_server("fund_coverage", fund_root)
   }

@@ -403,3 +403,34 @@ test_that("FIPs filter by the latest published investment entity indicator", {
   expect_equal(nrow(filter_investment_entity(funds, e, "")), 4L)
   expect_equal(nrow(fund_investment_entity(root)), 0L)  # fixture FIP has no ENTID_INVEST column
 })
+
+test_that("fund characteristics keep the latest published value and say when the report lacks the field", {
+  rows <- data.frame(
+    fund_cnpj_normalized = c("11", "11", "22", "33"),
+    value = c("Fechado", " Aberto ", "", "s"),
+    DT_COMPTC = c("2023-12-31", "2025-08-31", "2025-08-31", "2020-03-31"),
+    stringsAsFactors = FALSE)
+  l <- latest_attribute(rows)
+  expect_equal(l$fund_cnpj, c("11", "33"))
+  expect_equal(l$value, c("Aberto", "S"))      # trimmed; S/N upper-cased, other text as published
+  expect_equal(l$period, c("2025-08", "2020-03"))
+  a <- data.frame(family = c("fidc", "fidc", "fii"), fund_cnpj = c("11", "11", "44"),
+                  attribute = c("condominium", "single_interest", "exclusive"),
+                  value = c("Aberto", "N", "Sim"), period = c("2025-08", "2025-08", "2024-12"),
+                  stringsAsFactors = FALSE)
+  expect_equal(fund_attribute_text(a, "fidc", "11", "condominium")$text, "aberto")
+  expect_equal(fund_attribute_text(a, "fidc", "11", "single_interest")$text, "não")
+  expect_equal(fund_attribute_text(a, "fii", "44", "exclusive")$text, "sim")
+  expect_equal(fund_attribute_text(a, "fidc", "11", "exclusive")$text, "não informado")
+  expect_equal(fund_attribute_text(a, "fii", "44", "condominium")$text, "não consta do informe")
+  expect_setequal(fund_attribute_families("investment_entity"), "fip")
+  expect_equal(nrow(fund_attributes(root, fund_attribute_specs[0, ])), 0L)
+  source(testthat::test_path("..", "..", "src", "intelligence", "panorama_data.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "prototype", "static_funds.R"), encoding = "UTF-8")
+  expect_equal(static_fund_traits(a, c("fidc", "fip"), c("11", "11")),
+               c('[["Aberto","2025-08"],null,null,["N","2025-08"],null]',
+                 "[null,null,null,null,null]"))
+  meta <- jsonlite::fromJSON(static_traits_meta())
+  expect_equal(meta$order, static_trait_order)
+  expect_equal(meta$columns$fidc$single_interest, "COTST_INTERESSE")
+})

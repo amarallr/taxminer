@@ -13,6 +13,8 @@
     return v.toLocaleString('pt-BR', {minimumFractionDigits: d, maximumFractionDigits: d});
   }
   function fmtInt(v) { return v == null || isNaN(v) ? '—' : num(Math.round(v), 0); }
+  // Compact right-axis label for counts (as axis_int in prototype/charts.R).
+  function axisInt(v) { return v >= 1e6 ? num(v / 1e6, 1) + ' mi' : v >= 1e4 ? num(Math.round(v / 1e3), 0) + ' mil' : fmtInt(v); }
   function fmtBRL(v, d) {
     if (v == null || isNaN(v)) return '—';
     d = d == null ? 1 : d;
@@ -54,10 +56,14 @@
     return t;
   }
   function lineChart(months, values, o) {
-    o = $.extend({color: '#2a78d6', width: 560, height: 190, area: true, fmt: axisBRL, tip: fmtBRL, label: ''}, o);
+    // o.values2 (optional): second measure, dashed neutral line on its own
+    // right-hand axis whose ticks sit on the left gridlines (as svg_line_chart).
+    o = $.extend({color: '#2a78d6', width: 560, height: 190, area: true, fmt: axisBRL, tip: fmtBRL, label: '',
+                  values2: null, fmt2: axisInt, color2: '#5b6573', tips: null}, o);
     var ok = values.some(function (v) { return v != null; });
     if (!months.length || !ok) return '<div class="tm-chart-empty">Sem dados para o gráfico.</div>';
-    var ml = 62, mr = 14, mt = 10, mb = 24, W = o.width, H = o.height, pw = W - ml - mr, ph = H - mt - mb;
+    var dual = !!o.values2 && o.values2.some(function (v) { return v != null; });
+    var ml = 62, mr = dual ? 46 : 14, mt = 10, mb = 24, W = o.width, H = o.height, pw = W - ml - mr, ph = H - mt - mb;
     var d = months.map(function (m) { return Date.UTC(+m.substr(0, 4), +m.substr(5, 2) - 1, 1); });
     var x0 = d[0], x1 = d[d.length - 1]; if (x1 === x0) x1 = x0 + 31 * 864e5;
     var vmax = Math.max.apply(null, values.filter(function (v) { return v != null; }));
@@ -70,6 +76,26 @@
       out.push('<line class="tm-grid" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + sy(t).toFixed(1) + '" y2="' + sy(t).toFixed(1) +
                '"/><text class="tm-axis" x="' + (ml - 8) + '" y="' + (sy(t) + 4).toFixed(1) + '" text-anchor="end">' + esc(o.fmt(t)) + '</text>');
     });
+    var py2 = px.map(function () { return null; }), lines2 = [];
+    if (dual) {
+      var k = ticks.length - 1, raw2 = Math.max.apply(null, o.values2.filter(function (v) { return v != null; })) / k;
+      var p2 = Math.pow(10, Math.floor(Math.log10(raw2 || 1))), f2 = raw2 / p2;
+      var ymax2 = (raw2 > 0 ? (f2 <= 1 ? 1 : f2 <= 2 ? 2 : f2 <= 2.5 ? 2.5 : f2 <= 5 ? 5 : 10) * p2 : 1) * k;
+      var sy2 = function (v) { return mt + ph - v / ymax2 * ph; };
+      py2 = o.values2.map(function (v) { return v == null ? null : sy2(v); });
+      for (var j = 0; j <= k; j++) {
+        var t2 = ymax2 * j / k;
+        out.push('<text class="tm-axis tm-axis-2" x="' + (W - mr + 6) + '" y="' + (sy2(t2) + 4).toFixed(1) + '" text-anchor="start">' +
+                 esc(o.fmt2(t2)) + '</text>');
+      }
+      var seg2 = [], c2 = [];
+      py2.forEach(function (v, i) { if (v == null) { if (c2.length) seg2.push(c2); c2 = []; } else c2.push(i); });
+      if (c2.length) seg2.push(c2);
+      seg2.forEach(function (sg) {
+        lines2.push('<path class="tm-line tm-line-2" d="M' + sg.map(function (i) { return px[i].toFixed(1) + ',' + py2[i].toFixed(1); }).join(' L') +
+                    '" stroke="' + o.color2 + '"/>');
+      });
+    }
     var y0 = new Date(x0).getUTCFullYear(), y1 = new Date(x1).getUTCFullYear(), step = Math.max(1, Math.ceil((y1 - y0 + 1) / 6));
     for (var y = y0; y <= y1; y += step) {
       var yd = Date.UTC(y, 0, 1); if (yd < x0 || yd > x1) continue;
@@ -80,6 +106,7 @@
     var segs = [], cur = [];
     py.forEach(function (v, i) { if (v == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push(i); });
     if (cur.length) segs.push(cur);
+    out.push(lines2.join(''));
     segs.forEach(function (s) {
       var path = s.map(function (i) { return px[i].toFixed(1) + ',' + py[i].toFixed(1); }).join(' L');
       if (o.area) out.push('<path class="tm-area" d="M' + px[s[0]].toFixed(1) + ',' + sy(0).toFixed(1) + ' L' + path + ' L' +
@@ -90,10 +117,11 @@
     out.push('<circle class="tm-end" cx="' + px[last].toFixed(1) + '" cy="' + py[last].toFixed(1) + '" r="4" fill="' + o.color + '"/>');
     px.forEach(function (x, i) {
       var a = i ? (px[i - 1] + x) / 2 : ml, b = i < px.length - 1 ? (x + px[i + 1]) / 2 : W - mr;
-      var tip = monthLabel(months[i]) + '\n' + (values[i] == null ? 'sem informe' : o.tip(values[i]));
+      var tip = o.tips ? o.tips[i] : monthLabel(months[i]) + '\n' + (values[i] == null ? 'sem informe' : o.tip(values[i]));
       out.push('<g class="tm-hit" data-tip="' + esc(tip) + '"><rect x="' + a.toFixed(1) + '" y="' + mt + '" width="' + Math.max(1, b - a).toFixed(1) +
                '" height="' + ph + '"/><line class="tm-cross" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + mt + '" y2="' + (mt + ph) + '"/>' +
-               (py[i] == null ? '' : '<circle class="tm-dot" cx="' + x.toFixed(1) + '" cy="' + py[i].toFixed(1) + '" r="5" fill="' + o.color + '"/>') + '</g>');
+               (py[i] == null ? '' : '<circle class="tm-dot" cx="' + x.toFixed(1) + '" cy="' + py[i].toFixed(1) + '" r="5" fill="' + o.color + '"/>') +
+               (py2[i] == null ? '' : '<circle class="tm-dot" cx="' + x.toFixed(1) + '" cy="' + py2[i].toFixed(1) + '" r="4" fill="' + o.color2 + '"/>') + '</g>');
     });
     return '<svg class="tm-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label) + '">' + out.join('') + '</svg>';
   }
@@ -146,7 +174,8 @@
 
   // ---- Fund tabs (Fundos, FIDC, FII, FIP, FIAGRO) ----
   var F = {family: 0, entity: 1, cnpj: 2, key: 3, name: 4, names: 5, admin: 6, adminEntity: 7, adminCnpj: 8,
-           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18, share: 19, entInv: 20};
+           first: 9, last: 10, count: 11, pl: 12, plMonth: 13, change: 14, rank: 15, peers: 16, pct: 17, holders: 18, share: 19, entInv: 20, traits: 21,
+           holdersLast: 22, holdersMonth: 23};
   var PAGE = 25, data = null;
 
   function loadFunds() {
@@ -307,9 +336,7 @@
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2><div class="tm-detail-meta"><span><strong>Administrador: </strong>' +
       esc(f[F.admin] || 'não publicado') + (f[F.adminCnpj] ? ' · ' + esc(f[F.adminCnpj]) : '') + '</span><span><strong>Informes: </strong>' +
       fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span>' +
-      (f[F.family] === 'fip' ? '<span><strong>Entidade de investimento: </strong>' +
-        (f[F.entInv] === 'S' ? 'sim' : f[F.entInv] === 'N' ? 'não' : f[F.entInv] == null ? 'não informado' : esc(f[F.entInv])) + '</span>' : '') +
-      '</div></div>' +
+      '</div>' + traitsHtml(f, d.meta.traits) + '</div>' +
       '<div class="tm-detail-body"><div class="tm-static-tools"><select class="form-select form-select-sm tm-ficha-table" disabled>' +
       '<option>Carregando informes…</option></select><select class="form-select form-select-sm tm-ficha-period" disabled></select></div>' +
       '<div class="tm-caption tm-ficha-summary"></div>' +
@@ -377,7 +404,29 @@
     if (gzCache[url]) return gzCache[url];
     var done = $.Deferred();
     if (keep) gzCache[url] = done.promise();
-    fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    // Loading bar (prototype/www/loadbar.js): real progress when the server
+    // sends the size of the file.
+    var load = window.tmLoad ? window.tmLoad.start() : null;
+    function finish() { if (load != null) { window.tmLoad.done(load); load = null; } }
+    done.always(finish);
+    fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var total = +r.headers.get('Content-Length');
+      if (!r.body || !r.body.getReader || !total || load == null) return r.arrayBuffer();
+      var reader = r.body.getReader(), chunks = [], got = 0;
+      return (function pump() {
+        return reader.read().then(function (x) {
+          if (x.done) {
+            var all = new Uint8Array(got), at = 0;
+            chunks.forEach(function (c) { all.set(c, at); at += c.length; });
+            return all.buffer;
+          }
+          chunks.push(x.value); got += x.value.length;
+          window.tmLoad.progress(load, got / total);
+          return pump();
+        });
+      })();
+    })
       .then(function (buf) {
         var b = new Uint8Array(buf);
         if (b.length > 1 && b[0] === 0x1f && b[1] === 0x8b) {
@@ -509,6 +558,29 @@
     return '<div class="tm-caption">Períodos do mais recente ao mais antigo; passe o mouse no período para ver a citação da fonte.</div>' +
       '<table class="tm-wide tm-series"><thead><tr><th class="tm-field">Campo</th>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
   }
+  // Characteristics under the detail title (same as fund_traits_ui in
+  // prototype/fund_search_module.R): cotistas plus the fields of meta.traits.
+  function traitsHtml(f, meta) {
+    if (!meta) return '';
+    var fam = f[F.family], cols = meta.columns[fam] || {}, tr = f[F.traits] || [];
+    function item(label, text, tip, alert) {
+      var muted = text === 'não informado' || text === 'não consta do informe';
+      return '<span class="tm-trait' + (alert ? ' tm-trait-alert' : '') + '" data-tip="' + esc(tip) + '"><span class="tm-trait-label">' + esc(label) + '</span>' +
+             '<span class="tm-trait-value' + (muted ? ' tm-muted' : '') + '">' + esc(text) + '</span></span>';
+    }
+    var out = [item('Cotistas', f[F.holdersLast] == null ? 'não informado' : fmtInt(f[F.holdersLast]),
+                    f[F.holdersLast] == null ? 'Quantidade de cotistas não publicada nos informes.'
+                      : 'Quantidade de cotistas · informe de ' + monthLabel(f[F.holdersMonth]))];
+    meta.order.forEach(function (a, i) {
+      if (a === 'family_link' && !cols[a]) return;
+      var label = meta.labels[a], v = tr[i], text, tip;
+      if (!cols[a]) { text = 'não consta do informe'; tip = 'O informe da CVM de ' + fam.toUpperCase() + ' não tem este campo.'; }
+      else if (!v) { text = 'não informado'; tip = label + ' (' + cols[a] + ') · não preenchido nos informes'; }
+      else { text = v[0] === 'S' ? 'sim' : v[0] === 'N' ? 'não' : String(v[0]).toLowerCase(); tip = label + ' (' + cols[a] + ') · informe de ' + v[1]; }
+      out.push(item(label, text, tip, a === 'investment_entity' && text === 'não'));
+    });
+    return '<div class="tm-traits">' + out.join('') + '</div>';
+  }
   function profile(f, s, color) {
     if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';
     var months = s[1].map(function (_, i) { return addMonths(s[0], i); });
@@ -523,10 +595,18 @@
       kpi('Variação 12 meses', fmtPct(f[F.change]), 'mesmo mês, ano anterior') +
       kpi('Cotistas', fmtInt(f[F.holders])) +
       kpi('Posição entre ' + f[F.family].toUpperCase(), rank, f[F.pct] == null ? '' : 'maior que ' + fmtPct(f[F.pct], 0, false) + ' dos fundos') +
-      '</div><div class="tm-profile-charts' + (holders ? '' : ' tm-one') + '"><div><div class="tm-subhead">Patrimônio líquido</div>' +
-      lineChart(months, s[1], {color: color, height: 220, label: 'Patrimônio líquido do fundo'}) + '</div>' +
-      (holders ? '<div><div class="tm-subhead">Cotistas</div>' + lineChart(months, s[2], {color: color, height: 220, area: false,
-        fmt: function (v) { return fmtInt(v); }, tip: fmtInt, label: 'Número de cotistas do fundo'}) + '</div>' : '') +
+      // One chart: net assets on the left axis, quotaholders (dashed) on the right.
+      '</div><div class="tm-profile-charts tm-one"><div><div class="tm-subhead tm-subhead-key"><span>' +
+      (holders ? 'Patrimônio líquido e cotistas' : 'Patrimônio líquido') + '</span>' +
+      (holders ? '<div class="tm-chart-key"><span class="tm-key-line" style="border-top-color:' + color + '"></span>Patrimônio líquido (eixo esquerdo)' +
+        '<span class="tm-key-line tm-key-dash" style="border-top-color:#5b6573"></span>Cotistas (eixo direito)</div>' : '') + '</div>' +
+      lineChart(months, s[1], {color: color, height: 240, width: 760,
+        label: holders ? 'Patrimônio líquido (eixo esquerdo) e número de cotistas (eixo direito) do fundo' : 'Patrimônio líquido do fundo',
+        values2: holders ? s[2] : null,
+        tips: months.map(function (m, i) {
+          return monthLabel(m) + '\n' + (s[1][i] == null ? 'sem informe' : 'PL ' + fmtBRL(s[1][i])) +
+                 (s[2][i] == null ? '' : '\nCotistas ' + fmtInt(s[2][i]));
+        })}) + '</div>' +
       '</div><div class="tm-caption">Valores do informe de cada período (versão mais recente). Meses sem informe ficam em branco.</div>';
   }
   function namesTable(names) {
@@ -573,7 +653,10 @@
       box.find('.nav-link').removeClass('active'); $(this).addClass('active');
       box.find('[data-pane-body]').attr('hidden', true).filter('[data-pane-body="' + k + '"]').removeAttr('hidden');
     });
-    t.show(t.funds[0]);
+    t.el.data('tm-record', t);
+    // Opens on the fund of the tab the user came from, else the largest fund.
+    t.show(t.el.data('tm-open') || t.funds[0]);
+    t.el.removeData('tm-open');
   };
   // Largest funds first; CNPJ digits match from the start, words anywhere.
   RecordTab.prototype.suggest = function (v) {
@@ -626,8 +709,16 @@
     loadFunds().done(function (d) { if (record) new RecordTab(el).render(d); else new FundTab(el).render(d); })
       .fail(function () { el.html('<div class="tm-empty">Não foi possível carregar a lista de fundos.</div>'); });
   }
+  // FICHA opens on the fund selected in the tab that was active before it.
+  function paneOf(link) { return link ? $($(link).attr('data-bs-target') || $(link).attr('href')) : $(); }
   $(document).on('shown.bs.tab', function (e) {
-    var pane = $($(e.target).attr('data-bs-target') || $(e.target).attr('href'));
+    var pane = paneOf(e.target);
+    var rec = pane.find('.tm-static-record'), from = paneOf(e.relatedTarget).find('.tm-static-funds').data('tm-tab');
+    var f = from && from.selected;
+    if (rec.length && f) {
+      var r = rec.data('tm-record');
+      if (r) { if (r.selected !== f) r.show(f); } else rec.data('tm-open', f);
+    }
     pane.find('.tm-static-funds, .tm-static-record').each(function () { activate($(this)); });
   });
   $(function () { $('.tab-pane.active .tm-static-funds, .tab-pane.active .tm-static-record').each(function () { activate($(this)); }); });

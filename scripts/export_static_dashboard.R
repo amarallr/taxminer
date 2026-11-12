@@ -17,7 +17,9 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
             "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
-            "src/intelligence/cedente_data.R", "prototype/charts.R",
+            "src/intelligence/cedente_data.R", "src/collect/download_fund_reports.R",
+            "src/collect/collect_cvm_registries.R", "src/data/cvm_registry_names.R",
+            "src/collect/collect_rfb_cnpj.R", "src/data/rfb_company_names.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/static_funds.R")) {
   source(f, encoding = "UTF-8")
@@ -48,8 +50,14 @@ fichas_x <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS_X")) && dir.exists(file.
   list(funds = length(list.files(file.path(out_dir, "data", "fichas_x"), pattern = "\\.json\\.gz$", recursive = TRUE)) - 1L)
 } else write_static_ficha_extras(out_dir, root, data)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
-cedentes <- write_cedente_data(file.path(out_dir, "data", "cedentes"), read_fidc_cedentes(root),
-                               cedente_funds(data), data$master, unname(ctx$complete["fidc"]))
+# Cedente names: entity catalog, CVM registries and Receita Federal CNPJ open
+# data, when collected (scripts/collect_cvm_registries.R, scripts/collect_rfb_cnpj.R).
+ced_rows <- read_fidc_cedentes(root)
+registry_root <- cvm_registry_root(resolve_data_dir())
+cedentes <- write_cedente_data(file.path(out_dir, "data", "cedentes"), ced_rows,
+                               cedente_funds(data), data$master, unname(ctx$complete["fidc"]),
+                               registry = load_cvm_registry_names(registry_root),
+                               companies = cedente_company_names(ced_rows, registry_root))
 panorama <- write_panorama_data(file.path(out_dir, "data", "panorama"), ctx, data$directory, data$master, generated)
 
 # Same one-screen layout as the app tab (fund_admin_ui); the 40 largest
@@ -102,7 +110,8 @@ page <- bslib::page_navbar(
     shiny::tags$meta(name = "description",
                      content = "Panorama de FII, FIDC, FIP e FIAGRO a partir dos informes públicos da CVM."),
     shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), tm_app_script(),
-    shiny::tags$script(src = "panorama.js", defer = NA), shiny::tags$script(src = "taxminer_static.js", defer = NA),
+    shiny::tags$script(src = "loadbar.js", defer = NA), shiny::tags$script(src = "panorama.js", defer = NA),
+    shiny::tags$script(src = "taxminer_static.js", defer = NA),
     shiny::tags$script(src = "cedentes.js", defer = NA)),
   bslib::nav_panel("Panorama", panorama_ui("data/panorama/")),
   bslib::nav_panel("Administradores", admin_area),
@@ -119,6 +128,7 @@ unlink(file.path(out_dir, "lib"), recursive = TRUE)  # generated folder, rebuilt
 htmltools::save_html(page, file.path(out_dir, "index.html"), libdir = "lib", lang = "pt-BR")
 file.copy("prototype/www/taxminer.css", file.path(out_dir, "taxminer.css"), overwrite = TRUE)
 file.copy("prototype/static/taxminer_static.js", file.path(out_dir, "taxminer_static.js"), overwrite = TRUE)
+file.copy("prototype/www/loadbar.js", file.path(out_dir, "loadbar.js"), overwrite = TRUE)
 file.copy("prototype/www/panorama.js", file.path(out_dir, "panorama.js"), overwrite = TRUE)
 file.copy("prototype/www/cedentes.js", file.path(out_dir, "cedentes.js"), overwrite = TRUE)
 # The theme uses system fonts: the bundled web fonts and the source maps are

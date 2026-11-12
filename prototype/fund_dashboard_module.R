@@ -276,15 +276,19 @@ fund_profile_ui <- function(ctx, family, cnpj) {
       kpi("Cotistas", format_int(p$last$quotaholders)),
       kpi(sprintf("Posição entre %s", toupper(family)), rank_text,
           if (is.na(p$percentile)) NULL else sprintf("maior que %s dos fundos", format_pct(p$percentile, 0, sign = FALSE)))),
+    # One chart: net assets on the left axis, quotaholders (dashed) on the right.
     shiny::div(
-      class = if (has_holders) "tm-profile-charts" else "tm-profile-charts tm-one",
-      shiny::div(shiny::div(class = "tm-subhead", "Patrimônio líquido"),
-                 svg_line_chart(d$month, d$net_assets, color, label = "Patrimônio líquido do fundo", height = 220,
-                                tips = sprintf("%s\nPL %s\nFonte: %s, linha %s", month_label(d$month),
-                                               format_brl(d$net_assets), d$source_file, d$source_line))),
-      if (has_holders) shiny::div(
-        shiny::div(class = "tm-subhead", "Cotistas"),
-        svg_line_chart(d$month, d$quotaholders, color, format_value = axis_int, format_tip = format_int,
-                       area = FALSE, label = "Número de cotistas do fundo", height = 220))),
+      class = "tm-profile-charts tm-one",
+      shiny::div(
+        shiny::div(class = "tm-subhead tm-subhead-key",
+                   shiny::span(if (has_holders) "Patrimônio líquido e cotistas" else "Patrimônio líquido"),
+                   if (has_holders) chart_key(color, "Patrimônio líquido (eixo esquerdo)", "Cotistas (eixo direito)")),
+        svg_line_chart(d$month, d$net_assets, color, height = 240, width = 760,
+                       label = if (has_holders) "Patrimônio líquido (eixo esquerdo) e número de cotistas (eixo direito) do fundo"
+                               else "Patrimônio líquido do fundo",
+                       values2 = if (has_holders) d$quotaholders,
+                       tips = sprintf("%s\nPL %s%s\nFonte: %s, linha %s", month_label(d$month), format_brl(d$net_assets),
+                                      ifelse(is.na(d$quotaholders), "", paste0("\nCotistas ", format_int(d$quotaholders))),
+                                      d$source_file, d$source_line)))),
     shiny::div(class = "tm-caption", "Valores do informe de cada período (versão mais recente). Passe o mouse para ver o arquivo de origem."))
 }
