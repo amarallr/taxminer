@@ -215,3 +215,25 @@ Rscript --vanilla scripts/collect_fund_reports.R history   # every listed period
   downloaded (HTTP 200), all checks passed.
 - **Out of scope** unless the developer decides otherwise: FII `DFIN` (index of financial
   statement documents) and the other fund folders of the portal (`FI/`, `FIE/`, `ADM_FII/`).
+
+## Name sources for FIDC cedentes (2026-11-12, `decision_0041`)
+
+The FIDC monthly report publishes the cedente CPF or CNPJ but no name. PJ cedente names come
+from public registries, in this order: TaxMiner entity catalog, CVM registries (exact CNPJ),
+Receita Federal CNPJ open data (corporate name of the CNPJ root), CVM registries by CNPJ root.
+
+| Item               | CVM registries                                                                                                                       | Receita Federal CNPJ open data                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Files              | `FI/CAD/DADOS/cad_fi.csv`, `FI/CAD/DADOS/registro_fundo_classe.zip`, `CIA_ABERTA/CAD/DADOS/cad_cia_aberta.csv` (dados.cvm.gov.br) | `Empresas0.zip` … `Empresas9.zip` of the month (`arquivos.receitafederal.gov.br`, public share `Dados/Cadastros/CNPJ/{yyyy-mm}`) |
+| Format             | Latin-1, `;`, stray quotes (read with `quote = ""`)                                                                                  | No header, `;`, quoted, Latin-1: CNPJ root, corporate name, legal nature, responsible qualification, capital, size, federal entity |
+| Collector          | `scripts/collect_cvm_registries.R` (`src/collect/collect_cvm_registries.R`)                                                          | `scripts/collect_rfb_cnpj.R [yyyy-mm]` (`src/collect/collect_rfb_cnpj.R`)                                          |
+| Storage            | `investment_fund_reports/registries/raw/{stem}/{sha256_12}.{ext}`, manifest `manifests/registries.csv`                               | `investment_fund_reports/registries/raw/rfb_cnpj/{yyyy-mm}/EmpresasN.zip`, manifest `manifests/rfb_cnpj.csv`       |
+| Reader             | `src/data/cvm_registry_names.R` (cache `processed/cnpj_names.rds`)                                                                   | `src/data/rfb_company_names.R`: zips read as a stream, only the cedente roots kept (cache `processed/rfb_company_names.rds`) |
+| Collected          | 2026-11-12, 3 of 3 files                                                                                                             | 2026-10, 10 of 10 files (HTTP 200, about 1.4 GB)                                                                   |
+
+- Generic user agent, spaced requests; 401/403/429 stop the run. Names are kept as published.
+- Coverage (Cedentes package, 2026-11-12): 10,272 of 10,274 PJ cedentes named (Receita 8,943;
+  catalog 986; CVM companies 288; fund service providers 35; funds and classes 20). Each name
+  shows its source in the app and on the published site.
+- Corporate names of individual entrepreneurs (MEI) may include the owner's CPF, as published by
+  the Receita Federal.

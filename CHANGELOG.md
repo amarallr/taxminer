@@ -1,5 +1,21 @@
 # Changelog
 
+## Nomes dos cedentes, características dos fundos e Ficha que segue a aba — 2026-11-12
+
+- **Nomes dos cedentes PJ** (`decision_0041`): catálogo de entidades, cadastros da CVM (companhias abertas,
+  fundos e classes, prestadores de serviço) e base de CNPJ da Receita Federal (dados abertos, razão social da
+  raiz do CNPJ), baixados e mantidos localmente. 10.272 de 10.274 cedentes PJ com nome (antes, 986); a fonte
+  de cada nome aparece na lista e no detalhe. Novos coletores `scripts/collect_cvm_registries.R` e
+  `scripts/collect_rfb_cnpj.R` (`docs/data_sources.md`).
+- **Características dos fundos** (Fundos, FIDC, FII, FIP, FIAGRO): cotistas, aberto/fechado, exclusivo,
+  entidade de investimento (destacada quando "não") e interesse único e indissociável, pelo último informe
+  que publicou cada campo. PL e cotistas num só gráfico, com eixo esquerdo e direito.
+- **Aba Ficha** abre com o fundo selecionado na aba anterior (Panorama, Administradores, Fundos, FIDC,
+  Cedentes, FII, FIP, FIAGRO), no app e no painel publicado.
+- **Aba Cedentes:** listas de cedentes e de FIDCs lado a lado, uma filtrando a outra pelo clique; duplo
+  clique no FIDC abre o fundo na aba FIDC.
+- **Barra de carregamento** no app e no painel publicado.
+
 ## Todas as tabelas do FIDC no painel publicado e nomes das tabelas — 2026-11-12
 
 - **Painel publicado:** Ficha e Série completa das 17 demais tabelas do informe mensal do FIDC (II a X.7),

@@ -107,7 +107,9 @@ server <- function(input, output, session) {
                                                                      data = fund_data, families = f)
     open_record <- fund_record_server("record", fund_root, fund_data, fund_ctx)
     # FICHA opens on the fund selected in the tab that was active before it.
-    previous <- shiny::reactiveVal(NULL)
+    # Panorama, Administradores and Cedentes (browser side) send the fund selected there.
+  shiny::observeEvent(input$ficha_focus, open_record(input$ficha_focus))
+  previous <- shiny::reactiveVal(NULL)
     shiny::observeEvent(input$nav, {
       if (identical(input$nav, "Ficha") && !is.null(previous()) && previous() %in% names(picked)) {
         open_record(shiny::isolate(picked[[previous()]]()))

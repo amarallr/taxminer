@@ -130,7 +130,7 @@ chart_key <- function(color, left, right, color2 = "#5b6573") {
 # Horizontal bars as HTML rows (label, bar, value). `keys` + `input` make rows
 # clickable (they send the key to that Shiny input).
 bar_list <- function(labels, values, value_text, colors = "#2a78d6", sub = NULL, keys = NULL,
-                     input = NULL, selected = NULL, rank = NULL, tips = NULL) {
+                     input = NULL, selected = NULL, rank = NULL, tips = NULL, fund_keys = NULL) {
   top <- max(values, 0, na.rm = TRUE)
   colors <- rep_len(colors, length(values))
   # A missing key leaves that row not clickable.
@@ -142,8 +142,11 @@ bar_list <- function(labels, values, value_text, colors = "#2a78d6", sub = NULL,
   esc <- function(x) htmltools::htmlEscape(as.character(x), attribute = TRUE)
   w <- ifelse(top > 0 & !is.na(values), pmax(0.4, 100 * values / top), 0)
   sel <- if (is.null(selected) || is.null(keys)) rep(FALSE, n) else !is.na(keys) & keys == selected
-  cls <- paste0("tm-bar-row", ifelse(pick, " tm-pick", ""), ifelse(sel, " tm-selected", ""))
+  # `fund_keys` ("family|CNPJ"): a click selects the fund for the FICHA tab.
+  fpick <- if (is.null(fund_keys)) rep(FALSE, n) else !is.na(fund_keys)
+  cls <- paste0("tm-bar-row", ifelse(pick, " tm-pick", ""), ifelse(fpick, " tm-fund-pick", ""), ifelse(sel, " tm-selected", ""))
   attrs <- paste0(' class="', cls, '"',
+                  ifelse(fpick, paste0(' data-fund-key="', esc(fund_keys), '"'), ""),
                   ifelse(pick, paste0(' data-key="', esc(keys), '"'), ""),
                   if (!is.null(input)) ifelse(pick, paste0(' data-input="', esc(input), '"'), "") else "",
                   if (!is.null(tips)) paste0(' data-tip="', esc(tips), '"') else "")
@@ -240,6 +243,19 @@ $(function() {
     if (root.matches && root.matches(VALUES)) root.classList.toggle('tm-neg', NEG.test(root.textContent));
   }
   markNegative(document.body);
+  // Current fund of a tab (\"family|CNPJ digits\"), kept on its tab pane: the
+  // FICHA tab opens on the fund of the tab that was active before it.
+  window.tmFocusFund = function(el, key) { $(el).closest('.tab-pane').data('tm-focus', key || null); };
+  $(document).on('click', '.tm-fund-pick[data-fund-key]', function() {
+    $(this).siblings('.tm-selected').removeClass('tm-selected');
+    $(this).addClass('tm-selected');
+    window.tmFocusFund(this, $(this).attr('data-fund-key'));
+  });
+  $(document).on('shown.bs.tab', function(e) {
+    if ($(e.target).attr('data-value') !== 'Ficha' || !e.relatedTarget || !(window.Shiny && Shiny.setInputValue)) return;
+    var link = $(e.relatedTarget), key = $(link.attr('data-bs-target') || link.attr('href')).data('tm-focus');
+    if (key) Shiny.setInputValue('ficha_focus', key, {priority: 'event'});
+  });
   var pending = [], queued = false;
   new MutationObserver(function(records) {
     for (var i = 0; i < records.length; i++) {

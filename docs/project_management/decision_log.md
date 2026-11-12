@@ -636,3 +636,34 @@ ninguém.
 - Decisão do desenvolvedor (2026-11-12): `.restricted/` e `.tmp/` permanecem na pasta do projeto
   e na sincronização do OneDrive; não serão movidas nem excluídas da sincronização. Os agentes
   continuam sem acesso a elas, e as regras de não compartilhar nem publicar valem integralmente.
+
+## decision_0041 — 2026-11-12 — Nomes dos cedentes, características dos fundos e Ficha que segue a aba
+
+Pedidos do desenvolvedor: identificar o nome dos CNPJs dos cedentes, inclusive os que não estão
+nos cadastros da CVM ("Você não vai pesquisar na internet e montar uma base local?"); mostrar as
+características dos fundos com Entidade de investimento destacada quando "Não"; abrir a aba
+Ficha com o fundo corrente da aba anterior.
+
+- Nomes dos cedentes PJ, nesta ordem: catálogo de entidades do TaxMiner; cadastros da CVM pelo
+  CNPJ exato (companhias abertas, fundos e classes, prestadores de serviço); base de CNPJ da
+  Receita Federal (dados abertos, arquivos Empresas, razão social da raiz do CNPJ); cadastros da
+  CVM pela raiz do CNPJ. Cada nome mostra a fonte. Bases baixadas e mantidas localmente
+  (`docs/data_sources.md`); nada é enviado a serviços externos. Resultado: 10.272 de 10.274
+  cedentes PJ com nome.
+- Nomes como publicados, sem correção. Razões sociais de MEI podem conter o CPF do titular, como
+  publicado pela Receita Federal, e aparecem assim no app e no painel publicado.
+- Características dos fundos (Fundos, FIDC, FII, FIP, FIAGRO): cotistas, condomínio
+  (aberto/fechado), exclusivo, entidade de investimento e interesse único e indissociável, pelo
+  último informe que publicou cada campo; "não consta do informe" quando a família não publica o
+  campo. Entidade de investimento "não" fica destacada. PL e cotistas num só gráfico, PL no eixo
+  esquerdo e cotistas no direito, por pedido expresso do desenvolvedor.
+- Aba Ficha: ao ser aberta, mostra o fundo selecionado na aba ativa antes, no app e no painel
+  publicado: Fundos, FIDC, FII, FIP e FIAGRO (fundo da lista), Panorama (último fundo
+  selecionado), Administradores (fundo clicado na lista do administrador) e Cedentes (FIDC
+  selecionado ou, com só um cedente selecionado, o primeiro FIDC dele). Sem fundo selecionado na aba
+  anterior, a Ficha mantém o fundo que já mostrava.
+- Aba Cedentes: duas listas lado a lado, cedentes e FIDCs. Um clique em um cedente filtra os FIDCs
+  e um clique em um FIDC filtra os cedentes (novo clique desfaz); com seleção, a lista filtrada
+  mostra a participação publicada. Só o duplo clique em um FIDC abre o fundo na aba FIDC.
+- Pendência: os cadastros da CVM também trazem condomínio, exclusivo e entidade de investimento e
+  podem preencher os campos que o informe não publica; não implementado.

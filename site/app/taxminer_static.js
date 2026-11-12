@@ -131,7 +131,7 @@
     var top = Math.max.apply(null, rows.map(function (r) { return r.value || 0; }).concat([0]));
     return '<div class="tm-bars">' + rows.map(function (r) {
       var w = top > 0 && r.value != null ? Math.max(0.4, 100 * r.value / top) : 0;
-      return '<div class="tm-bar-row" data-tip="' + esc(r.tip) + '"><div class="tm-bar-label"><div class="tm-bar-name">' + esc(r.label) +
+      return '<div class="tm-bar-row' + (r.key ? ' tm-fund-pick" data-fund-key="' + esc(r.key) : '') + '" data-tip="' + esc(r.tip) + '"><div class="tm-bar-label"><div class="tm-bar-name">' + esc(r.label) +
              '</div><div class="tm-bar-sub">' + esc(r.sub) + '</div></div><div class="tm-bar-track"><div class="tm-bar" style="width:' +
              w.toFixed(2) + '%;background:' + r.color + '"></div></div><div class="tm-bar-value">' + esc(r.text) + '</div></div>';
     }).join('') + '</div>';
@@ -160,7 +160,7 @@
       list.html(head + (rows.length ? barList(rows.map(function (r) {
         var f = a.funds[r[0]];
         return {label: f[0] + (r[2] ? ' *' : ''), value: r[1], text: fmtBRL(r[1]) + ' · ' + fmtPct(total ? r[1] / total : null, 1, false), color: colors[f[1]] || '#2a78d6',
-                sub: f[1].toUpperCase() + ' · ' + f[2], tip: f[0] + '\n' + fmtPct(total ? r[1] / total : null, 1, false) + ' do total'};
+                sub: f[1].toUpperCase() + ' · ' + f[2], key: f[1] + '|' + String(f[2]).replace(/\D/g, ''), tip: f[0] + '\n' + fmtPct(total ? r[1] / total : null, 1, false) + ' do total'};
       })) : '<div class="tm-empty">Sem fundos neste mês.</div>'));
       list.scrollTop(0);
     }).fail(function () { list.html('<div class="tm-empty">Não foi possível carregar os fundos deste mês.</div>'); });
@@ -713,11 +713,23 @@
   function paneOf(link) { return link ? $($(link).attr('data-bs-target') || $(link).attr('href')) : $(); }
   $(document).on('shown.bs.tab', function (e) {
     var pane = paneOf(e.target);
-    var rec = pane.find('.tm-static-record'), from = paneOf(e.relatedTarget).find('.tm-static-funds').data('tm-tab');
-    var f = from && from.selected;
-    if (rec.length && f) {
-      var r = rec.data('tm-record');
-      if (r) { if (r.selected !== f) r.show(f); } else rec.data('tm-open', f);
+    var rec = pane.find('.tm-static-record'), prev = paneOf(e.relatedTarget), from = prev.find('.tm-static-funds').data('tm-tab');
+    // Fund tabs: the fund selected in the list; Panorama, Administradores and
+    // Cedentes: the fund they recorded ("family|CNPJ", tmFocusFund).
+    var f = from && from.selected, key = !f && prev.data('tm-focus');
+    if (rec.length && (f || key)) {
+      // Before activate(): loadFunds() runs its callbacks in order, so the
+      // fund is set before the record tab is built.
+      loadFunds().done(function (d) {
+        var g = f;
+        if (!g) {
+          var k = String(key).split('|');
+          for (var i = 0; i < d.funds.length && !g; i++) if (d.funds[i][F.family] === k[0] && d.funds[i][F.key] === k[1]) g = d.funds[i];
+        }
+        if (!g) return;
+        var r = rec.data('tm-record');
+        if (r) { if (r.selected !== g) r.show(g); } else rec.data('tm-open', g);
+      });
     }
     pane.find('.tm-static-funds, .tm-static-record').each(function () { activate($(this)); });
   });

@@ -359,6 +359,7 @@
       // its state.
       if (e.type === 'click' && e.detail === 2) {
         var f = p.index.funds[+$(this).attr('data-fund')];
+        if (f) p.focus(f);
         if (f) $(document).trigger('tm:open-fund', [{family: f[0], cnpj: f[1], name: f[2]}]);
       }
     });
@@ -376,8 +377,14 @@
   };
 
   // Loads what the state needs, then renders every component from one set of rows.
+  // Current fund for the FICHA tab (prototype/charts.R, tmFocusFund).
+  Panorama.prototype.focus = function (f) {
+    if (window.tmFocusFund) window.tmFocusFund(this.el, f ? f[0] + '|' + String(f[1]).replace(/\D/g, '') : null);
+  };
   Panorama.prototype.update = function () {
     var p = this, ix = p.index, st = p.state, token = (p.token = (p.token || 0) + 1);
+    // The last fund selected is the one FICHA opens.
+    p.focus(st.funds.length ? ix.funds[st.funds[st.funds.length - 1]] : null);
     var months = E.snapshotMonths(ix, st.month), before = {};
     Object.keys(months).forEach(function (f) { before[f] = E.shiftMonth(months[f], -12); });
     var need = {}, reqs = [];

@@ -82,7 +82,7 @@ fund_admin_ui <- function(id) {
                shiny::div(shiny::span(class = "tm-eyebrow", "Fase 1.3 · Administradores"),
                           shiny::h1("Concentração da administração fiduciária")),
                shiny::div(class = "tm-dash-meta",
-                          "Participação no patrimônio de FII, FIDC e FIAGRO no mês de referência · clique em um administrador e em um mês do gráfico")),
+                          "Participação no patrimônio de FII, FIDC e FIAGRO no mês de referência · clique em um administrador, em um mês do gráfico e em um fundo para abri-lo na aba Ficha")),
     shiny::div(class = "tm-filterbar",
                shiny::div(class = "tm-filter-family",
                           shiny::checkboxGroupInput(ns("family"), NULL, choices = admin_families,
@@ -212,6 +212,7 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
                         format_pct(if (isTRUE(total > 0)) f$net_assets / total else NA_real_, sign = FALSE)),
                   colors = unname(fund_family_colors[f$family]),
                   sub = sprintf("%s · %s", toupper(f$family), format_cnpj(f$fund_cnpj)),
+                  fund_keys = paste(f$family, f$fund_cnpj, sep = "|"),
                   tips = sprintf("%s\n%s do total", names, format_pct(f$net_assets / total, sign = FALSE))))
 }
 
