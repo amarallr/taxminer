@@ -192,6 +192,12 @@ write_static_fichas <- function(out_dir, root, data, tables = static_ficha_table
   invisible(list(funds = length(keys), rows = rows_total))
 }
 
+# FICHA tab: any fund's Ficha and Série completa (RecordTab in taxminer_static.js).
+static_record_ui <- function() {
+  page <- shiny::div(class = "tm-page tm-fill-page tm-static-record", shiny::div(class = "tm-empty", "Carregando fundos…"))
+  htmltools::bindFillRole(page, container = TRUE, item = TRUE)
+}
+
 # Tab body: filled in the browser by taxminer_static.js.
 static_funds_ui <- function(family = NULL) {
   page <- shiny::div(class = "tm-page tm-fill-page tm-static-funds", `data-family` = if (is.null(family)) "" else family,

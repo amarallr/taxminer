@@ -331,8 +331,8 @@ passos estão em [`project_status.md`](docs/project_management/project_status.md
   partir de dados públicos da CVM (ODbL). A Ficha e a Série completa publicadas cobrem as
   tabelas principais de cada tipo (FIDC tab_I; FII geral, complemento e ativo/passivo
   mensais; FIP trimestral e quadrimestral; FIAGRO mensal), um arquivo por fundo baixado só
-  quando o fundo é aberto. As demais tabelas e a aba Ficha (qualquer fundo, largura total)
-  rodam no app local (`scripts/run_prototype.R`).
+  quando o fundo é aberto; a aba Ficha mostra ficha e série completa de qualquer fundo na
+  largura toda. As demais tabelas rodam no app local (`scripts/run_prototype.R`).
 
 ## 13. Instalação e configuração
 

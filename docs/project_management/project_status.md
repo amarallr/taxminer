@@ -10,7 +10,7 @@
 
 ## Fichas dos fundos e desempenho — 2026-11-11
 
-- **Aba Ficha (app local, `decision_0037`):** entre FIAGRO e Cobertura e qualidade; escolhe
+- **Aba Ficha (`decision_0037`):** no app (entre FIAGRO e Cobertura e qualidade) e no painel publicado (entre FIAGRO e Sobre); escolhe
   qualquer fundo (CNPJ ou nome, maiores primeiro), tabela e período, com Ficha e Série
   completa na largura toda (`prototype/fund_record_module.R`).
 - **Painel publicado:** abas de fundos com Perfil, Ficha, Série completa e Denominações; Ficha

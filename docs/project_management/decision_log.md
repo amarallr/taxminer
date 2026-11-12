@@ -564,8 +564,9 @@ FIAGRO e Cobertura e qualidade, com as fichas e a série completa.
   duas versões mostrem o mesmo texto; cada coluna cita arquivo, linha e SHA-256 da CVM.
 - Alternativa descartada: carregar todos os informes na abertura da página (513 MB no painel
   publicado; ~520 MB de Parquet em memória no app, que já sofre falta de memória).
-- Limites: as demais tabelas seguem só no app local; a aba Ficha ainda não está no painel
-  publicado.
+- Limites: as demais tabelas seguem só no app local. A aba Ficha também está no painel
+  publicado (entre FIAGRO e Sobre, `RecordTab` em `prototype/static/taxminer_static.js`), sobre os
+  mesmos arquivos `data/fichas/`; abre na tabela com o informe mais recente.
 
 ## decision_0038 — 2026-11-11 — Cedentes dos FIDC com CPF completo
 

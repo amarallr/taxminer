@@ -9,8 +9,9 @@
   CPF completo, como publicado (`decision_0038`). Participações acima de 100% (cerca de 10% dos valores)
   são inconsistências do próprio informe: aparecem como publicadas, marcadas com ⚠. Mesmo pacote JSON
   nos dois (`src/intelligence/cedente_data.R`, `prototype/www/cedentes.js`).
-- **Aba Ficha** (app local), entre FIAGRO e Cobertura e qualidade: qualquer fundo, com Ficha e Série
-  completa na largura toda (`prototype/fund_record_module.R`).
+- **Aba Ficha**, entre FIAGRO e Cobertura e qualidade no app (`prototype/fund_record_module.R`) e entre
+  FIAGRO e Sobre no painel publicado: qualquer fundo, com Ficha e Série completa na largura toda. No
+  painel publicado, a Ficha abre na tabela com o informe mais recente (FIP: quadrimestral desde 2024).
 - **FIP:** filtro "Entidade de investimento" (sim, não, não informado), pelo último informe que publicou
   `ENTID_INVEST`; o detalhe do fundo mostra o valor e o mês do informe.
 - **Administradores:** a lista de fundos mostra PL e % do total do administrador.

@@ -335,7 +335,7 @@
       sel.html(fd.t.map(function (x, i) {
         return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
       }).join('')).prop('disabled', fd.t.length < 2);
-      t.fichaTable(0);
+      var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
     });
     getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
       if (t.selected !== f) return;
@@ -349,6 +349,13 @@
   // with the rules of the app; the markup is the one of report_card and
   // wide_table in prototype/fund_search_module.R. ----
   var CARD_COLUMNS = 6;
+  // Table opened first: the one with the most recent report (e.g. the
+  // four-monthly FIP report after 2023), the first listed on a tie.
+  function latestTable(fd) {
+    var best = 0;
+    fd.t.forEach(function (x, i) { if (x.c[0][0] > fd.t[best].c[0][0]) best = i; });
+    return best;
+  }
   function loadFicha(f) {
     var done = $.Deferred();
     $.when(getJSON('data/fichas/urls.json'), getJSON('data/fichas/' + f[F.family] + '/' + f[F.key] + '.json'))
@@ -368,7 +375,7 @@
     t.fichaIndex = k;
     var periods = [];
     x.c.forEach(function (c) { if (periods.indexOf(c[0]) < 0) periods.push(c[0]); });
-    box.find('.tm-ficha-period').html(periods.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join(''))
+    t.el.find('.tm-ficha-period').html(periods.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join(''))
       .prop('disabled', periods.length < 2);
     box.find('.tm-ficha-summary').text(fmtInt(x.c.length) + ' linhas em ' + fmtInt(periods.length) +
       ' períodos · valores originais da CVM, cada coluna cita o arquivo de origem');
@@ -457,17 +464,99 @@
   }
 
   // Build a tab the first time it is shown (the data file is loaded once).
+  // ---- FICHA tab: Ficha and Série completa of any fund on the whole width
+  // (same files and rendering as the fund detail; port of fund_record_ui). ----
+  function RecordTab(el) { this.el = el; }
+  RecordTab.prototype.fichaTable = FundTab.prototype.fichaTable;
+  RecordTab.prototype.fichaPeriod = FundTab.prototype.fichaPeriod;
+  RecordTab.prototype.render = function (d) {
+    var t = this;
+    t.d = d;
+    t.funds = d.funds.slice().sort(function (a, b) { return (b[F.pl] || -1) - (a[F.pl] || -1); });
+    t.el.html(
+      '<div class="tm-dash-head"><div><span class="tm-eyebrow">Fase 1.3 · Ficha do fundo</span><h1>Ficha e série completa</h1></div>' +
+      '<div class="tm-dash-meta">Valores originais dos informes da CVM; cada coluna cita o arquivo de origem · tabelas principais de cada tipo</div></div>' +
+      '<div class="tm-filterbar tm-record-filters"><div class="tm-record-search">' +
+      '<input type="search" class="form-control form-control-sm tm-rq" placeholder="Fundo: CNPJ (com ou sem máscara) ou nome, de qualquer tipo">' +
+      '<div class="tm-record-options" hidden></div></div>' +
+      '<select class="form-select form-select-sm tm-ficha-table" disabled></select>' +
+      '<select class="form-select form-select-sm tm-ficha-period" disabled></select></div>' +
+      '<div class="card tm-section tm-detail tm-pane tm-record tm-static-detail"><div class="tm-empty">Escolha um fundo.</div></div>');
+    var timer, opts = t.el.find('.tm-record-options');
+    t.el.on('input focus', '.tm-rq', function () {
+      var v = this.value; clearTimeout(timer);
+      timer = setTimeout(function () { t.suggest(v); }, 120);
+    });
+    t.el.on('mousedown', '.tm-record-option', function (e) { e.preventDefault(); t.show(t.funds[+$(this).attr('data-i')]); opts.attr('hidden', true); });
+    t.el.on('blur', '.tm-rq', function () { setTimeout(function () { opts.attr('hidden', true); }, 150); });
+    t.el.on('change', '.tm-ficha-table', function () { if (t.ficha) t.fichaTable(+this.value); });
+    t.el.on('change', '.tm-ficha-period', function () { if (t.ficha) t.fichaPeriod(this.value); });
+    t.el.on('click', '.tm-static-detail .nav-link', function (e) {
+      e.preventDefault();
+      var k = $(this).attr('data-pane'), box = $(this).closest('.tm-static-detail');
+      box.find('.nav-link').removeClass('active'); $(this).addClass('active');
+      box.find('[data-pane-body]').attr('hidden', true).filter('[data-pane-body="' + k + '"]').removeAttr('hidden');
+    });
+    t.show(t.funds[0]);
+  };
+  // Largest funds first; CNPJ digits match from the start, words anywhere.
+  RecordTab.prototype.suggest = function (v) {
+    var t = this, q = fold(v), words = q ? q.split(' ') : [], digits = (v || '').replace(/\D/g, ''), out = [];
+    for (var i = 0; i < t.funds.length && out.length < 50; i++) {
+      var f = t.funds[i];
+      if (!words.length || (digits.length >= 4 && f[F.key].indexOf(digits) === 0) ||
+          words.every(function (w) { return f.search.indexOf(w) >= 0; })) out.push(i);
+    }
+    t.el.find('.tm-record-options').html(out.length ? out.map(function (i) {
+      var f = t.funds[i];
+      return '<div class="tm-record-option" data-i="' + i + '"><span class="tm-tag tm-tag-' + f[F.family] + '">' + f[F.family].toUpperCase() +
+             '</span> <span class="tm-mono">' + esc(f[F.cnpj]) + '</span> ' + esc(f[F.name]) + '<span class="tm-muted"> · ' + fmtBRL(f[F.pl]) + '</span></div>';
+    }).join('') : '<div class="tm-empty">Nenhum fundo encontrado.</div>').removeAttr('hidden');
+  };
+  RecordTab.prototype.show = function (f) {
+    var t = this, box = t.el.find('.tm-static-detail');
+    if (!f) return;
+    t.selected = f; t.ficha = null;
+    t.el.find('.tm-rq').val(f[F.cnpj] + ' — ' + f[F.name]);
+    t.el.find('.tm-ficha-table').html('<option>Carregando informes…</option>').prop('disabled', true);
+    t.el.find('.tm-ficha-period').html('').prop('disabled', true);
+    box.html(
+      '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
+      '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2></div>' +
+      '<div class="tm-detail-body"><div class="tm-caption tm-ficha-summary"></div>' +
+      '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="ficha">Ficha</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li></ul>' +
+      '<div class="tab-content"><div data-pane-body="ficha"><div class="tm-empty">Carregando ficha…</div></div>' +
+      '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div></div></div>');
+    loadFicha(f).done(function (fd, urls) {
+      if (t.selected !== f) return;
+      var sel = t.el.find('.tm-ficha-table');
+      if (!fd || !fd.t.length) {
+        sel.html('<option>Sem informes nas tabelas publicadas</option>');
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html(
+          '<div class="tm-empty">Sem linhas nas tabelas principais para este fundo. As demais tabelas estão no app local.</div>');
+        return;
+      }
+      t.ficha = {data: fd, urls: urls};
+      sel.html(fd.t.map(function (x, i) {
+        return '<option value="' + i + '">' + esc(x.n) + '  (' + esc(x.c[x.c.length - 1][0]) + '–' + esc(x.c[0][0]) + ')</option>';
+      }).join('')).prop('disabled', fd.t.length < 2);
+      var best = latestTable(fd); sel.val(String(best)); t.fichaTable(best);
+    });
+  };
+
   function activate(el) {
     if (el.data('tm-ready')) return;
     el.data('tm-ready', true);
-    loadFunds().done(function (d) { new FundTab(el).render(d); })
+    var record = el.hasClass('tm-static-record');
+    loadFunds().done(function (d) { if (record) new RecordTab(el).render(d); else new FundTab(el).render(d); })
       .fail(function () { el.html('<div class="tm-empty">Não foi possível carregar a lista de fundos.</div>'); });
   }
   $(document).on('shown.bs.tab', function (e) {
     var pane = $($(e.target).attr('data-bs-target') || $(e.target).attr('href'));
-    pane.find('.tm-static-funds').each(function () { activate($(this)); });
+    pane.find('.tm-static-funds, .tm-static-record').each(function () { activate($(this)); });
   });
-  $(function () { $('.tab-pane.active .tm-static-funds').each(function () { activate($(this)); }); });
+  $(function () { $('.tab-pane.active .tm-static-funds, .tab-pane.active .tm-static-record').each(function () { activate($(this)); }); });
   // Double click on a fund in the Panorama: open its family tab filtered by
   // its CNPJ (applied when the tab is built, if it is not built yet).
   $(document).on('tm:open-fund', function (e, f) {

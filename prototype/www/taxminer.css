@@ -776,3 +776,12 @@ table.tm-series td.tm-num { max-width: none; }
 
 /* Published value outside its range (e.g. share above 100%): shown as published, flagged */
 .tm-warn { color: #9a6700; background: #fff8e1; }
+
+/* Published FICHA tab: fund search with suggestions */
+.tm-record-search { position: relative; min-width: 0; }
+.tm-record-options { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; max-height: 360px; overflow: auto;
+  background: #fff; border: 1px solid var(--tm-rule); box-shadow: 0 6px 18px rgba(11, 31, 58, .12); }
+.tm-record-option { padding: 5px 8px; font-size: .72rem; cursor: pointer; border-bottom: 1px solid #f0f2f5; }
+.tm-record-option:hover { background: #eef3fb; }
+.tm-static-record .tm-record-filters .form-select { font-size: .7rem; min-height: 28px; }
+.tm-static-record .tm-record { flex: 1 1 auto; min-height: 0; overflow: auto; margin-top: 6px; }
