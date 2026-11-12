@@ -145,7 +145,21 @@ fund_admin_server <- function(id, ctx) {
     output$funds <- shiny::renderUI({
       r <- ranking()
       shiny::req(picked(), picked() %in% r$key)
-      admin_funds_ui(ctx, r, picked(), families(), month(), reset = ns("month_reset"))
+      admin_funds_ui(ctx, r, picked(), families(), month(), reset = ns("month_reset"), fund_selected = fund_sel())
+    })
+
+    # Current fund of the app ("family|CNPJ"): its administrator and the fund in the list.
+    fund_sel <- shiny::reactiveVal(NULL)
+    list(show = function(value) {
+      p <- strsplit(value, "|", fixed = TRUE)[[1]]
+      s <- if (is.null(ctx$admin_idx)) NULL else ctx$admin_idx$snapshot
+      if (length(p) != 2L || is.null(s)) return(invisible())
+      hit <- unique(s$key[s$family == p[1] & s$fund_cnpj == p[2]])
+      hit <- hit[hit %in% shiny::isolate(ranking())$key]
+      if (!length(hit)) return(invisible())
+      picked(hit[1]); month(NULL); fund_sel(value)
+      # The ranking is not redrawn (its scroll is kept): the row is marked in the browser.
+      session$sendCustomMessage("tm-pick-row", list(input = ns("pick"), key = hit[1]))
     })
   })
 }
@@ -174,7 +188,7 @@ admin_kpis_ui <- function(r, families) {
 # or the funds behind one point of the chart. `reset` is the Shiny input that
 # goes back to the reference month; `top` keeps only the largest funds of the
 # reference month (static page).
-admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, top = NULL) {
+admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, top = NULL, fund_selected = NULL) {
   a <- r[r$key == key, ]
   admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
   idx <- ctx$admin_idx
@@ -212,7 +226,7 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
                         format_pct(if (isTRUE(total > 0)) f$net_assets / total else NA_real_, sign = FALSE)),
                   colors = unname(fund_family_colors[f$family]),
                   sub = sprintf("%s · %s", toupper(f$family), format_cnpj(f$fund_cnpj)),
-                  fund_keys = paste(f$family, f$fund_cnpj, sep = "|"),
+                  fund_keys = paste(f$family, f$fund_cnpj, sep = "|"), fund_selected = fund_selected,
                   tips = sprintf("%s\n%s do total", names, format_pct(f$net_assets / total, sign = FALSE))))
 }
 

@@ -657,11 +657,14 @@ Ficha com o fundo corrente da aba anterior.
   último informe que publicou cada campo; "não consta do informe" quando a família não publica o
   campo. Entidade de investimento "não" fica destacada. PL e cotistas num só gráfico, PL no eixo
   esquerdo e cotistas no direito, por pedido expresso do desenvolvedor.
-- Aba Ficha: ao ser aberta, mostra o fundo selecionado na aba ativa antes, no app e no painel
-  publicado: Fundos, FIDC, FII, FIP e FIAGRO (fundo da lista), Panorama (último fundo
-  selecionado), Administradores (fundo clicado na lista do administrador) e Cedentes (FIDC
-  selecionado ou, com só um cedente selecionado, o primeiro FIDC dele). Sem fundo selecionado na aba
-  anterior, a Ficha mantém o fundo que já mostrava.
+- Fundo corrente (pedido do desenvolvedor: "todas as abas precisam estar interrelacionadas"): o
+  último fundo que o usuário seleciona em qualquer aba (Panorama, Administradores, Fundos, FIDC,
+  Cedentes, FII, FIP, FIAGRO ou Ficha) passa a ser o fundo corrente, e cada aba o mostra ao ser
+  aberta: Ficha abre nele; Fundos e a aba da família o selecionam; Panorama o seleciona como filtro;
+  Administradores abre o administrador dele e marca o fundo na lista; Cedentes seleciona o FIDC ou
+  avisa que ele não informou cedentes no mês. Substitui a regra anterior ("fundo da aba ativa
+  antes"), que falhava quando o usuário passava por outra aba no caminho. Seleções automáticas (o
+  primeiro fundo de uma lista) não mudam o fundo corrente.
 - Aba Cedentes: duas listas lado a lado, cedentes e FIDCs. Um clique em um cedente filtra os FIDCs
   e um clique em um FIDC filtra os cedentes (novo clique desfaz); com seleção, a lista filtrada
   mostra a participação publicada. Só o duplo clique em um FIDC abre o fundo na aba FIDC.

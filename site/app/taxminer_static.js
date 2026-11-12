@@ -254,6 +254,7 @@
     t.el.on('click', 'tr[data-row]', function () {
       $(this).addClass('tm-selected').siblings('.tm-selected').removeClass('tm-selected');
       t.selected = t.rows[+$(this).attr('data-row')]; t.detail(t.selected);
+      setCurrent(t.selected);
     });
     t.el.on('change', '.tm-ficha-table', function () { if (t.ficha) t.fichaTable(+this.value); });
     t.el.on('change', '.tm-ficha-period', function () { if (t.ficha) t.fichaPeriod(this.value); });
@@ -265,6 +266,13 @@
     });
     t.d = d; t.update();
     if (t.el.data('tm-open')) t.open(t.el.data('tm-open'));
+    t.follow(window.tmCurrent);
+  };
+  // Shows the app's current fund when it belongs to this tab.
+  FundTab.prototype.follow = function (key) {
+    var t = this, g = t.d && findFund(t.d, key);
+    if (!g || (t.family && g[F.family] !== t.family) || t.selected === g) return;
+    t.selected = g; t.update(); t.detail(g);
   };
   // Show one fund: its CNPJ in the fund search, no administrator filter.
   FundTab.prototype.open = function (cnpj) {
@@ -643,7 +651,9 @@
       var v = this.value; clearTimeout(timer);
       timer = setTimeout(function () { t.suggest(v); }, 120);
     });
-    t.el.on('mousedown', '.tm-record-option', function (e) { e.preventDefault(); t.show(t.funds[+$(this).attr('data-i')]); opts.attr('hidden', true); });
+    t.el.on('mousedown', '.tm-record-option', function (e) {
+      e.preventDefault(); var g = t.funds[+$(this).attr('data-i')]; t.show(g); setCurrent(g); opts.attr('hidden', true);
+    });
     t.el.on('blur', '.tm-rq', function () { setTimeout(function () { opts.attr('hidden', true); }, 150); });
     t.el.on('change', '.tm-ficha-table', function () { if (t.ficha) t.fichaTable(+this.value); });
     t.el.on('change', '.tm-ficha-period', function () { if (t.ficha) t.fichaPeriod(this.value); });
@@ -654,9 +664,12 @@
       box.find('[data-pane-body]').attr('hidden', true).filter('[data-pane-body="' + k + '"]').removeAttr('hidden');
     });
     t.el.data('tm-record', t);
-    // Opens on the fund of the tab the user came from, else the largest fund.
-    t.show(t.el.data('tm-open') || t.funds[0]);
-    t.el.removeData('tm-open');
+    // Opens on the app's current fund, else the largest fund.
+    t.show(findFund(d, window.tmCurrent) || t.funds[0]);
+  };
+  RecordTab.prototype.follow = function (key) {
+    var t = this, g = t.d && findFund(t.d, key);
+    if (g && t.selected !== g) t.show(g);
   };
   // Largest funds first; CNPJ digits match from the start, words anywhere.
   RecordTab.prototype.suggest = function (v) {
@@ -709,29 +722,35 @@
     loadFunds().done(function (d) { if (record) new RecordTab(el).render(d); else new FundTab(el).render(d); })
       .fail(function () { el.html('<div class="tm-empty">Não foi possível carregar a lista de fundos.</div>'); });
   }
-  // FICHA opens on the fund selected in the tab that was active before it.
+  // Current fund ("family|CNPJ digits", prototype/charts.R): the last fund the
+  // user selected in any tab; every tab shows it when opened.
+  function fundKey(g) { return g[F.family] + '|' + g[F.key]; }
+  function findFund(d, key) {
+    if (!key) return null;
+    var k = String(key).split('|');
+    for (var i = 0; i < d.funds.length; i++) if (d.funds[i][F.family] === k[0] && d.funds[i][F.key] === k[1]) return d.funds[i];
+    return null;
+  }
+  function setCurrent(g) { if (g && window.tmSetCurrent) window.tmSetCurrent(fundKey(g)); }
+  function followAdmin(pane, key) {
+    if (!key) return;
+    var row = pane.find('[data-detail] .tm-fund-pick').filter(function () { return $(this).attr('data-fund-key') === key; }).first();
+    if (!row.length) return;
+    var panel = row.closest('[data-detail]').attr('data-detail');
+    var pick = pane.find('.tm-pick[data-key]').filter(function () { return $(this).attr('data-key') === panel; }).first();
+    if (pick.length && !pick.hasClass('tm-selected')) pick.trigger('click');
+    if (pick[0]) pick[0].scrollIntoView({block: 'nearest'});
+    row.closest('.tm-bars').find('.tm-selected').removeClass('tm-selected');
+    row.addClass('tm-selected');
+  }
   function paneOf(link) { return link ? $($(link).attr('data-bs-target') || $(link).attr('href')) : $(); }
   $(document).on('shown.bs.tab', function (e) {
-    var pane = paneOf(e.target);
-    var rec = pane.find('.tm-static-record'), prev = paneOf(e.relatedTarget), from = prev.find('.tm-static-funds').data('tm-tab');
-    // Fund tabs: the fund selected in the list; Panorama, Administradores and
-    // Cedentes: the fund they recorded ("family|CNPJ", tmFocusFund).
-    var f = from && from.selected, key = !f && prev.data('tm-focus');
-    if (rec.length && (f || key)) {
-      // Before activate(): loadFunds() runs its callbacks in order, so the
-      // fund is set before the record tab is built.
-      loadFunds().done(function (d) {
-        var g = f;
-        if (!g) {
-          var k = String(key).split('|');
-          for (var i = 0; i < d.funds.length && !g; i++) if (d.funds[i][F.family] === k[0] && d.funds[i][F.key] === k[1]) g = d.funds[i];
-        }
-        if (!g) return;
-        var r = rec.data('tm-record');
-        if (r) { if (r.selected !== g) r.show(g); } else rec.data('tm-open', g);
-      });
-    }
-    pane.find('.tm-static-funds, .tm-static-record').each(function () { activate($(this)); });
+    var pane = paneOf(e.target), key = window.tmCurrent;
+    pane.find('.tm-static-funds, .tm-static-record').each(function () {
+      var el = $(this), t = el.data('tm-tab') || el.data('tm-record');
+      if (t) t.follow(key); else activate(el);
+    });
+    followAdmin(pane, key);
   });
   $(function () { $('.tab-pane.active .tm-static-funds, .tab-pane.active .tm-static-record').each(function () { activate($(this)); }); });
   // Double click on a fund in the Panorama: open its family tab filtered by

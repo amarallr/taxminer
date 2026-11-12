@@ -10,8 +10,9 @@
 - **Características dos fundos** (Fundos, FIDC, FII, FIP, FIAGRO): cotistas, aberto/fechado, exclusivo,
   entidade de investimento (destacada quando "não") e interesse único e indissociável, pelo último informe
   que publicou cada campo. PL e cotistas num só gráfico, com eixo esquerdo e direito.
-- **Aba Ficha** abre com o fundo selecionado na aba anterior (Panorama, Administradores, Fundos, FIDC,
-  Cedentes, FII, FIP, FIAGRO), no app e no painel publicado.
+- **Fundo corrente em todas as abas:** o último fundo selecionado em qualquer aba é mostrado por todas
+  ao serem abertas (Ficha, Fundos e abas de família, Panorama, Administradores e Cedentes), no app e no
+  painel publicado.
 - **Aba Cedentes:** listas de cedentes e de FIDCs lado a lado, uma filtrando a outra pelo clique; duplo
   clique no FIDC abre o fundo na aba FIDC.
 - **Barra de carregamento** no app e no painel publicado.

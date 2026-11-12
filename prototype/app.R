@@ -102,21 +102,31 @@ ui <- bslib::page_navbar(
 
 server <- function(input, output, session) {
   if (fund_ready) {
-    picked <- list(Fundos = fund_search_server("funds", fund_root, fund_ctx, data = fund_data))
-    for (f in family_tabs) picked[[toupper(f)]] <- fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
-                                                                     data = fund_data, families = f)
-    open_record <- fund_record_server("record", fund_root, fund_data, fund_ctx)
-    # FICHA opens on the fund selected in the tab that was active before it.
-    # Panorama, Administradores and Cedentes (browser side) send the fund selected there.
-  shiny::observeEvent(input$ficha_focus, open_record(input$ficha_focus))
-  previous <- shiny::reactiveVal(NULL)
+    tabs <- list(Fundos = fund_search_server("funds", fund_root, fund_ctx, data = fund_data))
+    for (f in family_tabs) tabs[[toupper(f)]] <- fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
+                                                                   data = fund_data, families = f)
+    record <- fund_record_server("record", fund_root, fund_data, fund_ctx)
+    admin <- fund_admin_server("admins", fund_ctx)
+    # Current fund ("family|CNPJ"): the last fund the user selected in any tab.
+    # Every tab shows it when opened: the fund tabs, FICHA and Administradores
+    # here; Panorama and Cedentes in the browser (window.tmCurrent, kept in
+    # step by the message tm-current and the input current_fund).
+    current <- shiny::reactiveVal(NULL)
+    set_current <- function(value) {
+      if (is.null(value) || !nzchar(value) || identical(value, shiny::isolate(current()))) return()
+      current(value)
+      session$sendCustomMessage("tm-current", value)
+    }
+    shiny::observeEvent(input$current_fund, current(input$current_fund))
+    lapply(names(tabs), function(t) shiny::observeEvent(tabs[[t]]$chosen(), set_current(tabs[[t]]$chosen())))
+    shiny::observeEvent(record$fund(), if (identical(input$nav, "Ficha")) set_current(record$fund()))
     shiny::observeEvent(input$nav, {
-      if (identical(input$nav, "Ficha") && !is.null(previous()) && previous() %in% names(picked)) {
-        open_record(shiny::isolate(picked[[previous()]]()))
-      }
-      previous(input$nav)
+      value <- shiny::isolate(current())
+      if (is.null(value)) return()
+      if (identical(input$nav, "Ficha")) record$open(value)
+      else if (input$nav %in% names(tabs)) tabs[[input$nav]]$show(value)
+      else if (identical(input$nav, "Administradores")) admin$show(value)
     })
-    fund_admin_server("admins", fund_ctx)
     fund_coverage_server("fund_coverage", fund_root)
   }
 }

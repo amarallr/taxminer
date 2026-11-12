@@ -75,7 +75,7 @@
       'são inconsistências do próprio informe e não foram corrigidos.</div>');
     c.el.find('.tm-ced-month').val(c.state.month);
     var timer;
-    function reset() { c.state.ced = null; c.state.fund = null; }
+    function reset() { c.state.ced = null; c.state.fund = null; c.missing = null; }
     c.el.on('change', '.tm-ced-month', function () { c.state.month = this.value; c.load(); });
     c.el.on('input', '.tm-ced-q', function () { var v = this.value; clearTimeout(timer); timer = setTimeout(function () { c.state.q = v; reset(); c.update(); }, 180); });
     c.el.on('change', '.tm-ced-type', function () { c.state.type = this.value; reset(); c.update(); });
@@ -86,6 +86,7 @@
     });
     c.el.on('click', '.tm-ced-unpick', function (e) { e.preventDefault(); c.state[$(this).attr('data-dim')] = null; c.update(); });
     // A click selects (or, on the selected one, clears) and filters the other list.
+    c.el.on('click', '.tm-ced-row', function () { c.missing = null; });
     c.el.on('click', '.tm-ced-row', function () {
       var k = +$(this).attr('data-ced'); c.state.ced = c.state.ced === k ? null : k; c.update();
     });
@@ -102,14 +103,33 @@
       c.state.fund = c.state.fund === k ? null : k; c.update();
     });
   };
-  // Current fund for the FICHA tab (prototype/charts.R, tmFocusFund).
+  // The app's current fund (prototype/charts.R, tmSetCurrent).
   Cedentes.prototype.focus = function (f) {
-    if (window.tmFocusFund) window.tmFocusFund(this.el, f ? 'fidc|' + String(f[0]).replace(/\D/g, '') : null);
+    if (window.tmSetCurrent && f) window.tmSetCurrent('fidc|' + String(f[0]).replace(/\D/g, ''));
+  };
+  // Opened with a current FIDC chosen in another tab: it is selected (the
+  // cedente stays selected only if it is a cedente of that FIDC).
+  Cedentes.prototype.follow = function (key) {
+    var c = this, k = String(key || '').split('|');
+    if (k[0] !== 'fidc') return;
+    if (!c.rows) { c.want = key; return; }
+    c.want = null;
+    var i = -1;
+    for (var j = 0; j < c.idx.funds.length && i < 0; j++) if (String(c.idx.funds[j][0]).replace(/\D/g, '') === k[1]) i = j;
+    c.missing = null;
+    if (i < 0 || !c.rows.some(function (r) { return r[1] === i; })) {
+      // Not in this month: kept as a notice, the lists stay as they are.
+      c.missing = {key: k[1], i: i}; c.update(); return;
+    }
+    if (c.state.fund === i) return;
+    c.state.fund = i;
+    if (c.state.ced != null && !c.rows.some(function (r) { return r[0] === c.state.ced && r[1] === i; })) c.state.ced = null;
+    c.update();
   };
   Cedentes.prototype.load = function () {
     var c = this, m = c.state.month;
     c.el.find('.tm-ced-list, .tm-ced-funds').html('<div class="tm-empty">Carregando ' + monthLabel(m) + '…</div>');
-    c.get('months/' + m + '.json').done(function (d) { if (c.state.month === m) { c.rows = d.rows; c.update(); } })
+    c.get('months/' + m + '.json').done(function (d) { if (c.state.month === m) { c.rows = d.rows; if (c.want) c.follow(c.want); c.update(); } })
       .fail(function () { c.el.find('.tm-ced-list, .tm-ced-funds').html('<div class="tm-empty">Sem dados para ' + monthLabel(m) + '.</div>'); });
   };
   // Rows grouped by column k (0 cedente, 1 FIDC): distinct counterparts and the largest share.
@@ -198,6 +218,10 @@
     var ftop = fl.length ? fl[0].n : 1;
     c.el.find('.tm-ced-fcount').html(int(fl.length) + (fl.length === 1 ? ' FIDC' : ' FIDCs') +
       (fs ? ' do cedente ' + unpick('ced', cedName(st.ced)) : '') + more(fl.length));
+    var miss = c.missing && !cs && !fs ? c.missing : null;
+    c.el.find('.tm-ced-fcount').append(miss ? ' <span class="tm-head-note tm-ced-missing">· ' +
+      esc(miss.i >= 0 ? fundName(miss.i) : 'FIDC ' + miss.key.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')) +
+      ' não informou cedentes em ' + monthLabel(st.month) + '</span>' : '');
     c.el.find('.tm-ced-note-f').text((fs ? 'ordem: participação do cedente' : 'ordem: número de cedentes') + ' · duplo clique abre na aba FIDC');
     c.el.find('.tm-ced-funds').html(fl.length ? '<div class="tm-bars">' + fl.slice(0, LIMIT).map(function (g, i) {
       var f = idx.funds[g.id];
@@ -215,9 +239,13 @@
   function activate(el) {
     if (el.data('tm-ready')) return;
     el.data('tm-ready', true);
-    new Cedentes(el).start();
+    var c = new Cedentes(el);
+    el.data('tm-cedentes', c);
+    c.start();
   }
-  // Built the first time the tab is shown.
-  $(document).on('shown.bs.tab', function () { $('.tab-pane.active .tm-cedentes').each(function () { activate($(this)); }); });
+  // Built the first time the tab is shown; then shows the app's current FIDC.
+  $(document).on('shown.bs.tab', function () {
+    $('.tab-pane.active .tm-cedentes').each(function () { activate($(this)); $(this).data('tm-cedentes').follow(window.tmCurrent); });
+  });
   $(function () { $('.tab-pane.active .tm-cedentes').each(function () { activate($(this)); }); });
 })();

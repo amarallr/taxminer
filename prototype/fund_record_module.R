@@ -133,10 +133,11 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
     })
     # Opens a fund ("family|CNPJ"): the FICHA tab follows the fund of the tab
     # the user came from (prototype/app.R).
-    function(value) {
+    # open(): shows a fund ("family|CNPJ"); fund: the fund shown (prototype/app.R).
+    list(open = function(value) {
       if (!is.null(value) && value %in% choices && !identical(value, input$fund)) {
         shiny::updateSelectizeInput(session, "fund", choices = choices, selected = value, server = TRUE)
       }
-    }
+    }, fund = shiny::reactive(input$fund))
   })
 }

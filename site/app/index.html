@@ -69,18 +69,29 @@ $(function() {
     if (root.matches && root.matches(VALUES)) root.classList.toggle('tm-neg', NEG.test(root.textContent));
   }
   markNegative(document.body);
-  // Current fund of a tab ("family|CNPJ digits"), kept on its tab pane: the
-  // FICHA tab opens on the fund of the tab that was active before it.
-  window.tmFocusFund = function(el, key) { $(el).closest('.tab-pane').data('tm-focus', key || null); };
+  // Current fund ("family|CNPJ digits"): the last fund the user selected in
+  // any tab. Every tab shows it when opened (each tab script follows
+  // window.tmCurrent; in the app the server keeps it too, input current_fund
+  // and message tm-current).
+  window.tmCurrent = window.tmCurrent || null;
+  window.tmSetCurrent = function(key) {
+    if (!key || key === window.tmCurrent) return;
+    window.tmCurrent = key;
+    if (window.Shiny && Shiny.setInputValue) Shiny.setInputValue('current_fund', key, {priority: 'event'});
+  };
+  window.tmFocusFund = function(el, key) { window.tmSetCurrent(key); };
+  if (window.Shiny && Shiny.addCustomMessageHandler) {
+    Shiny.addCustomMessageHandler('tm-current', function(key) { window.tmCurrent = key; });
+    Shiny.addCustomMessageHandler('tm-pick-row', function(m) {
+      var row = $('.tm-pick[data-key]').filter(function() { return $(this).attr('data-input') === m.input && $(this).attr('data-key') === m.key; });
+      row.siblings('.tm-selected').removeClass('tm-selected'); row.addClass('tm-selected');
+      if (row[0]) row[0].scrollIntoView({block: 'nearest'});
+    });
+  }
   $(document).on('click', '.tm-fund-pick[data-fund-key]', function() {
-    $(this).siblings('.tm-selected').removeClass('tm-selected');
+    $(this).closest('.tm-bars').find('.tm-selected').removeClass('tm-selected');
     $(this).addClass('tm-selected');
-    window.tmFocusFund(this, $(this).attr('data-fund-key'));
-  });
-  $(document).on('shown.bs.tab', function(e) {
-    if ($(e.target).attr('data-value') !== 'Ficha' || !e.relatedTarget || !(window.Shiny && Shiny.setInputValue)) return;
-    var link = $(e.relatedTarget), key = $(link.attr('data-bs-target') || link.attr('href')).data('tm-focus');
-    if (key) Shiny.setInputValue('ficha_focus', key, {priority: 'event'});
+    window.tmSetCurrent($(this).attr('data-fund-key'));
   });
   var pending = [], queued = false;
   new MutationObserver(function(records) {
@@ -105,7 +116,7 @@ $(function() {
   <nav class="navbar navbar-default navbar-static-top navbar-inverse" role="navigation" style="background-color:#0b1f3a !important;" data-bs-theme="dark">
     <div class="container-fluid">
       <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-2377" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-2377">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-9721" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-9721">
           <span class="sr-only visually-hidden">Toggle navigation</span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -113,37 +124,37 @@ $(function() {
         </button>
         <span class="navbar-brand">TaxMiner</span>
       </div>
-      <div class="navbar-collapse collapse" id="navbar-collapse-2377">
-        <ul class="nav navbar-nav nav-underline" data-tabsetid="9866">
+      <div class="navbar-collapse collapse" id="navbar-collapse-9721">
+        <ul class="nav navbar-nav nav-underline" data-tabsetid="3285">
           <li class="active">
-            <a href="#tab-9866-1" data-toggle="tab" data-bs-toggle="tab" data-value="Panorama">Panorama</a>
+            <a href="#tab-3285-1" data-toggle="tab" data-bs-toggle="tab" data-value="Panorama">Panorama</a>
           </li>
           <li>
-            <a href="#tab-9866-2" data-toggle="tab" data-bs-toggle="tab" data-value="Administradores">Administradores</a>
+            <a href="#tab-3285-2" data-toggle="tab" data-bs-toggle="tab" data-value="Administradores">Administradores</a>
           </li>
           <li>
-            <a href="#tab-9866-3" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos">Fundos</a>
+            <a href="#tab-3285-3" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos">Fundos</a>
           </li>
           <li>
-            <a href="#tab-9866-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
+            <a href="#tab-3285-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
           </li>
           <li>
-            <a href="#tab-9866-5" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
+            <a href="#tab-3285-5" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
           </li>
           <li>
-            <a href="#tab-9866-6" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
+            <a href="#tab-3285-6" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
           </li>
           <li>
-            <a href="#tab-9866-7" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
+            <a href="#tab-3285-7" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
           </li>
           <li>
-            <a href="#tab-9866-8" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
+            <a href="#tab-3285-8" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
           </li>
           <li>
-            <a href="#tab-9866-9" data-toggle="tab" data-bs-toggle="tab" data-value="Ficha">Ficha</a>
+            <a href="#tab-3285-9" data-toggle="tab" data-bs-toggle="tab" data-value="Ficha">Ficha</a>
           </li>
           <li>
-            <a href="#tab-9866-10" data-toggle="tab" data-bs-toggle="tab" data-value="Sobre">Sobre</a>
+            <a href="#tab-3285-10" data-toggle="tab" data-bs-toggle="tab" data-value="Sobre">Sobre</a>
           </li>
           <div class="bslib-nav-spacer"></div>
           <li class="bslib-nav-item nav-item form-inline">
@@ -154,13 +165,13 @@ $(function() {
     </div>
   </nav>
   <div class="container-fluid html-fill-item html-fill-container">
-    <div class="tab-content html-fill-item html-fill-container" data-tabsetid="9866">
-      <div class="tab-pane active html-fill-item html-fill-container bslib-gap-spacing" data-value="Panorama" id="tab-9866-1" style="--bslib-navbar-margin:0;">
+    <div class="tab-content html-fill-item html-fill-container" data-tabsetid="3285">
+      <div class="tab-pane active html-fill-item html-fill-container bslib-gap-spacing" data-value="Panorama" id="tab-3285-1" style="--bslib-navbar-margin:0;">
         <div class="tm-dash html-fill-item" data-base="data/panorama/">
           <div class="tm-empty">Carregando o Panorama…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Administradores" id="tab-9866-2" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Administradores" id="tab-3285-2" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-admin-page html-fill-item html-fill-container">
           <div class="tm-dash-head">
             <div>
@@ -2752,49 +2763,49 @@ $(function() {
           </bslib-layout-columns>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Fundos" id="tab-9866-3" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Fundos" id="tab-3285-3" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIDC" id="tab-9866-4" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIDC" id="tab-3285-4" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fidc">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Cedentes" id="tab-9866-5" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Cedentes" id="tab-3285-5" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-cedentes html-fill-item html-fill-container" data-src="data/cedentes/">
           <div class="tm-empty">Carregando cedentes…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FII" id="tab-9866-6" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FII" id="tab-3285-6" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fii">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIP" id="tab-9866-7" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIP" id="tab-3285-7" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fip">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIAGRO" id="tab-9866-8" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIAGRO" id="tab-3285-8" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fiagro">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Ficha" id="tab-9866-9" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Ficha" id="tab-3285-9" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-record html-fill-item html-fill-container">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane" data-value="Sobre" id="tab-9866-10">
+      <div class="tab-pane" data-value="Sobre" id="tab-3285-10">
         <div class="tm-page">
           <div class="tm-hero tm-about">
             <div class="tm-eyebrow">Sobre este painel</div>
-            <div class="tm-version" title="Versão e data/hora de geração desta página">v.1.0.1 · 2026-11-12 13:27</div>
+            <div class="tm-version" title="Versão e data/hora de geração desta página">v.1.0.1 · 2026-11-12 14:31</div>
             <h1>Versão publicada do painel de fundos</h1>
             <p class="tm-lede">
-              Gerado em 2026-11-12 13:27 a partir dos informes públicos da CVM
+              Gerado em 2026-11-12 14:31 a partir dos informes públicos da CVM
               (dados.cvm.gov.br, Open Database License — ODbL). Material de pesquisa, não conclusão fiscal.
               As abas de fundos trazem lista, perfil, ficha, série completa e denominações das tabelas
               principais de cada tipo; as demais tabelas dos informes ficam no app local do TaxMiner.

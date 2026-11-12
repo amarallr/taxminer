@@ -553,12 +553,17 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
     shiny::observeEvent(input$next_page, page(min(pages(), page() + 1L)))
 
     picked <- shiny::reactiveVal(NULL)
-    shiny::observeEvent(input$pick, picked(input$pick))
-    # A new search selects its first fund, so the detail is never stale.
+    # Funds the user clicked (the app's current fund, prototype/app.R).
+    chosen <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$pick, { picked(input$pick); chosen(input$pick) })
+    # A new search selects its first fund, so the detail is never stale; the
+    # fund already selected stays when the new list still has it.
     shiny::observeEvent(results(), {
       sort_state(list(by = "pl", decreasing = TRUE))
       r <- sorted()
-      picked(if (nrow(r)) paste(r$family[1], r$fund_cnpj[1], sep = "|") else NULL)
+      keys <- paste(r$family, r$fund_cnpj, sep = "|")
+      p <- shiny::isolate(picked())
+      if (is.null(p) || !p %in% keys) picked(if (nrow(r)) keys[1] else NULL)
     })
 
     output$kpis <- shiny::renderUI({
@@ -586,7 +591,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
       if (nrow(r) == 0L) return(shiny::div(class = "tm-empty", "Nenhum fundo com esses filtros."))
       first <- (page() - 1L) * fund_page_size + 1L
       r <- r[first:min(nrow(r), first + fund_page_size - 1L), , drop = FALSE]
-      results_table(r, ns("pick"), shiny::isolate(picked()), ns("sort_col"), sort_state())
+      results_table(r, ns("pick"), picked(), ns("sort_col"), sort_state())
     })
 
     selected <- shiny::reactive({
@@ -698,8 +703,13 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
           collapse = " ")),
         tab)
     })
-    # Selected fund ("family|CNPJ"), read by the FICHA tab (prototype/app.R).
-    picked
+    # Selected fund ("family|CNPJ"); chosen: the user's clicks; show(): selects
+    # the app's current fund when it is in this tab's families (prototype/app.R).
+    list(picked = picked, chosen = chosen, show = function(value) {
+      p <- strsplit(value, "|", fixed = TRUE)[[1]]
+      if (length(p) == 2L && p[1] %in% scope && any(directory$family == p[1] & directory$fund_cnpj == p[2]) &&
+          !identical(value, shiny::isolate(picked()))) picked(value)
+    })
   })
 }
 fund_coverage_ui <- function(id) {

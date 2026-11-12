@@ -303,6 +303,7 @@
       p.index = index;
       p.layout();
       p.update();
+      if (p.want) p.follow(p.want);
     }).fail(function () { p.el.html('<div class="tm-empty">Não foi possível carregar os dados do Panorama.</div>'); });
   };
   Panorama.prototype.layout = function () {
@@ -377,9 +378,23 @@
   };
 
   // Loads what the state needs, then renders every component from one set of rows.
-  // Current fund for the FICHA tab (prototype/charts.R, tmFocusFund).
+  // The app's current fund (prototype/charts.R, tmSetCurrent): the last fund selected here.
   Panorama.prototype.focus = function (f) {
-    if (window.tmFocusFund) window.tmFocusFund(this.el, f ? f[0] + '|' + String(f[1]).replace(/\D/g, '') : null);
+    if (window.tmSetCurrent && f) window.tmSetCurrent(f[0] + '|' + String(f[1]).replace(/\D/g, ''));
+  };
+  // Opened with a current fund chosen in another tab: that fund is selected.
+  Panorama.prototype.follow = function (key) {
+    var p = this;
+    if (!key) return;
+    if (!p.index) { p.want = key; return; }
+    p.want = null;
+    var k = String(key).split('|'), i = -1;
+    for (var j = 0; j < p.index.funds.length && i < 0; j++) {
+      var f = p.index.funds[j];
+      if (f[0] === k[0] && String(f[1]).replace(/\D/g, '') === k[1]) i = j;
+    }
+    if (i < 0 || p.state.funds.indexOf(i) >= 0) return;
+    p.state.funds = [i]; p.update();
   };
   Panorama.prototype.update = function () {
     var p = this, ix = p.index, st = p.state, token = (p.token = (p.token || 0) + 1);
@@ -586,7 +601,10 @@
       p.start();
       // Redraw at the new size when the window changes or the tab becomes visible.
       $(window).on('resize', function () { clearTimeout(timer); timer = setTimeout(function () { p.drawCharts(); }, 150); });
-      $(document).on('shown.bs.tab', function () { p.drawCharts(); });
+      $(document).on('shown.bs.tab', function () {
+        if (p.el.closest('.tab-pane').hasClass('active')) p.follow(window.tmCurrent);
+        p.drawCharts();
+      });
     });
     // Local app (Shiny): a fund opened from the Panorama goes to its family tab
     // with the fund filter set to its CNPJ and the administrator filter cleared;
