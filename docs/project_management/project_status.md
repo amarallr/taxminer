@@ -7,6 +7,12 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## Versão 1.0.3 — 2026-11-12
+
+- Lançada a `1.0.3` (`VERSION`, tag `v1.0.3`, carimbo do painel publicado e do app local): nova
+  formatação da nota explicativa e TaxMiner Governance (Fases 01, 02 e 06 aceitas; Fase 04
+  implementada). Detalhes no `CHANGELOG.md`.
+
 ## TaxMiner Governance — Fase 04 — 2026-11-12
 
 - Fase 04 implementada e testada (`work_0035`, `decision_0049`): `src/common/governance_agents.R`;

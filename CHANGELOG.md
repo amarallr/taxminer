@@ -1,6 +1,8 @@
 # Changelog
 
-## Não incluído em versão — 2026-11-12
+## Versão 1.0.3 — 2026-11-12
+
+Registra como `1.0.3` (arquivo `VERSION`, tag `v1.0.3`) as entregas posteriores à 1.0.2:
 
 - **Nota explicativa** da entidade de investimento: quadro com borda, parágrafos justificados com
   hifenização e o período de cada parágrafo ("Até 2023 (ICVM 578/579):") em negrito. Na dica, a
