@@ -307,5 +307,5 @@ tm_theme <- function() {
     version = 5, bg = "#ffffff", fg = "#1c2430", primary = "#0b1f3a", secondary = "#5b6573",
     base_font = bslib::font_collection("Segoe UI", "Helvetica Neue", "Arial", "sans-serif"),
     heading_font = bslib::font_collection("Georgia", "Times New Roman", "serif"),
-    "border-radius" = "2px", "font-size-base" = "0.8125rem")
+    "border-radius" = "2px", "font-size-base" = "0.65rem")
 }

@@ -11,6 +11,8 @@
   (ex.: "v.1.0.3 · 2026-11-12 21:22 · 3cbb696"). No painel publicado, o hash é o do commit
   publicado, gravado na implantação; no app local, é o commit em uso, com "+" se houver alterações
   não salvas em commit.
+- **Fontes 20% menores** no app local e no painel publicado (tamanhos do CSS e base do Bootstrap
+  multiplicados por 0,8).
 
 ## Versão 1.0.3 — 2026-11-12
 
