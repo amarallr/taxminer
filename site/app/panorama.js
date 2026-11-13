@@ -612,13 +612,13 @@
     // handler (taxminer_static.js).
     if (window.Shiny && !$('.tm-static-funds').length) {
       $(document).on('tm:open-fund', function (e, f) {
-        var fam = String(f.family).toLowerCase(), tab = $('.navbar a[data-value="' + fam.toUpperCase() + '"]');
+        var fam = String(f.family).toLowerCase(), tab = window.tmFamilyTab(fam);
         var q = $('#funds_' + fam + '-fund_query')[0], a = $('#funds_' + fam + '-administrator')[0];
-        if (!tab.length || !q || !q.selectize) return;
+        if (!q || !q.selectize) return;
         if (a && a.selectize) a.selectize.clear(true);
         q.selectize.addOption({value: f.cnpj, label: f.cnpj + ' — ' + f.name});
         q.selectize.setValue([f.cnpj]);
-        tab.tab('show');
+        window.tmShowTab(tab);
       });
     }
   });

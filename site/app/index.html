@@ -20,6 +20,30 @@
   <meta name="description" content="Panorama de FII, FIDC, FIP e FIAGRO a partir dos informes públicos da CVM."/>
   <link rel="stylesheet" href="taxminer.css"/>
   <script>
+// Nested tabs (tm_fund_tabs): show a tab by its value anywhere on the page,
+// opening its parent tabs first; a pane is visible only when every enclosing
+// tab pane is active.
+window.tmShowTab = function(value) {
+  var links = $('a[data-bs-toggle="tab"], a[data-toggle="tab"]');
+  var a = links.filter(function() { return $(this).attr('data-value') === value; }).first();
+  if (!a.length) return false;
+  var chain = [a], pane = a.closest('.tab-pane');
+  while (pane.length) {
+    var id = '#' + pane.attr('id');
+    var up = links.filter(function() { return ($(this).attr('data-bs-target') || $(this).attr('href')) === id; }).first();
+    if (!up.length) break;
+    chain.unshift(up);
+    pane = up.closest('.tab-pane');
+  }
+  chain.forEach(function(l) { l.tab('show'); });
+  return true;
+};
+window.tmPaneVisible = function(el) { return $(el).parents('.tab-pane').not('.active').length === 0; };
+// Tab value of a family's fund list (FIDC has its list and Cedentes inside).
+window.tmFamilyTab = function(family) {
+  family = String(family).toLowerCase();
+  return family === 'fidc' ? 'Fundos FIDC' : family.toUpperCase();
+};
 $(function() {
   var tip = $('<div>').addClass('tm-tooltip').attr('role', 'tooltip').appendTo('body');
   // A blank line in a tip starts an explanatory note (fund_field_note_text):
@@ -47,8 +71,7 @@ $(function() {
     .on('mouseleave', '[data-tip]', function() { tip.hide(); })
     .on('click', '.tm-goto[data-tab]', function(e) {
       e.preventDefault();
-      var t = $(this).attr('data-tab');
-      $('.navbar a[data-bs-toggle="tab"]').filter(function() { return $(this).attr('data-value') === t; }).first().click();
+      window.tmShowTab($(this).attr('data-tab'));
     })
     .on('click', '.tm-chart-pick .tm-hit[data-month]', function() {
       // A month on a clickable chart: the enclosing [data-month-input] gets
@@ -150,21 +173,6 @@ $(function() {
           </li>
           <li>
             <a href="#tab-5931-3" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos">Fundos</a>
-          </li>
-          <li>
-            <a href="#tab-5931-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
-          </li>
-          <li>
-            <a href="#tab-5931-5" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
-          </li>
-          <li>
-            <a href="#tab-5931-6" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
-          </li>
-          <li>
-            <a href="#tab-5931-7" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
-          </li>
-          <li>
-            <a href="#tab-5931-8" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
           </li>
           <li>
             <a href="#tab-5931-9" data-toggle="tab" data-bs-toggle="tab" data-value="Ficha">Ficha</a>
@@ -2780,33 +2788,70 @@ $(function() {
         </div>
       </div>
       <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Fundos" id="tab-5931-3" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="">
-          <div class="tm-empty">Carregando fundos…</div>
-        </div>
-      </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIDC" id="tab-5931-4" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fidc">
-          <div class="tm-empty">Carregando fundos…</div>
-        </div>
-      </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Cedentes" id="tab-5931-5" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-cedentes html-fill-item html-fill-container" data-src="data/cedentes/">
-          <div class="tm-empty">Carregando cedentes…</div>
-        </div>
-      </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FII" id="tab-5931-6" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fii">
-          <div class="tm-empty">Carregando fundos…</div>
-        </div>
-      </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIP" id="tab-5931-7" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fip">
-          <div class="tm-empty">Carregando fundos…</div>
-        </div>
-      </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="FIAGRO" id="tab-5931-8" style="--bslib-navbar-margin:0;">
-        <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fiagro">
-          <div class="tm-empty">Carregando fundos…</div>
+        <div class="tabbable html-fill-item html-fill-container">
+          <ul class="nav nav-underline shiny-tab-input" id="fund_nav" data-tabsetid="6594">
+            <li class="active">
+              <a href="#tab-6594-1" data-toggle="tab" data-bs-toggle="tab" data-value="Todos">Todos</a>
+            </li>
+            <li>
+              <a href="#tab-6594-2" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
+            </li>
+            <li>
+              <a href="#tab-6594-3" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
+            </li>
+            <li>
+              <a href="#tab-6594-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
+            </li>
+            <li>
+              <a href="#tab-6594-5" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
+            </li>
+          </ul>
+          <div class="tab-content html-fill-item html-fill-container" data-tabsetid="6594">
+            <div class="tab-pane active html-fill-item html-fill-container" data-value="Todos" id="tab-6594-1">
+              <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="">
+                <div class="tm-empty">Carregando fundos…</div>
+              </div>
+            </div>
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIDC" id="tab-6594-2">
+              <div class="tabbable html-fill-item html-fill-container">
+                <ul class="nav nav-underline shiny-tab-input" id="fidc_nav" data-tabsetid="8228">
+                  <li class="active">
+                    <a href="#tab-8228-1" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos FIDC">Fundos FIDC</a>
+                  </li>
+                  <li>
+                    <a href="#tab-8228-2" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
+                  </li>
+                </ul>
+                <div class="tab-content html-fill-item html-fill-container" data-tabsetid="8228">
+                  <div class="tab-pane active html-fill-item html-fill-container" data-value="Fundos FIDC" id="tab-8228-1">
+                    <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fidc">
+                      <div class="tm-empty">Carregando fundos…</div>
+                    </div>
+                  </div>
+                  <div class="tab-pane html-fill-item html-fill-container" data-value="Cedentes" id="tab-8228-2">
+                    <div class="tm-page tm-fill-page tm-cedentes html-fill-item html-fill-container" data-src="data/cedentes/">
+                      <div class="tm-empty">Carregando cedentes…</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FII" id="tab-6594-3">
+              <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fii">
+                <div class="tm-empty">Carregando fundos…</div>
+              </div>
+            </div>
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIP" id="tab-6594-4">
+              <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fip">
+                <div class="tm-empty">Carregando fundos…</div>
+              </div>
+            </div>
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIAGRO" id="tab-6594-5">
+              <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fiagro">
+                <div class="tm-empty">Carregando fundos…</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Ficha" id="tab-5931-9" style="--bslib-navbar-margin:0;">
@@ -2818,10 +2863,10 @@ $(function() {
         <div class="tm-page">
           <div class="tm-hero tm-about">
             <div class="tm-eyebrow">Sobre este painel</div>
-            <div class="tm-version" title="Versão, data/hora de geração e commit desta página">v.1.0.3 · 2026-11-13 09:01</div>
+            <div class="tm-version" title="Versão, data/hora de geração e commit desta página">v.1.0.3 · 2026-11-13 09:41</div>
             <h1>Versão publicada do painel de fundos</h1>
             <p class="tm-lede">
-              Gerado em 2026-11-13 09:01 a partir dos informes públicos da CVM
+              Gerado em 2026-11-13 09:41 a partir dos informes públicos da CVM
               (dados.cvm.gov.br, Open Database License — ODbL). Material de pesquisa, não conclusão fiscal.
               As abas de fundos trazem lista, perfil, ficha, série completa e denominações das tabelas
               principais de cada tipo; as demais tabelas dos informes ficam no app local do TaxMiner.

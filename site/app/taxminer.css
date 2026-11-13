@@ -662,6 +662,12 @@ table.tm-results tr.tm-selected, table.tm-results tr.tm-selected:hover { backgro
 .tm-detail-body .nav-link, .tm-static-detail .nav-link, .nav-underline .nav-link {
   font-size: .5632rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; padding: 4px 2px; }
 .nav-underline .nav-link.active { color: var(--tm-navy); border-bottom-color: var(--tm-navy); }
+/* Published page: the sub tabs (Fundos › FIDC › Cedentes) are plain "li > a" too. */
+.nav-underline:not(.navbar-nav) > li > a { display: block; font-size: .5632rem; text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 600; padding: 4px 2px; color: var(--tm-muted); text-decoration: none; border-bottom: 2px solid transparent; }
+.nav-underline:not(.navbar-nav) > li > a:hover { color: var(--tm-navy); }
+.nav-underline:not(.navbar-nav) > li > a.active,
+.nav-underline:not(.navbar-nav):not(:has(> li > a.active)) > li.active > a { color: var(--tm-navy); border-bottom-color: var(--tm-navy); }
 
 /* Rankings: thinner bars, muted rank numbers, navy selection mark. */
 .tm-dash .tm-rank-list .tm-bar, .tm-dash .tm-rank-list .tm-bar-track { height: 6px; }

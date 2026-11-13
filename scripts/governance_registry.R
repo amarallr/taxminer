@@ -34,6 +34,9 @@
 # Reads and writes docs/project_management/ and reports/governance/ under --root (default "."). Exit status 1 on
 # integrity problems or invalid input.
 
+# Owner only (src/common/owner_mode.R): refused unless TAXMINER_OWNER_MODE=1.
+source("src/common/owner_mode.R")
+taxminer_require_owner("A governança do projeto")
 source("src/common/governance_registry.R")
 source("src/common/governance_prompts.R")
 source("src/common/governance_agents.R")

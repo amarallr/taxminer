@@ -1,5 +1,26 @@
 # Changelog
 
+## Não incluído em versão — 2026-11-13
+
+- **Fundos com subabas** (app e painel publicado): FIDC, FII, FIP e FIAGRO passam a ser subabas de
+  "Fundos" (ao lado de "Todos"), e "Cedentes" fica dentro de FIDC ("Fundos FIDC" e "Cedentes"). Os
+  atalhos entre abas (abrir fundo pelo Panorama, duplo clique em Cedentes, fundo atual) abrem a
+  cadeia de abas correta.
+- **Modo proprietário:** a aba Governança e o script `scripts/governance_registry.R` só funcionam
+  com `TAXMINER_OWNER_MODE=1` no perfil do proprietário (`src/common/owner_mode.R`). Fora disso, a
+  aba não aparece e o script recusa. Nunca entra no painel publicado nem em instaladores. O código
+  é público: isto restringe o uso do app e dos scripts, não a leitura do repositório.
+- **Catálogo de métricas** (explorador multimétrico, ETAPA 02; req_0019): 55 métricas (48
+  declaradas, 7 derivadas) em `config/metric_catalog.csv` e mapeamentos para tabelas e campos da
+  CVM em `config/metric_mappings.csv`, com vigência, filtro, chave de classe e equivalência entre
+  leiautes (`same_field`, `proven`, `not_proven`). `src/data/metric_catalog.R` faz a verificação
+  estática, a disponibilidade por leiaute, a revisão pelo dicionário da CVM, a matriz métrica ×
+  tabela e a série com linhagem por ponto. `scripts/validate_metric_catalog.R` grava
+  `reports/metric_catalog/validation_report.md`: as 8 métricas padrão coincidem com a série atual
+  da Ficha (0 divergências), e a troca de tabela do FIP em 2024 foi comprovada pelo dicionário.
+  ICVM 555 e FIF (I.2.c.5) ficam como métricas separadas: as descrições diferem. Ainda sem
+  interface (ETAPA 03).
+
 ## Não incluído em versão — 2026-11-12
 
 - **Ficha › Série completa** (app e painel publicado): rolagem horizontal; as colunas não encolhem e a

@@ -766,21 +766,21 @@
   function paneOf(link) { return link ? $($(link).attr('data-bs-target') || $(link).attr('href')) : $(); }
   $(document).on('shown.bs.tab', function (e) {
     var pane = paneOf(e.target), key = window.tmCurrent;
-    pane.find('.tm-static-funds, .tm-static-record').each(function () {
+    pane.find('.tm-static-funds, .tm-static-record').filter(function () { return window.tmPaneVisible(this); }).each(function () {
       var el = $(this), t = el.data('tm-tab') || el.data('tm-record');
       if (t) t.follow(key); else activate(el);
     });
     followAdmin(pane, key);
   });
-  $(function () { $('.tab-pane.active .tm-static-funds, .tab-pane.active .tm-static-record').each(function () { activate($(this)); }); });
+  $(function () { $('.tm-static-funds, .tm-static-record').filter(function () { return window.tmPaneVisible(this); }).each(function () { activate($(this)); }); });
   // Double click on a fund in the Panorama: open its family tab filtered by
   // its CNPJ (applied when the tab is built, if it is not built yet).
   $(document).on('tm:open-fund', function (e, f) {
     var fam = String(f.family).toLowerCase(), el = $('.tm-static-funds[data-family="' + fam + '"]');
-    var link = $('.navbar a[data-value="' + fam.toUpperCase() + '"]');
-    if (!el.length || !link.length) return;
+    var link = window.tmFamilyTab(fam);
+    if (!el.length) return;
     var tab = el.data('tm-tab');
     if (tab && tab.d) tab.open(f.cnpj); else el.data('tm-open', f.cnpj);
-    link.tab('show');
+    window.tmShowTab(link);
   });
 })(jQuery);

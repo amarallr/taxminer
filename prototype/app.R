@@ -15,13 +15,15 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/fund_record_module.R", "src/common/governance_registry.R",
             "src/common/governance_prompts.R", "src/common/governance_agents.R",
-            "src/common/governance_metrics.R", "prototype/governance_module.R")) {
+            "src/common/governance_metrics.R", "prototype/governance_module.R", "src/common/owner_mode.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
 }
 
 data_dir <- resolve_data_dir()
 fund_root <- source_data_root(data_dir, "investment_fund_reports")
 fund_ready <- file.exists(fund_processed_paths(fund_root)$index)
+# Owner-only tabs (src/common/owner_mode.R): TAXMINER_OWNER_MODE=1 in the owner's user profile.
+owner_mode <- taxminer_owner_mode()
 # Shared once by every fund tab: directory, entity catalogs (processed/master),
 # tables and dictionaries. Derived metrics and catalogs are rebuilt only when
 # their inputs change.
@@ -54,7 +56,7 @@ unavailable <- function(text) {
 }
 
 ui <- bslib::page_navbar(
-  id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
+  id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", "Ficha"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,
@@ -68,20 +70,15 @@ ui <- bslib::page_navbar(
   bslib::nav_panel(
     "Administradores",
     if (fund_ready) fund_admin_ui("admins") else unavailable("Sem dados consolidados.")),
+  # Fundos: all funds and one sub tab per fund type; Cedentes inside FIDC
+  # (tm_fund_tabs in prototype/charts.R, shared with the published page).
   bslib::nav_panel(
     "Fundos",
-    if (fund_ready) fund_search_ui("funds")
+    if (fund_ready) tm_fund_tabs(
+      fund_search_ui("funds"),
+      stats::setNames(lapply(family_tabs, function(f) fund_search_ui(paste0("funds_", f), family = f)), family_tabs),
+      cedentes_ui("cedentes-data/"))
     else unavailable("Fase 1.3 indisponível: rode a coleta e a consolidação dos fundos.")),
-  # One tab per fund type; CEDENTES right after FIDC.
-  !!!unlist(lapply(family_tabs, function(f) c(
-    list(bslib::nav_panel(
-      toupper(f),
-      if (fund_ready) fund_search_ui(paste0("funds_", f), family = f)
-      else unavailable("Sem dados consolidados."))),
-    if (f == "fidc") list(bslib::nav_panel(
-      "Cedentes",
-      if (fund_ready) cedentes_ui("cedentes-data/") else unavailable("Sem dados consolidados."))))),
-    recursive = FALSE),
   # Ficha and Série completa of any fund on the whole width.
   bslib::nav_panel(
     "Ficha",
@@ -89,8 +86,9 @@ ui <- bslib::page_navbar(
   bslib::nav_panel(
     "Cobertura e qualidade",
     if (fund_ready) fund_coverage_ui("fund_coverage") else unavailable("Sem dados consolidados.")),
-  # Governance records of the project (local app only, not published).
-  bslib::nav_panel("Governança", governance_ui("governance")),
+  # Governance records of the project: owner only (taxminer_owner_mode(); never in the
+  # published page or in any installer).
+  if (owner_mode) bslib::nav_panel("Governança", governance_ui("governance")),
   bslib::nav_panel(
     "Sobre",
     shiny::div(class = "tm-page", shiny::div(
@@ -105,7 +103,7 @@ ui <- bslib::page_navbar(
       if (fund_ready) method_note(fund_ctx))))
 
 server <- function(input, output, session) {
-  governance_server("governance", repo)
+  if (owner_mode) governance_server("governance", repo)
   if (fund_ready) {
     tabs <- list(Fundos = fund_search_server("funds", fund_root, fund_ctx, data = fund_data))
     for (f in family_tabs) tabs[[toupper(f)]] <- fund_search_server(paste0("funds_", f), fund_root, fund_ctx,
@@ -125,12 +123,22 @@ server <- function(input, output, session) {
     shiny::observeEvent(input$current_fund, current(input$current_fund))
     lapply(names(tabs), function(t) shiny::observeEvent(tabs[[t]]$chosen(), set_current(tabs[[t]]$chosen())))
     shiny::observeEvent(record$fund(), if (identical(input$nav, "Ficha")) set_current(record$fund()))
-    shiny::observeEvent(input$nav, {
+    # Visible area: the top tab, or inside Fundos the sub tab ("Todos" is the
+    # all-funds list, keyed "Fundos"; "Fundos FIDC" is the FIDC list).
+    active_tab <- shiny::reactive({
+      if (!identical(input$nav, "Fundos")) return(input$nav)
+      sub <- input$fund_nav
+      if (is.null(sub) || identical(sub, "Todos")) return("Fundos")
+      if (identical(sub, "FIDC") && identical(input$fidc_nav, "Cedentes")) return("Cedentes")
+      sub
+    })
+    shiny::observeEvent(active_tab(), {
       value <- shiny::isolate(current())
-      if (is.null(value)) return()
-      if (identical(input$nav, "Ficha")) record$open(value)
-      else if (input$nav %in% names(tabs)) tabs[[input$nav]]$show(value)
-      else if (identical(input$nav, "Administradores")) admin$show(value)
+      tab <- active_tab()
+      if (is.null(value) || is.null(tab)) return()
+      if (identical(tab, "Ficha")) record$open(value)
+      else if (tab %in% names(tabs)) tabs[[tab]]$show(value)
+      else if (identical(tab, "Administradores")) admin$show(value)
     })
     fund_coverage_server("fund_coverage", fund_root)
   }

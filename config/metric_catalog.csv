@@ -1,0 +1,56 @@
+metric_id,display_name,description,family,category,unit,nature,granularity,aggregation,value_type,formula,is_default,notes
+fidc.patrimonio_liquido,Patrimônio líquido,"(IV.a) Valor do Patrimônio Líquido",fidc,Patrimônio,BRL,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha (src/data/build_fund_metrics.R)"
+fidc.pl_medio_3m,PL médio (3 meses),"(IV.b) Valor do Patrimônio Líquido Médio (últimos três meses)",fidc,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.ativo_total,Ativo total,"(Tabela I) Ativo",fidc,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.disponibilidades,Disponibilidades,"(I.1) Disponibilidades",fidc,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.passivo_total,Passivo total,"(Tabela III) Passivo",fidc,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.carteira,Carteira,"(I.2) Carteira",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.dc_com_aquisicao,DC com aquisição substancial,"(I.2.a) Direitos Creditórios com Aquisição Substancial dos Riscos e Benefícios",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.dc_sem_aquisicao,DC sem aquisição substancial,"(I.2.b) Direitos Creditórios sem Aquisição Substancial dos Riscos e Benefícios",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.valores_mobiliarios,Valores mobiliários,"(I.2.c) Valores Mobiliários",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.cotas_fundos_icvm555,Cotas de fundos da ICVM 555,"(I.2.c.5) Cotas de Fundos da ICVM 555",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,"Não equivale a fidc.cotas_classes_fif sem prova: mesmo item do formulário, descrições diferentes no dicionário"
+fidc.cotas_classes_fif,Classes de cotas dos FIF,"(I.2.c.5) Classes de Cotas dos FIF - Anexo I da RCVM 175",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,"Ver fidc.cotas_fundos_icvm555"
+fidc.titulos_publicos,Títulos públicos federais,"(I.2.d) Títulos Públicos Federais",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.cdb,CDB,"(I.2.e) Certificados de Depósitos Bancários",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.compromissadas,Operações compromissadas,"(I.2.f) Aplicações em Operações Compromissadas",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.outros_renda_fixa,Outros ativos de renda fixa,"(I.2.g) Outros Ativos Financeiros de Renda Fixa",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.cotas_fidc,Cotas de FIDC,"(I.2.h) Cotas de Fundos de Investimento em Direitos Creditórios",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.cotas_fidc_np,Cotas de FIDC-NP,"(I.2.i) Cotas de Fundos de Investimento em Direitos Creditórios Não Padronizados",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.derivativos,Posições em derivativos (ativo),"(I.3) Posições Mantidas em Mercados de Derivativos",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.outros_ativos,Outros ativos,"(I.4) Outros Ativos",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.carteira_segmentos,Carteira por segmento (total),"(Tabela II) Carteira por Segmento",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.precatorios,Precatórios,"(II.i.1) Precatórios",fidc,Carteira,BRL,stock,fund,latest_version,declared,,FALSE,"Segmento da Tabela II; o denominador compatível é a Carteira por Segmento"
+fidc.dc_com_aquisicao_inadimplentes,Créditos inadimplentes (com aquisição),"(I.2.a.3) Créditos Existentes Inadimplentes",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.dc_sem_aquisicao_inadimplentes,Créditos inadimplentes (sem aquisição),"(I.2.b.3) Créditos Existentes Inadimplentes",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.provisao_com_aquisicao,Provisão para redução ao valor de recuperação (com aquisição),"(I.2.a.11) Provisão para Redução no Valor de Recuperação (-)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,"Sinal como publicado pela CVM"
+fidc.provisao_sem_aquisicao,Provisão para redução ao valor de recuperação (sem aquisição),"(I.2.b.11) Provisão para Redução no Valor de Recuperação (-)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,"Sinal como publicado pela CVM"
+fidc.dc_a_vencer_com_aquisicao,DC a vencer por prazo (com aquisição),"(V.a) Por Prazo de Vencimento (R$)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.parcelas_inadimplentes_com_aquisicao,Parcelas inadimplentes (com aquisição),"(V.b) Inadimplentes (Valor das Parcelas Inadimplentes, em R$)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.pagos_antecipadamente_com_aquisicao,Pagos antecipadamente (com aquisição),"(V.c) Pagos Antecipadamente (R$)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.parcelas_inadimplentes_sem_aquisicao,Parcelas inadimplentes (sem aquisição),"(VI.b) Inadimplentes (Valor das Parcelas Inadimplentes, em R$)",fidc,Risco,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.recompras_valor,Recompras (valor),"(VII.d.2) Recompras | Valor",fidc,Risco,BRL,flow,fund,latest_version,declared,,FALSE,"Negócios do mês"
+fidc.recompras_quantidade,Recompras (quantidade),"(VII.d.1) Recompras | Quantidade",fidc,Risco,count,flow,fund,latest_version,declared,,FALSE,"Negócios do mês"
+fidc.substituicoes_valor,Substituições (valor),"(VII.c.2) Substituições | Valor",fidc,Risco,BRL,flow,fund,latest_version,declared,,FALSE,"Negócios do mês"
+fidc.cotistas,Número de cotistas,"(X.1) Número de Cotistas, somado entre as classes/séries do fundo na competência",fidc,Cotistas e fluxos,count,stock,class_series,sum_classes_same_period,declared,,TRUE,"Mesma regra do gráfico atual da Ficha (soma por classe em src/data/build_fund_metrics.R)"
+fidc.captacoes,Captações no mês,"(X.4) Valor Total, tipo de operação Captações no Mês, somado entre as classes/séries",fidc,Cotistas e fluxos,BRL,flow,class_series,sum_classes_same_period,declared,,FALSE,
+fidc.resgates,Resgates no mês,"(X.4) Valor Total, tipo de operação Resgates no Mês, somado entre as classes/séries",fidc,Cotistas e fluxos,BRL,flow,class_series,sum_classes_same_period,declared,,FALSE,
+fidc.resgates_solicitados,Resgates solicitados,"(X.4) Valor Total, tipo de operação Resgates Solicitados, somado entre as classes/séries",fidc,Cotistas e fluxos,BRL,flow,class_series,sum_classes_same_period,declared,,FALSE,
+fidc.amortizacoes,Amortizações,"(X.4) Valor Total, tipo de operação Amortizações, somado entre as classes/séries",fidc,Cotistas e fluxos,BRL,flow,class_series,sum_classes_same_period,declared,,FALSE,
+fidc.rentabilidade_mes,Rentabilidade no mês (por classe/série),"(X.3) Rentabilidade Apurada no Mês",fidc,Cotistas e fluxos,pct,rate,class_series,none,declared,,FALSE,"Taxa por classe/série; não se soma nem se agrega ao fundo"
+fidc.liquidez_imediata,Ativos com liquidez imediata,"(X.5) Ativos com liquidez imediata",fidc,Cotistas e fluxos,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.liquidez_30d,Ativos liquidáveis em até 30 dias,"(X.5) Ativos que podem ser liquidados em até 30 dias",fidc,Cotistas e fluxos,BRL,stock,fund,latest_version,declared,,FALSE,
+fidc.dc_total,Direitos creditórios (total),"DC com aquisição substancial + DC sem aquisição substancial",fidc,Indicadores derivados,BRL,stock,fund,none,derived,fidc.dc_com_aquisicao + fidc.dc_sem_aquisicao,FALSE,"Calculado; mesma tabela e competência"
+fidc.dc_sobre_pl,Direitos creditórios / PL,"Direitos creditórios (total) dividido pelo patrimônio líquido",fidc,Indicadores derivados,ratio,stock,fund,none,derived,(fidc.dc_com_aquisicao + fidc.dc_sem_aquisicao) / fidc.patrimonio_liquido,FALSE,"Denominador > 0 obrigatório"
+fidc.disponibilidades_sobre_pl,Disponibilidades / PL,"Disponibilidades divididas pelo patrimônio líquido",fidc,Indicadores derivados,ratio,stock,fund,none,derived,fidc.disponibilidades / fidc.patrimonio_liquido,FALSE,"Denominador > 0 obrigatório"
+fidc.passivo_sobre_ativo,Passivo / Ativo,"Passivo total dividido pelo ativo total",fidc,Indicadores derivados,ratio,stock,fund,none,derived,fidc.passivo_total / fidc.ativo_total,FALSE,"Denominador > 0 obrigatório"
+fidc.inadimplencia_dc_com_aquisicao,Inadimplência / DC com aquisição,"Créditos existentes inadimplentes (I.2.a.3) sobre os DC com aquisição substancial (I.2.a)",fidc,Indicadores derivados,ratio,stock,fund,none,derived,fidc.dc_com_aquisicao_inadimplentes / fidc.dc_com_aquisicao,FALSE,"Numerador é componente do denominador (mesma seção I.2.a)"
+fidc.precatorios_sobre_carteira_segmentos,Precatórios / Carteira por segmento,"Precatórios (II.i.1) sobre a carteira por segmento (Tabela II)",fidc,Indicadores derivados,ratio,stock,fund,none,derived,fidc.precatorios / fidc.carteira_segmentos,FALSE,"Mesma tabela (II)"
+fidc.pl_variacao_mensal,Variação mensal do PL,"Variação percentual do PL ante a competência anterior válida",fidc,Indicadores derivados,pct,rate,fund,none,derived,pct_change(fidc.patrimonio_liquido),FALSE,"Lacuna entre competências é explicitada, nunca interpolada"
+fii.patrimonio_liquido,Patrimônio líquido,"Patrimônio líquido do informe mensal (complemento)",fii,Patrimônio,BRL,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha"
+fii.ativo_total,Ativo total,"Valor do ativo do informe mensal (complemento)",fii,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fii.cotistas,Número de cotistas,"Total de cotistas do informe mensal (complemento)",fii,Cotistas e fluxos,count,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha"
+fiagro.patrimonio_liquido,Patrimônio líquido,"Patrimônio líquido do informe mensal",fiagro,Patrimônio,BRL,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha"
+fiagro.ativo_total,Ativo total,"Valor do ativo do informe mensal",fiagro,Patrimônio,BRL,stock,fund,latest_version,declared,,FALSE,
+fiagro.cotistas,Número de cotistas,"Número de cotistas do informe mensal",fiagro,Cotistas e fluxos,count,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha"
+fip.patrimonio_liquido,Patrimônio líquido,"Valor do patrimônio líquido (informe trimestral até 2023; quadrimestral desde 2024)",fip,Patrimônio,BRL,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha; a periodicidade muda em 2024"
+fip.cotistas,Número de cotistas,"Número de cotistas (informe trimestral até 2023; quadrimestral desde 2024)",fip,Cotistas e fluxos,count,stock,fund,latest_version,declared,,TRUE,"Mesma fonte do gráfico atual da Ficha; a periodicidade muda em 2024"

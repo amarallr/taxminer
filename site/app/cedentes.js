@@ -245,7 +245,7 @@
   }
   // Built the first time the tab is shown; then shows the app's current FIDC.
   $(document).on('shown.bs.tab', function () {
-    $('.tab-pane.active .tm-cedentes').each(function () { activate($(this)); $(this).data('tm-cedentes').follow(window.tmCurrent); });
+    $('.tm-cedentes').filter(function () { return window.tmPaneVisible(this); }).each(function () { activate($(this)); $(this).data('tm-cedentes').follow(window.tmCurrent); });
   });
-  $(function () { $('.tab-pane.active .tm-cedentes').each(function () { activate($(this)); }); });
+  $(function () { $('.tm-cedentes').filter(function () { return window.tmPaneVisible(this); }).each(function () { activate($(this)); }); });
 })();

@@ -1,0 +1,51 @@
+metric_id,table_name,field,valid_from,valid_to,filter_field,filter_value,class_key,transform,equivalence,evidence,periodicity
+fidc.patrimonio_liquido,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,,,,,,cvm_number,same_field,"Campo presente em todos os layouts da tabela; mesma coluna de fund_metric_sources$fidc$net_assets",monthly
+fidc.pl_medio_3m,inf_mensal_fidc_tab_IV,TAB_IV_B_VL_PL_MEDIO,,,,,,cvm_number,same_field,"Campo presente em todos os layouts da tabela",monthly
+fidc.ativo_total,inf_mensal_fidc_tab_I,TAB_I_VL_ATIVO,,,,,,cvm_number,same_field,"Campo presente em todos os layouts da tabela",monthly
+fidc.disponibilidades,inf_mensal_fidc_tab_I,TAB_I1_VL_DISP,,,,,,cvm_number,same_field,,monthly
+fidc.carteira,inf_mensal_fidc_tab_I,TAB_I2_VL_CARTEIRA,,,,,,cvm_number,same_field,,monthly
+fidc.dc_com_aquisicao,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO,,,,,,cvm_number,same_field,,monthly
+fidc.dc_sem_aquisicao,inf_mensal_fidc_tab_I,TAB_I2B_VL_DIRCRED_SEM_RISCO,,,,,,cvm_number,same_field,,monthly
+fidc.valores_mobiliarios,inf_mensal_fidc_tab_I,TAB_I2C_VL_VLMOB,,,,,,cvm_number,same_field,,monthly
+fidc.cotas_fundos_icvm555,inf_mensal_fidc_tab_I,TAB_I2C5_VL_COTA_FUNDO_ICVM555,,,,,,cvm_number,same_field,"Dicionário: Cotas de Fundos da ICVM 555",monthly
+fidc.cotas_classes_fif,inf_mensal_fidc_tab_I,TAB_I2C5_VL_COTA_FIF,2020-11,,,,,cvm_number,same_field,"Campo surge no layout de 2020-11; dicionário: Classes de Cotas dos FIF - Anexo I da RCVM 175",monthly
+fidc.titulos_publicos,inf_mensal_fidc_tab_I,TAB_I2D_VL_TITPUB_FED,,,,,,cvm_number,same_field,,monthly
+fidc.cdb,inf_mensal_fidc_tab_I,TAB_I2E_VL_CDB,,,,,,cvm_number,same_field,,monthly
+fidc.compromissadas,inf_mensal_fidc_tab_I,TAB_I2F_VL_OPER_COMPROM,,,,,,cvm_number,same_field,,monthly
+fidc.outros_renda_fixa,inf_mensal_fidc_tab_I,TAB_I2G_VL_OUTRO_RF,,,,,,cvm_number,same_field,,monthly
+fidc.cotas_fidc,inf_mensal_fidc_tab_I,TAB_I2H_VL_COTA_FIDC,,,,,,cvm_number,same_field,,monthly
+fidc.cotas_fidc_np,inf_mensal_fidc_tab_I,TAB_I2I_VL_COTA_FIDC_NP,,,,,,cvm_number,same_field,,monthly
+fidc.derivativos,inf_mensal_fidc_tab_I,TAB_I3_VL_POSICAO_DERIV,,,,,,cvm_number,same_field,,monthly
+fidc.outros_ativos,inf_mensal_fidc_tab_I,TAB_I4_VL_OUTRO_ATIVO,,,,,,cvm_number,same_field,,monthly
+fidc.passivo_total,inf_mensal_fidc_tab_III,TAB_III_VL_PASSIVO,,,,,,cvm_number,same_field,,monthly
+fidc.carteira_segmentos,inf_mensal_fidc_tab_II,TAB_II_VL_CARTEIRA,,,,,,cvm_number,same_field,,monthly
+fidc.precatorios,inf_mensal_fidc_tab_II,TAB_II_I1_VL_PRECAT,,,,,,cvm_number,same_field,,monthly
+fidc.dc_com_aquisicao_inadimplentes,inf_mensal_fidc_tab_I,TAB_I2A3_VL_CRED_INAD,,,,,,cvm_number,same_field,,monthly
+fidc.dc_sem_aquisicao_inadimplentes,inf_mensal_fidc_tab_I,TAB_I2B3_VL_CRED_INAD,2019-11,,,,,cvm_number,same_field,"Campo surge no layout de 2019-11",monthly
+fidc.provisao_com_aquisicao,inf_mensal_fidc_tab_I,TAB_I2A11_VL_REDUCAO_RECUP,,,,,,cvm_number,same_field,,monthly
+fidc.provisao_sem_aquisicao,inf_mensal_fidc_tab_I,TAB_I2B11_VL_REDUCAO_RECUP,2019-11,,,,,cvm_number,same_field,"Campo surge no layout de 2019-11",monthly
+fidc.dc_a_vencer_com_aquisicao,inf_mensal_fidc_tab_V,TAB_V_A_VL_DIRCRED_PRAZO,,,,,,cvm_number,same_field,,monthly
+fidc.parcelas_inadimplentes_com_aquisicao,inf_mensal_fidc_tab_V,TAB_V_B_VL_DIRCRED_INAD,,,,,,cvm_number,same_field,,monthly
+fidc.pagos_antecipadamente_com_aquisicao,inf_mensal_fidc_tab_V,TAB_V_C_VL_DIRCRED_ANTECIPADO,,,,,,cvm_number,same_field,,monthly
+fidc.parcelas_inadimplentes_sem_aquisicao,inf_mensal_fidc_tab_VI,TAB_VI_B_VL_DIRCRED_INAD,,,,,,cvm_number,same_field,,monthly
+fidc.recompras_valor,inf_mensal_fidc_tab_VII,TAB_VII_D_2_VL_RECOMPRA,,,,,,cvm_number,same_field,,monthly
+fidc.recompras_quantidade,inf_mensal_fidc_tab_VII,TAB_VII_D_1_QT_RECOMPRA,,,,,,cvm_number,same_field,,monthly
+fidc.substituicoes_valor,inf_mensal_fidc_tab_VII,TAB_VII_C_2_VL_SUBST,,,,,,cvm_number,same_field,,monthly
+fidc.cotistas,inf_mensal_fidc_tab_X_1,TAB_X_NR_COTST,,,,,TAB_X_CLASSE_SERIE,cvm_number,same_field,"Mesma regra de fund_metric_sources$fidc (class_table, class_quotaholders, class_key)",monthly
+fidc.captacoes,inf_mensal_fidc_tab_X_4,TAB_X_VL_TOTAL,,,TAB_X_TP_OPER,Captações no Mês,TAB_X_CLASSE_SERIE,cvm_number,same_field,"Valores de TAB_X_TP_OPER observados nos dados",monthly
+fidc.resgates,inf_mensal_fidc_tab_X_4,TAB_X_VL_TOTAL,,,TAB_X_TP_OPER,Resgates no Mês,TAB_X_CLASSE_SERIE,cvm_number,same_field,"Valores de TAB_X_TP_OPER observados nos dados",monthly
+fidc.resgates_solicitados,inf_mensal_fidc_tab_X_4,TAB_X_VL_TOTAL,,,TAB_X_TP_OPER,Resgates Solicitados,TAB_X_CLASSE_SERIE,cvm_number,same_field,"Valores de TAB_X_TP_OPER observados nos dados",monthly
+fidc.amortizacoes,inf_mensal_fidc_tab_X_4,TAB_X_VL_TOTAL,,,TAB_X_TP_OPER,Amortizações,TAB_X_CLASSE_SERIE,cvm_number,same_field,"Valores de TAB_X_TP_OPER observados nos dados",monthly
+fidc.rentabilidade_mes,inf_mensal_fidc_tab_X_3,TAB_X_VL_RENTAB_MES,,,,,TAB_X_CLASSE_SERIE,cvm_number,same_field,,monthly
+fidc.liquidez_imediata,inf_mensal_fidc_tab_X_5,TAB_X_VL_LIQUIDEZ_0,,,,,,cvm_number,same_field,,monthly
+fidc.liquidez_30d,inf_mensal_fidc_tab_X_5,TAB_X_VL_LIQUIDEZ_30,,,,,,cvm_number,same_field,,monthly
+fii.patrimonio_liquido,inf_mensal_fii_complemento,Patrimonio_Liquido,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fii$net_assets",monthly
+fii.ativo_total,inf_mensal_fii_complemento,Valor_Ativo,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fii$total_assets",monthly
+fii.cotistas,inf_mensal_fii_complemento,Total_Numero_Cotistas,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fii$quotaholders",monthly
+fiagro.patrimonio_liquido,inf_mensal_fiagro,Patrimonio_Liquido,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fiagro$net_assets",monthly
+fiagro.ativo_total,inf_mensal_fiagro,Valor_Ativo,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fiagro$total_assets",monthly
+fiagro.cotistas,inf_mensal_fiagro,Numero_Cotistas,,,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fiagro$quotaholders",monthly
+fip.patrimonio_liquido,inf_trimestral_fip,VL_PATRIM_LIQ,,2023-12,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fip$net_assets",quarterly
+fip.patrimonio_liquido,inf_quadrimestral_fip,VL_PATRIM_LIQ,2024-01,,,,,cvm_number,proven,"Mesmo nome de coluna em fund_metric_sources$fip; troca de tabela pela mudança de periodicidade (trimestral até 2023, quadrimestral desde 2024)",four_monthly
+fip.cotistas,inf_trimestral_fip,NR_COTST,,2023-12,,,,cvm_number,same_field,"Mesma coluna de fund_metric_sources$fip$quotaholders",quarterly
+fip.cotistas,inf_quadrimestral_fip,NR_COTST,2024-01,,,,,cvm_number,proven,"Mesmo nome de coluna em fund_metric_sources$fip; troca de tabela pela mudança de periodicidade (trimestral até 2023, quadrimestral desde 2024)",four_monthly

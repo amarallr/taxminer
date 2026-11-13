@@ -103,7 +103,7 @@ about_area <- shiny::div(
 
 page <- bslib::page_navbar(
   title = tm_brand(), window_title = "TaxMiner · Painel de fundos",
-  fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE,
+  fillable = c("Panorama", "Administradores", "Fundos", "Ficha"), fluid = TRUE,
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = tm_theme(),
   header = shiny::tags$head(
@@ -115,10 +115,10 @@ page <- bslib::page_navbar(
     shiny::tags$script(src = "cedentes.js", defer = NA)),
   bslib::nav_panel("Panorama", panorama_ui("data/panorama/")),
   bslib::nav_panel("Administradores", admin_area),
-  bslib::nav_panel("Fundos", static_funds_ui()),
-  !!!unlist(lapply(family_tabs, function(f) c(
-    list(bslib::nav_panel(toupper(f), static_funds_ui(f))),
-    if (f == "fidc") list(bslib::nav_panel("Cedentes", cedentes_ui("data/cedentes/"))))), recursive = FALSE),
+  # Same nesting as the local app (tm_fund_tabs, prototype/charts.R).
+  bslib::nav_panel("Fundos", tm_fund_tabs(
+    static_funds_ui(), stats::setNames(lapply(family_tabs, static_funds_ui), family_tabs),
+    cedentes_ui("data/cedentes/"))),
   bslib::nav_panel("Ficha", static_record_ui()),
   bslib::nav_panel("Sobre", about_area),
   bslib::nav_spacer(),

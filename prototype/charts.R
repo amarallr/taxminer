@@ -196,6 +196,30 @@ change_badge <- function(x, suffix = "em 12 meses") {
 # page), show the pre-rendered panel `[data-detail=key]`.
 tm_app_script <- function() {
   shiny::tags$script(shiny::HTML("
+// Nested tabs (tm_fund_tabs): show a tab by its value anywhere on the page,
+// opening its parent tabs first; a pane is visible only when every enclosing
+// tab pane is active.
+window.tmShowTab = function(value) {
+  var links = $('a[data-bs-toggle=\"tab\"], a[data-toggle=\"tab\"]');
+  var a = links.filter(function() { return $(this).attr('data-value') === value; }).first();
+  if (!a.length) return false;
+  var chain = [a], pane = a.closest('.tab-pane');
+  while (pane.length) {
+    var id = '#' + pane.attr('id');
+    var up = links.filter(function() { return ($(this).attr('data-bs-target') || $(this).attr('href')) === id; }).first();
+    if (!up.length) break;
+    chain.unshift(up);
+    pane = up.closest('.tab-pane');
+  }
+  chain.forEach(function(l) { l.tab('show'); });
+  return true;
+};
+window.tmPaneVisible = function(el) { return $(el).parents('.tab-pane').not('.active').length === 0; };
+// Tab value of a family's fund list (FIDC has its list and Cedentes inside).
+window.tmFamilyTab = function(family) {
+  family = String(family).toLowerCase();
+  return family === 'fidc' ? 'Fundos FIDC' : family.toUpperCase();
+};
 $(function() {
   var tip = $('<div>').addClass('tm-tooltip').attr('role', 'tooltip').appendTo('body');
   // A blank line in a tip starts an explanatory note (fund_field_note_text):
@@ -223,8 +247,7 @@ $(function() {
     .on('mouseleave', '[data-tip]', function() { tip.hide(); })
     .on('click', '.tm-goto[data-tab]', function(e) {
       e.preventDefault();
-      var t = $(this).attr('data-tab');
-      $('.navbar a[data-bs-toggle=\"tab\"]').filter(function() { return $(this).attr('data-value') === t; }).first().click();
+      window.tmShowTab($(this).attr('data-tab'));
     })
     .on('click', '.tm-chart-pick .tm-hit[data-month]', function() {
       // A month on a clickable chart: the enclosing [data-month-input] gets
@@ -304,6 +327,34 @@ $(function() {
 # Navbar brand: white emblem (rfb_emblem.png, cropped from the supplied logo), a thin rule,
 # the word "Analytics" as text and a bar-chart icon in SVG (sharp at any resolution).
 # The same markup is in site/app/index.html.
+# Fundos area: "Todos" (all funds), then one sub tab per fund type; FIDC holds
+# its fund list and Cedentes. Tab values: "Todos", "FIDC", "Fundos FIDC",
+# "Cedentes", "FII", "FIP", "FIAGRO" (window.tmShowTab, tmFamilyTab).
+# all_ui: the all-funds tab; family_ui: named list (fidc, fii, ...); cedentes: the
+# Cedentes area.
+tm_fund_tabs <- function(all_ui, family_ui, cedentes) {
+  # Nested navsets do not fill on their own: the tabbable, its tab-content and
+  # its own panes (not the tabs inside the content) become fill containers, so
+  # the fund lists keep their inner scroll.
+  fill <- function(nav) {
+    tq <- htmltools::tagQuery(nav)
+    content <- tq$children(".tab-content")
+    content$children(".tab-pane")$addClass("html-fill-item html-fill-container")
+    content$addClass("html-fill-item html-fill-container")
+    htmltools::bindFillRole(tq$allTags(), container = TRUE, item = TRUE)
+  }
+  panels <- lapply(names(family_ui), function(f) {
+    body <- if (f == "fidc") {
+      fill(bslib::navset_underline(
+        id = "fidc_nav",
+        bslib::nav_panel("Fundos FIDC", family_ui[[f]]),
+        bslib::nav_panel("Cedentes", cedentes)))
+    } else family_ui[[f]]
+    bslib::nav_panel(toupper(f), body)
+  })
+  fill(do.call(bslib::navset_underline, c(list(id = "fund_nav", bslib::nav_panel("Todos", all_ui)), panels)))
+}
+
 tm_brand <- function() shiny::HTML('<span class="tm-brand" role="img" aria-label="Analytics"><img src="rfb_emblem.png" alt="" class="tm-brand-emblem"/><span class="tm-brand-rule"></span><span class="tm-brand-name">Analytics</span><svg class="tm-brand-bars" viewBox="0 0 20 18" aria-hidden="true"><rect x="0" y="10" width="5" height="8" rx="1.2"/><rect x="7.5" y="5" width="5" height="13" rx="1.2"/><rect x="15" y="0" width="5" height="18" rx="1.2"/></svg></span>')
 
 # Visual theme of the app and the static export (system fonts only).
