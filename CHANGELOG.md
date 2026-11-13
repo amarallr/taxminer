@@ -13,6 +13,10 @@
   não salvas em commit.
 - **Fontes 20% menores** no app local e no painel publicado (tamanhos do CSS e base do Bootstrap
   multiplicados por 0,8).
+- **Fontes 10% maiores** que no ajuste anterior, em todo o app e no painel publicado (fator final de
+  0,88 sobre o tamanho original).
+- **Nova marca na barra de navegação**, no lugar do nome "TaxMiner": emblema em branco, filete,
+  "Analytics" em texto e ícone de barras em SVG, nítidos em qualquer resolução.
 
 ## Versão 1.0.3 — 2026-11-12
 

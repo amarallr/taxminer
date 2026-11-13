@@ -301,11 +301,16 @@ $(function() {
 });"))
 }
 
+# Navbar brand: white emblem (rfb_emblem.png, cropped from the supplied logo), a thin rule,
+# the word "Analytics" as text and a bar-chart icon in SVG (sharp at any resolution).
+# The same markup is in site/app/index.html.
+tm_brand <- function() shiny::HTML('<span class="tm-brand" role="img" aria-label="Analytics"><img src="rfb_emblem.png" alt="" class="tm-brand-emblem"/><span class="tm-brand-rule"></span><span class="tm-brand-name">Analytics</span><svg class="tm-brand-bars" viewBox="0 0 20 18" aria-hidden="true"><rect x="0" y="10" width="5" height="8" rx="1.2"/><rect x="7.5" y="5" width="5" height="13" rx="1.2"/><rect x="15" y="0" width="5" height="18" rx="1.2"/></svg></span>')
+
 # Visual theme of the app and the static export (system fonts only).
 tm_theme <- function() {
   bslib::bs_theme(
     version = 5, bg = "#ffffff", fg = "#1c2430", primary = "#0b1f3a", secondary = "#5b6573",
     base_font = bslib::font_collection("Segoe UI", "Helvetica Neue", "Arial", "sans-serif"),
     heading_font = bslib::font_collection("Georgia", "Times New Roman", "serif"),
-    "border-radius" = "2px", "font-size-base" = "0.65rem")
+    "border-radius" = "2px", "font-size-base" = "0.715rem")
 }

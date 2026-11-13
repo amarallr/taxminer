@@ -54,7 +54,7 @@ unavailable <- function(text) {
 }
 
 ui <- bslib::page_navbar(
-  id = "nav", title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
+  id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,

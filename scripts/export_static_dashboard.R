@@ -102,7 +102,7 @@ about_area <- shiny::div(
   method_note(ctx))
 
 page <- bslib::page_navbar(
-  title = "TaxMiner", window_title = "TaxMiner · Painel de fundos",
+  title = tm_brand(), window_title = "TaxMiner · Painel de fundos",
   fillable = c("Panorama", "Administradores", "Fundos", toupper(family_tabs), "Cedentes", "Ficha"), fluid = TRUE,
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = tm_theme(),
@@ -131,6 +131,7 @@ file.copy("prototype/static/taxminer_static.js", file.path(out_dir, "taxminer_st
 file.copy("prototype/www/loadbar.js", file.path(out_dir, "loadbar.js"), overwrite = TRUE)
 file.copy("prototype/www/panorama.js", file.path(out_dir, "panorama.js"), overwrite = TRUE)
 file.copy("prototype/www/cedentes.js", file.path(out_dir, "cedentes.js"), overwrite = TRUE)
+file.copy("prototype/www/rfb_emblem.png", file.path(out_dir, "rfb_emblem.png"), overwrite = TRUE)
 # The theme uses system fonts: the bundled web fonts and the source maps are
 # never loaded by the page.
 lib <- file.path(out_dir, "lib")
