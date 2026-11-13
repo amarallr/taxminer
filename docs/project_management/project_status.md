@@ -1,11 +1,22 @@
 # TaxMiner — estado do projeto
 
 **Status:** vigente; entradas mais recentes primeiro ·
-**Última atualização:** 2026-11-12 ·
+**Última atualização:** 2026-11-13 ·
 **Documentos relacionados:** [Retomada](handoff.md) ·
 [Itens de trabalho](work_items.csv) ·
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
+
+## Aceites, subabas e modo proprietário — 2026-11-13
+
+- Fase 03 da governança aceita (`acc_0014`) e ETAPA 02 do explorador multimétrico aceita
+  (`acc_0015`, `work_0040`, `req_0019`), em `decision_0053`.
+- Commit `5058950`: subabas em Fundos (Cedentes dentro de FIDC), modo proprietário da Governança
+  (`TAXMINER_OWNER_MODE=1`) e catálogo de métricas. 167 testes passam.
+- Sondagem de documentos da CVM: Fundos.NET cobre FII e FIDC; FIP não. Implementação aguarda
+  autorização.
+- **Aguardando:** P13 item a item; P9; Fases 07 e 08; ETAPA 03; download de documentos; caminho do
+  instalador (bloqueio do Defender).
 
 ## TaxMiner Governance — Fase 03 — 2026-11-13
 

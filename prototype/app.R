@@ -15,7 +15,8 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
             "prototype/fund_record_module.R", "src/common/governance_registry.R",
             "src/common/governance_prompts.R", "src/common/governance_agents.R",
-            "src/common/governance_metrics.R", "prototype/governance_module.R", "src/common/owner_mode.R")) {
+            "src/common/governance_metrics.R", "src/common/governance_views.R", "prototype/governance_module.R",
+            "src/common/owner_mode.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
 }
 

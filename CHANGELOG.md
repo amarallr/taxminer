@@ -2,6 +2,14 @@
 
 ## Não incluído em versão — 2026-11-13
 
+- **Governança reorganizada** (app local, somente o proprietário): subabas Visão geral, Pendências,
+  Aceites, Requisitos e itens, Dependências, Rastreabilidade, Agentes e tokens e Auditoria. As
+  pendências mostram situação, o que falta e de quem depende; os requisitos, o progresso dos itens
+  aceitos; as dependências, a situação de cada uma. Selos de status por cor, textos em português,
+  tabelas com cabeçalho fixo e números em pt-BR. Um clique em qualquer linha abre a
+  rastreabilidade do registro (`src/common/governance_views.R`).
+- **Aceites:** Fase 03 da governança (`acc_0014`) e ETAPA 02 do explorador multimétrico
+  (`acc_0015`), em `decision_0053`.
 - **Fundos com subabas** (app e painel publicado): FIDC, FII, FIP e FIAGRO passam a ser subabas de
   "Fundos" (ao lado de "Todos"), e "Cedentes" fica dentro de FIDC ("Fundos FIDC" e "Cedentes"). Os
   atalhos entre abas (abrir fundo pelo Panorama, duplo clique em Cedentes, fundo atual) abrem a

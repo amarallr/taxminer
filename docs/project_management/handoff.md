@@ -1,7 +1,7 @@
 # Retomada do TaxMiner
 
 **Status:** vigente ·
-**Última atualização:** 2026-11-12 ·
+**Última atualização:** 2026-11-13 ·
 **Documentos relacionados:** [Estado atual](project_status.md) ·
 [Histórico de retomadas](handoff_history.md) ·
 [Revisão de 2026-11-10](review_update_plan.md)
@@ -12,17 +12,21 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 
 ## Estado atual
 
-- **TaxMiner Governance (`req_0021`):** Fases 01, 02, 06, 04 e 05 aceitas (`acc_0010`–`acc_0013`).
+- **TaxMiner Governance (`req_0021`):** Fases 01, 02, 06, 04, 05 e 03 aceitas (`acc_0010`–`acc_0014`).
   Conferir os registros com `Rscript --vanilla scripts/governance_registry.R check` (inclui a
   camada imutável, `immutable_rules.csv`). Mudar estados só por `scripts/governance_registry.R set`
   (gera a transição); revisões do prompt só por `propose-prompt` e `decide-prompt`. Execuções em
   `execution_register.csv` (`add-execution`, `update-execution`, `reconcile`); hook em
   `scripts/governance_hook.R`, não instalado; leitura de tokens desligada (P9). Aba Governança no
-  app local (`prototype/governance_module.R`, `src/common/governance_metrics.R`). Próxima fase: 03
-  (aguarda autorização); depois 07 e 08.
-  Fase 03 implementada e testada (`work_0037`, aceite pendente): `src/common/governance_planning.R`;
+  app local (`prototype/governance_module.R`, `src/common/governance_metrics.R`). Próximas fases: 07 e 08
+  (aguardam autorização).
+  Fase 03 aceita (`acc_0014`, `decision_0053`): `src/common/governance_planning.R`;
   `scripts/governance_registry.R plan-report` gera `reports/governance/planning_report.md`. Status de
   requisitos só por `reconcile-requirements --apply` com decisão do desenvolvedor. Próximas: 07 e 08.
+- **Explorador multimétrico (`req_0019`):** ETAPA 02 aceita (`acc_0015`, `work_0040`): catálogo em
+  `config/metric_catalog.csv` e `config/metric_mappings.csv`; validar com
+  `TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla scripts/validate_metric_catalog.R`. Próxima: ETAPA 03
+  (interface), aguarda autorização. Governança e seu script exigem `TAXMINER_OWNER_MODE=1`.
 - **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e

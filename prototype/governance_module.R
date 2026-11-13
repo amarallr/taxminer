@@ -30,21 +30,50 @@ gov_kind <- function(id) {
   ifelse(is.na(k), "other", k)
 }
 
-# HTML table; `pick` names the column whose value drills down (clickable rows).
-gov_table <- function(df, labels = names(df), pick = NULL, input = NULL, num = character(), empty = "Nada a mostrar.") {
+# HTML table; `pick` names the column whose value drills down (clickable rows);
+# `html` names columns already built as safe HTML (badges, bars); `wide` columns wrap.
+gov_table <- function(df, labels = names(df), pick = NULL, input = NULL, num = character(), empty = "Nada a mostrar.",
+                      html = character(), wide = character(), tall = FALSE) {
   if (!nrow(df)) return(shiny::div(class = "tm-gov-empty", empty))
-  head <- paste0("<tr>", paste0("<th", ifelse(names(df) %in% num, ' class="tm-num"', ""), ">", gov_esc(labels), "</th>",
-                                collapse = ""), "</tr>")
+  cls <- function(n) {
+    c <- c(if (n %in% num) "tm-num", if (n %in% wide) "tm-gov-wide", if (identical(n, pick)) "tm-gov-id")
+    if (length(c)) sprintf(' class="%s"', paste(c, collapse = " ")) else ""
+  }
+  head <- paste0("<tr>", paste0("<th", vapply(names(df), cls, ""), ">", gov_esc(labels), "</th>", collapse = ""), "</tr>")
   rows <- vapply(seq_len(nrow(df)), function(i) {
-    cells <- paste0("<td", ifelse(names(df) %in% num, ' class="tm-num"', ""), ">",
-                    gov_esc(unlist(df[i, ], use.names = FALSE)), "</td>", collapse = "")
+    v <- unlist(df[i, ], use.names = FALSE)
+    v <- ifelse(names(df) %in% html, v, gov_esc(v))
+    cells <- paste0("<td", vapply(names(df), cls, ""), ">", v, "</td>", collapse = "")
     attrs <- if (!is.null(pick)) sprintf(' class="tm-pick" data-key="%s" data-input="%s"', gov_esc(df[[pick]][i]),
                                          gov_esc(input)) else ""
     paste0("<tr", attrs, ">", cells, "</tr>")
   }, character(1))
-  shiny::div(class = "tm-gov-table-wrap", htmltools::HTML(paste0(
+  shiny::div(class = paste("tm-gov-table-wrap", if (tall) "tm-gov-tall"), htmltools::HTML(paste0(
     '<table class="tm-card-table tm-gov-table"><thead>', head, "</thead><tbody>", paste(rows, collapse = ""),
     "</tbody></table>")))
+}
+
+# Status badge: tone done (green), wait (amber, awaiting the developer), dev (blue),
+# todo (grey), block (red).
+gov_badge <- function(text, tone) sprintf('<span class="tm-gov-badge tm-gov-%s">%s</span>', tone, gov_esc(text))
+gov_requirement_tone <- function(s) {
+  t <- c(accepted = "done", in_progress = "dev", blocked = "block", rejected = "block")[s]
+  ifelse(is.na(t), "todo", t)
+}
+gov_progress <- function(done, total) {
+  p <- ifelse(total > 0, round(100 * done / total), 0)
+  sprintf('<span class="tm-gov-progress" title="%d de %d aceitos"><span style="width:%d%%"></span></span><span class="tm-gov-progress-n">%s de %s</span>',
+          done, total, p, gov_br_int(done), gov_br_int(total))
+}
+gov_date <- function(x) {
+  t <- governance_time(x)
+  ifelse(is.na(t), "—", format(t, "%d/%m/%Y %H:%M", tz = "America/Sao_Paulo"))
+}
+# Counter chips above a table.
+gov_counts <- function(labels, values, tones) {
+  shiny::div(class = "tm-gov-counts", lapply(seq_along(labels), function(i) shiny::span(
+    class = paste("tm-gov-count", paste0("tm-gov-", tones[i])),
+    shiny::span(class = "tm-gov-count-n", gov_br_int(values[i])), shiny::span(labels[i]))))
 }
 
 gov_card <- function(title, ..., note = NULL, id = NULL) {
@@ -58,10 +87,11 @@ governance_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(class = "tm-page tm-gov",
     shiny::div(class = "tm-hero tm-gov-hero",
-      shiny::div(class = "tm-eyebrow", "TaxMiner Governance"),
-      shiny::h1("Governance — Executive Command Center"),
-      shiny::p(class = "tm-lede", "Requisitos, entregas, execuções de agentes e trilha de auditoria, lidos dos",
-               "registros em docs/project_management/. Indicador sem dado aparece como indisponível, nunca como zero."),
+      shiny::div(class = "tm-eyebrow", "TaxMiner Governance · somente o proprietário"),
+      shiny::h1("Governança do projeto"),
+      shiny::p(class = "tm-lede", "Pendências, aceites, requisitos, dependências, execuções de agentes e trilha de",
+               "auditoria, lidos dos registros em docs/project_management/. Indicador sem dado aparece como",
+               "indisponível, nunca como zero."),
       shiny::uiOutput(ns("sync"))),
     shiny::div(class = "tm-gov-filters",
       # Empty range = whole history (NA start/end only raise a coercion notice).
@@ -84,27 +114,45 @@ governance_ui <- function(id) {
                                                 "manual" = 0), selected = 150),
                  shiny::actionButton(ns("refresh"), "Atualizar agora", class = "btn-sm"),
                  shiny::actionButton(ns("clear"), "Limpar filtros", class = "btn-sm btn-link"))),
-    shiny::h2(class = "tm-gov-h2", "Executive Overview"),
-    shiny::uiOutput(ns("kpis")),
-    shiny::div(class = "tm-gov-grid",
-      gov_card("Requirements Pipeline", shiny::uiOutput(ns("pipeline")), note = "requisitos por status; itens por etapa"),
-      gov_card("Risks & Blockers", shiny::uiOutput(ns("risks")))),
-    shiny::div(class = "tm-gov-grid",
-      gov_card("Execution Timeline", shiny::uiOutput(ns("timeline"))),
-      gov_card("Agent Performance", shiny::uiOutput(ns("agents")))),
-    shiny::div(class = "tm-gov-grid",
-      gov_card("Token Efficiency", shiny::uiOutput(ns("tokens"))),
-      gov_card("Prompt Evolution", shiny::uiOutput(ns("prompts")))),
-    gov_card("Traceability Graph", id = ns("trace"),
-             shiny::div(class = "tm-gov-trace-bar", shiny::uiOutput(ns("crumbs"), inline = TRUE),
-                        shiny::actionButton(ns("up"), "↑ Voltar", class = "btn-sm btn-link")),
-             shiny::uiOutput(ns("graph")), shiny::uiOutput(ns("detail")),
-             note = "clique num nó ou numa linha para detalhar; Voltar desfaz"),
-    gov_card("Delivery Roadmap", shiny::uiOutput(ns("roadmap"))),
-    gov_card("Audit Trail", shiny::uiOutput(ns("audit")),
-             note = shiny::span("últimos 200 eventos · ",
-                                shiny::downloadLink(ns("export_md"), "relatório (.md)"), " · ",
-                                shiny::downloadLink(ns("export_csv"), "trilha (.csv)"))))
+    bslib::navset_underline(
+      id = ns("tabs"),
+      bslib::nav_panel("Visão geral",
+        shiny::uiOutput(ns("kpis")),
+        shiny::div(class = "tm-gov-grid",
+          gov_card("Funil de requisitos e entregas", shiny::uiOutput(ns("pipeline")),
+                   note = "requisitos por status; itens por etapa"),
+          gov_card("Riscos e bloqueios", shiny::uiOutput(ns("risks"))))),
+      bslib::nav_panel("Pendências",
+        gov_card("Pedidos em desenvolvimento ou pendentes", shiny::uiOutput(ns("pending")),
+                 note = "itens sem aceite e pedidos sem requisito; aguardando você primeiro; clique para rastrear")),
+      bslib::nav_panel("Aceites",
+        gov_card("Aceites registrados", shiny::uiOutput(ns("acceptances")),
+                 note = "mais recentes primeiro; clique para rastrear")),
+      bslib::nav_panel("Requisitos e itens",
+        gov_card("Requisitos", shiny::uiOutput(ns("requirements")),
+                 note = "itens aceitos sobre o total; clique para rastrear"),
+        gov_card("Itens de trabalho", shiny::uiOutput(ns("roadmap")))),
+      bslib::nav_panel("Dependências",
+        gov_card("Dependências entre itens", shiny::uiOutput(ns("dependencies")),
+                 note = "situação de cada dependência; um item só começa com as dependências aceitas")),
+      bslib::nav_panel("Rastreabilidade",
+        gov_card("Grafo de rastreabilidade", id = ns("trace"),
+                 shiny::div(class = "tm-gov-trace-bar", shiny::uiOutput(ns("crumbs"), inline = TRUE),
+                            shiny::actionButton(ns("up"), "↑ Voltar", class = "btn-sm btn-link")),
+                 shiny::uiOutput(ns("graph")), shiny::uiOutput(ns("detail")),
+                 note = "clique num nó ou numa linha para detalhar; Voltar desfaz")),
+      bslib::nav_panel("Agentes e tokens",
+        shiny::div(class = "tm-gov-grid",
+          gov_card("Linha do tempo das execuções", shiny::uiOutput(ns("timeline"))),
+          gov_card("Desempenho por agente", shiny::uiOutput(ns("agents")))),
+        shiny::div(class = "tm-gov-grid",
+          gov_card("Eficiência de tokens", shiny::uiOutput(ns("tokens"))),
+          gov_card("Evolução do prompt mestre", shiny::uiOutput(ns("prompts"))))),
+      bslib::nav_panel("Auditoria",
+        gov_card("Trilha de auditoria", shiny::uiOutput(ns("audit")),
+                 note = shiny::span("últimos 200 eventos · ",
+                                    shiny::downloadLink(ns("export_md"), "relatório (.md)"), " · ",
+                                    shiny::downloadLink(ns("export_csv"), "trilha (.csv)"))))))
 }
 
 governance_server <- function(id, root, now = Sys.time) {
@@ -191,8 +239,8 @@ governance_server <- function(id, root, now = Sys.time) {
       d <- governance_delivery_stages(r)
       shiny::tagList(
         shiny::div(class = "tm-gov-sub", "Requisitos por status (ciclo de vida)"),
-        if (nrow(p)) bar_list(p$status, p$n, gov_br_int(p$n), colors = "#051c2c",
-                              tips = sprintf("%s: %d requisito(s)", p$status, p$n))
+        if (nrow(p)) bar_list(governance_label("requirement", p$status), p$n, gov_br_int(p$n), colors = "#051c2c",
+                              tips = sprintf("%s: %d requisito(s)", governance_label("requirement", p$status), p$n))
         else shiny::div(class = "tm-gov-empty", "Nenhum requisito com os filtros atuais."),
         shiny::div(class = "tm-gov-sub", "Itens de trabalho por etapa (Implementado ≠ Testado ≠ Aceito ≠ Liberado)"),
         bar_list(d$stage, d$n, gov_br_int(d$n), colors = "#1f4fd1",
@@ -203,6 +251,8 @@ governance_server <- function(id, root, now = Sys.time) {
       r <- filtered()
       rk <- r$risks[r$risks$status == "open", c("risk_id", "description", "likelihood", "impact"), drop = FALSE]
       rk$description <- gov_short(rk$description, 110L)
+      rk$likelihood <- governance_label("risk", rk$likelihood)
+      rk$impact <- governance_label("risk", rk$impact)
       w <- r$work_items
       blocked <- w[w$implementation_status == "blocked" | w$test_status == "blocked" | w$release_status == "blocked",
                    c("work_item_id", "title"), drop = FALSE]
@@ -300,7 +350,7 @@ governance_server <- function(id, root, now = Sys.time) {
       p <- state$regs$prompt_revisions
       p <- p[order(p$revision_id, decreasing = TRUE), , drop = FALSE]
       tab <- data.frame(id = p$revision_id, v = paste(p$previous_version, "→", p$version), at = substr(p$revised_at, 1L, 10L),
-                        cls = p$change_class, ap = p$approval, imp = gov_short(p$improvements, 70L), stringsAsFactors = FALSE)
+                        cls = p$change_class, ap = governance_label("decision", p$approval), imp = gov_short(p$improvements, 70L), stringsAsFactors = FALSE)
       shiny::tagList(
         shiny::div(class = "tm-gov-sub", sprintf("Prompt mestre: %d revisões (%d aprovadas, %d propostas, %d rejeitadas)",
                                                   nrow(p), sum(p$approval == "approved"), sum(p$approval == "proposed"),
@@ -325,8 +375,10 @@ governance_server <- function(id, root, now = Sys.time) {
       s <- stack()
       if (!identical(utils::tail(s, 1L), i)) stack(utils::tail(c(s, i), 20L))
     }
-    shiny::observeEvent(input$pick, push(input$pick))
-    shiny::observeEvent(input$go, push(input$query))
+    # A pick anywhere opens the Rastreabilidade sub tab on that record.
+    show_trace <- function() if (!identical(input$tabs, "Rastreabilidade")) bslib::nav_select("tabs", "Rastreabilidade", session)
+    shiny::observeEvent(input$pick, { push(input$pick); show_trace() })
+    shiny::observeEvent(input$go, { push(input$query); show_trace() })
     shiny::observeEvent(input$up, { s <- stack(); if (length(s) > 1L) stack(utils::head(s, -1L)) })
     focus <- shiny::reactive(utils::tail(stack(), 1L))
 
@@ -391,18 +443,78 @@ governance_server <- function(id, root, now = Sys.time) {
       r <- filtered()
       w <- r$work_items
       w <- w[order(w$acceptance_status == "approved", -as.integer(sub("work_", "", w$work_item_id))), , drop = FALSE]
-      tab <- data.frame(id = w$work_item_id, req = w$requirement_id, title = gov_short(w$title, 80L),
-                        impl = w$implementation_status, test = w$test_status, acc = w$acceptance_status,
-                        rel = w$release_status, stringsAsFactors = FALSE)
+      s <- governance_item_situation(w)
+      tab <- data.frame(id = w$work_item_id, req = w$requirement_id, title = gov_short(w$title, 140L),
+                        sit = gov_badge(s$situation, s$tone),
+                        impl = governance_label("implementation_status", w$implementation_status),
+                        test = governance_label("test_status", w$test_status),
+                        acc = governance_label("acceptance_status", w$acceptance_status),
+                        rel = governance_label("release_status", w$release_status), stringsAsFactors = FALSE)
       pl <- state$regs$planning_revisions
       pl <- pl[order(pl$plan_id, decreasing = TRUE), , drop = FALSE]
       shiny::tagList(
         if (nrow(pl)) shiny::div(class = "tm-gov-plan",
-          shiny::span(class = "tm-gov-sub", sprintf("Plano vigente (%s, %s): ", pl$plan_id[1], pl$approval[1])),
+          shiny::span(class = "tm-gov-sub", sprintf("Plano vigente (%s, %s): ", pl$plan_id[1],
+                                                    governance_label("decision", pl$approval[1]))),
           pl$summary[1]),
-        gov_table(utils::head(tab, 40L), c("Item", "Requisito", "Título", "Implementação", "Teste", "Aceite", "Release"),
-                  pick = "id", input = ns("pick"), empty = "Nenhum item com os filtros atuais."),
-        if (nrow(tab) > 40L) shiny::div(class = "tm-gov-note", sprintf("Mostrando 40 de %d itens (pendentes primeiro).", nrow(tab))))
+        gov_table(tab, c("Item", "Requisito", "Título", "Situação", "Implementação", "Teste", "Aceite", "Liberação"),
+                  pick = "id", input = ns("pick"), empty = "Nenhum item com os filtros atuais.", html = "sit",
+                  wide = "title", tall = TRUE))
+    })
+
+    output$pending <- shiny::renderUI({
+      p <- governance_pending_view(filtered())
+      n <- function(t) sum(p$tone == t)
+      tab <- data.frame(n = gov_br_int(seq_len(nrow(p))), id = p$id, title = gov_short(p$title, 160L),
+                        req = p$requirement, sit = gov_badge(p$situation, p$tone), next_step = p$next_step,
+                        depends = p$depends, stringsAsFactors = FALSE)
+      shiny::tagList(
+        gov_counts(c("aguardando você", "em desenvolvimento", "bloqueados", "não iniciados ou sem requisito"),
+                   c(n("wait"), n("dev"), n("block"), n("todo")), c("wait", "dev", "block", "todo")),
+        gov_table(tab, c("#", "Registro", "Pedido", "Requisito", "Situação", "O que falta", "Depende de"),
+                  pick = "id", input = ns("pick"), num = "n", html = "sit", wide = c("title", "depends"), tall = TRUE,
+                  empty = "Nada pendente com os filtros atuais."))
+    })
+
+    output$acceptances <- shiny::renderUI({
+      a <- governance_acceptance_view(filtered())
+      tone <- ifelse(a$decision == "approved", "done", ifelse(a$decision == "rejected", "block", "wait"))
+      tab <- data.frame(id = a$id, criteria = gov_short(a$criteria, 170L), item = a$item, req = a$requirement,
+                        dec = gov_badge(governance_label("decision", a$decision), tone), at = gov_date(a$at),
+                        who = ifelse(a$reviewer == "developer", "você", a$reviewer), stringsAsFactors = FALSE)
+      shiny::tagList(
+        gov_counts(c("aceites", "recusas"), c(sum(a$decision == "approved"), sum(a$decision == "rejected")),
+                   c("done", "block")),
+        gov_table(tab, c("Registro", "Aceite", "Item", "Requisito", "Decisão", "Data", "Revisor"),
+                  pick = "id", input = ns("pick"), html = "dec", wide = "criteria", tall = TRUE,
+                  empty = "Nenhum aceite com os filtros atuais."))
+    })
+
+    output$requirements <- shiny::renderUI({
+      q <- governance_requirement_view(filtered())
+      tab <- data.frame(id = q$id, desc = gov_short(q$description, 150L), mod = q$module,
+                        pri = ifelse(q$priority == "high", "alta", ifelse(q$priority == "medium", "média", q$priority)),
+                        st = gov_badge(governance_label("requirement", q$status), gov_requirement_tone(q$status)),
+                        prog = gov_progress(q$accepted, q$items), wait = gov_br_int(q$waiting), open = gov_br_int(q$open),
+                        stringsAsFactors = FALSE)
+      gov_table(tab, c("Requisito", "Descrição", "Módulo", "Prioridade", "Status", "Itens aceitos", "Aguardando você",
+                       "Em aberto"),
+                pick = "id", input = ns("pick"), num = c("wait", "open"), html = c("st", "prog"), wide = "desc",
+                tall = TRUE, empty = "Nenhum requisito com os filtros atuais.")
+    })
+
+    output$dependencies <- shiny::renderUI({
+      d <- governance_dependency_view(filtered())
+      ready_tone <- c("concluído" = "done", "dependências atendidas" = "dev", "aguarda dependências" = "todo")
+      tab <- data.frame(id = d$id, title = gov_short(d$title, 130L), sit = gov_badge(d$situation, d$tone),
+                        dep = d$depends, ready = gov_badge(d$ready, ready_tone[d$ready]), stringsAsFactors = FALSE)
+      shiny::tagList(
+        gov_counts(c("prontos para seguir", "aguardam dependências", "concluídos"),
+                   c(sum(d$ready == "dependências atendidas"), sum(d$ready == "aguarda dependências"),
+                     sum(d$ready == "concluído")), c("dev", "todo", "done")),
+        gov_table(tab, c("Item", "Título", "Situação", "Depende de", "Andamento"), pick = "id", input = ns("pick"),
+                  html = c("sit", "ready"), wide = c("title", "dep"), tall = TRUE,
+                  empty = "Nenhum item com dependências."))
     })
 
     audit <- shiny::reactive(governance_audit(filtered(), 200L))

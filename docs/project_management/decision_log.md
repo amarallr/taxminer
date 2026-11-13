@@ -785,3 +785,14 @@ Autorização do desenvolvedor ("Sim. Autorizado. Pode seguir.") após a lista d
 - Não cobre os itens P9 (hook de captura; leitura de tokens), que exigem confirmação item a item,
   nem uma nova versão (1.0.4), que exige autorização explícita.
 - As propostas de status dos requisitos (P13) não são aplicadas sem aprovação item a item.
+
+## decision_0053 — 2026-11-13T09:55:18-03:00 — Aceites: Governance Fase 03 e explorador multimétrico ETAPA 02
+
+Aceite do desenvolvedor ("Aceites = autorizados") após a tabela de pendências.
+
+- Fase 03 da governança aceita (`acc_0014`, `work_0037`); revisão de planejamento `plan_0006` aprovada.
+- ETAPA 02 do explorador multimétrico aceita (`acc_0015`, `work_0040`, `req_0019`): catálogo de
+  métricas, mapeamentos entre leiautes e validação semântica; métricas padrão iguais à série atual
+  da Ficha (0 divergências).
+- Não cobre: as 18 propostas de status dos requisitos (P13), aprovadas só item a item; os itens P9;
+  as Fases 07 e 08; a ETAPA 03; nova versão.

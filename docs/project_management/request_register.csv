@@ -11,3 +11,5 @@ request_0009,2026-11-12T18:12:25-03:00,claude_code,claude_code,Aprovar a Fase 04
 request_0010,2026-11-12T21:19:53-03:00,claude_code,claude_code,Aprovar a Fase 05; commit e push,operational_command,req_0021,answered,2026-11-12T21:19:53-03:00
 request_0011,2026-11-13T08:23:35-03:00,claude_code,claude_code,Autorizar a Fase 03 (planejamento e otimização de tokens),operational_command,req_0021,linked,2026-11-13T08:23:35-03:00
 request_0012,2026-11-13T08:23:36-03:00,claude_code,claude_code,Gerar pacote de instalação (assistente) da versão publicada; sem administrador; regenerável por versão,feature,,captured,2026-11-13T08:23:36-03:00
+request_0013,2026-11-13T09:54:51-03:00,claude_code,claude_code,Explorador multimétrico: ETAPA 02 (catálogo de métricas; mapeamentos e validação semântica); com JS próprio,feature,req_0019,linked,2026-11-13T09:54:51-03:00
+request_0014,2026-11-13T09:54:51-03:00,claude_code,claude_code,Aceitar a Fase 03 da governança e a ETAPA 02 do explorador multimétrico,operational_command,req_0021;req_0019,answered,2026-11-13T09:54:51-03:00

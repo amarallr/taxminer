@@ -52,3 +52,11 @@ trn_0050,work_0039,implementation_status,,not_started,2026-11-13T08:23:35-03:00,
 trn_0051,work_0037,implementation_status,not_started,implemented,2026-11-13T08:23:35-03:00,claude_code,src/common/governance_planning.R
 trn_0052,work_0037,test_status,not_run,passed,2026-11-13T08:23:35-03:00,claude_code,test_0065;test_0066
 trn_0053,plan_0006,approval,,proposed,2026-11-13T08:23:35-03:00,claude_code,planning_revisions.csv
+trn_0054,request_0013,status,,linked,2026-11-13T09:54:51-03:00,claude_code,request_register.csv
+trn_0055,request_0014,status,,answered,2026-11-13T09:54:51-03:00,claude_code,request_register.csv
+trn_0056,work_0040,implementation_status,,not_started,2026-11-13T09:54:50-03:00,claude_code,work_items.csv
+trn_0057,work_0040,implementation_status,not_started,implemented,2026-11-13T09:54:50-03:00,claude_code,src/data/metric_catalog.R@5058950
+trn_0058,work_0040,test_status,not_run,passed,2026-11-13T09:54:50-03:00,claude_code,test_0067;test_0068
+trn_0059,work_0037,acceptance_status,pending,approved,2026-11-13T09:55:18-03:00,developer,acc_0014
+trn_0060,work_0040,acceptance_status,pending,approved,2026-11-13T09:55:18-03:00,developer,acc_0015
+trn_0061,plan_0006,approval,proposed,approved,2026-11-13T09:55:18-03:00,developer,decision_0053

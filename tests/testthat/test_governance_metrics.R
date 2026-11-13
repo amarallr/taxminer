@@ -4,7 +4,8 @@
 # Run from the project root:
 #   Rscript -e "testthat::test_file('tests/testthat/test_governance_metrics.R')"
 
-for (f in c("governance_registry.R", "governance_prompts.R", "governance_agents.R", "governance_metrics.R")) {
+for (f in c("governance_registry.R", "governance_prompts.R", "governance_agents.R", "governance_metrics.R",
+            "governance_views.R")) {
   source(testthat::test_path("..", "..", "src", "common", f))
 }
 source(testthat::test_path("..", "..", "src", "common", "signatures.R"))
