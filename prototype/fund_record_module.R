@@ -48,7 +48,8 @@ fund_record_ui <- function(id) {
         bslib::navset_underline(
           id = ns("view"),
           bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("card")))),
-          bslib::nav_panel("Série completa", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows"))))))))
+          bslib::nav_panel("Série completa", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))),
+          bslib::nav_panel("Distribuições", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("dists"))))))))
   htmltools::bindFillRole(page, container = TRUE, item = TRUE)
 }
 
@@ -56,6 +57,7 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     choices <- fund_record_choices(data, ctx)
     report_rows <- if (is.null(data$report_rows)) fund_rows_cache(root, data$urls) else data$report_rows
+    peers <- if (is.null(data$peers)) fund_peer_cache(root) else data$peers
     shiny::updateSelectizeInput(session, "fund", choices = choices, selected = choices[1], server = TRUE)
 
     fund <- shiny::reactive({
@@ -116,6 +118,17 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
                  else if (attr(card, "hidden") > 1)
                    sprintf("%s campos vazios neste período ocultos.", format_count(attr(card, "hidden"))))
       shiny::tagList(if (length(notes)) shiny::div(class = "tm-caption", paste(notes, collapse = " ")), card)
+    })
+
+    output$dists <- shiny::renderUI({
+      r <- rows()
+      if (!is.null(attr(r, "error"))) return(shiny::div(class = "tm-empty", paste("Erro:", attr(r, "error"))))
+      if (nrow(r) == 0L) return(shiny::div(class = "tm-empty", "Sem linhas nesta tabela para o fundo."))
+      f <- fund(); shiny::req(input$period)
+      p <- tryCatch(peers(f$family, input$table, input$period), error = function(e) structure(list(), error = conditionMessage(e)))
+      pp <- fund_previous_period(r, input$period)
+      prev <- if (!is.null(pp)) tryCatch(peers(f$family, input$table, pp), error = function(e) NULL)
+      fund_distribution_matrix_ui(r, data$descriptions, input$table, input$period, p, f$family, prev, if (!is.null(prev)) pp)
     })
 
     output$rows <- shiny::renderUI({

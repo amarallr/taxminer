@@ -146,3 +146,70 @@ governance_dependency_view <- function(regs) {
 # Risk likelihood and impact in Portuguese.
 governance_state_labels$risk <- c(likely = "provável", possible = "possível", observed = "observado", unknown = "desconhecido",
                                   low = "baixo", medium = "médio", high = "alto")
+
+# Portuguese texts of the registers (config/governance_texts_pt.csv: id, field,
+# text). The registers stay as recorded (the audit source); the Governança tab
+# shows the Portuguese text of each free-text field when there is one and the
+# recorded text otherwise. State codes are never replaced (the views compare them).
+governance_texts_path <- function(root) file.path(root, "config", "governance_texts_pt.csv")
+
+governance_texts_read <- function(path) {
+  if (!file.exists(path)) return(data.frame(id = character(), field = character(), text = character()))
+  utils::read.csv(path, colClasses = "character", na.strings = character(), encoding = "UTF-8",
+                  stringsAsFactors = FALSE)
+}
+
+governance_localize <- function(regs, texts) {
+  if (is.null(texts) || !nrow(texts)) return(regs)
+  for (name in names(regs)) {
+    spec <- governance_specs[[name]]
+    x <- regs[[name]]
+    if (is.null(spec) || !is.data.frame(x) || !nrow(x)) next
+    for (field in intersect(unique(texts$field), names(x))) {
+      t <- texts[texts$field == field, , drop = FALSE]
+      k <- match(x[[spec$id]], t$id)
+      x[[field]][!is.na(k)] <- t$text[k[!is.na(k)]]
+    }
+    regs[[name]] <- x
+  }
+  regs
+}
+
+# Register fields and recorded codes in Portuguese for the detail and audit
+# tables (unknown names and values pass through).
+governance_field_labels <- c(
+  work_item_id = "item", requirement_id = "requisito", acceptance_id = "aceite", request_id = "pedido",
+  risk_id = "risco", test_id = "teste", plan_id = "plano", revision_id = "revisão", transition_id = "transição",
+  execution_id = "execução", module = "módulo", title = "título", type = "tipo", priority = "prioridade",
+  owner = "responsável", dependencies = "dependências", implementation_status = "implementação",
+  test_status = "teste", acceptance_status = "aceite", release_status = "liberação", operations_status = "operação",
+  evidence_links = "evidências", updated_at = "atualizado em", description = "descrição", source = "origem",
+  acceptance_criteria = "critérios de aceite", status = "status", criteria = "critério", reviewer = "revisor",
+  decision = "decisão", decision_timestamp = "data da decisão", evidence_path = "evidência", notes = "observações",
+  likelihood = "probabilidade", impact = "impacto", mitigation = "mitigação", received_at = "recebido em",
+  channel = "canal", agent = "agente", summary = "resumo", classification = "classificação",
+  requirement_ids = "requisitos", level = "nível", environment = "ambiente", execution_timestamp = "executado em",
+  result = "resultado", code_commit = "commit", revised_at = "revisado em", phase = "fase", reason = "motivo",
+  approval = "aprovação", evidence = "evidência", prompt_file = "arquivo do prompt", version = "versão",
+  previous_version = "versão anterior", change_class = "classe da mudança", improvements = "melhorias",
+  affected_requirements = "requisitos afetados", base_commit = "commit base", validation = "validação",
+  approver = "aprovador", entity_id = "registro", field = "campo", from_status = "de", to_status = "para",
+  changed_at = "quando", actor = "quem")
+
+governance_value_labels <- c(
+  high = "alta", medium = "média", low = "baixa",  # priority (risk levels use governance_label("risk", ...))
+  unlist(unname(governance_state_labels[c("implementation_status", "test_status", "acceptance_status",
+                                          "release_status", "requirement", "risk")])),
+  approved = "aceito", rejected = "recusado", proposed = "proposto", passed = "aprovado", failed = "falhou",
+  skipped = "ignorado", not_applicable = "não se aplica", not_started = "não iniciado", open = "aberto",
+  mitigated = "mitigado", closed = "encerrado", captured = "registrado", linked = "ligado a requisito",
+  answered = "atendido", under_analysis = "em análise", developer = "desenvolvedor", feature = "funcionalidade",
+  analysis = "análise", milestone = "marco", bug = "correção", refactoring = "refatoração", performance = "desempenho",
+  security = "segurança", documentation = "documentação", unit = "unitário", integration = "integração",
+  local = "local", queued = "na fila", running = "em execução", paused = "pausado", completed = "concluído",
+  interrupted = "interrompido", in_progress = "em andamento", common = "comum", data = "dados",
+  intelligence = "inteligência", collect = "coleta", high = "alta", medium = "média", low = "baixa",
+  claude_code = "Claude Code", codex = "Codex")
+
+governance_field_label <- function(x) { l <- unname(governance_field_labels[x]); ifelse(is.na(l), x, l) }
+governance_value_label <- function(x) { l <- unname(governance_value_labels[x]); ifelse(is.na(l) | !nzchar(x), x, l) }

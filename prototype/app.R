@@ -3,6 +3,7 @@
 # Run from the project root:
 #   TAXMINER_DATA_DIR=C:/TaxMinerData Rscript --vanilla scripts/run_prototype.R
 
+options(scipen = 999)  # numbers are never printed in scientific notation
 repo <- if (dir.exists(file.path("..", "src"))) normalizePath("..") else normalizePath(".")
 for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parquet_io.R",
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
@@ -57,7 +58,7 @@ unavailable <- function(text) {
 }
 
 ui <- bslib::page_navbar(
-  id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", "Ficha"), fluid = TRUE, lang = "pt-BR",
+  id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", "Ficha", "Governança"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
   theme = theme,
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,

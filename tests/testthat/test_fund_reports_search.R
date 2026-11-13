@@ -261,7 +261,7 @@ test_that("placeholder fund names are shown as missing and sorted last", {
 })
 
 test_that("the full series table formats values like the card and stays fast", {
-  x <- c(NA, "", "0", "12", "1234", "-1234567.5", "1.234,56", "007", "-05", "abc", "1e5", "1.234", "S")
+  x <- c(NA, "", "0", "12", "1234", "-1234567.5", "1.234,56", "007", "-05", "abc", "1e5", "1.234", "S", "1.234.567")
   for (field in c("TAB_I_VL_ATIVO", "CNPJ_FUNDO")) {
     one <- lapply(x, display_value, field = field)
     all <- display_values(x, field)
@@ -428,8 +428,8 @@ test_that("fund characteristics keep the latest published value and say when the
   source(testthat::test_path("..", "..", "src", "intelligence", "panorama_data.R"), encoding = "UTF-8")
   source(testthat::test_path("..", "..", "prototype", "static_funds.R"), encoding = "UTF-8")
   expect_equal(static_fund_traits(a, c("fidc", "fip"), c("11", "11")),
-               c('[["Aberto","2025-08"],null,null,["N","2025-08"],null]',
-                 "[null,null,null,null,null]"))
+               c('[["Aberto","2025-08"],null,null,["N","2025-08"],null,null,null,null,null]',
+                 "[null,null,null,null,null,null,null,null,null]"))
   meta <- jsonlite::fromJSON(static_traits_meta())
   expect_equal(meta$order, static_trait_order)
   expect_equal(meta$columns$fidc$single_interest, "COTST_INTERESSE")
@@ -443,4 +443,81 @@ test_that("explanatory field notes reach the tooltips and the published metadata
   expect_match(tip, "Lei nº 14.754/2023 e Resolução CVM nº 175", fixed = TRUE)
   meta <- jsonlite::fromJSON(static_traits_meta())
   expect_identical(meta$notes$ENTID_INVEST, fund_field_notes$ENTID_INVEST)
+})
+
+test_that("characteristics: class lines joined, highlights, filters and choices", {
+  rows <- data.frame(fund_cnpj_normalized = c("1", "1", "1", "2"), value = c("S", "N", "N", "s"),
+                     DT_COMPTC = c("2025-01-31", "2025-01-31", "2024-12-31", "2025-01-31"), stringsAsFactors = FALSE)
+  for (column in setdiff(fund_period_columns, names(rows))) rows[[column]] <- NA_character_
+  l <- latest_attribute(rows)
+  expect_equal(l$value, c("N / S", "S"))
+  expect_equal(fund_attribute_value_text("political_rights", l$value), c("não / sim", "sim"))
+  expect_equal(fund_attribute_alert("political_rights", c("N / S", "N", NA)), c(TRUE, FALSE, FALSE))
+  expect_equal(fund_attribute_alert("investment_entity", c("N", "S")), c(TRUE, FALSE))
+  expect_equal(fund_attribute_alert("exclusive", "S"), FALSE)
+  expect_equal(fund_attribute_value_text("subscribed_pct", "99.5 / 100"), "99,50% / 100,00%")
+  expect_equal(fund_display_attributes("fii"), c("condominium", "exclusive", "investment_entity", "single_interest",
+                                                 "family_link", "public"))
+  attrs <- data.frame(family = c("fip", "fip", "fii", "fip", "fip"), fund_cnpj = c("1", "2", "3", "1", "2"),
+                      attribute = c("political_rights", "political_rights", "public", "subscribed_pct", "subscribed_pct"),
+                      value = c("N / S", "N", "INVESTIDOR PROFISSIONAL", "100", "50"), period = "2025-01",
+                      stringsAsFactors = FALSE)
+  list_rows <- data.frame(family = c("fip", "fip", "fii", "fip"), fund_cnpj = c("1", "2", "3", "4"), stringsAsFactors = FALSE)
+  f <- function(...) filter_fund_attributes(list_rows, attrs, list(...))$fund_cnpj
+  expect_equal(f(political_rights = "s"), "1")
+  expect_equal(f(political_rights = "n"), c("1", "2"))
+  expect_equal(f(political_rights = "NA"), "4")
+  expect_equal(f(political_rights = "NC"), "3")
+  expect_equal(f(political_rights = ""), c("1", "2", "3", "4"))
+  expect_equal(f(subscribed_pct = c(90, NA)), "1")
+  expect_equal(f(public = "investidor profissional"), "3")
+  expect_equal(fund_attribute_key(c("Investidores profissionais", "INVESTIDOR PROFISSIONAL")), rep("investidor profissional", 2))
+  ch <- fund_attribute_choices(attrs, "public", "fii")
+  expect_equal(unname(ch), "investidor profissional")
+  expect_equal(names(ch), "Investidores profissionais")
+})
+
+test_that("scientific notation is never displayed", {
+  expect_equal(expand_scientific(c("1.2345E-5", "3e+06", "-2.5E-3", "12.5", NA, "abc")),
+               c("0.000012345", "3000000", "-0.0025", "12.5", NA, "abc"))
+  expect_equal(display_value("1.2345E-5")$text, "0,000012345")
+  expect_equal(display_value("1.5E7")$text, "15.000.000")
+  d <- display_values(c("4.9E-3", "1234.5", "7E2"))
+  expect_equal(d$text, c("0,0049", "1.234,5", "700"))
+  expect_true(all(d$num))
+  expect_false(any(grepl("[eE][-+]?[0-9]", d$text)))
+})
+
+test_that("special-rights hints come from one source and the joint notice needs both rights in the same line", {
+  source(testthat::test_path("..", "..", "prototype", "charts.R"), encoding = "UTF-8")
+  source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
+  h <- jsonlite::fromJSON(fund_hint_json(), simplifyVector = FALSE)
+  expect_setequal(names(h), c("political_rights", "economic_rights", "joint"))
+  heads <- vapply(h$political_rights$sections, function(s) s[[1]], "")
+  expect_equal(heads, c("Fonte (CVM)", "Descrição", "Interpretação", "Relevância tributária (interpretação analítica)",
+                        "Atenção", "Referências normativas"))
+  interp <- unlist(h$economic_rights$sections[[3]][[2]])
+  expect_true(all(vapply(c("Sim:", "Não:", "Não informado:"), function(p) any(startsWith(interp, p)), TRUE)))
+  expect_match(h$political_rights$sections[[1]][[2]][[1]], "DIREITO_POLIT_CLASSE")
+  expect_match(as.character(tm_app_script()), "window.TM_INFO = ", fixed = TRUE)
+  expect_match(as.character(fund_info_for("political_rights")), 'data-info="political_rights"')
+  expect_match(as.character(fund_info_for("political_rights")), 'aria-label="Sobre: Direitos políticos especiais"')
+  expect_null(fund_info_for("condominium"))
+  # Joint: only a line (class) with both S in the latest period; empty = not informed, never "não".
+  rows <- data.frame(fund_cnpj_normalized = c("1", "1", "2", "2", "3", "3", "4"),
+                     DIREITO_POLIT_CLASSE = c("S", "N", "S", "N", "S", "S", ""),
+                     DIREITO_ECON_CLASSE = c("S", "S", "N", "S", "S", "S", ""),
+                     DT_COMPTC = c("2025-08-31", "2025-08-31", "2025-08-31", "2025-08-31", "2023-03-31", "2025-08-31", "2025-08-31"),
+                     Data_Referencia = NA_character_, stringsAsFactors = FALSE)
+  j <- fund_joint_from_rows(rows)
+  expect_equal(j$fund_cnpj, c("1", "3"))     # fund 2 has S in different classes: no notice
+  expect_equal(j$value, c("1", "1")); expect_equal(j$period, c("2025-08", "2025-08"))
+  expect_equal(unique(j$attribute), "joint_rights")
+  a <- rbind(j, data.frame(family = "fip", fund_cnpj = "1", attribute = c("political_rights", "economic_rights"),
+                           value = c("N / S", "S"), period = "2025-08"))
+  ui <- as.character(fund_traits_ui(a, "fip", "1"))
+  expect_match(ui, "Análise conjunta de direitos especiais")
+  expect_match(ui, "1 linha com DIREITO_POLIT_CLASSE = S e DIREITO_ECON_CLASSE = S")
+  expect_match(ui, 'data-info="economic_rights"')
+  expect_false(grepl("Análise conjunta", as.character(fund_traits_ui(a[a$attribute != "joint_rights", ], "fip", "1"))))
 })

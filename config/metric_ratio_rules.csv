@@ -1,0 +1,76 @@
+family,table_name,numerator,denominator_table,denominator,kind,label_pt,note
+fidc,inf_mensal_fidc_tab_I,^TAB_I_VL_ATIVO$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,Ativo / PL,Alavancagem bruta
+fidc,inf_mensal_fidc_tab_I,^TAB_I[1-4][A-Z0-9]*_VL_,inf_mensal_fidc_tab_I,TAB_I_VL_ATIVO,share_of_total,{item} / Ativo,Itens da hierarquia sobre o total da tabela
+fidc,inf_mensal_fidc_tab_I,^TAB_I2A(2|21|3)_VL_,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO,analytic,{item} / DC com aquisição,Inadimplência sobre os direitos creditórios
+fidc,inf_mensal_fidc_tab_I,^TAB_I2B(2|21|3)_VL_,inf_mensal_fidc_tab_I,TAB_I2B_VL_DIRCRED_SEM_RISCO,analytic,{item} / DC sem aquisição,Inadimplência sobre os direitos creditórios
+fidc,inf_mensal_fidc_tab_I,^TAB_I2A11_VL_REDUCAO_RECUP$,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO,analytic,Provisão / DC com aquisição,Sinal invertido para leitura
+fidc,inf_mensal_fidc_tab_I,^TAB_I2B11_VL_REDUCAO_RECUP$,inf_mensal_fidc_tab_I,TAB_I2B_VL_DIRCRED_SEM_RISCO,analytic,Provisão / DC sem aquisição,Sinal invertido para leitura
+fidc,inf_mensal_fidc_tab_I,^TAB_I2A12_PR_CEDENTE_,,,keep,{item},Já é percentual
+fidc,inf_mensal_fidc_tab_II,^TAB_II_VL_CARTEIRA$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,Carteira por segmento / PL,
+fidc,inf_mensal_fidc_tab_II,^TAB_II_[A-K][0-9]*_VL_,inf_mensal_fidc_tab_II,TAB_II_VL_CARTEIRA,share_of_total,{item} / Carteira por segmento,
+fidc,inf_mensal_fidc_tab_III,^TAB_III_VL_PASSIVO$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,Passivo / PL,
+fidc,inf_mensal_fidc_tab_III,^TAB_III_[AB][0-9]*_VL_,inf_mensal_fidc_tab_III,TAB_III_VL_PASSIVO,share_of_total,{item} / Passivo,
+fidc,inf_mensal_fidc_tab_IV,^TAB_IV_A_VL_PL$,,,keep,Patrimônio líquido,Porte do fundo
+fidc,inf_mensal_fidc_tab_IV,^TAB_IV_B_VL_PL_MEDIO$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,PL médio 3m / PL,
+fidc,inf_mensal_fidc_tab_V,^TAB_V_A[0-9]+_VL_,inf_mensal_fidc_tab_V,TAB_V_A_VL_DIRCRED_PRAZO,share_of_total,{item} / A vencer,
+fidc,inf_mensal_fidc_tab_V,^TAB_V_B[0-9]+_VL_,inf_mensal_fidc_tab_V,TAB_V_B_VL_DIRCRED_INAD,share_of_total,{item} / Inadimplentes,
+fidc,inf_mensal_fidc_tab_V,^TAB_V_C[0-9]+_VL_,inf_mensal_fidc_tab_V,TAB_V_C_VL_DIRCRED_ANTECIPADO,share_of_total,{item} / Pagos antecipadamente,
+fidc,inf_mensal_fidc_tab_V,^TAB_V_B_VL_DIRCRED_INAD$,inf_mensal_fidc_tab_V,TAB_V_A_VL_DIRCRED_PRAZO+TAB_V_B_VL_DIRCRED_INAD,analytic,Inadimplência da carteira,Denominador é soma de dois campos
+fidc,inf_mensal_fidc_tab_VI,^TAB_VI_A[0-9]+_VL_,inf_mensal_fidc_tab_VI,TAB_VI_A_VL_DIRCRED_PRAZO,share_of_total,{item} / A vencer,
+fidc,inf_mensal_fidc_tab_VI,^TAB_VI_B[0-9]+_VL_,inf_mensal_fidc_tab_VI,TAB_VI_B_VL_DIRCRED_INAD,share_of_total,{item} / Inadimplentes,
+fidc,inf_mensal_fidc_tab_VI,^TAB_VI_C[0-9]+_VL_,inf_mensal_fidc_tab_VI,TAB_VI_C_VL_DIRCRED_ANTECIPADO,share_of_total,{item} / Pagos antecipadamente,
+fidc,inf_mensal_fidc_tab_VI,^TAB_VI_B_VL_DIRCRED_INAD$,inf_mensal_fidc_tab_VI,TAB_VI_A_VL_DIRCRED_PRAZO+TAB_VI_B_VL_DIRCRED_INAD,analytic,Inadimplência da carteira,Denominador é soma de dois campos
+fidc,inf_mensal_fidc_tab_VII,^TAB_VII_.*_VL_,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO+TAB_I2B_VL_DIRCRED_SEM_RISCO,analytic,{item} / Direitos creditórios,Giro da carteira
+fidc,inf_mensal_fidc_tab_VII,^TAB_VII_D_2_VL_RECOMPRA$,inf_mensal_fidc_tab_VII,TAB_VII_A1_2_VL_DIRCRED_RISCO+TAB_VII_A2_2_VL_DIRCRED_SEM_RISCO,analytic,Recompras / Aquisições,
+fidc,inf_mensal_fidc_tab_VII,^TAB_VII_.*_QT_,,,keep,{item},Quantidades
+fidc,inf_mensal_fidc_tab_IX,^TAB_IX_,,,keep,{item},Já são taxas
+fidc,inf_mensal_fidc_tab_X,^TAB_X_SCR_RISCO_DEVEDOR_,inf_mensal_fidc_tab_X,sum(^TAB_X_SCR_RISCO_DEVEDOR_),share_of_total,{item} / SCR (devedor),
+fidc,inf_mensal_fidc_tab_X,^TAB_X_SCR_RISCO_OPER_,inf_mensal_fidc_tab_X,sum(^TAB_X_SCR_RISCO_OPER_),share_of_total,{item} / SCR (operação),
+fidc,inf_mensal_fidc_tab_X,^TAB_X_DEBITO_TRIBUT$,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO+TAB_I2B_VL_DIRCRED_SEM_RISCO,analytic,Cedentes com débito tributário / DC,
+fidc,inf_mensal_fidc_tab_X_1,^TAB_X_NR_COTST$,,,keep,Número de cotistas,
+fidc,inf_mensal_fidc_tab_X_1_1,^TAB_X_NR_COTST_SENIOR_,inf_mensal_fidc_tab_X_1_1,sum(^TAB_X_NR_COTST_SENIOR_),share_of_total,{item} / Cotistas sênior,
+fidc,inf_mensal_fidc_tab_X_1_1,^TAB_X_NR_COTST_SUBORD_,inf_mensal_fidc_tab_X_1_1,sum(^TAB_X_NR_COTST_SUBORD_),share_of_total,{item} / Cotistas subordinados,
+fidc,inf_mensal_fidc_tab_X_2,^TAB_X_(VL|QT)_COTA$,,,keep,{item},Valor unitário e quantidade; subordinação é métrica analítica (ver proposta)
+fidc,inf_mensal_fidc_tab_X_3,^TAB_X_VL_RENTAB_MES$,,,keep,{item},Já é percentual
+fidc,inf_mensal_fidc_tab_X_4,^TAB_X_VL_TOTAL$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,{tipo de operação} / PL,Por TAB_X_TP_OPER
+fidc,inf_mensal_fidc_tab_X_5,^TAB_X_VL_LIQUIDEZ_,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,{item} / PL,
+fidc,inf_mensal_fidc_tab_X_6,^TAB_X_PR_,,,keep,{item},Já é percentual
+fidc,inf_mensal_fidc_tab_X_7,^TAB_X_PR_GARANTIA_DIRCRED$,,,keep,{item},Já é percentual
+fidc,inf_mensal_fidc_tab_X_7,^TAB_X_VL_GARANTIA_DIRCRED$,inf_mensal_fidc_tab_I,TAB_I2A_VL_DIRCRED_RISCO+TAB_I2B_VL_DIRCRED_SEM_RISCO,analytic,Garantias / Direitos creditórios,
+fii,inf_mensal_fii_ativo_passivo,^Total_Investido$,inf_mensal_fii_complemento,Valor_Ativo,share_of_total,Total investido / Ativo,
+fii,inf_mensal_fii_ativo_passivo,^(Acoes|Acoes_Sociedades_Atividades_FII|Bonus_Subscricao|CEPAC|Cotas_Sociedades_Atividades_FII|CRI|CRI_CRA|FDIC|FII|FIP|LCI|LCI_LCA|LIG|Letras_Hipotecarias|Outras_Cotas_FI|Direitos_Bens_Imoveis|Outros_Valores_Mobliarios|Cedulas_Debentures|Debentures|Notas_Promissorias|Fundo_Acoes|Certificados_Deposito_Valores_Mobiliarios|Imoveis_Renda_Acabados|Imoveis_Renda_Construcao|Imoveis_Venda_Acabados|Imoveis_Venda_Construcao|Terrenos|Outros_Direitos_Reais|Instrumentos_Financeiros_Derivativos)$,inf_mensal_fii_ativo_passivo,Total_Investido,share_of_total,{item} / Total investido,
+fii,inf_mensal_fii_ativo_passivo,^(Disponibilidades|Titulos_Publicos|Titulos_Privados|Fundos_Renda_Fixa)$,inf_mensal_fii_ativo_passivo,Total_Necessidades_Liquidez,share_of_total,{item} / Liquidez,
+fii,inf_mensal_fii_ativo_passivo,^Total_Necessidades_Liquidez$,inf_mensal_fii_complemento,Patrimonio_Liquido,over_pl,Liquidez / PL,
+fii,inf_mensal_fii_ativo_passivo,^(Valores_Receber|Contas_Receber_Aluguel|Contas_Receber_Venda_Imoveis|Outros_Valores_Receber)$,inf_mensal_fii_complemento,Valor_Ativo,share_of_total,{item} / Ativo,
+fii,inf_mensal_fii_ativo_passivo,^Total_Passivo$,inf_mensal_fii_complemento,Patrimonio_Liquido,over_pl,Passivo / PL,
+fii,inf_mensal_fii_ativo_passivo,^(Rendimentos_Distribuir|Taxa_Administracao_Pagar|Taxa_Performance_Pagar|Obrigacoes_Aquisicao_Imoveis|Adiantamento_Venda_Imoveis|Adiantamento_Alugueis|Obrigacoes_Securitizacao_Recebiveis|Instrumentos_Financeiros_Derivativos|Provisoes_Contigencias|Outros_Valores_Pagar)$,inf_mensal_fii_ativo_passivo,Total_Passivo,share_of_total,{item} / Passivo,Derivativos aparecem no ativo e no passivo
+fii,inf_mensal_fii_complemento,^Valor_Ativo$,inf_mensal_fii_complemento,Patrimonio_Liquido,over_pl,Ativo / PL,
+fii,inf_mensal_fii_complemento,^Patrimonio_Liquido$,,,keep,Patrimônio líquido,Porte do fundo
+fii,inf_mensal_fii_complemento,^Numero_Cotistas_,inf_mensal_fii_complemento,Total_Numero_Cotistas,share_of_total,{item} / Cotistas,
+fii,inf_mensal_fii_complemento,^Percentual_,,,keep,{item},Já é percentual
+fii,inf_trimestral_fii_resultado_contabil_financeiro,^(Receita|Despesa|Resultado_Venda|Resultado_Liquido_(?!Total))[A-Za-z_]*_Contabil$,inf_trimestral_fii_resultado_contabil_financeiro,Total_Receitas_Despesas_Contabil,share_of_total,{item} / Receitas e despesas (contábil),
+fii,inf_trimestral_fii_resultado_contabil_financeiro,^(Receita|Despesa|Resultado_Venda|Resultado_Liquido_(?!Total))[A-Za-z_]*_Financeiro$,inf_trimestral_fii_resultado_contabil_financeiro,Total_Receitas_Despesas_Financeiro,share_of_total,{item} / Receitas e despesas (financeiro),
+fii,inf_trimestral_fii_resultado_contabil_financeiro,^Resultado_Trimestral_Liquido_,inf_mensal_fii_complemento,Patrimonio_Liquido,over_pl,{item} / PL,PL do último mês do trimestre
+fii,inf_trimestral_fii_resultado_contabil_financeiro,^Rendimentos_Declarados$,inf_trimestral_fii_resultado_contabil_financeiro,Resultado_Financeiro_Liquido_Acumulado,analytic,Rendimentos / Resultado financeiro,Taxa de distribuição (descritiva)
+fii,inf_trimestral_fii_complemento,^Ativo_Liquidez_Valor_,inf_mensal_fii_complemento,Patrimonio_Liquido,over_pl,{item} / PL,PL do último mês do trimestre
+fii,inf_trimestral_fii_complemento,^Percentual_,,,keep,{item},Já é percentual
+fii,inf_trimestral_fii_imovel,^Percentual_,,,keep,{item},Já é percentual
+fii,inf_trimestral_fii_ativo,^Valor$,inf_mensal_fii_ativo_passivo,Total_Investido,share_of_total,Valor / Total investido,Mês de referência do trimestre
+fii,inf_anual_fii_distribuicao_cotistas,^Numero_Cotistas_Faixa_,inf_anual_fii_distribuicao_cotistas,sum(^Numero_Cotistas_Faixa_),share_of_total,{item} / Cotistas,
+fii,inf_anual_fii_distribuicao_cotistas,^Percentual_,,,keep,{item},Já é percentual
+fii,inf_anual_fii_ativo_valor_contabil,^Valor_Justo$,inf_anual_fii_ativo_valor_contabil,Valor,analytic,Valor justo / Valor contábil,Reavaliação
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^VL_CAP_(COMPROM|SUBSCR|INTEGR)$,same_row,VL_PATRIM_LIQ,over_pl,{item} / PL,Proposta do usuário; mesma classe
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^VL_CAP_INTEGR$,same_row,VL_CAP_SUBSCR,analytic,Integralizado / Subscrito,Limitada a [0; 1]
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^VL_PATRIM_LIQ$,same_row,VL_CAP_INTEGR,analytic,PL / Integralizado,Múltiplo sobre o capital (RVPI)
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^VL_INVEST_FIP_COTA$,same_row,VL_PATRIM_LIQ,over_pl,Cotas de outros FIP / PL,
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^NR_COTST_SUBSCR_(?!CLASSE),same_row,NR_TOTAL_COTST_SUBSCR,share_of_total,{item} / Cotistas subscritores,
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^QT_COTA_INTEGR$,same_row,QT_COTA_SUBSCR,analytic,Cotas integralizadas / subscritas,
+fip,inf_trimestral_fip|inf_quadrimestral_fip,^(PR_|VL_PATRIM_COTA$|VL_QUOTA_CLASSE$),,,keep,{item},Percentual ou preço unitário
+fiagro,inf_mensal_fiagro,^(Valor_Ativo|Total_Passivo)$,same_row,Patrimonio_Liquido,over_pl,{item} / PL,
+fiagro,inf_mensal_fiagro,^(CRA|CRI|CPR|CPR_Financeira|CPR_Fisica|CDCA|CDA_WA|LCA|LCI|Direitos_Creditorios_Agronegocio|Direitos_Creditorios_Imoveis_Rurais|Demais_Direitos_Creditorios|Imoveis_Rurais|Participacoes_Societarias|Titulos_Participacoes_Societarias|Acoes_Certificados_Deposito|Debentures|Debentures_Conversiveis|Debentures_Nao_Conversiveis|Notas_Comerciais|Cotas_Fundos_Investimento|FII|FIP|FIDC|FIAGRO|FIF|FIIM|Fundos_Renda_Fixa|Titulos_Renda_Fixa|Creditos_Carbono_Agronegocio|Creditos_Descarbonizacao|Instrumentos_Financeiros_Derivativos|Outros_Ativos_Financeiros)$,same_row,Total_Investido,share_of_total,{item} / Total investido,
+fiagro,inf_mensal_fiagro,^A_Vencer_,same_row,A_Vencer,share_of_total,{item} / A vencer,
+fiagro,inf_mensal_fiagro,^Vencidos_,same_row,Vencidos,share_of_total,{item} / Vencidos,
+fiagro,inf_mensal_fiagro,^Vencidos$,same_row,A_Vencer+Vencidos,analytic,Inadimplência,
+fiagro,inf_mensal_fiagro,^(Rendimentos_Distribuir|Taxa_Administracao_Pagar|Taxa_Gestao_Pagar|Taxa_Distribuicao_Pagar|Taxa_Performance_Pagar|Obrigacoes_Aquisicao_Ativos|Adiantamento_Venda_Ativos|Provisoes_Contigencias|Outros_Valores_Pagar)$,same_row,Total_Passivo,share_of_total,{item} / Passivo,
+fiagro,inf_mensal_fiagro,^Numero_Cotistas_,same_row,Numero_Cotistas,share_of_total,{item} / Cotistas,
+fiagro,inf_mensal_fiagro,^(Percentual_|Rentabilidade_|Dividend_Yield)|^Valor_Patrimonial_Cotas$,,,keep,{item},Percentual ou preço unitário

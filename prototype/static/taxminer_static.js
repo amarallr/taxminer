@@ -210,6 +210,123 @@
      tip: 'Participação do fundo no patrimônio total do seu tipo no mês de referência (mesma base do Panorama)'}
   ];
 
+  // ---- Characteristics (meta.traits, written by static_traits_meta in
+  // prototype/static_funds.R; same rules as src/intelligence/search_fund_reports.R) ----
+  function famHas(m, a, fam) { return !!(m.columns[fam] || {})[a]; }
+  // Shown in the Ficha and the filters: the core fields always, the others
+  // when a family in scope publishes them (fund_display_attributes).
+  function displayAttrs(m, fams) {
+    return m.order.filter(function (a) { return m.core.indexOf(a) >= 0 || fams.some(function (f) { return famHas(m, a, f); }); });
+  }
+  // List columns: fields published by a family in scope (fund_scope_attributes).
+  function scopeAttrs(m, fams) {
+    return m.order.filter(function (a) { return fams.some(function (f) { return famHas(m, a, f); }); });
+  }
+  function traitOf(m, f, a) { var v = (f[F.traits] || [])[m.order.indexOf(a)]; return v || null; }
+  function valueParts(v) { return String(v).split(' / '); }
+  function traitText(m, a, v) {
+    var seen = {}, out = [];
+    valueParts(v).forEach(function (p) { var t = ((m.values[a] || {})[p] || [null, p])[1]; if (!seen[t]) { seen[t] = 1; out.push(t); } });
+    return out.join(' / ');
+  }
+  function valueKeys(m, a, v) { return valueParts(v).map(function (p) { return ((m.values[a] || {})[p] || [fold(p)])[0]; }); }
+  function isAlert(m, a, v) { return !!m.alert[a] && v != null && valueParts(v).indexOf(m.alert[a]) >= 0; }
+  function isNumeric(m, a) { return m.numeric.indexOf(a) >= 0; }
+  function numberParts(v) { return valueParts(v).map(Number).filter(function (n) { return !isNaN(n); }); }
+  // Filter options of one field for the families in scope: published values
+  // (most frequent first), "Não informado" and "Não consta do informe".
+  function attrOptions(d, m, a, fams) {
+    var count = {}, text = {};
+    d.funds.forEach(function (f) {
+      if (fams.indexOf(f[F.family]) < 0) return;
+      var v = traitOf(m, f, a); if (!v) return;
+      valueParts(v[0]).forEach(function (p) {
+        var x = (m.values[a] || {})[p] || [fold(p), p, p];
+        count[x[0]] = (count[x[0]] || 0) + 1; text[x[0]] = x[2];
+      });
+    });
+    var keys = Object.keys(count).sort(function (x, y) { return count[y] - count[x] || (x < y ? -1 : 1); });
+    var some = fams.some(function (f) { return famHas(m, a, f); }), all = fams.every(function (f) { return famHas(m, a, f); });
+    return '<option value="">Todos</option>' + keys.map(function (k) { return '<option value="' + esc(k) + '">' + esc(text[k]) + '</option>'; }).join('') +
+      (some ? '<option value="NA">Não informado</option>' : '') + (all ? '' : '<option value="NC">Não consta do informe</option>');
+  }
+  function attrTip(m, a, fams) {
+    var cols = fams.filter(function (f) { return famHas(m, a, f); }).map(function (f) { return f.toUpperCase() + ' ' + m.columns[f][a]; });
+    if (!cols.length) return m.labels[a] + ': o informe da CVM de ' + fams.join(', ').toUpperCase() + ' não tem este campo.';
+    var first = fams.filter(function (f) { return famHas(m, a, f); })[0];
+    return m.labels[a] + ' (' + cols.join('; ') + '), último informe que o preencheu. Com um valor escolhido, ficam só os fundos das ' +
+      'famílias cujo informe tem o campo; "Não consta do informe" seleciona os das demais famílias.' + noteText(m.columns[first][a]);
+  }
+  // ⓘ button of a characteristic with an explanatory hint (window.TM_INFO,
+  // fund_attribute_hints in R; popover in tm_info_script).
+  function infoBtn(a) {
+    var h = window.TM_INFO && window.TM_INFO[a];
+    return h ? '<button type="button" class="tm-info" data-info="' + a + '" aria-label="Sobre: ' + esc(h.title) +
+      '" aria-expanded="false">ⓘ</button>' : '';
+  }
+  // Informative notice when one class has both special rights (fund_joint_ui in R).
+  function jointHtml(j) {
+    var h = window.TM_INFO && window.TM_INFO.joint;
+    if (!h || !j) return '';
+    var n = +j[0];
+    return '<div class="tm-joint" role="note"><div class="tm-joint-title">' + esc(h.title) + '</div><p>' + esc(h.text) + '</p>' +
+      '<p class="tm-joint-src">Fonte: informe FIP de ' + esc(j[1]) + ', ' + (n === 1 ? '1 linha' : fmtInt(n) + ' linhas') +
+      ' com DIREITO_POLIT_CLASSE = S e DIREITO_ECON_CLASSE = S na mesma linha (mesma classe e competência). ' +
+      'Aviso informativo: não altera destaques nem a classificação de entidade de investimento.</p></div>';
+  }
+  // Collapsible panel (same markup as fund_attribute_filters_ui in the app).
+  function attrPanel(d, fams) {
+    var m = d.meta.traits;
+    function field(label, tip, inner, info) {
+      return '<div class="tm-cf" data-tip="' + esc(tip) + '"><label class="tm-cf-label">' + esc(label) + (info || '') + '</label>' + inner + '</div>';
+    }
+    function range(id, label, tip, step, unit) {
+      return field(label, tip, '<div class="tm-cf-range"><input type="number" min="0" step="' + step + '" class="form-control tm-cf-num" data-range="' +
+        id + '" data-bound="min"><span class="tm-cf-sep">a</span><input type="number" min="0" step="' + step +
+        '" class="form-control tm-cf-num" data-range="' + id + '" data-bound="max">' + (unit ? '<span class="tm-cf-sep">' + unit + '</span>' : '') + '</div>');
+    }
+    var sel = displayAttrs(m, fams).filter(function (a) { return !isNumeric(m, a); }).map(function (a) {
+      return field(m.medium[a], attrTip(m, a, fams), '<select class="form-select tm-cf-attr" data-attr="' + a + '">' + attrOptions(d, m, a, fams) + '</select>', infoBtn(a));
+    }).join('');
+    return '<details class="tm-cf-panel"><summary class="tm-cf-summary"><span class="tm-cf-title">Características</span>' +
+      '<span class="tm-cf-active"></span><span class="tm-cf-hint">cotistas, condomínio, público-alvo, direitos e outras; clique para abrir</span></summary>' +
+      '<div class="tm-cf-grid">' + range('holders', 'Cotistas', 'Quantidade de cotistas no último informe que a publicou (mínimo e máximo).', 1) + sel +
+      (scopeAttrs(m, fams).indexOf('subscribed_pct') >= 0 ? range('subscribed', 'Cotas subscritas',
+        'Percentual total das cotas subscritas (FIP, PR_TOTAL_COTA_SUBSCR), mínimo e máximo; com várias classes, basta uma no intervalo.', 0.01, '%') : '') +
+      '<div class="tm-cf-actions"><a href="#" class="tm-link tm-cf-clear">Limpar características</a></div></div></details>';
+  }
+  // Active characteristic filters of a tab: {attr: key}, {holders: [min, max]}, ...
+  function attrFilters(el) {
+    var out = {attrs: {}, ranges: {}, n: 0};
+    el.find('.tm-cf-attr').each(function () { var v = $(this).val(); if (v) { out.attrs[$(this).attr('data-attr')] = v; out.n++; } });
+    el.find('.tm-cf-num').each(function () {
+      var v = this.value === '' ? null : Number(this.value), id = $(this).attr('data-range');
+      if (v == null || isNaN(v)) return;
+      var r = out.ranges[id] = out.ranges[id] || [null, null];
+      r[$(this).attr('data-bound') === 'min' ? 0 : 1] = v;
+    });
+    out.n += Object.keys(out.ranges).length;
+    return out;
+  }
+  function attrPass(m, f, flt) {
+    for (var a in flt.attrs) {
+      var want = flt.attrs[a], has = famHas(m, a, f[F.family]), v = traitOf(m, f, a);
+      if (want === 'NC') { if (has) return false; continue; }
+      if (!has) return false;
+      if (want === 'NA') { if (v) return false; continue; }
+      if (!v || valueKeys(m, a, v[0]).indexOf(want) < 0) return false;
+    }
+    var h = flt.ranges.holders;
+    if (h && (f[F.holdersLast] == null || (h[0] != null && f[F.holdersLast] < h[0]) || (h[1] != null && f[F.holdersLast] > h[1]))) return false;
+    var s = flt.ranges.subscribed;
+    if (s) {
+      if (!famHas(m, 'subscribed_pct', f[F.family])) return false;
+      var sv = traitOf(m, f, 'subscribed_pct');
+      if (!sv || !numberParts(sv[0]).some(function (n) { return (s[0] == null || n >= s[0]) && (s[1] == null || n <= s[1]); })) return false;
+    }
+    return true;
+  }
+
   function FundTab(el) {
     this.el = el; this.family = el.attr('data-family') || '';
     this.families = this.family ? [this.family] : ['fidc', 'fii', 'fip', 'fiagro'];
@@ -230,12 +347,7 @@
       '<div class="tm-filterbar">' + chips +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-q" placeholder="Fundo: nome atual ou anterior, ou CNPJ (com ou sem máscara)"></div>' +
       '<div class="tm-filter-wide"><input type="search" class="form-control form-control-sm tm-qa" placeholder="Administrador: nome ou CNPJ"></div>' +
-      (fam === 'fip' ? '<div data-tip="' + esc('Indica se o fundo é entidade de investimento (ENTID_INVEST, último informe que o publicou)' +
-        noteText('ENTID_INVEST')) + '">' +
-        '<select class="form-select form-select-sm tm-qe"><option value="">Entidade de investimento: todos</option>' +
-        '<option value="S">Entidade de investimento: sim</option><option value="N">Entidade de investimento: não</option>' +
-        '<option value="NA">Entidade de investimento: não informado</option></select></div>' : '') +
-      '<button type="button" class="btn btn-link btn-sm tm-filter-clear">Limpar</button></div>' +
+      '<button type="button" class="btn btn-link btn-sm tm-filter-clear">Limpar</button></div>' + attrPanel(d, t.families) +
       '<div class="tm-master-detail tm-static-grid">' +
       '<div class="card tm-section tm-pane"><div class="card-header tm-card-head"><span class="tm-count"></span>' +
       '<span class="tm-head-note">clique em um fundo</span></div><div class="card-body tm-scroll tm-list"></div>' +
@@ -243,12 +355,16 @@
       '<div class="tm-pane-wrap"><div class="card tm-section tm-detail tm-pane tm-static-detail"><div class="tm-empty">Selecione um fundo na lista.</div></div></div></div>');
     var timer;
     t.el.on('input', '.tm-q, .tm-qa', function () { clearTimeout(timer); timer = setTimeout(function () { t.reset(); }, 180); });
-    t.el.on('change', '.tm-filter-family input, .tm-qe', function () { t.reset(); });
+    t.el.on('change', '.tm-filter-family input, .tm-cf-attr', function () { t.reset(); });
+    t.el.on('input', '.tm-cf-num', function () { clearTimeout(timer); timer = setTimeout(function () { t.reset(); }, 300); });
+    t.el.on('click', '.tm-cf-clear', function (e) { e.preventDefault(); t.el.find('.tm-cf-attr, .tm-cf-num').val(''); t.reset(); });
     t.el.on('click', '.tm-filter-clear', function () {
-      t.el.find('.tm-q, .tm-qa, .tm-qe').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.reset();
+      t.el.find('.tm-q, .tm-qa, .tm-cf-attr, .tm-cf-num').val(''); t.el.find('.tm-filter-family input').prop('checked', true); t.reset();
     });
-    t.el.on('click', 'th[data-sort]', function () {
-      var by = $(this).attr('data-sort'), s = SORTS.filter(function (x) { return x.by === by; })[0];
+    t.el.on('click', 'th[data-sort]', function (e) {
+      if ($(e.target).closest('.tm-info').length) return;
+      var by = $(this).attr('data-sort'), s = (t.columns || SORTS).filter(function (x) { return x.by === by; })[0];
+      if (!s) return;
       t.sort = t.sort.by === by ? {by: by, dec: !t.sort.dec} : {by: by, dec: s.dec}; t.page = 0; t.update();
     });
     t.el.on('click', '.tm-pager a', function (e) { e.preventDefault(); t.page += +$(this).attr('data-step'); t.update(); });
@@ -288,23 +404,38 @@
     var words = q ? q.split(' ') : [], awords = qa ? qa.split(' ') : [];
     var s = t.sort, dir = s.dec ? -1 : 1;
     // A page change reuses the filtered, sorted list; only the slice is redrawn.
-    var qe = t.el.find('.tm-qe').val() || '';
-    var key = [fams.join(','), q, qd, qa, qad, qe, s.by, s.dec].join('|');
+    var m = d.meta.traits, flt = attrFilters(t.el);
+    t.el.find('.tm-cf-active').html(flt.n ? '<span class="tm-cf-count">' + flt.n + (flt.n === 1 ? ' filtro ativo' : ' filtros ativos') + '</span>' : '');
+    // List columns: the fixed ones, Cotistas and the characteristics of the checked families.
+    var attrs = scopeAttrs(m, fams);
+    t.columns = SORTS.concat([{by: 'holders', label: 'Cotistas', dec: true, num: true,
+                               tip: 'Quantidade de cotistas no último informe que a publicou'}]).concat(attrs.map(function (a) {
+      return {by: 'attr_' + a, attr: a, label: m.short[a], dec: isNumeric(m, a), num: isNumeric(m, a),
+              tip: m.labels[a] + ', último informe que o preencheu. Em branco: o informe da família não tem o campo; —: não preenchido'};
+    }));
+    var key = [fams.join(','), q, qd, qa, qad, JSON.stringify(flt), s.by, s.dec].join('|');
     var rows = t.rowsKey === key ? t.rows : null;
     if (!rows) {
       rows = d.funds.filter(function (f) {
         if (fams.indexOf(f[F.family]) < 0) return false;
-        // FIP "entidade de investimento": latest published value (S/N) or not published.
-        if (qe && f[F.family] === 'fip' && (qe === 'NA' ? f[F.entInv] != null : f[F.entInv] !== qe)) return false;
+        if (flt.n && !attrPass(m, f, flt)) return false;
         if (words.length && !(qd.length >= 4 && f[F.key].indexOf(qd) === 0) &&
             !words.every(function (w) { return f.search.indexOf(w) >= 0; })) return false;
         if (awords.length && !(qad.length >= 4 && f.adminDigits.indexOf(qad) === 0) &&
             !awords.every(function (w) { return f.adminKey.indexOf(w) >= 0; })) return false;
         return true;
       });
-      var col = s.by === 'name' ? 'nameKey' : s.by === 'period' ? F.last : s.by === 'count' ? F.count : s.by === 'share' ? F.share : F.pl;
+      var col = s.by === 'name' ? 'nameKey' : s.by === 'period' ? F.last : s.by === 'count' ? F.count : s.by === 'share' ? F.share :
+                s.by === 'holders' ? F.holdersLast : F.pl;
+      // Characteristic columns: the number (percent) or the key of the first part; empty last.
+      var sa = s.by.indexOf('attr_') === 0 ? s.by.slice(5) : null;
+      function sortValue(f) {
+        if (!sa) return f[col];
+        var v = traitOf(m, f, sa); if (!v) return null;
+        return isNumeric(m, sa) ? numberParts(v[0])[0] : valueKeys(m, sa, v[0])[0];
+      }
       rows.sort(function (a, b) {
-        var x = a[col], y = b[col];
+        var x = sortValue(a), y = sortValue(b);
         if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
         return (x < y ? -1 : x > y ? 1 : 0) * dir;
       });
@@ -312,10 +443,11 @@
     }
     var pages = Math.max(1, Math.ceil(rows.length / PAGE)); t.page = Math.min(Math.max(0, t.page), pages - 1);
     var slice = rows.slice(t.page * PAGE, (t.page + 1) * PAGE);
-    var head = SORTS.map(function (c) {
+    var head = t.columns.map(function (c) {
       var on = s.by === c.by;
       return '<th class="tm-sortable' + (on ? ' tm-sorted' : '') + (c.num ? ' tm-num' : '') + '" data-sort="' + c.by +
-             '" title="' + esc(c.tip || 'Clique para ordenar; de novo para inverter') + '">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') + '</th>';
+             '" title="' + esc(c.tip || 'Clique para ordenar; de novo para inverter') + '">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') +
+             (c.attr ? infoBtn(c.attr) : '') + '</th>';
     }).join('');
     var body = slice.map(function (f, i) {
       var n = t.page * PAGE + i, sel = t.selected === f ? ' class="tm-selected"' : '';
@@ -326,9 +458,16 @@
              esc(f[F.admin] || 'administrador não publicado') + '</div></td><td class="tm-mono">' + esc(f[F.first]) + '<br>' + esc(f[F.last]) +
              '</td><td class="tm-num">' + fmtInt(f[F.count]) + '</td><td class="tm-num" data-tip="' +
              (f[F.plMonth] ? 'PL em ' + monthLabel(f[F.plMonth]) : '') + '">' + fmtBRL(f[F.pl]) + '</td><td class="tm-num">' +
-             fmtShare(f[F.share]) + '</td></tr>';
+             fmtShare(f[F.share]) + '</td><td class="tm-num" data-tip="' + (f[F.holdersMonth] ? 'Cotistas em ' + monthLabel(f[F.holdersMonth]) : '') + '">' +
+             fmtInt(f[F.holdersLast]) + '</td>' + attrs.map(function (a) {
+               if (!famHas(m, a, f[F.family])) return '<td class="tm-attr tm-muted" data-tip="O informe de ' + f[F.family].toUpperCase() + ' não tem este campo."></td>';
+               var v = traitOf(m, f, a);
+               if (!v) return '<td class="tm-attr tm-muted' + (isNumeric(m, a) ? ' tm-num' : '') + '">—</td>';
+               return '<td class="tm-attr' + (isNumeric(m, a) ? ' tm-num' : '') + (isAlert(m, a, v[0]) ? ' tm-attr-alert' : '') +
+                      '" data-tip="Informe de ' + esc(v[1]) + '">' + esc(traitText(m, a, v[0])) + '</td>';
+             }).join('') + '</tr>';
     }).join('');
-    t.el.find('.tm-list').html(rows.length ? '<table class="tm-results"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
+    t.el.find('.tm-list').html(rows.length ? '<table class="tm-results tm-results-wide"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
                                            : '<div class="tm-empty">Nenhum fundo encontrado.</div>').scrollTop(0);
     t.el.find('.tm-count').text(fmtInt(rows.length) + (rows.length === 1 ? ' fundo' : ' fundos'));
     t.el.find('.tm-pager').html(pages > 1 ? (t.page ? '<a href="#" data-step="-1">‹ anterior</a>' : '<span></span>') +
@@ -341,30 +480,35 @@
     var t = this, d = t.d, box = t.el.find('.tm-static-detail');
     var color = d.meta.colors[f[F.family]] || '#2a78d6', names = d.byEntity[f[F.entity]] || [];
     box.html(
-      '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
+      '<div class="card-header tm-detail-head"><div class="tm-detail-top"><div class="tm-detail-id"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2><div class="tm-detail-meta"><span><strong>Administrador: </strong>' +
       esc(f[F.admin] || 'não publicado') + (f[F.adminCnpj] ? ' · ' + esc(f[F.adminCnpj]) : '') + '</span><span><strong>Informes: </strong>' +
       fmtInt(f[F.count]) + ' (' + esc(f[F.first]) + ' a ' + esc(f[F.last]) + ')</span>' +
-      '</div>' + traitsHtml(f, d.meta.traits) + '</div>' +
+      '</div>' + traitsHtml(f, d.meta.traits) + '</div><div class="tm-ret-slot"></div></div></div>' +
       '<div class="tm-detail-body"><div class="tm-static-tools"><select class="form-select form-select-sm tm-ficha-table" disabled>' +
       '<option>Carregando informes…</option></select><select class="form-select form-select-sm tm-ficha-period" disabled></select></div>' +
       '<div class="tm-caption tm-ficha-summary"></div>' +
       '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="ficha">Ficha</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="dist">Distribuições</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="nomes">Denominações (' + names.length + ')</a></li></ul>' +
-      '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-empty">Carregando série…</div></div>' +
+      '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-perfil-main"><div class="tm-empty">Carregando série…</div></div></div>' +
       '<div data-pane-body="ficha" hidden><div class="tm-empty">Carregando ficha…</div></div>' +
       '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div>' +
+      '<div data-pane-body="dist" class="tm-table-wrap" hidden><div class="tm-empty">Carregando distribuições…</div></div>' +
       '<div data-pane-body="nomes" hidden>' + namesTable(names) + '</div></div></div>');
     var key = f[F.key];
     loadFicha(f).done(function (fd, urls) {
       if (t.selected !== f) return;
       t.ficha = {data: fd, urls: urls};
+      // Monthly return on a normal curve (fund_return_ui, rendered at export).
+      if (fd && fd.r) box.find('.tm-ret-slot').html(fd.r);
+      if (fd && fd.j) box.find('.tm-joint-slot').html(jointHtml(fd.j));
       var sel = box.find('.tm-ficha-table');
       if (!fd || !fd.t.length) {
         sel.html('<option>Sem informes nas tabelas publicadas</option>');
-        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html(
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"], [data-pane-body="dist"]').html(
           '<div class="tm-empty">Sem linhas nas tabelas principais para este fundo. As demais tabelas estão no app local.</div>');
         return;
       }
@@ -375,9 +519,9 @@
     });
     getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
       if (t.selected !== f) return;
-      box.find('[data-pane-body="perfil"]').html(profile(f, s[key], color));
+      box.find('[data-pane-body="perfil"] .tm-perfil-main').html(profile(f, s[key], color));
     }).fail(function () {
-      box.find('[data-pane-body="perfil"]').html('<div class="tm-empty">Não foi possível carregar a série deste fundo.</div>');
+      box.find('[data-pane-body="perfil"] .tm-perfil-main').html('<div class="tm-empty">Não foi possível carregar a série deste fundo.</div>');
     });
   };
   // ---- Ficha and Série completa (data/fichas/{family}/{CNPJ}.json, written by
@@ -475,7 +619,7 @@
     var f = t.selected, data = t.ficha.data, x = data.t[k], box = t.el.find('.tm-static-detail');
     t.el.find('.tm-ficha-period').html('').prop('disabled', true);
     box.find('.tm-ficha-summary').text(fmtInt(x.rows) + ' linhas · carregando ' + tableLabel(x.n) + '…');
-    box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">Carregando ' + esc(tableLabel(x.n)) + '…</div>');
+    box.find('[data-pane-body="ficha"], [data-pane-body="serie"], [data-pane-body="dist"]').html('<div class="tm-empty">Carregando ' + esc(tableLabel(x.n)) + '…</div>');
     getGz('data/fichas_x/' + f[F.family] + '/' + f[F.key] + '.json.gz').done(function (xd) {
       if (t.selected !== f || !t.ficha || t.ficha.data !== data) return;
       data.t.forEach(function (y, i) {
@@ -485,14 +629,14 @@
       });
       if (t.fichaIndex !== k) return;
       if (data.t[k].lazy) {
-        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">' + esc(x.n) + ' não está no arquivo publicado deste fundo.</div>');
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"], [data-pane-body="dist"]').html('<div class="tm-empty">' + esc(x.n) + ' não está no arquivo publicado deste fundo.</div>');
         return;
       }
       t.fichaTable(k);
     }).fail(function () {
       if (t.selected !== f || t.fichaIndex !== k) return;
       box.find('.tm-ficha-summary').text('');
-      box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html('<div class="tm-empty">Não foi possível carregar ' + esc(x.n) +
+      box.find('[data-pane-body="ficha"], [data-pane-body="serie"], [data-pane-body="dist"]').html('<div class="tm-empty">Não foi possível carregar ' + esc(x.n) +
         (typeof DecompressionStream === 'undefined' ? ': este navegador não descomprime arquivos gzip; atualize o navegador ou use o app local.' : '.') + '</div>');
     });
   }
@@ -566,6 +710,228 @@
     if (hidden > 0) notes.push(hidden === 1 ? '1 campo vazio neste período oculto.' : plural(hidden, '', 'campos vazios neste período ocultos.'));
     t.el.find('.tm-static-detail [data-pane-body="ficha"]').html(
       (notes.length ? '<div class="tm-caption">' + notes.join(' ') + '</div>' : '') + '<div class="tm-table-wrap">' + html + '</div>');
+    t.distPeriod(p);
+  };
+  // ---- Distribuições: one normal curve per numeric field of the table (same
+  // rules as fund_field_distributions and fund_distribution_svg in R) ----
+  var MIN_VALUES = 6;
+  function parseShown(s) {
+    if (s == null || s === '') return null;
+    var n = Number(String(s).replace(/\./g, '').replace(',', '.'));
+    return isNaN(n) ? null : n;
+  }
+  function compact(v) {
+    if (v == null || isNaN(v)) return '—';
+    var a = Math.abs(v), s = v < 0 ? '-' : '';
+    if (a >= 1e9) return s + num(a / 1e9, 1) + ' bi';
+    if (a >= 1e6) return s + num(a / 1e6, 1) + ' mi';
+    if (a >= 1e4) return s + num(a / 1e3, 1) + ' mil';
+    if (a >= 100) return s + num(a, 0);
+    return s + num(a, a >= 1 || a === 0 ? 2 : 4);
+  }
+  function distribution(values, periods) {
+    var n = values.length;
+    if (n < MIN_VALUES) return null;
+    var mean = values.reduce(function (s, v) { return s + v; }, 0) / n;
+    var sd = Math.sqrt(values.reduce(function (s, v) { return s + (v - mean) * (v - mean); }, 0) / (n - 1));
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    var lo = Math.max(min, mean - 4 * sd), hi = Math.min(max, mean + 4 * sd);
+    if (!isFinite(sd) || sd === 0 || hi <= lo) { lo = mean - 1; hi = mean + 1; }
+    var bins = Math.min(16, Math.max(6, Math.ceil(Math.sqrt(n)))), bw = (hi - lo) / bins, counts = [], outside = 0, i;
+    for (i = 0; i < bins; i++) counts.push(0);
+    values.forEach(function (v) {
+      if (v < lo || v > hi) { outside++; return; }
+      counts[Math.min(bins - 1, Math.max(0, Math.ceil((v - lo) / bw) - 1))]++;
+    });
+    var last = 0, first = periods[0];
+    periods.forEach(function (p, k) { if (p > periods[last]) last = k; if (p < first) first = p; });
+    return {n: n, mean: mean, sd: isFinite(sd) ? sd : 0, min: min, max: max, lo: lo, hi: hi, counts: counts, outside: outside,
+            last: values[last], lastPeriod: periods[last], firstPeriod: first};
+  }
+  // Display scale (fund_display_scale in R): null = linear; c = asinh(v / c).
+  function scaleFwd(v, c) { return c == null ? v : Math.asinh(v / c); }
+  function scaleInv(t, c) { return c == null ? t : Math.sinh(t) * c; }
+  function scaleNote(c, centre) {
+    return c == null ? '' : '\nEscala logarítmica (asinh) só para exibição, para comparar valores de ordens de grandeza diferentes: o eixo e este ' +
+      'texto mostram valores originais; o tracejado marca o centro da curva nessa escala (' + compact(centre) + '), que não é a média.';
+  }
+  // lo, hi, counts, dmean and dsd are on the display scale (d.scale); the
+  // marked value and the axis labels are original values.
+  function distSvg(d, w, h, label) {
+    var ml = 4, mr = 4, mt = 6, mb = 16, pw = w - ml - mr, ph = h - mt - mb, k = d.counts.length, bw = (d.hi - d.lo) / k;
+    var sc = d.scale == null ? null : d.scale, dm = d.dmean == null ? d.mean : d.dmean, ds = d.dsd == null ? d.sd : d.dsd;
+    function sx(v) { return ml + (v - d.lo) / (d.hi - d.lo) * pw; }
+    function dens(v) { return ds > 0 ? Math.exp(-0.5 * Math.pow((v - dm) / ds, 2)) / (ds * Math.sqrt(2 * Math.PI)) * d.n * bw : 0; }
+    var xs = [], i; for (i = 0; i < 60; i++) xs.push(d.lo + (d.hi - d.lo) * i / 59);
+    var top = Math.max.apply(null, d.counts.concat(xs.map(dens)).concat([1]));
+    function sy(v) { return mt + ph - v / top * ph; }
+    function f(v) { return v.toFixed(1); }
+    var bars = d.counts.map(function (c, j) {
+      if (!c) return '';
+      var x0 = sx(d.lo + j * bw) + 0.6, x1 = sx(d.lo + (j + 1) * bw) - 0.6;
+      return '<rect class="tm-rd-bar" x="' + f(x0) + '" y="' + f(sy(c)) + '" width="' + f(Math.max(0.8, x1 - x0)) + '" height="' + f(mt + ph - sy(c)) + '" rx="1.5"/>';
+    }).join('');
+    var curve = ds > 0 ? '<path class="tm-rd-curve" d="M' + xs.map(function (v) { return f(sx(v)) + ',' + f(sy(dens(v))); }).join(' L') + '"/>' : '';
+    // A marked value outside the scale shows as a dot on the nearest edge.
+    var lt = d.last == null ? null : scaleFwd(d.last, sc);
+    var mx = f(sx(dm)), last = lt == null ? '' : lt >= d.lo && lt <= d.hi ? '<line class="tm-rd-last" x1="' + f(sx(lt)) + '" x2="' + f(sx(lt)) +
+      '" y1="' + mt + '" y2="' + (mt + ph) + '"/><circle class="tm-rd-dot" cx="' + f(sx(lt)) + '" cy="' + (mt + 3) + '" r="3"/>' :
+      '<circle class="tm-rd-dot" cx="' + f(lt < d.lo ? ml + 3 : w - mr - 3) + '" cy="' + (mt + ph - 3) + '" r="3"/>';
+    // The mean label is dropped when it would run into the edge labels.
+    var room = Math.min(sx(dm) - ml, w - mr - sx(dm)) >= 0.22 * pw;
+    var ticks = [[ml, d.lo, 'start']].concat(room ? [[mx, dm, 'middle']] : []).concat([[w - mr, d.hi, 'end']]).map(function (t) {
+      return '<text class="tm-rd-tick" x="' + t[0] + '" y="' + (h - 4) + '" text-anchor="' + t[2] + '">' + esc(compact(scaleInv(t[1], sc))) + '</text>';
+    }).join('') + (sc == null ? '' : '<text class="tm-rd-tick tm-rd-log" x="' + (w - mr) + '" y="' + (mt + 6) + '" text-anchor="end">escala log</text>');
+    return '<svg class="tm-rd-svg" viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img" aria-label="' + esc(label) + '">' +
+      '<line class="tm-rd-axis" x1="' + ml + '" x2="' + (w - mr) + '" y1="' + (mt + ph) + '" y2="' + (mt + ph) + '"/>' + bars + curve +
+      '<line class="tm-rd-mean" x1="' + mx + '" x2="' + mx + '" y1="' + mt + '" y2="' + (mt + ph) + '"/>' + last + ticks + '</svg>';
+  }
+  // Position of the fund among the funds of its family at the chosen
+  // competência (same rules as fund_distribution_matrix_ui and
+  // fund_peer_percentile in R); data/peers/{family}/{table}/{period}.json.gz
+  // comes from write_static_peers: field -> [n, mean, sd, lo, hi, outside,
+  // [counts], [101 percentiles]].
+  var PEER_MIN = 6;
+  function median(v) {
+    var s = v.slice().sort(function (a, b) { return a - b; }), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function peerPercentile(q, v) {
+    var i, lo = -1, hi = -1;
+    for (i = 0; i < q.length; i++) if (q[i] === v) { if (lo < 0) lo = i; hi = i; }
+    if (v < q[0]) return 0;
+    if (v > q[100]) return 100;
+    if (lo === 0 && v === q[0]) return hi / 2;
+    if (hi === 100 && v === q[100]) return (lo + 100) / 2;
+    if (lo >= 0) return (lo + hi) / 2;
+    for (i = 0; i < 100; i++) if (q[i] < v && v < q[i + 1]) return i + (v - q[i]) / (q[i + 1] - q[i]);
+    return null;
+  }
+  // Robust position statistics (fund_peer_robust in R): robust z = distance to
+  // the median in scaled MADs on the display scale; |z| >= 2 atypical, >= 3.5
+  // extreme (Iglewicz and Hoaglin, 1993); Tukey's fences on the same scale.
+  var Z_ATP = 2, Z_EXT = 3.5;
+  function peerSummary(a) {
+    return a ? {n: a[0], mean: a[1], sd: a[2], lo: a[3], hi: a[4], outside: a[5], counts: a[6], q: a[7],
+                scale: a[8] == null ? null : a[8], dmean: a[9], dsd: a[10], rs: a[11] == null ? null : a[11]} : null;
+  }
+  function robust(s, v) {
+    var out = {z: null, level: '—', tukey: false};
+    if (!s || v == null || s.rs == null) return out;
+    var f = function (u) { return scaleFwd(u, s.scale); }, q1 = f(s.q[25]), q3 = f(s.q[75]), iqr = q3 - q1;
+    out.z = (f(v) - f(s.q[50])) / s.rs;
+    out.level = Math.abs(out.z) >= Z_EXT ? 'extremo' : Math.abs(out.z) >= Z_ATP ? 'atípico' : 'típico';
+    out.tukey = f(v) < q1 - 1.5 * iqr || f(v) > q3 + 1.5 * iqr;
+    return out;
+  }
+  function zText(z) { return z == null ? '—' : (z > 0 ? '+' : '') + num(z, 1); }
+  function ownValue(x, y, p) {
+    var own = [];
+    x.c.forEach(function (c, i) { if (c[0] !== p || y[3].charAt(i) !== '1') return; var v = parseShown(y[4][i]); if (v != null) own.push(v); });
+    return own.length ? median(own) : null;
+  }
+  function peerMatrix(x, p, pd, fam, prev, pp) {
+    var FAM = fam.toUpperCase(), idx = [], stats = [], noPeer = 0;
+    x.c.forEach(function (c, i) { if (c[0] === p) idx.push(i); });
+    x.f.forEach(function (y) {
+      var v = ownValue(x, y, p);
+      if (v == null) return;
+      var s = peerSummary(pd.f[y[1]]);
+      if (!s) { noPeer++; return; }
+      var pc = peerPercentile(s.q, v), rb = robust(s, v), before = null;
+      if (prev && prev.f[y[1]]) {
+        var ps = peerSummary(prev.f[y[1]]), pv = ownValue(x, y, pp);
+        if (pv != null) before = {p: peerPercentile(ps.q, pv), z: robust(ps, pv).z};
+      }
+      stats.push({y: y, s: s, v: v, pc: pc, rb: rb, prev: before});
+    });
+    if (!stats.length) return '<div class="tm-empty">Nenhum campo numérico do fundo em ' + esc(p) + ' tem ao menos ' + PEER_MIN +
+      ' fundos ' + FAM + ' com valores distintos para comparar.</div>';
+    stats.sort(function (a, b) { return (b.rb.z == null ? -1 : Math.abs(b.rb.z)) - (a.rb.z == null ? -1 : Math.abs(a.rb.z)); });
+    function pct(v) { return v == null ? '—' : String(Math.round(v)); }
+    var cells = stats.map(function (o) {
+      var y = o.y, s = o.s, v = o.v, pr = pct(o.pc), rb = o.rb;
+      var vals = [], per = [];
+      y[4].forEach(function (t, i) { if (y[3].charAt(i) !== '1') return; var w = parseShown(t); if (w != null) { vals.push(w); per.push(x.c[i][0]); } });
+      var hist = vals.length >= MIN_VALUES ? distribution(vals, per) : null;
+      var tip = y[0] + '\nCampo CVM: ' + y[1] +
+        '\nPosição do fundo entre os ' + fmtInt(s.n) + ' fundos ' + FAM + ' com este campo publicado na competência ' + p + ': percentil ' + pr +
+        ' (o valor do fundo, ' + compact(v) + ', é maior que o de ' + pr + '% deles).' +
+        (rb.z != null ? '\nZ robusto ' + zText(rb.z) + ': ' + rb.level + ' (|z| < 2 típico; 2 a 3,5 atípico; 3,5 ou mais extremo). ' +
+          'Mede a distância à mediana em desvios robustos (MAD) na escala log' +
+          (rb.tukey ? '; fora das cercas de Tukey (seria um ponto isolado num boxplot)' : '') + '.' : '') +
+        (o.prev ? '\nNa competência anterior (' + pp + '): percentil ' + pct(o.prev.p) + ', z ' + zText(o.prev.z) +
+          '; variação de ' + zText(o.pc - o.prev.p) + ' pontos percentuais.' : '') +
+        (s.scale == null ? '\nBarras = quantidade de fundos por faixa de valor; curva = normal com a mesma média e desvio-padrão dos fundos; tracejado = média dos fundos; laranja = este fundo.'
+          : '\nBarras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; tracejado = centro da curva; laranja = este fundo.') +
+        '\nFundos ' + FAM + ': P25 ' + compact(s.q[25]) + ' · mediana ' + compact(s.q[50]) + ' · P75 ' + compact(s.q[75]) + ' (metade dos fundos fica entre P25 e P75).' +
+        '\nMédia ' + compact(s.mean) + ' · desvio-padrão ' + compact(s.sd) + ' · mínimo ' + compact(s.q[0]) + ' · máximo ' + compact(s.q[100]) + '.' +
+        '\nGráfico winsorizado a 2,5% de cada lado: valores abaixo de P2,5 (' + compact(scaleInv(s.lo, s.scale)) + ') ou acima de P97,5 (' +
+        compact(scaleInv(s.hi, s.scale)) + ') aparecem nesses limites' + (s.outside ? ' (' + fmtInt(s.outside) + ' fundos)' : '') +
+        '; média, desvio, percentis e posição usam os valores originais.' +
+        (v < scaleInv(s.lo, s.scale) || v > scaleInv(s.hi, s.scale) ? '\nO fundo está entre os valores winsorizados: o ponto laranja fica na borda.' : '') +
+        scaleNote(s.scale, scaleInv(s.dmean, s.scale)) +
+        '\nUm valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas.' +
+        (idx.length > 1 ? '\nEste fundo tem ' + fmtInt(idx.length) + ' linhas nesta data.' : '') +
+        (hist ? '\nHistórico do próprio fundo: média ' + compact(hist.mean) + ' · desvio-padrão ' + compact(hist.sd) + ' · ' + fmtInt(hist.n) +
+                ' valores (' + hist.firstPeriod + ' a ' + hist.lastPeriod + ').' : '') + noteText(y[1]);
+      var d = {n: s.n, mean: s.mean, sd: s.sd, lo: s.lo, hi: s.hi, counts: s.counts, last: v, scale: s.scale, dmean: s.dmean, dsd: s.dsd};
+      var lv = {'típico': ' tm-z-typ', 'atípico': ' tm-z-atp', 'extremo': ' tm-z-ext'}[rb.level] || '';
+      var delta = o.prev && o.prev.p != null ? Math.round(o.pc - o.prev.p) : null;
+      return '<div class="tm-dist' + lv + '" data-tip="' + esc(tip) + '"><div class="tm-dist-label' + (y[2] ? ' tm-derived' : '') + '">' + esc(y[0]) + '</div>' +
+        distSvg(d, 200, 64, y[0]) + '<div class="tm-dist-cap"><b class="tm-dist-pos">percentil ' + pr + '</b>' +
+        (rb.z != null ? '<span class="tm-z-badge">z ' + zText(rb.z) + '</span>' : '') +
+        (delta != null ? '<span class="tm-z-delta ' + (delta >= 0 ? 'tm-up' : 'tm-down') + '">' + (delta >= 0 ? '▲' : '▼') + Math.abs(delta) + '</span>' : '') +
+        ' · fundo ' + compact(v) + ' · ' + fmtInt(s.n) + ' fundos</div></div>';
+    });
+    var off = stats.filter(function (o) { return o.rb.level === 'atípico' || o.rb.level === 'extremo'; });
+    var nExt = off.filter(function (o) { return o.rb.level === 'extremo'; }).length;
+    var panelTip = 'Z robusto: distância do fundo à mediana dos fundos da família na mesma competência, em desvios robustos ' +
+      '(MAD escalonado, na escala log). |z| de 2 a 3,5 = atípico; 3,5 ou mais = extremo (Iglewicz e Hoaglin, 1993). ' +
+      'Resistente aos valores extremos, que distorcem a média e o desvio-padrão. Descritivo: posição entre os pares, ' +
+      'não um juízo sobre o fundo. ▲▼ = variação do percentil desde a competência anterior do fundo.';
+    var panel = '<div class="tm-z-panel" data-tip="' + esc(panelTip) + '"><div class="tm-z-head"><span class="tm-z-title">Destaques estatísticos</span>' +
+      fmtInt(off.length) + ' de ' + fmtInt(stats.length) + ' campos fora do típico: ' + fmtInt(nExt) + ' extremos, ' + fmtInt(off.length - nExt) +
+      ' atípicos' + (prev ? ' · comparação com ' + esc(pp) : '') + '.</div>' +
+      (off.length ? '<ol class="tm-z-list">' + off.slice(0, 6).map(function (o) {
+        return '<li class="' + (o.rb.level === 'extremo' ? 'tm-z-ext' : 'tm-z-atp') + '"><span class="tm-z-name">' + esc(o.y[0]) + '</span> ' +
+          (o.rb.z > 0 ? 'acima' : 'abaixo') + ' da mediana · fundo ' + compact(o.v) + ', mediana ' + compact(o.s.q[50]) + ' · percentil ' + pct(o.pc) +
+          ' · z ' + zText(o.rb.z) + (o.prev ? ' · antes percentil ' + pct(o.prev.p) : '') + '</li>';
+      }).join('') + '</ol>' : '<div class="tm-z-none">Todos os campos estão na faixa típica da família (|z| &lt; 2).</div>') + '</div>';
+    var tip = 'Cada gráfico compara o fundo com os demais fundos ' + FAM + ' que publicaram o campo na mesma competência. ' +
+      'O percentil diz quantos por cento desses fundos têm valor menor que o do fundo (percentil 90 = maior que 90% deles). ' +
+      'Os gráficos vêm do mais atípico para o mais típico (|z robusto|). Troque a competência no seletor de período da Ficha. ' +
+      'Passe o mouse em um gráfico para ver P25, mediana, P75, média, extremos e o histórico do próprio fundo.';
+    return '<div class="tm-caption" data-tip="' + esc(tip) + '">Posição do fundo entre os ' + fmtInt(pd.funds) + ' fundos ' + FAM +
+      ' na competência ' + esc(p) + ', campo a campo (' + (stats.length === 1 ? '1 campo numérico' : fmtInt(stats.length) + ' campos numéricos') +
+      ', do mais ao menos atípico): barras = fundos por faixa de valor; curva = normal ajustada; tracejado = centro; laranja = este fundo. ' +
+      'Passe o mouse para a explicação.' +
+      (noPeer ? ' Fora da matriz: ' + (noPeer === 1 ? '1 campo' : fmtInt(noPeer) + ' campos') + ' sem ao menos ' + PEER_MIN + ' fundos com valores distintos.' : '') +
+      '</div>' + panel + '<div class="tm-dist-grid">' + cells.join('') + '</div>';
+  }
+  FundTab.prototype.distPeriod = function (p) {
+    var t = this, f = t.selected, x = t.ficha.data.t[t.fichaIndex], fam = f[F.family], token = {};
+    var pane = t.el.find('.tm-static-detail [data-pane-body="dist"]');
+    t.distToken = token;
+    pane.html('<div class="tm-empty">Carregando os demais fundos ' + fam.toUpperCase() + ' em ' + esc(p) + '…</div>');
+    // Previous competência of the fund (trajectory); optional.
+    var periods = [];
+    x.c.forEach(function (c) { if (periods.indexOf(c[0]) < 0 && c[0] < p) periods.push(c[0]); });
+    periods.sort();
+    var pp = periods.length ? periods[periods.length - 1] : null, base = 'data/peers/' + fam + '/' + x.n + '/';
+    var prevReq = pp ? getGz(base + pp + '.json.gz').then(function (d) { return d; }, function () { return $.Deferred().resolve(null).promise(); })
+                     : $.Deferred().resolve(null).promise();
+    getGz(base + p + '.json.gz').done(function (pd) {
+      prevReq.always(function (prev) {
+        if (t.distToken === token) pane.html(peerMatrix(x, p, pd, fam, prev || null, prev ? pp : null));
+      });
+    }).fail(function () {
+      if (t.distToken !== token) return;
+      pane.html('<div class="tm-empty">' + (typeof DecompressionStream === 'undefined'
+        ? 'Este navegador não descomprime arquivos gzip; atualize o navegador ou use o app local.'
+        : 'Nenhum campo de ' + esc(tableLabel(x.n)) + ' tem ao menos ' + PEER_MIN + ' fundos ' + fam.toUpperCase() +
+          ' com valores distintos em ' + esc(p) + '.') + '</div>');
+    });
   };
   function seriesTable(x, urls) {
     var head = x.c.map(function (c) {
@@ -584,30 +950,31 @@
       '<table class="tm-wide tm-series"><thead><tr><th class="tm-field">Campo</th>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
   }
   // Characteristics under the detail title (same as fund_traits_ui in
-  // prototype/fund_search_module.R): cotistas plus the fields of meta.traits.
+  // prototype/fund_search_module.R): a grid of label over value with cotistas and
+  // the fields of this family's report; the core fields it lacks in one line.
   function traitsHtml(f, meta) {
     if (!meta) return '';
-    var fam = f[F.family], cols = meta.columns[fam] || {}, tr = f[F.traits] || [];
-    function item(label, text, tip, alert) {
-      var muted = text === 'não informado' || text === 'não consta do informe';
-      return '<span class="tm-trait' + (alert ? ' tm-trait-alert' : '') + '" data-tip="' + esc(tip) + '"><span class="tm-trait-label">' + esc(label) + '</span>' +
-             '<span class="tm-trait-value' + (muted ? ' tm-muted' : '') + '">' + esc(text) + '</span></span>';
+    var fam = f[F.family], cols = meta.columns[fam] || {};
+    function item(label, text, tip, alert, info) {
+      return '<div class="tm-tr' + (alert ? ' tm-tr-alert' : '') + '" data-tip="' + esc(tip) + '"><div class="tm-tr-label">' + esc(label) + (info || '') + '</div>' +
+             '<div class="tm-tr-value' + (text === 'não informado' ? ' tm-muted' : '') + '">' + esc(text) + '</div></div>';
     }
+    var shown = displayAttrs(meta, [fam]), absent = shown.filter(function (a) { return !cols[a]; });
     var out = [item('Cotistas', f[F.holdersLast] == null ? 'não informado' : fmtInt(f[F.holdersLast]),
                     f[F.holdersLast] == null ? 'Quantidade de cotistas não publicada nos informes.'
                       : 'Quantidade de cotistas · informe de ' + monthLabel(f[F.holdersMonth]))];
-    meta.order.forEach(function (a, i) {
-      if (a === 'family_link' && !cols[a]) return;
-      var label = meta.labels[a], v = tr[i], text, tip;
-      if (!cols[a]) { text = 'não consta do informe'; tip = 'O informe da CVM de ' + fam.toUpperCase() + ' não tem este campo.'; }
-      else if (!v) { text = 'não informado'; tip = label + ' (' + cols[a] + ') · não preenchido nos informes'; }
-      else { text = v[0] === 'S' ? 'sim' : v[0] === 'N' ? 'não' : String(v[0]).toLowerCase(); tip = label + ' (' + cols[a] + ') · informe de ' + v[1]; }
-      if (cols[a]) tip += noteText(cols[a]);
-      out.push(item(label, text, tip, a === 'investment_entity' && text === 'não'));
+    shown.forEach(function (a) {
+      if (!cols[a]) return;
+      var v = traitOf(meta, f, a), label = meta.labels[a], text, tip;
+      if (!v) { text = 'não informado'; tip = label + ' (' + cols[a] + ') · não preenchido nos informes'; }
+      else { text = traitText(meta, a, v[0]); tip = label + ' (' + cols[a] + ') · informe de ' + v[1]; }
+      out.push(item(meta.medium[a], text, tip + noteText(cols[a]), v && isAlert(meta, a, v[0]), infoBtn(a)));
     });
+    var miss = absent.length ? '<div class="tm-traits-absent" data-tip="Campos que o informe da CVM desta família não tem (não é falta de preenchimento).">' +
+      'Não constam do informe de ' + fam.toUpperCase() + ': ' + absent.map(function (a) { return meta.medium[a].toLowerCase(); }).join(', ') + '.</div>' : '';
     // Explanatory notes of the fields this family publishes.
     var notes = meta.order.map(function (a) { return cols[a] ? noteHtml(cols[a], meta.labels[a]) : ''; }).join('');
-    return '<div class="tm-traits">' + out.join('') + '</div>' + notes;
+    return '<div class="tm-traits-grid">' + out.join('') + '</div>' + miss + '<div class="tm-joint-slot"></div>' + notes;
   }
   function profile(f, s, color) {
     if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';
@@ -628,7 +995,7 @@
       (holders ? 'Patrimônio líquido e cotistas' : 'Patrimônio líquido') + '</span>' +
       (holders ? '<div class="tm-chart-key"><span class="tm-key-line" style="border-top-color:' + color + '"></span>Patrimônio líquido (eixo esquerdo)' +
         '<span class="tm-key-line tm-key-dash" style="border-top-color:#5b6573"></span>Cotistas (eixo direito)</div>' : '') + '</div>' +
-      lineChart(months, s[1], {color: color, height: 240, width: 760,
+      lineChart(months, s[1], {color: color, height: 180, width: 760,
         label: holders ? 'Patrimônio líquido (eixo esquerdo) e número de cotistas (eixo direito) do fundo' : 'Patrimônio líquido do fundo',
         values2: holders ? s[2] : null,
         tips: months.map(function (m, i) {
@@ -653,6 +1020,7 @@
   function RecordTab(el) { this.el = el; }
   RecordTab.prototype.fichaTable = FundTab.prototype.fichaTable;
   RecordTab.prototype.fichaPeriod = FundTab.prototype.fichaPeriod;
+  RecordTab.prototype.distPeriod = FundTab.prototype.distPeriod;
   RecordTab.prototype.render = function (d) {
     var t = this;
     t.d = d;
@@ -717,15 +1085,17 @@
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2></div>' +
       '<div class="tm-detail-body"><div class="tm-caption tm-ficha-summary"></div>' +
       '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="ficha">Ficha</a></li>' +
-      '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li></ul>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="dist">Distribuições</a></li></ul>' +
       '<div class="tab-content"><div data-pane-body="ficha"><div class="tm-empty">Carregando ficha…</div></div>' +
-      '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div></div></div>');
+      '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div>' +
+      '<div data-pane-body="dist" class="tm-table-wrap" hidden><div class="tm-empty">Carregando distribuições…</div></div></div></div>');
     loadFicha(f).done(function (fd, urls) {
       if (t.selected !== f) return;
       var sel = t.el.find('.tm-ficha-table');
       if (!fd || !fd.t.length) {
         sel.html('<option>Sem informes nas tabelas publicadas</option>');
-        box.find('[data-pane-body="ficha"], [data-pane-body="serie"]').html(
+        box.find('[data-pane-body="ficha"], [data-pane-body="serie"], [data-pane-body="dist"]').html(
           '<div class="tm-empty">Sem linhas nas tabelas principais para este fundo. As demais tabelas estão no app local.</div>');
         return;
       }

@@ -12,6 +12,7 @@
 # Writes site/app/index.html, taxminer.css, taxminer_static.js, data/ and lib/.
 
 if (!file.exists("taxminer.Rproj")) stop("Run from the TaxMiner project root.")
+options(scipen = 999)  # numbers are never printed in scientific notation
 for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parquet_io.R",
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
@@ -49,6 +50,8 @@ fichas <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS")) && dir.exists(file.path
 fichas_x <- if (nzchar(Sys.getenv("TAXMINER_KEEP_FICHAS_X")) && dir.exists(file.path(out_dir, "data", "fichas_x"))) {
   list(funds = length(list.files(file.path(out_dir, "data", "fichas_x"), pattern = "\\.json\\.gz$", recursive = TRUE)) - 1L)
 } else write_static_ficha_extras(out_dir, root, data)
+# Funds of the same family per table and competência (tab Distribuições).
+peers <- write_static_peers(out_dir, root)
 admin_files <- write_static_admin_months(out_dir, ctx, keys, families)
 # Cedente names: entity catalog, CVM registries and Receita Federal CNPJ open
 # data, when collected (scripts/collect_cvm_registries.R, scripts/collect_rfb_cnpj.R).

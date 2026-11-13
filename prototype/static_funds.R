@@ -60,7 +60,7 @@ static_fund_index <- function(data, ctx) {
 
 # Characteristics of each fund as a JSON array in static_trait_order: each item
 # is [value, "YYYY-MM"] (latest report that filled it) or null.
-static_trait_order <- c("condominium", "exclusive", "investment_entity", "single_interest", "family_link")
+static_trait_order <- fund_attribute_order
 static_fund_traits <- function(attributes, family, cnpj) {
   if (is.null(attributes)) return(rep("null", length(family)))
   key <- paste(family, cnpj)
@@ -98,8 +98,27 @@ static_fund_index_json <- function(index, master, meta) {
 }
 
 # Labels and CVM columns of the characteristics, per family, for the browser:
-# {"order":[...],"labels":{...},"columns":{"fidc":{"condominium":"CONDOM"},...}}.
-static_traits_meta <- function() {
+# {"order":[...],"labels":{...},"columns":{"fidc":{"condominium":"CONDOM"},...}}, plus
+# the medium and short labels, the core fields, the numeric ones, the highlighted
+# values and, per attribute, each published value part -> [filter key, display
+# text, option text] (fund_attribute_key, fund_attribute_value_text), so the
+# browser shows and filters exactly as the app.
+static_traits_meta <- function(attributes = NULL) {
+  obj <- function(v) paste0("{", paste(sprintf("%s:%s", json_string(names(v)), json_string(unname(v))), collapse = ","), "}")
+  values <- vapply(fund_attribute_order, function(a) {
+    p <- if (is.null(attributes)) character() else unique(unlist(strsplit(attributes$value[attributes$attribute == a], " / ", fixed = TRUE)))
+    if (!length(p)) return("{}")
+    key <- fund_attribute_key(p)
+    opt <- if (a == "public") fund_public_text(key) else fund_attribute_value_text(a, p)
+    opt <- paste0(toupper(substr(opt, 1, 1)), substr(opt, 2, nchar(opt)))
+    paste0("{", paste(sprintf("%s:[%s,%s,%s]", json_string(p), json_string(key), json_string(fund_attribute_value_text(a, p)),
+                              json_string(opt)), collapse = ","), "}")
+  }, character(1))
+  extra <- paste0(",\"medium\":", obj(fund_attribute_medium), ",\"short\":", obj(fund_attribute_short),
+                  ",\"core\":[", paste(json_string(fund_attribute_core), collapse = ","), "]",
+                  ",\"numeric\":[", paste(json_string(fund_attribute_numeric), collapse = ","), "]",
+                  ",\"alert\":", obj(fund_attribute_alert_values),
+                  ",\"values\":{", paste(sprintf("%s:%s", json_string(fund_attribute_order), values), collapse = ","), "}")
   sp <- fund_attribute_specs[!duplicated(paste(fund_attribute_specs$family, fund_attribute_specs$attribute)), ]
   cols <- vapply(split(sp, sp$family), function(x) paste0("{", paste(sprintf("%s:%s", json_string(x$attribute),
                                                                            json_string(x$column)), collapse = ","), "}"), character(1))
@@ -108,7 +127,7 @@ static_traits_meta <- function() {
          "},\"columns\":{", paste(sprintf("%s:%s", json_string(names(cols)), cols), collapse = ","), "}",
          ",\"notes\":{", paste(sprintf("%s:[%s]", json_string(names(fund_field_notes)),
                                         vapply(fund_field_notes, function(n) paste(json_string(n), collapse = ","), "")),
-                                collapse = ","), "}}")
+                                collapse = ","), "}", extra, "}")
 }
 
 write_static_fund_data <- function(out_dir, data, ctx, generated) {
@@ -123,7 +142,7 @@ write_static_fund_data <- function(out_dir, data, ctx, generated) {
                                                          json_string(unname(fund_family_names))), collapse = ","), "}"),
                tables = paste0("{", paste(sprintf("%s:%s", json_string(names(fund_table_labels)),
                                                    json_string(unname(fund_table_labels))), collapse = ","), "}"),
-               traits = static_traits_meta())
+               traits = static_traits_meta(data$attributes))
   writeLines(enc2utf8(static_fund_index_json(index, data$master, meta)), file.path(dir, "funds.json"), useBytes = TRUE)
   invisible(list(funds = nrow(index)))
 }
@@ -219,9 +238,12 @@ static_ficha_objects <- function(root, fam, tn, urls, descriptions) {
 }
 
 # One file per fund, data/fichas/{family}/{CNPJ digits}.json, read when the
-# fund is opened: {"t": [objects of static_ficha_objects]}.
+# fund is opened: {"t": [objects of static_ficha_objects], "r": HTML of the
+# monthly return chart (fund_return_ui, the same markup as the app), "j":
+# [lines, period] of the joint special-rights notice (fund_joint_rights), when any}.
 # data/fichas/urls.json lists the CVM files.
-write_static_fichas <- function(out_dir, root, data, tables = static_ficha_tables) {
+write_static_fichas <- function(out_dir, root, data, tables = static_ficha_tables,
+                                returns = if (exists("fund_returns", mode = "function")) fund_returns(root)) {
   dir <- file.path(out_dir, "data", "fichas")
   unlink(dir, recursive = TRUE)
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
@@ -240,8 +262,17 @@ write_static_fichas <- function(out_dir, root, data, tables = static_ficha_table
   }
   for (fam in names(tables)) dir.create(file.path(dir, fam), showWarnings = FALSE)
   keys <- ls(parts)
+  by_fund <- if (is.null(returns)) NULL else split(returns, paste(returns$family, returns$fund_cnpj, sep = "/"))
+  jr <- if (is.null(data$attributes)) NULL else data$attributes[data$attributes$attribute == "joint_rights", , drop = FALSE]
+  joint <- if (is.null(jr) || !nrow(jr)) character() else
+    stats::setNames(sprintf("[%s,%s]", json_string(jr$value), json_string(jr$period)), paste(jr$family, jr$fund_cnpj, sep = "/"))
   for (key in keys) {
-    writeLines(enc2utf8(paste0("{\"t\":[", paste(parts[[key]], collapse = ","), "]}")),
+    fam <- sub("/.*$", "", key); cnpj <- sub("^.*/", "", key)
+    ret <- if (is.null(returns)) NULL else
+      as.character(fund_return_ui(root, fam, cnpj, returns = if (is.null(by_fund[[key]])) returns[0, ] else by_fund[[key]]))
+    writeLines(enc2utf8(paste0("{\"t\":[", paste(parts[[key]], collapse = ","), "]",
+                               if (!is.null(ret)) paste0(",\"r\":", json_string(ret)),
+                               if (!is.na(joint[key])) paste0(",\"j\":", joint[key]), "}")),
                file.path(dir, paste0(key, ".json")), useBytes = TRUE)
   }
   writeLines(enc2utf8(paste0("[", paste(json_string(urls$source_url), collapse = ","), "]")),
@@ -297,6 +328,70 @@ write_static_ficha_extras <- function(out_dir, root, data, tables = static_ficha
     funds <- funds + length(keys)
   }
   invisible(list(funds = funds, rows = rows_total))
+}
+
+static_peer_tables <- function() {
+  stats::setNames(lapply(names(static_ficha_tables), function(f) c(static_ficha_tables[[f]], static_ficha_extra_tables[[f]])),
+                  names(static_ficha_tables))
+}
+
+# Funds of the same family at each competência, for the tab Distribuições
+# (fund_peer_summaries): data/peers/{family}/{table}/{period}.json.gz, one file
+# per table and period as shown in the Ficha (YYYY-MM for dates), read only
+# when that period is chosen: {"funds": funds with rows, "f": {field: [n, mean,
+# sd, lo, hi, outside, [counts], [101 percentiles], display scale (null =
+# linear, else c of asinh(v / c)), display mean, display sd, robust scale (scaled
+# MAD of the display values, fund_peer_robust_scale)]}}; lo, hi and the
+# counts are on the display scale. Same tables as the
+# Ficha; numbers with 7 significant digits.
+static_peer_number <- function(x) {
+  out <- sprintf("%.7g", x)
+  out[!is.finite(x)] <- "null"
+  out
+}
+
+static_peer_json <- function(s) {
+  sprintf("[%d,%s,%s,%s,%s,%d,[%s],[%s],%s,%s,%s,%s]", s$n, static_peer_number(s$mean), static_peer_number(s$sd),
+          static_peer_number(s$lo), static_peer_number(s$hi), s$outside, paste(s$counts, collapse = ","),
+          paste(static_peer_number(s$q), collapse = ","), static_peer_number(s$scale),
+          static_peer_number(s$dmean), static_peer_number(s$dsd), static_peer_number(s$rs))
+}
+
+write_static_peers <- function(out_dir, root, tables = static_peer_tables()) {
+  dir <- file.path(out_dir, "data", "peers")
+  unlink(dir, recursive = TRUE)
+  base <- fund_processed_paths(root)$base
+  files <- 0L
+  for (fam in names(tables)) for (tn in tables[[fam]]) {
+    if (!dir.exists(file.path(base, fam, tn))) next
+    r <- as.data.frame(open_fund_table(root, fam, tn))
+    r <- r[!is.na(r$fund_cnpj_normalized), , drop = FALSE]
+    period <- row_periods(r)
+    shown <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+    funds <- tapply(r$fund_cnpj_normalized, shown, function(v) length(unique(v)))
+    out <- list()
+    for (fld in fund_distribution_fields(names(r))) {
+      num <- fund_numeric_values(r[[fld]], fld)
+      ok <- !is.na(num)
+      if (!any(ok)) next
+      med <- fund_median_by(num[ok], paste(shown[ok], r$fund_cnpj_normalized[ok], sep = "\r"))
+      by_period <- split(unname(med), sub("\r.*$", "", names(med)))
+      for (p in names(by_period)) {
+        s <- fund_peer_summary(by_period[[p]])
+        if (!is.null(s)) out[[p]] <- c(out[[p]], paste0(json_string(fld), ":", static_peer_json(s)))
+      }
+    }
+    if (!length(out)) next
+    dir.create(file.path(dir, fam, tn), recursive = TRUE, showWarnings = FALSE)
+    for (p in names(out)) {
+      con <- gzfile(file.path(dir, fam, tn, paste0(p, ".json.gz")), "wb", compression = 9)
+      writeLines(enc2utf8(sprintf("{\"funds\":%d,\"f\":{%s}}", funds[[p]], paste(out[[p]], collapse = ","))), con, useBytes = TRUE)
+      close(con)
+      files <- files + 1L
+    }
+    rm(r); invisible(gc())
+  }
+  invisible(list(files = files))
 }
 
 # FICHA tab: any fund's Ficha and Série completa (RecordTab in taxminer_static.js).

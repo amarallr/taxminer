@@ -796,3 +796,39 @@ Aceite do desenvolvedor ("Aceites = autorizados") após a tabela de pendências.
   da Ficha (0 divergências).
 - Não cobre: as 18 propostas de status dos requisitos (P13), aprovadas só item a item; os itens P9;
   as Fases 07 e 08; a ETAPA 03; nova versão.
+
+## decision_0054 — 2026-11-13T10:22:23-03:00 — Aceites: Fase 1.3 (fundos), primitivas comuns, painel e entidades
+
+Aceite explícito do desenvolvedor dos itens listados por ele (work_0028 citado três vezes; um aceite).
+
+- `acc_0016` work_0020 (fontes CVM e amostra de informes); `acc_0017` work_0021 (consolidação por família e leiaute);
+  `acc_0018` work_0022 (busca de informes); `acc_0019` work_0024 (primitivas de confiabilidade em src/common);
+  `acc_0020` work_0027 (painel analítico de fundos); `acc_0021` work_0028 (resolução central de entidades);
+  `acc_0022` work_0029 (diagnóstico e plano de BI); `acc_0023` work_0030 (filtros cruzados do Panorama);
+  `acc_0024` work_0031 (painel e site: Cedentes, Ficha, Série completa, características).
+- Não cobre: work_0023 (marco de validação da Fase 1.3), work_0025 (em desenvolvimento), liberação ou nova versão.
+
+## decision_0055 — 2026-11-13T10:30:52-03:00 — Aceite: work_0019 (inventário das novas fontes)
+
+Aceite explícito do desenvolvedor ("Item work_0019 aceite OK").
+
+- `acc_0025` work_0019: inventário e análise de lacunas dos informes de fundos da CVM (Common P07 etapa 00).
+
+## decision_0056 — 2026-11-13T10:41:01-03:00 — Aceite: marco da Fase 1.3 (work_0023)
+
+Aceite explícito do desenvolvedor ("Aceite work_0023 OK!").
+
+- `acc_0026` work_0023: validação humana da Fase 1.3 (informes de fundos). O marco se conclui com o próprio
+  aceite: implementação registrada como implementada e teste como não aplicável (evidência: esta decisão).
+- Não cobre liberação nem nova versão.
+
+## decision_0057 — 2026-11-13T14:43:03-03:00 — Aceite: hints de direitos especiais (work_0041)
+
+Aceite explícito do desenvolvedor ("Aceite work_0041 OK!").
+
+- `acc_0027` work_0041 (`req_0022`, `.claude/doit.txt`): hints ⓘ de "Direitos políticos especiais" e
+  "Direitos econ.-financeiros distintos" (FIP) nos filtros, nas características da ficha e nas colunas da
+  lista, no app e no painel publicado, com popover acessível e textos centralizados; aviso conjunto
+  informativo quando uma mesma linha de classe tem os dois campos = S. Referências normativas conferidas
+  nos textos oficiais (Res. CVM 175, Anexo IV; Lei 14.754/2023, art. 23).
+- Não cobre liberação nem nova versão.

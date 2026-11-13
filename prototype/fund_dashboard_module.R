@@ -313,7 +313,7 @@ fund_profile_ui <- function(ctx, family, cnpj) {
         shiny::div(class = "tm-subhead tm-subhead-key",
                    shiny::span(if (has_holders) "Patrimônio líquido e cotistas" else "Patrimônio líquido"),
                    if (has_holders) chart_key(color, "Patrimônio líquido (eixo esquerdo)", "Cotistas (eixo direito)")),
-        svg_line_chart(d$month, d$net_assets, color, height = 240, width = 760,
+        svg_line_chart(d$month, d$net_assets, color, height = 180, width = 760,
                        label = if (has_holders) "Patrimônio líquido (eixo esquerdo) e número de cotistas (eixo direito) do fundo"
                                else "Patrimônio líquido do fundo",
                        values2 = if (has_holders) d$quotaholders,

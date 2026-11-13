@@ -2,6 +2,7 @@
 # dependencies, from synthetic in-memory registers. Run from the project root:
 #   Rscript -e "testthat::test_file('tests/testthat/test_governance_views.R')"
 
+source(testthat::test_path("..", "..", "src", "common", "governance_registry.R"))
 source(testthat::test_path("..", "..", "src", "common", "governance_views.R"))
 
 views_regs <- function() {
@@ -78,4 +79,32 @@ test_that("dependencies show the situation of each one and whether the item can 
 test_that("labels are in Portuguese and unknown values pass through", {
   expect_equal(governance_label("requirement", c("proposed", "novo")), c("proposto", "novo"))
   expect_equal(governance_label("risk", "observed"), "observado")
+})
+
+test_that("free-text fields are shown in Portuguese while codes stay as recorded", {
+  regs <- views_regs()
+  texts <- data.frame(id = c("work_0001", "req_0002", "acc_0001", "work_0404"),
+                      field = c("title", "description", "criteria", "title"),
+                      text = c("Título em português", "Descrição B", "Critério em português", "Inexistente"),
+                      stringsAsFactors = FALSE)
+  l <- governance_localize(regs, texts)
+  expect_equal(l$work_items$title[1:2], c("Título em português", "Item work_0002"))
+  expect_equal(l$requirements$description, c("A", "Descrição B", "C"))
+  expect_equal(l$acceptances$criteria, c("Critério em português", "Critério B"))
+  expect_identical(l$work_items$acceptance_status, regs$work_items$acceptance_status)
+  expect_equal(governance_field_label(c("implementation_status", "novo")), c("implementação", "novo"))
+  expect_equal(governance_value_label(c("approved", "high", "", "texto livre")), c("aceito", "alta", "", "texto livre"))
+})
+
+test_that("the Portuguese text file covers every recorded title, description and criterion", {
+  root <- testthat::test_path("..", "..")
+  texts <- governance_texts_read(governance_texts_path(root))
+  expect_false(any(duplicated(paste(texts$id, texts$field))))
+  regs <- governance_read(file.path(root, "docs", "project_management"))
+  for (f in list(c("work_items", "work_item_id", "title"), c("requirements", "requirement_id", "description"),
+                 c("acceptances", "acceptance_id", "criteria"), c("risks", "risk_id", "description"))) {
+    ids <- regs[[f[1]]][[f[2]]]
+    missing <- setdiff(ids, texts$id[texts$field == f[3]])
+    expect_equal(missing, character(), info = paste(f[1], f[3]))
+  }
 })

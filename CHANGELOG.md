@@ -2,6 +2,83 @@
 
 ## Não incluído em versão — 2026-11-13
 
+- **Características dos fundos** (app e painel publicado): novos campos Público-alvo (FII, FIP,
+  FIAGRO), classe de cotas com direitos políticos especiais, com direitos econômico-financeiros
+  distintos e percentual total das cotas subscritas (FIP), além de cotistas, condomínio, fundo
+  exclusivo, entidade de investimento, interesse único e vínculo familiar. Quando as classes do FIP
+  publicam valores diferentes no mesmo informe, todos aparecem ("não / sim"); nenhuma classe é
+  escolhida no lugar das outras. No cabeçalho da ficha, as características ficam em etiquetas compactas
+  de rótulo e valor, na coluna do nome do fundo. Os
+  campos que o informe da família não tem aparecem numa única linha. Ficam destacados em âmbar:
+  entidade de investimento = não, direitos políticos especiais = sim e direitos econômico-financeiros
+  distintos = sim.
+- **Colunas e filtros das características** em Fundos e em todas as subabas. A lista ganha as colunas
+  Cotistas e as características das famílias em exibição, ordenáveis e com rolagem horizontal. Um
+  painel recolhível, "Características", traz um filtro por característica exibida (Todos, valores
+  publicados, Não informado, Não consta do informe) e faixas de cotistas e de cotas subscritas,
+  com a contagem de filtros ativos. O Público-alvo une as formas singular e plural (FII
+  "INVESTIDOR PROFISSIONAL" e FIP "Investidores profissionais").
+- **Rentabilidade em curva normal** (cabeçalho da ficha, ao lado do nome do fundo, app e painel
+  publicado): mini gráfico com o histograma da
+  rentabilidade mensal publicada, a curva normal com a mesma média e desvio, a média e o último mês.
+  Usa FIDC `TAB_X_VL_RENTAB_MES` (a classe/série com mais meses), FII
+  `Percentual_Rentabilidade_Efetiva_Mes` (fração, exibida em %) e FIAGRO `Rentabilidade_Efetiva_Mes`.
+  A escala vai até 4 desvios da média, e os meses fora dela são contados e informados; nenhum valor
+  é descartado. Exige ao menos 6 meses. O FIP não publica rentabilidade, e o gráfico diz isso. No
+  app, o gráfico lê só o fundo selecionado; no painel publicado, vem no arquivo da ficha do fundo.
+- **Aba Distribuições** ao lado de Série completa (Fundos, subabas e FICHA; app e painel publicado):
+  matriz com um pequeno gráfico por campo numérico da tabela escolhida. Ela mostra a **posição do fundo
+  entre os fundos da mesma família na mesma competência** (a do seletor de período da Ficha). As
+  barras contam fundos por faixa de valor; a curva é a normal com a média e o desvio desses fundos;
+  o tracejado é a média e a marca laranja é o fundo. Cada gráfico mostra o percentil do fundo e o
+  número de fundos. O hint traz a explicação, P25, mediana e P75, média, desvio, extremos, a escala
+  (1º ao 99º percentil, com os fundos fora dela contados) e o histórico do próprio fundo. Há um
+  valor por fundo: a mediana das suas linhas na data (classes, séries ou versões). Ficam de fora os
+  campos com menos de 6 fundos ou com valor único. No painel publicado, os resumos por tabela e
+  competência ficam em `data/peers/` (gzip), lidos só quando escolhidos.
+- **Escala logarítmica nos gráficos de distribuição** (Distribuições e rentabilidade mensal ao lado do
+  nome do fundo; app e painel publicado): histograma e curva são desenhados em escala log com sinal
+  (asinh), que aceita zero e valores negativos. Os valores dos fundos variam por ordens de grandeza, e
+  na escala linear o histograma virava uma única barra. A escala é só para exibição: eixo, hint,
+  percentis, média, desvio, P25, mediana e P75 continuam em valores originais. O gráfico mostra
+  "escala log", e o hint explica que o tracejado marca o centro da curva nessa escala. No mini gráfico
+  de rentabilidade, o aviso fica na legenda, sem cobrir as barras.
+- **Winsorização a 2,5%** nos gráficos de distribuição: valores abaixo de P2,5 ou acima de P97,5 são
+  desenhados nesses limites, e o hint informa os limites e quantos fundos foram afetados. Média, desvio,
+  percentis e posição continuam calculados com os valores originais.
+- **Análise estatística robusta na aba Distribuições** (app e painel publicado): cada campo mostra o
+  **z robusto** do fundo, (valor − mediana) / MAD, na escala de exibição, comparado aos demais fundos da
+  mesma família na mesma competência. Classes: típico (|z| < 2), atípico (|z| ≥ 2) e extremo
+  (|z| ≥ 3,5, critério de Iglewicz e Hoaglin). O hint informa também se o valor fica fora das cercas de
+  Tukey (1,5 × IQR) e quanto o percentil mudou desde a competência anterior (▲▼). Os campos são
+  ordenados do mais para o menos atípico, e um painel "Destaques estatísticos" lista os seis campos
+  mais fora do típico. A classificação é descritiva: não é conclusão fiscal nem indica irregularidade.
+- **Perfil sem barra de rolagem:** o gráfico "Patrimônio líquido e cotistas" ficou mais baixo e cabe no
+  painel da ficha, com a legenda visível.
+- **Hints de direitos especiais (FIP)**, `req_0022` / `work_0041`: botão ⓘ ao lado de "Direitos
+  políticos especiais" e "Direitos econ.-financeiros distintos" nos filtros, nas características da
+  ficha e nas colunas da lista (app e painel publicado).
+  - O popover tem as seções Fonte (CVM), Descrição, Interpretação (Sim, Não, Não informado; vazio não
+    equivale a "não"), Relevância tributária (interpretação analítica), Atenção e Referências
+    normativas (Res. CVM 175, Anexo IV; Lei 14.754/2023, art. 23, conferidas nos textos oficiais).
+  - Abre com clique, Enter, Espaço ou toque e fecha com Esc, clique fora ou ×.
+  - Textos centralizados em `fund_attribute_hints`, de onde vêm `window.TM_INFO` no app e no painel.
+  - **Aviso conjunto** (informativo) quando uma mesma linha de classe do último informe FIP tem os dois
+    campos = S (`fund_joint_rights`). Ele informa a competência e o número de linhas e não altera
+    destaques nem a classificação de entidade de investimento.
+- **Decimais da CVM na exibição:** um valor publicado como `12.345` (ponto decimal) aparece como
+  `12,345`; antes aparecia `12.345`, que no padrão brasileiro parece doze mil.
+- **Sem notação científica:** valores publicados como `1.2345E-5` aparecem como `0,000012345` em
+  telas, fichas e séries completas, no app e no painel publicado (`expand_scientific`), e
+  `options(scipen = 999)` no app e no exportador.
+- **Governança em português:** títulos, descrições, critérios, riscos, planos e observações aparecem
+  em português por uma camada de exibição (`config/governance_texts_pt.csv`). Os registros continuam
+  como gravados (fonte da auditoria), e um teste exige tradução para todo título, descrição, critério
+  e risco. Campos, estados e filtros também aparecem em português. A aba cabe na janela, sem barras
+  de rolagem na página: cabeçalho e filtros compactos, e só os cartões rolam por dentro. As caixas do
+  grafo de rastreabilidade ficaram menores.
+- **Aceites** (`decision_0054` a `decision_0056`): work_0019 a work_0024, work_0027 a work_0031
+  (`acc_0016` a `acc_0026`). O marco da Fase 1.3 (work_0023) se conclui com o próprio aceite.
 - **Governança reorganizada** (app local, somente o proprietário): subabas Visão geral, Pendências,
   Aceites, Requisitos e itens, Dependências, Rastreabilidade, Agentes e tokens e Auditoria. As
   pendências mostram situação, o que falta e de quem depende; os requisitos, o progresso dos itens

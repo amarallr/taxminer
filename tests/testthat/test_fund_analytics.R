@@ -528,3 +528,114 @@ test_that("the loading bar waits, stays a minimum time, follows real progress an
   expect_match(export, "src = \"loadbar.js\"", fixed = TRUE)
   expect_match(export, "prototype/www/loadbar.js", fixed = TRUE)
 })
+
+test_that("return distribution: mean, deviation, last month, values outside the scale counted", {
+  months <- sprintf("2025-%02d", 1:12)
+  v <- c(1, 1.2, 0.8, 1.1, 0.9, 1, 1.05, 0.95, 1.1, 0.9, 1, 500)
+  d <- fund_return_distribution(v, months)
+  expect_equal(d$n, 12L)
+  expect_equal(d$mean, mean(v))
+  expect_equal(d$last, 500); expect_equal(d$last_month, "2025-12")
+  expect_equal(sum(d$counts), 12L)  # winsorized values sit in the edge bars
+  expect_null(fund_return_distribution(1:5, months[1:5]))
+  expect_equal(parse_return_number(c("1.5E-4", "0.3", "x", NA)), c(0.00015, 0.3, NA, NA))
+  svg <- fund_return_svg(d)
+  expect_match(svg, "^<svg")
+  expect_false(grepl("[0-9][eE][-+][0-9]", svg))
+  expect_match(fund_return_caption(d), "12 meses (jan/2025 a dez/2025)", fixed = TRUE)
+  expect_equal(format_return_pct(c(0.000012, NA)), c("0,00%", "—"))
+})
+
+test_that("latest quotaholders per fund skip carried months", {
+  m <- data.frame(family = "fip", fund_cnpj = "1", month = c("2025-01", "2025-02", "2025-03"),
+                  quotaholders = c(10, 12, 12), carried = c(FALSE, FALSE, TRUE), stringsAsFactors = FALSE)
+  h <- fund_latest_quotaholders(m)
+  expect_equal(h$month, "2025-02"); expect_equal(h$quotaholders, 12)
+  r <- attach_fund_quotaholders(data.frame(family = c("fip", "fii"), fund_cnpj = c("1", "1")), h)
+  expect_equal(r$quotaholders, c(12, NA))
+})
+
+test_that("Distribuições place the fund among the funds of its family at the chosen date", {
+  # Percentiles: share of funds below; ties take the middle; outside = 0 or 100.
+  s <- fund_peer_summary(1:100)
+  expect_equal(s$n, 100L); expect_equal(s$q[51], 50.5); expect_equal(sum(s$counts), 100L)
+  expect_equal(fund_peer_percentile(s, 50.5), 50)
+  expect_equal(fund_peer_percentile(s, 1), 0); expect_equal(fund_peer_percentile(s, 0), 0)
+  expect_equal(fund_peer_percentile(s, 101), 100)
+  expect_equal(fund_peer_percentile(fund_peer_summary(c(rep(0, 50), 1:50)), 0), 24.5)
+  expect_null(fund_peer_summary(1:5))
+  expect_null(fund_peer_summary(rep(3, 10)))
+  # One value per fund: the median of its rows.
+  expect_equal(fund_median_by(c(1, 2, 4, 9), c("a", "b", "b", "c"))[c("a", "b", "c")], c(a = 1, b = 3, c = 9))
+  # Numbers as in the Ficha: CVM decimals use "."; codes and zero-padded values are not numbers.
+  expect_equal(fund_numeric_values(c("12.345", "1.2E-3", "1.234.567", "007", "abc", "", NA), "VL_X"),
+               c(12.345, 0.0012, 1234567, NA, NA, NA, NA))
+  expect_true(all(is.na(fund_numeric_values("11222333000181", "CNPJ_ADMIN"))))
+  expect_equal(display_value("12.345")$text, "12,345")
+  # Matrix: one chart per field the fund has at the date, with the hint.
+  r <- data.frame(fund_cnpj_normalized = as.character(1:8), DT_COMPTC = "2026-01-31",
+                  VL_PL = as.character(c(10, 20, 30, 40, 50, 60, 70, 80)), stringsAsFactors = FALSE)
+  peers <- fund_peer_summaries(r)
+  expect_equal(attr(peers, "funds"), 8L); expect_named(peers, "VL_PL")
+  ui <- as.character(fund_distribution_matrix_ui(r[7, ], NULL, "t", "2026-01-31", peers, "fidc"))
+  expect_match(ui, "percentil 86")
+  expect_match(ui, "P25 27,50 · mediana 45,00 · P75 62,50")
+  expect_match(ui, "8 fundos FIDC")
+  expect_match(fund_distribution_matrix_ui(r[7, ], NULL, "t", "2026-01-31", list(), "fidc") |> as.character(),
+               "Nenhum campo numérico")
+})
+
+test_that("distributions are drawn on a log scale with original labels", {
+  expect_false(is.na(fund_display_scale(1:100)))
+  expect_true(is.na(fund_display_scale(c(1, 2, 1, 2))))
+  skew <- c(rep(c(0, 1, 2, 3, 5), 40), 1e6, 5e6, 2e7, 1e8)
+  c <- fund_display_scale(skew)
+  expect_true(is.finite(c) && c > 0)
+  expect_equal(fund_scale_inv(fund_scale_fwd(c(-50, 0, 7, 1e8), c), c), c(-50, 0, 7, 1e8))
+  s <- fund_peer_summary(skew)
+  expect_equal(s$scale, c); expect_equal(s$q[51], 2)
+  svg <- fund_distribution_svg(c(s, list(last = 3)), 200, 64, format_compact_number)
+  expect_match(svg, "escala log")
+  expect_match(svg, ">0,00<")                  # lower label in original values
+  expect_false(grepl("e[+-][0-9]", svg))       # never scientific notation
+  d <- fund_return_distribution(c(rep(1, 20), 1.1, 0.9, 1.2, 0.8, 300), sprintf("2024-%02d", 1:25))
+  expect_false(is.na(d$scale))
+  expect_equal(d$mean, mean(c(rep(1, 20), 1.1, 0.9, 1.2, 0.8, 300)))
+})
+
+test_that("distribution charts are winsorized at 2.5% on each side; statistics stay original", {
+  v <- c(1:97, 1000, 2000, 5000)
+  w <- fund_winsorize(v)
+  expect_equal(w$lo, unname(quantile(v, 0.025))); expect_equal(w$hi, unname(quantile(v, 0.975)))
+  expect_equal(w$clamped, sum(v < w$lo | v > w$hi))
+  s <- fund_peer_summary(v)
+  expect_equal(sum(s$counts), 100L)            # every fund is drawn (extremes at the edge bars)
+  expect_equal(s$outside, w$clamped)
+  expect_equal(s$mean, mean(v)); expect_equal(s$q[101], 5000)
+  expect_equal(fund_scale_inv(s$hi, s$scale), w$hi)
+  d <- fund_return_distribution(c(rep(1, 30), 0.5, 2, 300), sprintf("m%02d", 1:33))
+  expect_equal(sum(d$counts), 33L); expect_equal(d$mean, mean(c(rep(1, 30), 0.5, 2, 300)))
+})
+
+test_that("robust z places the fund among its peers without being pulled by extremes", {
+  v <- c(1:99, 1e6)
+  s <- fund_peer_summary(v)
+  expect_true(is.finite(s$rs) && s$rs > 0)
+  typ <- fund_peer_robust(s, 50); expect_equal(typ$level, "típico"); expect_false(typ$tukey)
+  ext <- fund_peer_robust(s, 1e6); expect_equal(ext$level, "extremo"); expect_true(ext$z > 3.5); expect_true(ext$tukey)
+  low <- fund_peer_robust(s, -5000); expect_true(low$z < 0)
+  expect_equal(fund_peer_z_text(2.04), "+2,0"); expect_equal(fund_peer_z_text(-3.96), "-4,0")
+  # Half the funds at zero: MAD = 0, falls back to IQR / 1.349 or the deviation.
+  s0 <- fund_peer_summary(c(rep(0, 60), 1:40))
+  expect_true(is.finite(s0$rs) && s0$rs > 0)
+  # Matrix: highlights panel, cells from the most atypical, previous competência.
+  r <- data.frame(fund_cnpj_normalized = as.character(1:10), DT_COMPTC = "2026-02-28",
+                  VL_A = as.character(c(1:9, 500)), VL_B = as.character(1:10), stringsAsFactors = FALSE)
+  prev <- transform(r, DT_COMPTC = "2026-01-31", VL_A = as.character(1:10))
+  ui <- as.character(fund_distribution_matrix_ui(rbind(prev[10, ], r[10, ]), NULL, "t", "2026-02-28",
+                                                 fund_peer_summaries(r), "fidc", fund_peer_summaries(prev), "2026-01-31"))
+  expect_match(ui, "Destaques estatísticos")
+  expect_match(ui, "comparação com 2026-01-31")
+  expect_lt(regexpr("VL_A", ui), regexpr("VL_B", ui))   # the atypical field comes first
+  expect_match(ui, "tm-z-delta")
+})

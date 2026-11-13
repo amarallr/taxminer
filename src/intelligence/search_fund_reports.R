@@ -113,23 +113,73 @@ fund_investment_entity <- function(root) {
 # of each field per fund, as published (S/N fields upper-cased and trimmed,
 # other values kept). Each family only has the fields its CVM report carries;
 # the others are "not in the report" (see fund_attribute_families).
-fund_attribute_specs <- data.frame(
-  attribute = c("condominium", "exclusive", "single_interest", "exclusive", "exclusive",
-                "family_link", "family_link", "investment_entity", "investment_entity", "family_link"),
-  family = c("fidc", "fidc", "fidc", "fii", "fii", "fii", "fii", "fip", "fip", "fiagro"),
-  table_name = c("inf_mensal_fidc_tab_I", "inf_mensal_fidc_tab_I", "inf_mensal_fidc_tab_I",
-                 "inf_mensal_fii_geral", "inf_trimestral_fii_geral", "inf_mensal_fii_geral",
-                 "inf_trimestral_fii_geral", "inf_trimestral_fip", "inf_quadrimestral_fip", "inf_mensal_fiagro"),
-  column = c("CONDOM", "FUNDO_EXCLUSIVO", "COTST_INTERESSE", "Fundo_Exclusivo", "Fundo_Exclusivo",
-             "Cotistas_Vinculo_Familiar", "Cotistas_Vinculo_Familiar", "ENTID_INVEST", "ENTID_INVEST",
-             "Cotistas_Vinculo_Familiar"),
-  stringsAsFactors = FALSE)
+fund_attribute_specs <- local({
+  s <- function(attribute, family, tables, column) data.frame(attribute = attribute, family = family,
+                                                              table_name = tables, column = column, stringsAsFactors = FALSE)
+  fii <- c("inf_mensal_fii_geral", "inf_trimestral_fii_geral")
+  fip <- c("inf_trimestral_fip", "inf_quadrimestral_fip")
+  rbind(
+    s("condominium", "fidc", "inf_mensal_fidc_tab_I", "CONDOM"),
+    s("exclusive", "fidc", "inf_mensal_fidc_tab_I", "FUNDO_EXCLUSIVO"),
+    s("single_interest", "fidc", "inf_mensal_fidc_tab_I", "COTST_INTERESSE"),
+    s("exclusive", "fii", fii, "Fundo_Exclusivo"),
+    s("family_link", "fii", fii, "Cotistas_Vinculo_Familiar"),
+    s("public", "fii", c(fii, "inf_anual_fii_geral"), "Publico_Alvo"),
+    s("investment_entity", "fip", fip, "ENTID_INVEST"),
+    s("public", "fip", fip, "PUBLICO_ALVO"),
+    s("political_rights", "fip", fip, "DIREITO_POLIT_CLASSE"),
+    s("economic_rights", "fip", fip, "DIREITO_ECON_CLASSE"),
+    s("subscribed_pct", "fip", fip, "PR_TOTAL_COTA_SUBSCR"),
+    s("family_link", "fiagro", "inf_mensal_fiagro", "Cotistas_Vinculo_Familiar"),
+    s("public", "fiagro", "inf_mensal_fiagro", "Publico_Alvo"))
+})
 
 fund_attribute_labels <- c(
   condominium = "Condomínio", exclusive = "Fundo exclusivo",
   single_interest = "Cotistas com interesse único e indissociável",
   investment_entity = "Entidade de investimento",
-  family_link = "Cotistas com vínculo familiar ou societário familiar")
+  family_link = "Cotistas com vínculo familiar ou societário familiar",
+  public = "Público-alvo",
+  political_rights = "Classe de cotas com direitos políticos especiais",
+  economic_rights = "Classe de cotas com distintos direitos econômico-financeiros",
+  subscribed_pct = "Percentual total das cotas subscritas")
+
+# Short headers of the list columns (the full label goes to the tooltip).
+fund_attribute_short <- c(
+  condominium = "Condomínio", exclusive = "Exclusivo", single_interest = "Interesse único",
+  investment_entity = "Ent. invest.", family_link = "Vínculo fam.", public = "Público-alvo",
+  political_rights = "Dir. políticos", economic_rights = "Dir. econ.", subscribed_pct = "% subscritas")
+
+# Medium labels of the Ficha grid and the filter panel (full label in the tooltip).
+fund_attribute_medium <- c(
+  condominium = "Condomínio", exclusive = "Fundo exclusivo", investment_entity = "Entidade de investimento",
+  single_interest = "Interesse único e indissociável", family_link = "Vínculo familiar ou societário",
+  public = "Público-alvo", political_rights = "Direitos políticos especiais",
+  economic_rights = "Direitos econ.-financeiros distintos", subscribed_pct = "Cotas subscritas")
+
+# Order of the characteristics in the Ficha, the list and the filters.
+fund_attribute_order <- c("condominium", "exclusive", "investment_entity", "single_interest", "family_link",
+                          "public", "political_rights", "economic_rights", "subscribed_pct")
+# Numeric characteristics (percent); the others are categories (S/N or text).
+fund_attribute_numeric <- "subscribed_pct"
+
+# Values highlighted wherever the characteristic is shown (developer decision):
+# not an investment entity; class of quotas with special political rights or
+# with distinct economic rights. A joined value is highlighted when any part is.
+fund_attribute_alert_values <- c(investment_entity = "N", political_rights = "S", economic_rights = "S")
+fund_attribute_alert <- function(attribute, value) {
+  target <- fund_attribute_alert_values[attribute]
+  if (is.na(target)) return(rep(FALSE, length(value)))
+  vapply(value, function(v) !is.na(v) && target %in% strsplit(v, " / ", fixed = TRUE)[[1]], logical(1), USE.NAMES = FALSE)
+}
+
+# Characteristics shown for a set of families (Ficha chips and filters): the
+# first four always, the others when at least one family publishes them.
+fund_attribute_core <- c("condominium", "exclusive", "investment_entity", "single_interest")
+fund_display_attributes <- function(families) {
+  pub <- vapply(fund_attribute_order, function(a) any(fund_attribute_families(a) %in% families), logical(1))
+  fund_attribute_order[fund_attribute_order %in% fund_attribute_core | pub]
+}
 
 # Explanatory notes on CVM fields (text of the developer, decision_0042),
 # shown wherever the field appears: characteristics, filters, Ficha and Série
@@ -148,6 +198,84 @@ fund_field_notes <- list(ENTID_INVEST = c(
         "requisitos legais e regulamentares, considerando a classe, a modalidade do fundo e a legislação vigente em",
         "cada competência.")))
 
+# Explanatory hints (ⓘ popover) of characteristics, the single source of the
+# texts for the app and the published panel (fund_hint_json, read by
+# tm_app_script). Each one: title and sections (heading, paragraphs); a
+# paragraph "Sim: ..." shows its lead in bold. "Fonte (CVM)" holds facts of
+# the CVM data dictionary and data; "Relevância tributária" holds analytical
+# interpretation, never conclusions. Texts of the developer (.claude/doit.txt),
+# references checked against the official texts (Planalto; CVM Res. 175, Anexo IV).
+fund_hint_reference <- c(
+  cvm175 = paste("Resolução CVM nº 175/2022, Anexo Normativo IV (FIP): o regulamento pode atribuir a subclasses",
+                 "direitos econômico-financeiros distintos e trata dos direitos políticos e econômicos de cada",
+                 "subclasse, quando houver."),
+  lei14754 = paste("Lei nº 14.754/2023, art. 23: conceito de entidade de investimento (gestão profissional e",
+                   "discricionária), regulamentado pelo Conselho Monetário Nacional; aplicável quando pertinente ao",
+                   "regime tributário analisado."))
+fund_hint_source <- function(column, definition) {
+  c(sprintf(paste("Campo %s dos informes trimestral (2017 a 2023) e quadrimestral (desde 2024) do FIP.",
+                  "Dicionário de dados da CVM: “%s”."), column, definition),
+    paste("Informado por classe de cotas, na competência do informe: classes do mesmo fundo podem ter valores",
+          "diferentes, e todos aparecem (“não / sim”). FIDC, FII e FIAGRO não publicam este campo."))
+}
+fund_attribute_hints <- list(
+  political_rights = list(title = "Direitos políticos especiais", sections = list(
+    list("Fonte (CVM)", fund_hint_source("DIREITO_POLIT_CLASSE", "Indica se a classe de cotas possui direitos políticos especiais")),
+    list("Descrição", paste("Indica se determinada classe de cotas possui direitos políticos diferenciados, como voto",
+                            "especial, poder de veto ou participação em decisões específicas do fundo.")),
+    list("Interpretação", c(
+      "Sim: a classe possui prerrogativas políticas especiais previstas nos documentos constitutivos do fundo.",
+      "Não: não há indicação de direitos políticos especiais no campo informado.",
+      paste("Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo",
+            "vazio no informe; não equivale a “não”)."))),
+    list("Relevância tributária (interpretação analítica)", c(
+      paste("Esses direitos podem ser relevantes para avaliar a influência dos cotistas sobre a gestão, especialmente",
+            "a efetiva discricionariedade do gestor e o enquadramento como entidade de investimento, quando esse",
+            "conceito for aplicável ao regime tributário analisado."),
+      paste("Recomenda-se verificar se os direitos permitem aos cotistas interferir efetivamente nas decisões de",
+            "investimento, restringindo a autonomia do gestor."))),
+    list("Atenção", paste("A existência de direitos políticos especiais não implica, isoladamente, controle do gestor",
+                          "pelos cotistas, irregularidade ou desenquadramento tributário.")),
+    list("Referências normativas", unname(fund_hint_reference[c("cvm175", "lei14754")])))),
+  economic_rights = list(title = "Direitos econômico-financeiros distintos", sections = list(
+    list("Fonte (CVM)", fund_hint_source("DIREITO_ECON_CLASSE", "Indica se a classe de cotas possui distintos direitos econômico-financeiros")),
+    list("Descrição", paste("Indica se determinada classe de cotas possui direitos econômico-financeiros diferenciados,",
+                            "relacionados à distribuição de rendimentos, amortizações, resgates ou participação em perdas,",
+                            "conforme a estrutura e o regulamento do fundo.")),
+    list("Interpretação", c(
+      "Sim: existem direitos econômicos diferenciados atribuídos às cotas, conforme os documentos aplicáveis.",
+      "Não: não há indicação desses direitos diferenciados no campo informado.",
+      paste("Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo",
+            "vazio no informe; não equivale a “não”)."))),
+    list("Relevância tributária (interpretação analítica)", c(
+      "Pode indicar assimetria na distribuição de riscos e retornos entre investidores.",
+      paste("Recomenda-se examinar se a estrutura reflete efetiva exposição econômica dos cotistas ou relações que",
+            "mereçam investigação adicional, especialmente quando houver concentração de cotas, vínculos societários",
+            "ou participação de empresas de um mesmo grupo econômico."))),
+    list("Atenção", paste("Direitos econômicos diferenciados são admitidos em determinadas estruturas de fundos e não",
+                          "constituem, isoladamente, indício de planejamento tributário abusivo ou irregularidade.")),
+    list("Referências normativas", unname(fund_hint_reference[c("cvm175", "lei14754")])))))
+
+# Joint notice: shown only when one class of quotas has both indicators = sim
+# in the same line of the latest report (fund_joint_rights); informative only,
+# it changes no classification or highlight.
+fund_joint_hint <- list(
+  title = "Análise conjunta de direitos especiais",
+  text = paste("Esta classe apresenta direitos políticos especiais e direitos econômico-financeiros distintos.",
+               "Recomenda-se examinar conjuntamente a estrutura de governança, os poderes efetivos dos cotistas, a",
+               "discricionariedade do gestor e a distribuição de riscos e retornos. A combinação desses indicadores",
+               "não caracteriza, isoladamente, irregularidade ou desenquadramento tributário."))
+
+# JSON of the hints for the browser (window.TM_INFO).
+fund_hint_json <- function() {
+  js <- function(x) paste0("\"", gsub("\"", "\\\\\"", gsub("\\\\", "\\\\\\\\", x)), "\"")
+  hint <- function(h) sprintf("{\"title\":%s,\"sections\":[%s]}", js(h$title), paste(vapply(h$sections, function(s)
+    sprintf("[%s,[%s]]", js(s[[1]]), paste(js(s[[2]]), collapse = ",")), ""), collapse = ","))
+  sprintf("{%s,\"joint\":{\"title\":%s,\"text\":%s}}",
+          paste(sprintf("%s:%s", js(names(fund_attribute_hints)), vapply(fund_attribute_hints, hint, "")), collapse = ","),
+          js(fund_joint_hint$title), js(fund_joint_hint$text))
+}
+
 # Note of each field as text appended to a tooltip ("" when there is none).
 fund_field_note_text <- function(fields) {
   vapply(fields, function(f) {
@@ -162,6 +290,9 @@ fund_attribute_families <- function(attribute) {
 }
 
 # rows: fund_cnpj_normalized, value, period columns; one result row per fund.
+# Reports with one line per class of quotas (FIP) can publish different values
+# in the same period: the distinct values of the latest period are all kept,
+# sorted and joined with " / " (never one class picked over the others).
 latest_attribute <- function(rows) {
   v <- trimws(rows$value)
   rows <- rows[!is.na(v) & nzchar(v) & !is.na(rows$fund_cnpj_normalized), , drop = FALSE]
@@ -171,8 +302,26 @@ latest_attribute <- function(rows) {
   o <- order(rows$fund_cnpj_normalized, period, decreasing = c(FALSE, TRUE), na.last = TRUE, method = "radix")
   rows <- rows[o, , drop = FALSE]; v <- v[o]; period <- period[o]
   first <- !duplicated(rows$fund_cnpj_normalized)
-  data.frame(fund_cnpj = rows$fund_cnpj_normalized[first], value = v[first],
+  latest <- period[first][match(rows$fund_cnpj_normalized, rows$fund_cnpj_normalized[first])]
+  same <- (is.na(latest) & is.na(period)) | (!is.na(latest) & !is.na(period) & period == latest)
+  joined <- tapply(v[same], factor(rows$fund_cnpj_normalized[same], levels = unique(rows$fund_cnpj_normalized)),
+                   function(x) paste(sort(unique(x), method = "radix"), collapse = " / "))
+  data.frame(fund_cnpj = rows$fund_cnpj_normalized[first], value = unname(as.character(joined)),
              period = substr(period[first], 1L, 7L), stringsAsFactors = FALSE)
+}
+
+# Display text of attribute values: S/N as sim/não (each part of a joined
+# value), percentages in pt-BR with two decimals, other text in lower case.
+fund_attribute_value_text <- function(attribute, value) {
+  vapply(value, function(v) {
+    if (is.na(v)) return(NA_character_)
+    parts <- strsplit(v, " / ", fixed = TRUE)[[1]]
+    out <- if (attribute %in% fund_attribute_numeric) {
+      n <- suppressWarnings(as.numeric(parts))
+      ifelse(is.na(n), parts, paste0(formatC(n, format = "f", digits = 2, big.mark = ".", decimal.mark = ","), "%"))
+    } else ifelse(parts == "S", "sim", ifelse(parts == "N", "não", tolower(parts)))
+    paste(unique(out), collapse = " / ")
+  }, character(1), USE.NAMES = FALSE)
 }
 
 # Long table: family, fund_cnpj, attribute, value, period.
@@ -196,9 +345,47 @@ fund_attributes <- function(root, specs = fund_attribute_specs) {
     if (nrow(l)) out[[key]] <- data.frame(family = s$family[1], fund_cnpj = l$fund_cnpj, attribute = s$attribute[1],
                                           value = l$value, period = l$period, stringsAsFactors = FALSE)
   }
+  out[["joint"]] <- fund_joint_rights(root)
   if (!length(out)) return(data.frame(family = character(), fund_cnpj = character(), attribute = character(),
                                       value = character(), period = character()))
   do.call(rbind, unname(out))
+}
+
+# Funds with at least one class of quotas whose line in the latest FIP report
+# (the latest period with either field filled) has DIREITO_POLIT_CLASSE = S and
+# DIREITO_ECON_CLASSE = S: attribute "joint_rights", value = number of such
+# classes in that line set. Not in fund_attribute_order: no column or filter.
+fund_joint_rights <- function(root) {
+  base <- fund_processed_paths(root)$base
+  cols <- c("DIREITO_POLIT_CLASSE", "DIREITO_ECON_CLASSE")
+  rows <- do.call(rbind, lapply(c("inf_trimestral_fip", "inf_quadrimestral_fip"), function(tn) {
+    if (!dir.exists(file.path(base, "fip", tn))) return(NULL)
+    df <- read_fund_columns(root, "fip", tn, c("fund_cnpj_normalized", cols, fund_period_columns))
+    if (!all(cols %in% names(df))) return(NULL)
+    for (column in setdiff(fund_period_columns, names(df))) df[[column]] <- NA_character_
+    df[, c("fund_cnpj_normalized", cols, fund_period_columns), drop = FALSE]
+  }))
+  fund_joint_from_rows(rows)
+}
+
+# rows: fund_cnpj_normalized, DIREITO_POLIT_CLASSE, DIREITO_ECON_CLASSE and the
+# period columns, one line per class of quotas.
+fund_joint_from_rows <- function(rows) {
+  empty <- data.frame(family = character(), fund_cnpj = character(), attribute = character(),
+                      value = character(), period = character())
+  if (is.null(rows) || !nrow(rows)) return(empty)
+  pol <- toupper(trimws(rows$DIREITO_POLIT_CLASSE)); eco <- toupper(trimws(rows$DIREITO_ECON_CLASSE))
+  filled <- !is.na(rows$fund_cnpj_normalized) & ((!is.na(pol) & nzchar(pol)) | (!is.na(eco) & nzchar(eco)))
+  rows <- rows[filled, , drop = FALSE]; pol <- pol[filled]; eco <- eco[filled]
+  period <- row_period(rows)
+  latest <- tapply(period, rows$fund_cnpj_normalized, max, na.rm = TRUE)
+  at <- !is.na(period) & period == latest[rows$fund_cnpj_normalized]
+  both <- at & pol %in% "S" & eco %in% "S"
+  if (!any(both)) return(empty)
+  n <- tapply(both, rows$fund_cnpj_normalized, sum)
+  n <- n[n > 0]
+  data.frame(family = "fip", fund_cnpj = names(n), attribute = "joint_rights", value = as.character(n),
+             period = substr(latest[names(n)], 1L, 7L), stringsAsFactors = FALSE)
 }
 
 # Display text of one characteristic of one fund ("sim", "não", "fechado",
@@ -207,8 +394,85 @@ fund_attribute_text <- function(attributes, family, cnpj, attribute) {
   if (!family %in% fund_attribute_families(attribute)) return(list(text = "não consta do informe", period = NA_character_))
   k <- which(attributes$family == family & attributes$fund_cnpj == cnpj & attributes$attribute == attribute)
   if (!length(k)) return(list(text = "não informado", period = NA_character_))
-  v <- attributes$value[k[1]]
-  list(text = switch(v, S = "sim", N = "não", tolower(v)), period = attributes$period[k[1]])
+  list(text = fund_attribute_value_text(attribute, attributes$value[k[1]]), period = attributes$period[k[1]])
+}
+
+# Wide table of the characteristics: one row per family and fund, one column
+# per attribute (published value, NA when not filled or not in the report).
+fund_attribute_wide <- function(attributes, family, cnpj) {
+  key <- paste(family, cnpj)
+  out <- data.frame(row.names = seq_along(key))
+  for (a in fund_attribute_order) {
+    x <- attributes[attributes$attribute == a, , drop = FALSE]
+    out[[a]] <- x$value[match(key, paste(x$family, x$fund_cnpj))]
+  }
+  out
+}
+
+# Filter values of the categorical characteristics: "" (all), "NA" (published
+# by the family but not filled), "NC" (not in the family's report) or a value
+# key (fund_attribute_key). Numeric
+# ones take c(min, max) (NA for an open bound). A set filter keeps only the
+# families whose report has the field; a joined value (several classes) passes
+# when any of its parts does.
+# Singular and plural forms of the target audience (FII publishes "INVESTIDOR
+# PROFISSIONAL", FIP "Investidores profissionais") share one key.
+fund_attribute_key <- function(x) {
+  k <- tolower(trimws(x))
+  k <- gsub("\\binvestidores\\b", "investidor", k, perl = TRUE)
+  k <- gsub("\\bprofissionais\\b", "profissional", k, perl = TRUE)
+  gsub("\\bqualificados\\b", "qualificado", k, perl = TRUE)
+}
+
+# Option text of a target-audience key, in the plural ("Investidores qualificados").
+fund_public_text <- function(key) {
+  t <- gsub("\\binvestidor\\b", "investidores", key, perl = TRUE)
+  t <- gsub("\\bprofissional\\b", "profissionais", t, perl = TRUE)
+  t <- gsub("\\bqualificado\\b", "qualificados", t, perl = TRUE)
+  paste0(toupper(substr(t, 1, 1)), substr(t, 2, nchar(t)))
+}
+
+filter_fund_attributes <- function(rows, attributes, filters) {
+  if (is.null(attributes) || !nrow(rows)) return(rows)
+  keep <- rep(TRUE, nrow(rows))
+  for (a in names(filters)) {
+    f <- filters[[a]]
+    if (is.null(f) || !length(f)) next
+    fams <- fund_attribute_families(a)
+    x <- attributes[attributes$attribute == a, , drop = FALSE]
+    v <- x$value[match(paste(rows$family, rows$fund_cnpj), paste(x$family, x$fund_cnpj))]
+    parts <- strsplit(ifelse(is.na(v), "", v), " / ", fixed = TRUE)
+    if (a %in% fund_attribute_numeric) {
+      f <- suppressWarnings(as.numeric(f))
+      if (length(f) < 2L || all(is.na(f))) next
+      ok <- vapply(parts, function(p) {
+        n <- suppressWarnings(as.numeric(p))
+        any(!is.na(n) & (is.na(f[1]) | n >= f[1]) & (is.na(f[2]) | n <= f[2]))
+      }, logical(1))
+    } else {
+      f <- f[1]
+      if (is.na(f) || !nzchar(f)) next
+      # "NC": funds whose family's report does not have the field.
+      if (f == "NC") { keep <- keep & !rows$family %in% fams; next }
+      ok <- if (f == "NA") is.na(v) else vapply(parts, function(p) f %in% fund_attribute_key(p), logical(1))
+    }
+    keep <- keep & rows$family %in% fams & ok
+  }
+  rows[keep, , drop = FALSE]
+}
+
+# Options of a categorical filter for the families in scope: value key and
+# display text, most frequent first, then "não informado".
+fund_attribute_choices <- function(attributes, attribute, families) {
+  x <- attributes[attributes$attribute == attribute & attributes$family %in% families, , drop = FALSE]
+  parts <- unlist(strsplit(x$value, " / ", fixed = TRUE))
+  if (!length(parts)) return(character())
+  key <- fund_attribute_key(parts)
+  n <- sort(table(key), decreasing = TRUE)
+  text <- if (attribute == "public") fund_public_text(names(n))
+          else fund_attribute_value_text(attribute, parts[match(names(n), key)])
+  text <- paste0(toupper(substr(text, 1, 1)), substr(text, 2, nchar(text)))
+  stats::setNames(names(n), text)
 }
 
 # Keeps the FIPs whose latest indicator is `value` ("S", "N" or "NA" for not

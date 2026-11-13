@@ -23,6 +23,13 @@ gov_esc <- function(x) htmltools::htmlEscape(as.character(x), attribute = TRUE)
 gov_br_int <- function(v) formatC(v, format = "d", big.mark = ".", decimal.mark = ",")
 gov_fmt_time <- function(t) ifelse(is.na(t), "—", format(t, "%d/%m/%Y %H:%M", tz = "America/Sao_Paulo"))
 gov_short <- function(x, n = 90L) ifelse(nchar(x) > n, paste0(substr(x, 1L, n - 1L), "…"), x)
+
+# Transitions with field names, states and actors in Portuguese (display only).
+gov_localize_transitions <- function(t) {
+  for (col in intersect(c("field"), names(t))) t[[col]] <- governance_field_label(t[[col]])
+  for (col in intersect(c("from_status", "to_status", "actor"), names(t))) t[[col]] <- governance_value_label(t[[col]])
+  t
+}
 gov_kind <- function(id) {
   p <- sub("_\\d+$", "", id)
   k <- c(request = "request", req = "requirement", work = "work_item", exec = "execution", test = "test",
@@ -85,7 +92,9 @@ gov_card <- function(title, ..., note = NULL, id = NULL) {
 
 governance_ui <- function(id) {
   ns <- shiny::NS(id)
-  shiny::div(class = "tm-page tm-gov",
+  # Fills the window (Governança is fillable in prototype/app.R): header and filters
+  # fixed, the sub-tab below takes the rest and only its cards scroll.
+  page <- shiny::div(class = "tm-page tm-gov",
     shiny::div(class = "tm-hero tm-gov-hero",
       shiny::div(class = "tm-eyebrow", "TaxMiner Governance · somente o proprietário"),
       shiny::h1("Governança do projeto"),
@@ -114,7 +123,7 @@ governance_ui <- function(id) {
                                                 "manual" = 0), selected = 150),
                  shiny::actionButton(ns("refresh"), "Atualizar agora", class = "btn-sm"),
                  shiny::actionButton(ns("clear"), "Limpar filtros", class = "btn-sm btn-link"))),
-    bslib::navset_underline(
+    shiny::div(class = "tm-gov-tabs", bslib::navset_underline(
       id = ns("tabs"),
       bslib::nav_panel("Visão geral",
         shiny::uiOutput(ns("kpis")),
@@ -152,7 +161,8 @@ governance_ui <- function(id) {
         gov_card("Trilha de auditoria", shiny::uiOutput(ns("audit")),
                  note = shiny::span("últimos 200 eventos · ",
                                     shiny::downloadLink(ns("export_md"), "relatório (.md)"), " · ",
-                                    shiny::downloadLink(ns("export_csv"), "trilha (.csv)"))))))
+                                    shiny::downloadLink(ns("export_csv"), "trilha (.csv)")))))))
+  htmltools::bindFillRole(page, container = TRUE, item = TRUE)
 }
 
 governance_server <- function(id, root, now = Sys.time) {
@@ -170,7 +180,8 @@ governance_server <- function(id, root, now = Sys.time) {
         }
         sig <- governance_signature(dir)
         if (force || !identical(sig, shiny::isolate(state$sig))) {
-          regs <- governance_read(dir)
+          # Free-text fields shown in Portuguese (config/governance_texts_pt.csv); codes unchanged.
+          regs <- governance_localize(governance_read(dir), governance_texts_read(governance_texts_path(root)))
           state$imm <- tryCatch(governance_immutable_check(root), error = function(e) NULL)
           state$regs <- regs
           state$sig <- sig
@@ -194,7 +205,9 @@ governance_server <- function(id, root, now = Sys.time) {
       ch <- governance_filter_choices(state$regs)
       for (n in c("agent", "module", "priority", "status")) {
         keep <- shiny::isolate(input[[n]])
-        shiny::updateSelectizeInput(session, n, choices = union(ch[[n]], keep), selected = keep)
+        v <- union(ch[[n]], keep)
+        # Values stay as recorded (the filter compares them); labels in Portuguese.
+        shiny::updateSelectizeInput(session, n, choices = stats::setNames(v, governance_value_label(v)), selected = keep)
       }
     })
     shiny::observeEvent(input$clear, {
@@ -392,26 +405,27 @@ governance_server <- function(id, root, now = Sys.time) {
       g <- governance_graph(state$regs, focus())
       n <- g$nodes
       cols <- sort(unique(n$column))
-      W <- 980; colw <- W / 5
+      # Compact boxes: 60% of the column wide, 16 high, rows 21 apart.
+      W <- 980; colw <- W / 5; bw <- round(colw * 0.6)
       n$x <- 10 + (n$column - 1) * colw
-      n$y <- stats::ave(seq_len(nrow(n)), n$column, FUN = seq_along) * 30 + 6
-      H <- max(n$y) + 20
+      n$y <- stats::ave(seq_len(nrow(n)), n$column, FUN = seq_along) * 21 + 8
+      H <- max(n$y) + 14
       pos <- function(i, what) n[[what]][match(i, n$id)]
       edges <- if (nrow(g$edges)) vapply(seq_len(nrow(g$edges)), function(k) {
         a <- g$edges$from[k]; b <- g$edges$to[k]
-        x1 <- pos(a, "x") + colw - 30; y1 <- pos(a, "y"); x2 <- pos(b, "x"); y2 <- pos(b, "y")
-        if (x2 < x1) { tmp <- x1; x1 <- pos(b, "x") + colw - 30; x2 <- pos(a, "x"); y1 <- pos(b, "y"); y2 <- pos(a, "y") }
+        x1 <- pos(a, "x") + bw; y1 <- pos(a, "y"); x2 <- pos(b, "x"); y2 <- pos(b, "y")
+        if (x2 < x1) { tmp <- x1; x1 <- pos(b, "x") + bw; x2 <- pos(a, "x"); y1 <- pos(b, "y"); y2 <- pos(a, "y") }
         sprintf('<path class="tm-gov-edge" d="M%.1f %.1f C%.1f %.1f %.1f %.1f %.1f %.1f"/>', x1, y1, (x1 + x2) / 2, y1, (x1 + x2) / 2, y2, x2, y2)
       }, character(1)) else character()
       nodes <- vapply(seq_len(nrow(n)), function(k) {
         clickable <- !n$kind[k] %in% c("commit", "evidence", "other")
-        text <- gov_short(if (n$kind[k] %in% c("commit", "evidence")) n$label[k] else n$id[k], 26L)
+        text <- gov_short(if (n$kind[k] %in% c("commit", "evidence")) n$label[k] else n$id[k], 20L)
         tip <- paste0(gov_kind_labels[[n$kind[k]]], ": ", n$id[k], if (nzchar(n$label[k]) && !n$kind[k] %in% c("commit", "evidence")) paste0("\n", gov_short(n$label[k], 160L)) else "")
-        sprintf('<g class="tm-gov-node%s%s"%s data-tip="%s"><rect x="%.1f" y="%.1f" width="%.1f" height="22" rx="3" style="stroke:%s"/><circle cx="%.1f" cy="%.1f" r="4" fill="%s"/><text x="%.1f" y="%.1f">%s</text></g>',
+        sprintf('<g class="tm-gov-node%s%s"%s data-tip="%s"><rect x="%.1f" y="%.1f" width="%.1f" height="16" rx="3" style="stroke:%s"/><circle cx="%.1f" cy="%.1f" r="3" fill="%s"/><text x="%.1f" y="%.1f">%s</text></g>',
                 if (n$focus[k]) " tm-gov-focus" else "", if (clickable) " tm-pick" else "",
                 if (clickable) sprintf(' data-key="%s" data-input="%s"', gov_esc(n$id[k]), gov_esc(ns("pick"))) else "",
-                gov_esc(tip), n$x[k], n$y[k] - 11, colw - 30, gov_kind_colors[[n$kind[k]]], n$x[k] + 10, n$y[k],
-                gov_kind_colors[[n$kind[k]]], n$x[k] + 20, n$y[k] + 4, gov_esc(text))
+                gov_esc(tip), n$x[k], n$y[k] - 8, bw, gov_kind_colors[[n$kind[k]]], n$x[k] + 8, n$y[k],
+                gov_kind_colors[[n$kind[k]]], n$x[k] + 15, n$y[k] + 3, gov_esc(text))
       }, character(1))
       heads <- c("Solicitações", "Requisitos", "Itens de trabalho", "Execuções · testes · aceites", "Commits · evidências")
       hd <- paste(sprintf('<text class="tm-gov-axis" x="%.1f" y="10">%s</text>', 10 + (0:4) * colw, heads), collapse = "")
@@ -430,7 +444,10 @@ governance_server <- function(id, root, now = Sys.time) {
       if (!nrow(row)) return(NULL)
       fields <- data.frame(campo = names(row), valor = unlist(row[1, ], use.names = FALSE), stringsAsFactors = FALSE)
       fields <- fields[nzchar(fields$valor), , drop = FALSE]
+      fields$valor <- governance_value_label(fields$valor)
+      fields$campo <- governance_field_label(fields$campo)
       hist <- r$transitions[r$transitions$entity_id == i, c("transition_id", "changed_at", "field", "from_status", "to_status", "actor", "evidence"), drop = FALSE]
+      hist <- gov_localize_transitions(hist)
       shiny::div(class = "tm-gov-detail",
         shiny::div(shiny::div(class = "tm-gov-sub", sprintf("%s — %s", gov_kind_labels[[gov_kind(i)]], i)),
                    gov_table(fields, c("Campo", "Valor"))),
@@ -492,7 +509,7 @@ governance_server <- function(id, root, now = Sys.time) {
 
     output$requirements <- shiny::renderUI({
       q <- governance_requirement_view(filtered())
-      tab <- data.frame(id = q$id, desc = gov_short(q$description, 150L), mod = q$module,
+      tab <- data.frame(id = q$id, desc = gov_short(q$description, 150L), mod = governance_value_label(q$module),
                         pri = ifelse(q$priority == "high", "alta", ifelse(q$priority == "medium", "média", q$priority)),
                         st = gov_badge(governance_label("requirement", q$status), gov_requirement_tone(q$status)),
                         prog = gov_progress(q$accepted, q$items), wait = gov_br_int(q$waiting), open = gov_br_int(q$open),
@@ -519,7 +536,7 @@ governance_server <- function(id, root, now = Sys.time) {
 
     audit <- shiny::reactive(governance_audit(filtered(), 200L))
     output$audit <- shiny::renderUI({
-      a <- audit()
+      a <- gov_localize_transitions(audit())
       gov_table(a[, c("transition_id", "changed_at", "entity_id", "field", "from_status", "to_status", "actor", "evidence"), drop = FALSE],
                 c("Transição", "Quando", "Registro", "Campo", "De", "Para", "Quem", "Evidência"),
                 pick = "entity_id", input = ns("pick"), empty = "Nenhum evento no período.")

@@ -195,7 +195,7 @@ change_badge <- function(x, suffix = "em 12 meses") {
 # their `data-key` to the Shiny input `data-input` or, without Shiny (static
 # page), show the pre-rendered panel `[data-detail=key]`.
 tm_app_script <- function() {
-  shiny::tags$script(shiny::HTML("
+  shiny::tagList(shiny::tags$script(shiny::HTML("
 // Nested tabs (tm_fund_tabs): show a tab by its value anywhere on the page,
 // opening its parent tabs first; a pane is visible only when every enclosing
 // tab pane is active.
@@ -321,7 +321,71 @@ $(function() {
       for (var j = 0; j < seen.length; j++) if (seen[j]) markNegative(seen[j].closest(VALUES) || seen[j]);
     });
   }).observe(document.body, {childList: true, subtree: true, characterData: true});
-});"))
+});")), tm_info_script())
+}
+
+# Explanatory popovers (ⓘ, fund_attribute_hints): a button .tm-info[data-info]
+# beside the name of an indicator opens a panel with the sections; click,
+# Enter, Space or touch open and close it, Esc and a click outside close it,
+# and focus returns to the button. The texts come from one place
+# (fund_hint_json) as window.TM_INFO, in the app and in the published panel.
+tm_info_button <- function(key, label) {
+  shiny::tags$button(type = "button", class = "tm-info", `data-info` = key,
+                     `aria-label` = paste("Sobre:", label), `aria-expanded` = "false", "ⓘ")
+}
+
+tm_info_script <- function() {
+  json <- if (exists("fund_hint_json", mode = "function")) fund_hint_json() else "{}"
+  shiny::tags$script(shiny::HTML(paste0("window.TM_INFO = ", json, ";\n", r"---(
+$(function() {
+  var pop = null, owner = null;
+  function close(back) {
+    if (!pop) return;
+    pop.remove(); pop = null;
+    if (owner) { owner.attr('aria-expanded', 'false'); if (back) owner.trigger('focus'); }
+    owner = null;
+  }
+  function para(t) {
+    var m = /^([^:]{2,40}):\s+(.*)$/.exec(t), p = $('<p>');
+    if (m) p.append($('<b>').text(m[1] + ':'), document.createTextNode(' ' + m[2])); else p.text(t);
+    return p;
+  }
+  function open(btn) {
+    var h = (window.TM_INFO || {})[btn.attr('data-info')];
+    if (!h) return;
+    close(false);
+    owner = btn.attr('aria-expanded', 'true');
+    var id = 'tm-info-' + Date.now();
+    pop = $('<div>').addClass('tm-info-pop').attr({role: 'dialog', 'aria-labelledby': id, tabindex: '-1'});
+    pop.append($('<div>').addClass('tm-info-head').append(
+      $('<div>').addClass('tm-info-title').attr('id', id).text(h.title),
+      $('<button type="button">').addClass('tm-info-close').attr('aria-label', 'Fechar').text('×')));
+    (h.sections || []).forEach(function(s) {
+      var sec = $('<section>').append($('<h4>').text(s[0]));
+      s[1].forEach(function(t) { sec.append(para(t)); });
+      pop.append(sec);
+    });
+    pop.appendTo('body');
+    // Below the button when it fits, else above; inside the window on phones.
+    var r = btn[0].getBoundingClientRect(), w = pop.outerWidth(), vw = $(window).width(), vh = $(window).height();
+    var left = Math.max(8, Math.min(r.left, vw - w - 8)), top = r.bottom + 6;
+    if (top + pop.outerHeight() > vh - 8 && r.top - pop.outerHeight() - 6 > 8) top = r.top - pop.outerHeight() - 6;
+    pop.css({left: left, top: Math.max(8, top)});
+    pop.trigger('focus');
+  }
+  $(document).on('click', '.tm-info', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    var b = $(this);
+    if (owner && owner[0] === this) close(true); else open(b);
+  }).on('click', '.tm-info-close', function(e) { e.stopPropagation(); close(true); })
+    .on('mousedown touchstart', function(e) {
+      if (pop && !$(e.target).closest('.tm-info-pop, .tm-info').length) close(false);
+    }).on('keydown', function(e) { if (e.key === 'Escape' && pop) close(true); })
+    // A button inside a sortable header or a summary must not sort or toggle.
+    .on('keydown', '.tm-info', function(e) { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); });
+  $(window).on('resize scroll', function() { close(false); });
+});
+)---")))
 }
 
 # Navbar brand: white emblem (rfb_emblem.png, cropped from the supplied logo), a thin rule,
