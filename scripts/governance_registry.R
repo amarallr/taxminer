@@ -22,6 +22,14 @@
 #       [--outcome=...] [--input_tokens=N] [--output_tokens=N] [--cached_tokens=N] [--reported_cost=X]
 #   Rscript --vanilla scripts/governance_registry.R reconcile [--max_hours=12]   (open executions without end -> unknown)
 #   Rscript --vanilla scripts/governance_registry.R capability-report   (writes reports/governance/capability_matrix.md)
+# Planning and context optimization (phase 03):
+#   Rscript --vanilla scripts/governance_registry.R plan-report   (writes reports/governance/planning_report.md)
+#   Rscript --vanilla scripts/governance_registry.R plan --id=req_0014
+#   Rscript --vanilla scripts/governance_registry.R dedup --text="..." [--module=collect]
+#   Rscript --vanilla scripts/governance_registry.R context --id=req_0021 [--budget=20000]
+#   Rscript --vanilla scripts/governance_registry.R reconcile-requirements   (proposals only)
+#   Rscript --vanilla scripts/governance_registry.R reconcile-requirements --apply=req_0001,req_0002
+#       --decision_id=decision_00NN   (only proposals the developer approved, one by one)
 # `check` also verifies the immutable layer (AGENTS.md, CLAUDE.md, Common P01, Common P08 section 12).
 # Reads and writes docs/project_management/ and reports/governance/ under --root (default "."). Exit status 1 on
 # integrity problems or invalid input.
@@ -29,6 +37,8 @@
 source("src/common/governance_registry.R")
 source("src/common/governance_prompts.R")
 source("src/common/governance_agents.R")
+source("src/common/governance_metrics.R")
+source("src/common/governance_planning.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 command <- if (length(args)) args[1] else "check"
@@ -130,6 +140,32 @@ if (command == "check") {
   dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
   writeLines(enc2utf8(governance_prompt_report(root)), out, useBytes = TRUE)
   cat("Written", out, "\n")
+} else if (command == "plan-report") {
+  out <- file.path(root, "reports", "governance", "planning_report.md")
+  dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
+  writeLines(enc2utf8(governance_planning_report(governance_read(dir))), out, useBytes = TRUE)
+  cat("Written", out, "\n")
+} else if (command == "plan") {
+  p <- governance_plan_requirement(governance_read(dir), opt("id"))
+  cat(sprintf("%s | status %s (items support: %s) | complexity %s | effort %s days (n=%d) | tokens %s | agent %s\n",
+              opt("id"), p$requirement$status, p$status_supported, p$complexity$level,
+              format(p$effort_days$value), p$effort_days$sample, format(p$tokens$value), p$agent$recommended))
+  print(p$tasks, row.names = FALSE)
+  if (length(p$risks)) cat("Risks:", paste(p$risks, collapse = "; "), "\n")
+} else if (command == "dedup") {
+  print(governance_dedup(governance_read(dir), opt("text"), opt("module", ""))[, 1:6], row.names = FALSE)
+} else if (command == "context") {
+  print(governance_context_pack(root, governance_read(dir), opt("id"), as.integer(opt("budget", "20000"))),
+        row.names = FALSE)
+} else if (command == "reconcile-requirements") {
+  if (is.null(opts$apply)) {
+    print(governance_reconcile_requirements(governance_read(dir))[, 1:9], row.names = FALSE)
+  } else {
+    t <- governance_apply_requirement_status(dir, strsplit(opt("apply"), ",", fixed = TRUE)[[1]], opt("decision_id"),
+                                             opt("actor", "developer"))
+    cat("Recorded", paste(t, collapse = " "), "\n")
+    report_problems()
+  }
 } else {
   stop("Unknown command: ", command, call. = FALSE)
 }

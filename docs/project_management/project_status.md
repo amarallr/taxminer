@@ -7,6 +7,15 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 03 — 2026-11-13
+
+- Fase 03 implementada e testada (`work_0037`, `decision_0052`): motor de planejamento
+  determinístico (deduplicação, planos, priorização, estimativas, pacotes de contexto,
+  replanejamento) e propostas de status dos requisitos. Relatório em
+  `reports/governance/planning_report.md`. 155 testes passam.
+- **Aguardando:** aceite da Fase 03; aprovação item a item das propostas de status (P13);
+  confirmações P9; autorização das Fases 07 e 08.
+
 ## TaxMiner Governance — Fase 05 — 2026-11-12
 
 - Fase 04 aceita (`acc_0012`). Fase 05 implementada e testada (`work_0036`, `decision_0050`): aba

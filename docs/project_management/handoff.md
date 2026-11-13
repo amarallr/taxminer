@@ -20,6 +20,9 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
   `scripts/governance_hook.R`, não instalado; leitura de tokens desligada (P9). Aba Governança no
   app local (`prototype/governance_module.R`, `src/common/governance_metrics.R`). Próxima fase: 03
   (aguarda autorização); depois 07 e 08.
+  Fase 03 implementada e testada (`work_0037`, aceite pendente): `src/common/governance_planning.R`;
+  `scripts/governance_registry.R plan-report` gera `reports/governance/planning_report.md`. Status de
+  requisitos só por `reconcile-requirements --apply` com decisão do desenvolvedor. Próximas: 07 e 08.
 - **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e

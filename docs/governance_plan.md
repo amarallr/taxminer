@@ -565,3 +565,77 @@ Fase 04 aceita (`acc_0012`); Fase 05 autorizada em `decision_0050`. Item `work_0
 
 Fase 05 aceita em 2026-11-12T21:19:53-03:00 (`acc_0013`, `decision_0051`); `plan_0005` aprovado. Fases aceitas: 01, 02,
 06, 04 e 05. Pendentes: 03, 07 e 08, cada uma com autorização própria. Itens P9 seguem pendentes.
+
+## 24. Fase 03 — Planning & Token Optimization (executada em 2026-11-13)
+
+Autorizada pelo desenvolvedor ("Sim. Autorizado. Pode seguir.", `decision_0052`). Item `work_0037`.
+A autorização genérica não cobre os itens P9 nem uma nova versão.
+
+### Entregas (`src/common/governance_planning.R`)
+
+- **Deduplicação** (seção 6.3): compara o texto de um pedido novo com requisitos e itens
+  (similaridade de termos). Só sugere ("provável duplicata" ou "relacionado"), marca outro módulo e
+  nunca funde. Também aponta solicitações quase iguais no registro.
+- **Planejamento e decomposição** (seção 7): plano por requisito com tarefas abertas,
+  dependências (itens e requisitos), riscos, critérios de aceite, agente recomendado (com a base da
+  recomendação), complexidade (pontuação explicada), checkpoints e estratégia de testes.
+- **Estimativas**: esforço pela mediana do ciclo de itens aceitos **do mesmo módulo**, com o tamanho
+  da amostra. Abaixo de três itens fica indisponível. Tokens só com execuções informadas; hoje,
+  indisponível.
+- **Priorização transparente**: pontuação = peso da prioridade registrada + itens que o requisito
+  desbloqueia + 1 se já iniciado − penalidade de complexidade. Lê as prioridades; nunca as altera.
+- **Otimização de contexto** (seção 8): pacote por camadas (1 metadados dos registros; 2 resumos
+  validados de `handoff.md` e `project_status.md`; 3 arquivos de evidência como trechos; 4
+  arquivos completos só sob demanda), dentro de um orçamento em caracteres. Caminhos protegidos,
+  absolutos ou com `..` ficam fora.
+- **Replanejamento** (seção 14): o que mudou desde a última revisão aprovada (solicitações,
+  falhas, bloqueios, riscos, execuções, tokens, revisões pendentes).
+- **Reconciliação do status dos requisitos (P13)**: propõe o status que os itens sustentam e marca
+  os casos ambíguos. Só aplica os aprovados pelo desenvolvedor, um a um, com a decisão como
+  evidência (`reconcile-requirements --apply=... --decision_id=...`).
+- Comandos novos: `plan-report` (gera `reports/governance/planning_report.md`), `plan`, `dedup`,
+  `context`, `reconcile-requirements`.
+- Decomposição de `req_0021`: itens `work_0038` (Fase 07) e `work_0039` (Fase 08) registrados
+  como não iniciados.
+- Correção da Fase 05: no funil, `accepted` passa a ser o estado final, como na seção 10 do prompt.
+
+### Gate (validação funcional e de qualidade)
+
+| Controle | Teste |
+| --- | --- |
+| Deduplicação sugere, marca outro módulo e não altera nenhum registro | deduplicação |
+| Propostas de status pela evidência dos itens; sem itens, nenhuma proposta; ambiguidade marcada | reconciliação |
+| Aplica só com `decision_NNNN`, só propostas vigentes, com transição registrada | aplicação |
+| Plano com tarefas, dependências e riscos; esforço só com amostra comparável; tokens nunca estimados sem dado | plano |
+| Pontuação confere com seus componentes; prioridades intactas | priorização |
+| Camadas em ordem, orçamento respeitado, caminhos protegidos excluídos | contexto |
+| Replanejamento desde a última revisão aprovada; relatório gerado | replanejamento |
+
+### Evidências
+
+- 155 testes, 0 falhas (147 anteriores + 8 novos) (`test_0065`, `test_0066`). O único aviso é
+  anterior (`test_fund_analytics.R`).
+- `reports/governance/planning_report.md` gerado com os registros reais; verificação de integridade ok.
+
+### Limitações
+
+- Sem execuções registradas, tokens e agente recomendado por histórico continuam indisponíveis.
+- O ciclo medido vem das transições registradas, não do tempo de trabalho. O histórico importado
+  (aceite como primeira transição) fica fora da amostra.
+
+## 25. Checkpoint 6 (chk_0006)
+
+| Campo | Valor |
+| --- | --- |
+| Etapa | Fase 03 implementada e testada; aguarda aceite (`work_0037` `pending`) |
+| Fases | 01, 02, 06, 04 e 05 aceitas; 03 implementada; pendentes 07 e 08 (`plan_0006`, proposto) |
+| Testes | 155 passam |
+| Decisões pendentes | 18 propostas de status de requisitos (P13), item a item; itens P9 |
+| Novo pedido | instalador por versão (`request_0012`), a planejar à parte |
+
+## 26. Revisão da Fase 03
+
+1. As seis partes da fase foram implementadas sem LLM e sem rede.
+2. Retrabalho: a primeira versão estimava esforço com itens de outros módulos e com o histórico
+   importado (ciclo zero). Passou a usar só itens comparáveis e a mostrar "indisponível".
+3. Tokens: indisponível.

@@ -744,12 +744,13 @@ fund_coverage_ui <- function(id) {
                         "Nenhuma linha é descartada. Os registros de qualidade apontam duplicatas,",
                         "versões reapresentadas e diferenças frente aos dicionários da CVM.")),
     shiny::uiOutput(ns("kpis")),
-    bslib::layout_columns(
-      col_widths = c(7, 5),
-      bslib::card(bslib::card_header("Tabelas consolidadas"),
-                  bslib::card_body(class = "tm-table-wrap", shiny::tableOutput(ns("tables")))),
-      bslib::card(bslib::card_header("Registros de qualidade"),
-                  bslib::card_body(class = "tm-table-wrap", shiny::tableOutput(ns("quality")))))
+    # Two sub-tabs: the consolidated tables (with each table's name and description,
+    # from fund_table_labels) and the quality records.
+    bslib::navset_card_underline(
+      id = ns("view"),
+      bslib::nav_panel("Tabelas consolidadas", shiny::uiOutput(ns("tables"))),
+      bslib::nav_panel("Registro de qualidade",
+                       shiny::div(class = "tm-table-wrap", shiny::tableOutput(ns("quality")))))
   )
 }
 
@@ -765,16 +766,39 @@ fund_coverage_server <- function(id, root) {
         kpi("Famílias", length(unique(tables$family))),
         kpi("Registros de qualidade", format_count(sum(quality$records))))
     })
-    output$tables <- shiny::renderTable({
-      data.frame(`Família` = toupper(tables$family), Tabela = tables$table_name,
-                 Arquivos = tables$members, Linhas = format_count(tables$rows),
-                 Layouts = tables$layouts, `Períodos` = paste(tables$first_period, "–",
-                                                              tables$last_period),
-                 check.names = FALSE)
-    }, spacing = "s")
+    # Consolidated tables: one sub-tab per family (pills), each with its tables.
+    # Quality: one row per record type, the count per family (columns) and the total.
+    families <- sort(unique(c(tables$family, quality$family)))
+    table_families <- sort(unique(tables$family))
+    for (f in table_families) local({
+      fam <- f
+      output[[paste0("tables_", fam)]] <- shiny::renderTable({
+        t <- tables[tables$family == fam, , drop = FALSE]
+        # Report order of the CVM form (fund_table_labels: I, II, ..., IX, X, X.1, ...).
+        t <- t[order(match(t$table_name, names(fund_table_labels)), t$table_name), , drop = FALSE]
+        data.frame(Tabela = t$table_name, `Nome e descrição` = fund_table_label(t$table_name),
+                   Arquivos = t$members, Linhas = format_count(t$rows), Layouts = t$layouts,
+                   `Períodos` = paste(t$first_period, "–", t$last_period), check.names = FALSE)
+      }, spacing = "s", align = "llrrrl")
+    })
+    output$tables <- shiny::renderUI({
+      ns <- session$ns
+      do.call(bslib::navset_pill, c(list(id = ns("family")), lapply(table_families, function(f) {
+        n <- sum(tables$family == f)
+        bslib::nav_panel(title = sprintf("%s (%d)", toupper(f), n), value = f,
+                         shiny::div(class = "tm-table-wrap tm-family-tables",
+                                    shiny::tableOutput(ns(paste0("tables_", f)))))
+      })))
+    })
     output$quality <- shiny::renderTable({
-      data.frame(`Família` = toupper(quality$family), Registro = quality$issue_type,
-                 Quantidade = format_count(quality$records), check.names = FALSE)
-    }, spacing = "s")
+      types <- sort(unique(quality$issue_type))
+      out <- data.frame(Registro = types, check.names = FALSE)
+      for (f in families) {
+        n <- vapply(types, function(t) sum(quality$records[quality$family == f & quality$issue_type == t]), numeric(1))
+        out[[toupper(f)]] <- ifelse(n > 0, format_count(n), "")
+      }
+      out$Total <- format_count(vapply(types, function(t) sum(quality$records[quality$issue_type == t]), numeric(1)))
+      out
+    }, spacing = "s", align = paste0("l", strrep("r", length(families) + 1L)))
   })
 }

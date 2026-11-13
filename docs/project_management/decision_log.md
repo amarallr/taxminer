@@ -776,3 +776,12 @@ Aprovação explícita do desenvolvedor ("aprovo a Fase 05, pode fazer commit e 
 - Commit e push autorizados para esta entrega.
 - A aprovação não confirma os itens P9: o hook de captura continua não instalado, e a leitura de tokens das transcrições, desligada.
 - Próxima fase: 03 (Planning & Token Optimization), que depende de nova autorização.
+
+## decision_0052 — 2026-11-13T08:23:35-03:00 — TaxMiner Governance: Fase 03 autorizada
+
+Autorização do desenvolvedor ("Sim. Autorizado. Pode seguir.") após a lista de próximos passos.
+
+- Interpretada como autorização da Fase 03, o primeiro passo da lista.
+- Não cobre os itens P9 (hook de captura; leitura de tokens), que exigem confirmação item a item,
+  nem uma nova versão (1.0.4), que exige autorização explícita.
+- As propostas de status dos requisitos (P13) não são aplicadas sem aprovação item a item.

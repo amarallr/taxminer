@@ -934,3 +934,17 @@ body { font-size: var(--bs-body-font-size); }
   font-size: 1.15rem; letter-spacing: .015em; color: #fff; }
 .navbar .tm-brand-bars { height: 14px; width: auto; fill: #7fb3ee; margin-left: -4px; align-self: center;
   transform: translateY(1px); }
+
+/* Cobertura e qualidade: subabas por família em "Tabelas consolidadas". */
+.tm-family-tables { margin-top: 10px; }
+
+/* FICHA > Série completa: a tabela mantém a largura natural das colunas (não encolhe) e o
+   contêiner rola na horizontal; a coluna "Campo" fica fixa à esquerda durante a rolagem. */
+table.tm-series { width: max-content; min-width: 100%; }
+table.tm-series td { min-width: 7.5rem; max-width: 16rem; white-space: normal; }
+table.tm-series td.tm-num { white-space: nowrap; max-width: none; }
+table.tm-series th.tm-field { position: sticky; left: 0; z-index: 2; background: #fff; min-width: 13rem;
+  max-width: 18rem; white-space: normal; box-shadow: 1px 0 0 var(--tm-rule); }
+table.tm-series thead th.tm-field { z-index: 3; }
+table.tm-series tbody tr:hover th.tm-field { background: #f7f9fc; }
+.tm-tall:has(table.tm-series), [data-pane-body="serie"] { overflow-x: auto !important; }

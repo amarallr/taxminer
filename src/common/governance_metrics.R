@@ -38,9 +38,11 @@ governance_kpi_definitions <- data.frame(
            "count", "money", "days", "pct", "count"),
   stringsAsFactors = FALSE)
 
-governance_requirement_order <- c("captured", "proposed", "under_analysis", "accepted", "planned", "awaiting_approval",
+# Lifecycle order of the master prompt (section 10): "accepted" is the final state,
+# after "awaiting_acceptance" (fixed in phase 03); "proposed" is the Common P01 name for captured.
+governance_requirement_order <- c("captured", "proposed", "under_analysis", "planned", "awaiting_approval",
                                   "approved", "in_progress", "blocked", "implemented", "under_testing", "tested",
-                                  "awaiting_acceptance", "rejected", "cancelled")
+                                  "awaiting_acceptance", "accepted", "rejected", "cancelled")
 
 # ISO 8601 with offset -> POSIXct (NA for empty or "unknown").
 governance_time <- function(x) {

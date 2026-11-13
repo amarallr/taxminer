@@ -2,6 +2,14 @@
 
 ## Não incluído em versão — 2026-11-12
 
+- **Ficha › Série completa** (app e painel publicado): rolagem horizontal; as colunas não encolhem e a
+  coluna "Campo" fica fixa à esquerda.
+- **Cobertura e qualidade** (app local): subabas "Tabelas consolidadas" e "Registro de qualidade".
+  As tabelas ficam em subabas por família, na ordem das fichas da CVM, com nome e descrição de cada
+  uma; no registro de qualidade, as famílias são colunas, com total.
+- **Governança — planejamento** (Fase 03): relatório de planejamento com priorização explicada,
+  plano por requisito, estimativas só com histórico comparável, deduplicação de pedidos e propostas
+  de status dos requisitos para aprovação humana.
 - **Governança — Executive Command Center** (aba nova no app local): 17 indicadores com definição
   formal, que mostram "indisponível" quando não há dado; funil de requisitos; linha do tempo e
   desempenho dos agentes; tokens; grafo de rastreabilidade com detalhamento; riscos; roteiro;
