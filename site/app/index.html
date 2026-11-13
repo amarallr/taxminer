@@ -146,6 +146,57 @@ $(function() {
     });
   }).observe(document.body, {childList: true, subtree: true, characterData: true});
 });</script>
+  <script>window.TM_INFO = {"political_rights":{"title":"Direitos políticos especiais","sections":[["Fonte (CVM)",["Campo DIREITO_POLIT_CLASSE dos informes trimestral (2017 a 2023) e quadrimestral (desde 2024) do FIP. Dicionário de dados da CVM: “Indica se a classe de cotas possui direitos políticos especiais”.","Informado por classe de cotas, na competência do informe: classes do mesmo fundo podem ter valores diferentes, e todos aparecem (“não / sim”). FIDC, FII e FIAGRO não publicam este campo."]],["Descrição",["Indica se determinada classe de cotas possui direitos políticos diferenciados, como voto especial, poder de veto ou participação em decisões específicas do fundo."]],["Interpretação",["Sim: a classe possui prerrogativas políticas especiais previstas nos documentos constitutivos do fundo.","Não: não há indicação de direitos políticos especiais no campo informado.","Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo vazio no informe; não equivale a “não”)."]],["Relevância tributária (interpretação analítica)",["Esses direitos podem ser relevantes para avaliar a influência dos cotistas sobre a gestão, especialmente a efetiva discricionariedade do gestor e o enquadramento como entidade de investimento, quando esse conceito for aplicável ao regime tributário analisado.","Recomenda-se verificar se os direitos permitem aos cotistas interferir efetivamente nas decisões de investimento, restringindo a autonomia do gestor."]],["Atenção",["A existência de direitos políticos especiais não implica, isoladamente, controle do gestor pelos cotistas, irregularidade ou desenquadramento tributário."]],["Referências normativas",["Resolução CVM nº 175/2022, Anexo Normativo IV (FIP): o regulamento pode atribuir a subclasses direitos econômico-financeiros distintos e trata dos direitos políticos e econômicos de cada subclasse, quando houver.","Lei nº 14.754/2023, art. 23: conceito de entidade de investimento (gestão profissional e discricionária), regulamentado pelo Conselho Monetário Nacional; aplicável quando pertinente ao regime tributário analisado."]]]},"economic_rights":{"title":"Direitos econômico-financeiros distintos","sections":[["Fonte (CVM)",["Campo DIREITO_ECON_CLASSE dos informes trimestral (2017 a 2023) e quadrimestral (desde 2024) do FIP. Dicionário de dados da CVM: “Indica se a classe de cotas possui distintos direitos econômico-financeiros”.","Informado por classe de cotas, na competência do informe: classes do mesmo fundo podem ter valores diferentes, e todos aparecem (“não / sim”). FIDC, FII e FIAGRO não publicam este campo."]],["Descrição",["Indica se determinada classe de cotas possui direitos econômico-financeiros diferenciados, relacionados à distribuição de rendimentos, amortizações, resgates ou participação em perdas, conforme a estrutura e o regulamento do fundo."]],["Interpretação",["Sim: existem direitos econômicos diferenciados atribuídos às cotas, conforme os documentos aplicáveis.","Não: não há indicação desses direitos diferenciados no campo informado.","Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo vazio no informe; não equivale a “não”)."]],["Relevância tributária (interpretação analítica)",["Pode indicar assimetria na distribuição de riscos e retornos entre investidores.","Recomenda-se examinar se a estrutura reflete efetiva exposição econômica dos cotistas ou relações que mereçam investigação adicional, especialmente quando houver concentração de cotas, vínculos societários ou participação de empresas de um mesmo grupo econômico."]],["Atenção",["Direitos econômicos diferenciados são admitidos em determinadas estruturas de fundos e não constituem, isoladamente, indício de planejamento tributário abusivo ou irregularidade."]],["Referências normativas",["Resolução CVM nº 175/2022, Anexo Normativo IV (FIP): o regulamento pode atribuir a subclasses direitos econômico-financeiros distintos e trata dos direitos políticos e econômicos de cada subclasse, quando houver.","Lei nº 14.754/2023, art. 23: conceito de entidade de investimento (gestão profissional e discricionária), regulamentado pelo Conselho Monetário Nacional; aplicável quando pertinente ao regime tributário analisado."]]]},"joint":{"title":"Análise conjunta de direitos especiais","text":"Esta classe apresenta direitos políticos especiais e direitos econômico-financeiros distintos. Recomenda-se examinar conjuntamente a estrutura de governança, os poderes efetivos dos cotistas, a discricionariedade do gestor e a distribuição de riscos e retornos. A combinação desses indicadores não caracteriza, isoladamente, irregularidade ou desenquadramento tributário."}};
+
+$(function() {
+  var pop = null, owner = null;
+  function close(back) {
+    if (!pop) return;
+    pop.remove(); pop = null;
+    if (owner) { owner.attr('aria-expanded', 'false'); if (back) owner.trigger('focus'); }
+    owner = null;
+  }
+  function para(t) {
+    var m = /^([^:]{2,40}):\s+(.*)$/.exec(t), p = $('<p>');
+    if (m) p.append($('<b>').text(m[1] + ':'), document.createTextNode(' ' + m[2])); else p.text(t);
+    return p;
+  }
+  function open(btn) {
+    var h = (window.TM_INFO || {})[btn.attr('data-info')];
+    if (!h) return;
+    close(false);
+    owner = btn.attr('aria-expanded', 'true');
+    var id = 'tm-info-' + Date.now();
+    pop = $('<div>').addClass('tm-info-pop').attr({role: 'dialog', 'aria-labelledby': id, tabindex: '-1'});
+    pop.append($('<div>').addClass('tm-info-head').append(
+      $('<div>').addClass('tm-info-title').attr('id', id).text(h.title),
+      $('<button type="button">').addClass('tm-info-close').attr('aria-label', 'Fechar').text('×')));
+    (h.sections || []).forEach(function(s) {
+      var sec = $('<section>').append($('<h4>').text(s[0]));
+      s[1].forEach(function(t) { sec.append(para(t)); });
+      pop.append(sec);
+    });
+    pop.appendTo('body');
+    // Below the button when it fits, else above; inside the window on phones.
+    var r = btn[0].getBoundingClientRect(), w = pop.outerWidth(), vw = $(window).width(), vh = $(window).height();
+    var left = Math.max(8, Math.min(r.left, vw - w - 8)), top = r.bottom + 6;
+    if (top + pop.outerHeight() > vh - 8 && r.top - pop.outerHeight() - 6 > 8) top = r.top - pop.outerHeight() - 6;
+    pop.css({left: left, top: Math.max(8, top)});
+    pop.trigger('focus');
+  }
+  $(document).on('click', '.tm-info', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    var b = $(this);
+    if (owner && owner[0] === this) close(true); else open(b);
+  }).on('click', '.tm-info-close', function(e) { e.stopPropagation(); close(true); })
+    .on('mousedown touchstart', function(e) {
+      if (pop && !$(e.target).closest('.tm-info-pop, .tm-info').length) close(false);
+    }).on('keydown', function(e) { if (e.key === 'Escape' && pop) close(true); })
+    // A button inside a sortable header or a summary must not sort or toggle.
+    .on('keydown', '.tm-info', function(e) { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); });
+  $(window).on('resize scroll', function() { close(false); });
+});
+</script>
   <script src="loadbar.js" defer></script>
   <script src="panorama.js" defer></script>
   <script src="taxminer_static.js" defer></script>
@@ -155,7 +206,7 @@ $(function() {
   <nav class="navbar navbar-default navbar-static-top navbar-inverse" role="navigation" style="background-color:#0b1f3a !important;" data-bs-theme="dark">
     <div class="container-fluid">
       <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1673" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-1673">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-9165" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-9165">
           <span class="sr-only visually-hidden">Toggle navigation</span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
@@ -163,22 +214,22 @@ $(function() {
         </button>
         <span class="navbar-brand"><span class="tm-brand" role="img" aria-label="Analytics"><img src="rfb_emblem.png" alt="" class="tm-brand-emblem"/><span class="tm-brand-rule"></span><span class="tm-brand-name">Analytics</span><svg class="tm-brand-bars" viewBox="0 0 20 18" aria-hidden="true"><rect x="0" y="10" width="5" height="8" rx="1.2"/><rect x="7.5" y="5" width="5" height="13" rx="1.2"/><rect x="15" y="0" width="5" height="18" rx="1.2"/></svg></span></span>
       </div>
-      <div class="navbar-collapse collapse" id="navbar-collapse-1673">
-        <ul class="nav navbar-nav nav-underline" data-tabsetid="5931">
+      <div class="navbar-collapse collapse" id="navbar-collapse-9165">
+        <ul class="nav navbar-nav nav-underline" data-tabsetid="7143">
           <li class="active">
-            <a href="#tab-5931-1" data-toggle="tab" data-bs-toggle="tab" data-value="Panorama">Panorama</a>
+            <a href="#tab-7143-1" data-toggle="tab" data-bs-toggle="tab" data-value="Panorama">Panorama</a>
           </li>
           <li>
-            <a href="#tab-5931-2" data-toggle="tab" data-bs-toggle="tab" data-value="Administradores">Administradores</a>
+            <a href="#tab-7143-2" data-toggle="tab" data-bs-toggle="tab" data-value="Administradores">Administradores</a>
           </li>
           <li>
-            <a href="#tab-5931-3" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos">Fundos</a>
+            <a href="#tab-7143-3" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos">Fundos</a>
           </li>
           <li>
-            <a href="#tab-5931-9" data-toggle="tab" data-bs-toggle="tab" data-value="Ficha">Ficha</a>
+            <a href="#tab-7143-4" data-toggle="tab" data-bs-toggle="tab" data-value="Ficha">Ficha</a>
           </li>
           <li>
-            <a href="#tab-5931-10" data-toggle="tab" data-bs-toggle="tab" data-value="Sobre">Sobre</a>
+            <a href="#tab-7143-5" data-toggle="tab" data-bs-toggle="tab" data-value="Sobre">Sobre</a>
           </li>
           <div class="bslib-nav-spacer"></div>
           <li class="bslib-nav-item nav-item form-inline">
@@ -189,13 +240,13 @@ $(function() {
     </div>
   </nav>
   <div class="container-fluid html-fill-item html-fill-container">
-    <div class="tab-content html-fill-item html-fill-container" data-tabsetid="5931">
-      <div class="tab-pane active html-fill-item html-fill-container bslib-gap-spacing" data-value="Panorama" id="tab-5931-1" style="--bslib-navbar-margin:0;">
+    <div class="tab-content html-fill-item html-fill-container" data-tabsetid="7143">
+      <div class="tab-pane active html-fill-item html-fill-container bslib-gap-spacing" data-value="Panorama" id="tab-7143-1" style="--bslib-navbar-margin:0;">
         <div class="tm-dash html-fill-item" data-base="data/panorama/">
           <div class="tm-empty">Carregando o Panorama…</div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Administradores" id="tab-5931-2" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Administradores" id="tab-7143-2" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-admin-page html-fill-item html-fill-container">
           <div class="tm-dash-head">
             <div>
@@ -2787,48 +2838,48 @@ $(function() {
           </bslib-layout-columns>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Fundos" id="tab-5931-3" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Fundos" id="tab-7143-3" style="--bslib-navbar-margin:0;">
         <div class="tabbable html-fill-item html-fill-container">
-          <ul class="nav nav-underline shiny-tab-input" id="fund_nav" data-tabsetid="6594">
+          <ul class="nav nav-underline shiny-tab-input" id="fund_nav" data-tabsetid="7594">
             <li class="active">
-              <a href="#tab-6594-1" data-toggle="tab" data-bs-toggle="tab" data-value="Todos">Todos</a>
+              <a href="#tab-7594-1" data-toggle="tab" data-bs-toggle="tab" data-value="Todos">Todos</a>
             </li>
             <li>
-              <a href="#tab-6594-2" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
+              <a href="#tab-7594-2" data-toggle="tab" data-bs-toggle="tab" data-value="FIDC">FIDC</a>
             </li>
             <li>
-              <a href="#tab-6594-3" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
+              <a href="#tab-7594-3" data-toggle="tab" data-bs-toggle="tab" data-value="FII">FII</a>
             </li>
             <li>
-              <a href="#tab-6594-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
+              <a href="#tab-7594-4" data-toggle="tab" data-bs-toggle="tab" data-value="FIP">FIP</a>
             </li>
             <li>
-              <a href="#tab-6594-5" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
+              <a href="#tab-7594-5" data-toggle="tab" data-bs-toggle="tab" data-value="FIAGRO">FIAGRO</a>
             </li>
           </ul>
-          <div class="tab-content html-fill-item html-fill-container" data-tabsetid="6594">
-            <div class="tab-pane active html-fill-item html-fill-container" data-value="Todos" id="tab-6594-1">
+          <div class="tab-content html-fill-item html-fill-container" data-tabsetid="7594">
+            <div class="tab-pane active html-fill-item html-fill-container" data-value="Todos" id="tab-7594-1">
               <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="">
                 <div class="tm-empty">Carregando fundos…</div>
               </div>
             </div>
-            <div class="tab-pane html-fill-item html-fill-container" data-value="FIDC" id="tab-6594-2">
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIDC" id="tab-7594-2">
               <div class="tabbable html-fill-item html-fill-container">
-                <ul class="nav nav-underline shiny-tab-input" id="fidc_nav" data-tabsetid="8228">
+                <ul class="nav nav-underline shiny-tab-input" id="fidc_nav" data-tabsetid="5933">
                   <li class="active">
-                    <a href="#tab-8228-1" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos FIDC">Fundos FIDC</a>
+                    <a href="#tab-5933-1" data-toggle="tab" data-bs-toggle="tab" data-value="Fundos FIDC">Fundos FIDC</a>
                   </li>
                   <li>
-                    <a href="#tab-8228-2" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
+                    <a href="#tab-5933-2" data-toggle="tab" data-bs-toggle="tab" data-value="Cedentes">Cedentes</a>
                   </li>
                 </ul>
-                <div class="tab-content html-fill-item html-fill-container" data-tabsetid="8228">
-                  <div class="tab-pane active html-fill-item html-fill-container" data-value="Fundos FIDC" id="tab-8228-1">
+                <div class="tab-content html-fill-item html-fill-container" data-tabsetid="5933">
+                  <div class="tab-pane active html-fill-item html-fill-container" data-value="Fundos FIDC" id="tab-5933-1">
                     <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fidc">
                       <div class="tm-empty">Carregando fundos…</div>
                     </div>
                   </div>
-                  <div class="tab-pane html-fill-item html-fill-container" data-value="Cedentes" id="tab-8228-2">
+                  <div class="tab-pane html-fill-item html-fill-container" data-value="Cedentes" id="tab-5933-2">
                     <div class="tm-page tm-fill-page tm-cedentes html-fill-item html-fill-container" data-src="data/cedentes/">
                       <div class="tm-empty">Carregando cedentes…</div>
                     </div>
@@ -2836,17 +2887,17 @@ $(function() {
                 </div>
               </div>
             </div>
-            <div class="tab-pane html-fill-item html-fill-container" data-value="FII" id="tab-6594-3">
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FII" id="tab-7594-3">
               <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fii">
                 <div class="tm-empty">Carregando fundos…</div>
               </div>
             </div>
-            <div class="tab-pane html-fill-item html-fill-container" data-value="FIP" id="tab-6594-4">
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIP" id="tab-7594-4">
               <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fip">
                 <div class="tm-empty">Carregando fundos…</div>
               </div>
             </div>
-            <div class="tab-pane html-fill-item html-fill-container" data-value="FIAGRO" id="tab-6594-5">
+            <div class="tab-pane html-fill-item html-fill-container" data-value="FIAGRO" id="tab-7594-5">
               <div class="tm-page tm-fill-page tm-static-funds html-fill-item html-fill-container" data-family="fiagro">
                 <div class="tm-empty">Carregando fundos…</div>
               </div>
@@ -2854,19 +2905,19 @@ $(function() {
           </div>
         </div>
       </div>
-      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Ficha" id="tab-5931-9" style="--bslib-navbar-margin:0;">
+      <div class="tab-pane html-fill-item html-fill-container bslib-gap-spacing" data-value="Ficha" id="tab-7143-4" style="--bslib-navbar-margin:0;">
         <div class="tm-page tm-fill-page tm-static-record html-fill-item html-fill-container">
           <div class="tm-empty">Carregando fundos…</div>
         </div>
       </div>
-      <div class="tab-pane" data-value="Sobre" id="tab-5931-10">
+      <div class="tab-pane" data-value="Sobre" id="tab-7143-5">
         <div class="tm-page">
           <div class="tm-hero tm-about">
             <div class="tm-eyebrow">Sobre este painel</div>
-            <div class="tm-version" title="Versão, data/hora de geração e commit desta página">v.1.0.3 · 2026-11-13 09:41</div>
+            <div class="tm-version" title="Versão, data/hora de geração e commit desta página">v.1.0.3 · 2026-11-13 16:20</div>
             <h1>Versão publicada do painel de fundos</h1>
             <p class="tm-lede">
-              Gerado em 2026-11-13 09:41 a partir dos informes públicos da CVM
+              Gerado em 2026-11-13 16:20 a partir dos informes públicos da CVM
               (dados.cvm.gov.br, Open Database License — ODbL). Material de pesquisa, não conclusão fiscal.
               As abas de fundos trazem lista, perfil, ficha, série completa e denominações das tabelas
               principais de cada tipo; as demais tabelas dos informes ficam no app local do TaxMiner.
