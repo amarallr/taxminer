@@ -759,3 +759,20 @@ Autorizada em `decision_0048`.
 - Registro de execuções (`execution_register.csv`) com a máquina de estados do prompt. Os tokens são os informados pelo agente; vazio quer dizer indisponível e nunca é estimado.
 - Adaptadores somente leitura e matriz de capacidades declarada. Nenhum agente é executado; o despacho de tarefas não é usado.
 - O hook do Claude Code (`scripts/governance_hook.R`) e o leitor de tokens das transcrições ficam implementados e testados só com dados sintéticos. O hook não está instalado e nenhuma transcrição real foi lida. Cada um depende de confirmação própria do desenvolvedor (P9). O leitor exige ainda uma decisão registrada neste arquivo.
+
+## decision_0050 — 2026-11-12T18:12:24-03:00 — TaxMiner Governance: Fase 04 aceita; Fase 05 autorizada
+
+Aprovação explícita do desenvolvedor ("aprovo a Fase 04, pode seguir para a Fase 05").
+
+- Fase 04 aceita (`acc_0012`, `work_0035`); replanejamento `plan_0004` aprovado.
+- A aprovação não confirma os itens P9: o hook de captura continua não instalado, e a leitura de tokens das transcrições, desligada.
+- Fase 05 (painel executivo) autorizada. Implementada em 2026-11-12T18:23:35-03:00: aba Governança no app local; não entra no painel publicado.
+
+## decision_0051 — 2026-11-12T21:19:53-03:00 — TaxMiner Governance: Fase 05 aceita
+
+Aprovação explícita do desenvolvedor ("aprovo a Fase 05, pode fazer commit e push").
+
+- Fase 05 aceita (`acc_0013`, `work_0036`); replanejamento `plan_0005` aprovado.
+- Commit e push autorizados para esta entrega.
+- A aprovação não confirma os itens P9: o hook de captura continua não instalado, e a leitura de tokens das transcrições, desligada.
+- Próxima fase: 03 (Planning & Token Optimization), que depende de nova autorização.

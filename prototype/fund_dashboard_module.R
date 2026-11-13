@@ -49,17 +49,32 @@ method_note <- function(ctx) {
                      "administrador correto; nesses casos o nome vem dos demais informes desse CNPJ.")))
 }
 
-# Version and build time shown under "Sobre" (app and published page): the
-# VERSION file at the project root and when the page was generated (export
-# time for the published page, start time for the local app), as
-# "v.1.0.1 · 2026-11-11 15:42". Nothing is shown when VERSION is missing.
-version_label <- function(repo = ".", generated = Sys.time()) {
+# Version, build time and commit shown under "Sobre" (app and published page):
+# the VERSION file at the project root, when the page was generated (export
+# time for the published page, start time for the local app) and the commit
+# short hash, as "v.1.0.1 · 2026-11-11 15:42 · 3cbb696". The local app passes
+# git_commit_label(); the Pages workflow appends the deployed commit to the
+# published page. Nothing is shown when VERSION is missing.
+version_label <- function(repo = ".", generated = Sys.time(), commit = "") {
   f <- file.path(repo, "VERSION")
   v <- if (file.exists(f)) trimws(readLines(f, n = 1L, warn = FALSE, encoding = "UTF-8")) else ""
   if (!length(v) || !nzchar(v)) return(NULL)
   when <- if (inherits(generated, "POSIXt")) format(generated, "%Y-%m-%d %H:%M") else as.character(generated)
-  shiny::div(class = "tm-version", title = "Versão e data/hora de geração desta página",
-             paste0("v.", v, " · ", when))
+  hash <- if (length(commit) && !is.na(commit[1]) && nzchar(commit[1])) paste0(" · ", commit[1]) else ""
+  shiny::div(class = "tm-version", title = "Versão, data/hora de geração e commit desta página",
+             paste0("v.", v, " · ", when, hash))
+}
+
+# Short hash of the checked-out commit, with "+" when tracked files have
+# uncommitted changes; "" when git or the repository is unavailable.
+git_commit_label <- function(repo = ".") {
+  git <- function(...) tryCatch(suppressWarnings(system2("git", c("-C", shQuote(repo), ...),
+                                                         stdout = TRUE, stderr = FALSE)),
+                                error = function(e) character())
+  h <- git("rev-parse", "--short", "HEAD")
+  if (!length(h) || !grepl("^[0-9a-f]{4,40}$", h[1])) return("")
+  dirty <- git("status", "--porcelain", "--untracked-files=no")
+  paste0(h[1], if (length(dirty)) "+" else "")
 }
 
 # Panorama: one landscape screen, no page scrolling (grid in taxminer.css,

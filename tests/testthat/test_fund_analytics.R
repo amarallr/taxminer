@@ -394,6 +394,9 @@ test_that("the Sobre tab shows the version from the VERSION file", {
   at <- as.POSIXct("2026-11-11 15:42:59", tz = "UTC")
   expect_match(as.character(version_label(dir, at)), ">v.1.2.3 · 2026-11-11 15:42</div>", fixed = TRUE)
   expect_match(as.character(version_label(dir, "2026-01-02 03:04")), ">v.1.2.3 · 2026-01-02 03:04<", fixed = TRUE)
+  expect_match(as.character(version_label(dir, "2026-01-02 03:04", commit = "3cbb696+")),
+               ">v.1.2.3 · 2026-01-02 03:04 · 3cbb696+<", fixed = TRUE)
+  expect_identical(git_commit_label(dir), "")
   expect_match(readLines(testthat::test_path("..", "..", "VERSION"), n = 1L), "^[0-9]+[.][0-9]+[.][0-9]+$")
 })
 

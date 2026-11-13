@@ -7,6 +7,14 @@
 [Registro de decisões](decision_log.md) ·
 [Panorama](../project_overview.md)
 
+## TaxMiner Governance — Fase 05 — 2026-11-12
+
+- Fase 04 aceita (`acc_0012`). Fase 05 implementada e testada (`work_0036`, `decision_0050`): aba
+  **Governança** do app local (Executive Command Center), com 17 KPIs definidos, dez painéis,
+  filtros, detalhamento, atualização a cada 150 s e exportação. 147 testes passam.
+- Fase 05 aceita (`acc_0013`, `decision_0051`).
+- **Aguardando:** autorização da Fase 03; confirmações P9 (hook e leitura de tokens).
+
 ## Versão 1.0.3 — 2026-11-12
 
 - Lançada a `1.0.3` (`VERSION`, tag `v1.0.3`, carimbo do painel publicado e do app local): nova

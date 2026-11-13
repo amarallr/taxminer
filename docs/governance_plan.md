@@ -489,3 +489,79 @@ Autorizada em `decision_0048`; decisão `decision_0049`. Item `work_0035` (`req_
    `expect_match` avaliava a chamada duas vezes, trocado por atribuição.
 3. Tokens: indisponível.
 4. Sem melhorias de prompt propostas nesta fase.
+
+## 20. Fase 05 — Executive Dashboard (executada em 2026-11-12)
+
+Fase 04 aceita (`acc_0012`); Fase 05 autorizada em `decision_0050`. Item `work_0036` (`req_0021`).
+
+### Entregas
+
+- `src/common/governance_metrics.R`: 17 KPIs da seção 11.1 com definição formal; filtros;
+  funil; etapas de entrega; desempenho por agente; grafo de rastreabilidade; trilha; frescor dos
+  dados; relatório exportável. KPI sem dado é `NA` com o motivo, nunca zero.
+- `prototype/governance_module.R`: aba **Governança** do app local, com os painéis Executive
+  Overview, Requirements Pipeline, Risks & Blockers, Execution Timeline, Agent Performance, Token
+  Efficiency, Prompt Evolution, Traceability Graph (com detalhamento do registro e histórico de
+  transições), Delivery Roadmap e Audit Trail.
+- Filtros por período, agente, módulo, prioridade e status. Todos os indicadores seguem os filtros,
+  exceto riscos e histórico do prompt, que não se ligam a requisitos. Pesquisa por ID; clique em
+  nó, linha ou barra para detalhar; "Voltar" desfaz.
+- Atualização a cada 150 s (ou 60 s, 300 s, manual). Os registros só são relidos quando os arquivos
+  mudam. Mostra a última sincronização e o último progresso real (transição mais recente); indica
+  dados desatualizados (mais de dois intervalos sem leitura) e falha de leitura, mantendo os últimos
+  dados. Botão "Atualizar agora". A página só lê: não inicia execuções nem grava registros.
+- Exportação: relatório em Markdown (KPIs com definições, funil, etapas, filtros vigentes) e trilha
+  em CSV.
+- A aba fica só no app local; os registros de governança não vão para o painel publicado.
+
+### Gate (dados, filtros e atualização a cada 150 s)
+
+| Controle | Teste |
+| --- | --- |
+| Cada KPI confere com o cálculo manual em registros sintéticos; indisponível vira `NA` | KPIs |
+| Sem execuções: tokens, custo e falha de agente indisponíveis | KPIs indisponíveis |
+| Módulo, agente, período e status filtram requisitos, itens, testes, solicitações, execuções e trilha | filtros |
+| Funil, etapas, desempenho, trilha e grafo (sem nó solto; commit sem "+uncommitted") | dados dos painéis |
+| Desatualizado após dois intervalos; nunca no modo manual | frescor |
+| Intervalo padrão de 150 s; sem mudança não relê; arquivo novo é relido; filtros mantidos; falha mantém os dados | módulo (testServer) |
+| Detalhar, pesquisar ID (inexistente é recusado) e voltar | módulo (testServer) |
+
+### Evidências
+
+- 147 testes, 0 falhas (139 anteriores + 8 novos) (`test_0063`, `test_0064`). O único aviso da
+  suíte é anterior a esta fase (`test_fund_analytics.R`).
+- Página conferida no app com os registros reais (captura de tela): 21 requisitos, 22 itens
+  implementados, 12 aceitos, camada imutável intacta.
+
+### Limitações
+
+- Sem execuções registradas, os painéis de execuções, desempenho e tokens mostram "indisponível".
+  Isso persiste até a captura (P9) ou o registro manual.
+- "Atrasados" fica indisponível porque o registro não tem datas-alvo.
+- A maior parte dos requisitos antigos está em `proposed`. O funil mostra o registro como ele é.
+
+## 21. Checkpoint 5 (chk_0005)
+
+| Campo | Valor |
+| --- | --- |
+| Etapa | Fase 05 implementada e testada; aguarda aceite (`work_0036` `pending`) |
+| Fases | 01, 02, 06 e 04 aceitas; 05 implementada; pendentes 03, 07 e 08 (`plan_0005`, proposto) |
+| Testes | 147 passam |
+| Confirmações pendentes (P9) | hook de captura; leitura de tokens das transcrições |
+
+## 22. Revisão da Fase 05
+
+1. As seções 11.1 a 11.4 do prompt foram implementadas. Os KPIs sem base aparecem como indisponíveis.
+2. Retrabalho: com a pasta dos registros ausente, a leitura devolvia tabelas vazias em vez de
+   falhar. O teste acusou, e a página passou a exigir o registro de requisitos e a manter os dados
+   anteriores. Avisos de separador decimal corrigidos.
+3. Tokens: indisponível.
+
+| # | Problema | Melhoria proposta | Classe |
+| --- | --- | --- | --- |
+| P13 | O status `proposed` dos requisitos antigos não acompanha a entrega dos itens | reconciliar o status dos requisitos na Fase 03, com aprovação humana item a item | functional |
+
+## 23. Aceite da Fase 05
+
+Fase 05 aceita em 2026-11-12T21:19:53-03:00 (`acc_0013`, `decision_0051`); `plan_0005` aprovado. Fases aceitas: 01, 02,
+06, 04 e 05. Pendentes: 03, 07 e 08, cada uma com autorização própria. Itens P9 seguem pendentes.

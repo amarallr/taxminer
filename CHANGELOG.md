@@ -1,5 +1,17 @@
 # Changelog
 
+## Não incluído em versão — 2026-11-12
+
+- **Governança — Executive Command Center** (aba nova no app local): 17 indicadores com definição
+  formal, que mostram "indisponível" quando não há dado; funil de requisitos; linha do tempo e
+  desempenho dos agentes; tokens; grafo de rastreabilidade com detalhamento; riscos; roteiro;
+  trilha de auditoria; evolução do prompt. Filtros, pesquisa por ID, atualização a cada 150 s e
+  exportação em Markdown e CSV. A aba não entra no painel publicado.
+- **Carimbo de versão com o commit:** o carimbo em "Sobre" mostra também o hash curto do commit
+  (ex.: "v.1.0.3 · 2026-11-12 21:22 · 3cbb696"). No painel publicado, o hash é o do commit
+  publicado, gravado na implantação; no app local, é o commit em uso, com "+" se houver alterações
+  não salvas em commit.
+
 ## Versão 1.0.3 — 2026-11-12
 
 Registra como `1.0.3` (arquivo `VERSION`, tag `v1.0.3`) as entregas posteriores à 1.0.2:

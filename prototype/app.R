@@ -13,7 +13,9 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/collect/collect_cvm_registries.R", "src/data/cvm_registry_names.R",
             "src/collect/collect_rfb_cnpj.R", "src/data/rfb_company_names.R", "prototype/charts.R",
             "prototype/fund_search_module.R", "prototype/fund_dashboard_module.R",
-            "prototype/fund_record_module.R")) {
+            "prototype/fund_record_module.R", "src/common/governance_registry.R",
+            "src/common/governance_prompts.R", "src/common/governance_agents.R",
+            "src/common/governance_metrics.R", "prototype/governance_module.R")) {
   source(file.path(repo, f), local = TRUE, encoding = "UTF-8")
 }
 
@@ -87,12 +89,14 @@ ui <- bslib::page_navbar(
   bslib::nav_panel(
     "Cobertura e qualidade",
     if (fund_ready) fund_coverage_ui("fund_coverage") else unavailable("Sem dados consolidados.")),
+  # Governance records of the project (local app only, not published).
+  bslib::nav_panel("Governança", governance_ui("governance")),
   bslib::nav_panel(
     "Sobre",
     shiny::div(class = "tm-page", shiny::div(
       class = "tm-hero tm-about",
       shiny::div(class = "tm-eyebrow", "Sobre o TaxMiner"),
-      version_label(repo),
+      version_label(repo, commit = git_commit_label(repo)),
       shiny::h1("Pesquisa em fontes públicas"),
       shiny::p(class = "tm-lede",
                "Dados públicos da CVM (dados.cvm.gov.br, licença ODbL), com valores como publicados.",
@@ -101,6 +105,7 @@ ui <- bslib::page_navbar(
       if (fund_ready) method_note(fund_ctx))))
 
 server <- function(input, output, session) {
+  governance_server("governance", repo)
   if (fund_ready) {
     tabs <- list(Fundos = fund_search_server("funds", fund_root, fund_ctx, data = fund_data))
     for (f in family_tabs) tabs[[toupper(f)]] <- fund_search_server(paste0("funds_", f), fund_root, fund_ctx,

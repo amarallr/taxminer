@@ -12,15 +12,14 @@ retomadas está em `handoff_history.md`; a revisão e sua execução, em
 
 ## Estado atual
 
-- **TaxMiner Governance (`req_0021`, `decision_0043`–`decision_0045`):** Fase 01 aprovada; Fase 02
-  implementada e testada (`work_0033`), com aceite pendente. Conferir os registros com
-  `Rscript --vanilla scripts/governance_registry.R check`. Mudar estados só por
-  `scripts/governance_registry.R set` (gera a transição). Fase 06 implementada e testada (`work_0034`, aceite pendente):
-  `check` também confere a camada imutável (`immutable_rules.csv`); revisões do prompt só por
-  `propose-prompt` e `decide-prompt`. Fase 06 aceita.
-Fase 04 implementada e testada (`work_0035`, aceite pendente): execuções em
+- **TaxMiner Governance (`req_0021`):** Fases 01, 02, 06, 04 e 05 aceitas (`acc_0010`–`acc_0013`).
+  Conferir os registros com `Rscript --vanilla scripts/governance_registry.R check` (inclui a
+  camada imutável, `immutable_rules.csv`). Mudar estados só por `scripts/governance_registry.R set`
+  (gera a transição); revisões do prompt só por `propose-prompt` e `decide-prompt`. Execuções em
   `execution_register.csv` (`add-execution`, `update-execution`, `reconcile`); hook em
-  `scripts/governance_hook.R`, não instalado; leitura de tokens desligada (P9). Próxima fase: 05.
+  `scripts/governance_hook.R`, não instalado; leitura de tokens desligada (P9). Aba Governança no
+  app local (`prototype/governance_module.R`, `src/common/governance_metrics.R`). Próxima fase: 03
+  (aguarda autorização); depois 07 e 08.
 - **Common P02 (setup):** `work_0001` e `work_0003` aprovados (`acc_0001`,
   `acc_0002`). Release `not_released`; operações `not_started`.
 - **Common P03 (`work_0002`):** arquitetura, requisitos com limiares e

@@ -33,3 +33,14 @@ trn_0031,work_0035,implementation_status,,not_started,2026-11-12T18:01:29-03:00,
 trn_0032,work_0035,implementation_status,not_started,implemented,2026-11-12T18:01:29-03:00,claude_code,src/common/governance_agents.R
 trn_0033,work_0035,test_status,not_run,passed,2026-11-12T18:01:29-03:00,claude_code,test_0061;test_0062
 trn_0034,plan_0004,approval,,proposed,2026-11-12T18:01:29-03:00,claude_code,planning_revisions.csv
+trn_0035,request_0008,status,,answered,2026-11-12T18:12:25-03:00,claude_code,request_register.csv
+trn_0036,request_0009,status,,linked,2026-11-12T18:12:25-03:00,claude_code,request_register.csv
+trn_0037,work_0035,acceptance_status,pending,approved,2026-11-12T18:12:24-03:00,developer,acc_0012
+trn_0038,plan_0004,approval,proposed,approved,2026-11-12T18:12:24-03:00,developer,decision_0050
+trn_0039,work_0036,implementation_status,,not_started,2026-11-12T18:23:35-03:00,claude_code,work_items.csv
+trn_0040,work_0036,implementation_status,not_started,implemented,2026-11-12T18:23:35-03:00,claude_code,prototype/governance_module.R
+trn_0041,work_0036,test_status,not_run,passed,2026-11-12T18:23:35-03:00,claude_code,test_0063;test_0064
+trn_0042,plan_0005,approval,,proposed,2026-11-12T18:23:35-03:00,claude_code,planning_revisions.csv
+trn_0043,request_0010,status,,answered,2026-11-12T21:19:53-03:00,claude_code,request_register.csv
+trn_0044,work_0036,acceptance_status,pending,approved,2026-11-12T21:19:53-03:00,developer,acc_0013
+trn_0045,plan_0005,approval,proposed,approved,2026-11-12T21:19:53-03:00,developer,decision_0051
