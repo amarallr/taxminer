@@ -790,9 +790,10 @@
   // Display scale (fund_display_scale in R): null = linear; c = asinh(v / c).
   function scaleFwd(v, c) { return c == null ? v : Math.asinh(v / c); }
   function scaleInv(t, c) { return c == null ? t : Math.sinh(t) * c; }
-  function scaleNote(c, centre, fmt) {
+  function scaleNote(c, centre, fmt, median) {
     return c == null ? '' : '\nEscala logarítmica (asinh) só para exibição, para comparar valores de ordens de grandeza diferentes: o eixo e este ' +
-      'texto mostram valores originais; o tracejado marca o centro da curva nessa escala (' + (fmt || compact)(centre) + '), que não é a média.';
+      'texto mostram valores originais; ' + (median ? 'o tracejado marca a mediana dos fundos (' + (fmt || compact)(centre) + ').'
+        : 'o tracejado marca o centro da curva nessa escala (' + (fmt || compact)(centre) + '), que não é a média.');
   }
   // lo, hi, counts, dmean and dsd are on the display scale (d.scale); the
   // marked value and the axis labels are original values.
@@ -831,12 +832,14 @@
     var curve = ds > 0 ? '<path class="tm-rd-curve" d="M' + xs.map(function (v) { return f(sx(v)) + ',' + f(sy(dens(v))); }).join(' L') + '"/>' : '';
     // A marked value outside the scale shows as a dot on the nearest edge.
     var lt = d.last == null ? null : scaleFwd(d.last, sc);
-    var mx = f(sx(dm)), last = lt == null ? '' : lt >= d.lo && lt <= d.hi ? '<line class="tm-rd-last" x1="' + f(sx(lt)) + '" x2="' + f(sx(lt)) +
+    // Dashed line: the peers' median (z = 0) when known, else the curve centre.
+    var cx = d.zmed != null ? d.zmed : dm;
+    var mx = f(sx(cx)), last = lt == null ? '' : lt >= d.lo && lt <= d.hi ? '<line class="tm-rd-last" x1="' + f(sx(lt)) + '" x2="' + f(sx(lt)) +
       '" y1="' + mt + '" y2="' + (mt + ph) + '"/><circle class="tm-rd-dot" cx="' + f(sx(lt)) + '" cy="' + (mt + 3) + '" r="3"/>' :
       '<circle class="tm-rd-dot" cx="' + f(lt < d.lo ? ml + 3 : w - mr - 3) + '" cy="' + (mt + ph - 3) + '" r="3"/>';
     // The mean label is dropped when it would run into the edge labels.
-    var room = Math.min(sx(dm) - ml, w - mr - sx(dm)) >= 0.22 * pw;
-    var ticks = [[ml, d.lo, 'start']].concat(room ? [[mx, dm, 'middle']] : []).concat([[w - mr, d.hi, 'end']]).map(function (t) {
+    var room = Math.min(sx(cx) - ml, w - mr - sx(cx)) >= 0.22 * pw;
+    var ticks = [[ml, d.lo, 'start']].concat(room ? [[mx, cx, 'middle']] : []).concat([[w - mr, d.hi, 'end']]).map(function (t) {
       return '<text class="tm-rd-tick" x="' + t[0] + '" y="' + (h - 4) + '" text-anchor="' + t[2] + '">' + esc((fmt || compact)(scaleInv(t[1], sc))) + '</text>';
     }).join('') + (sc == null ? '' : '<text class="tm-rd-tick tm-rd-log" x="' + (w - mr) + '" y="' + (mt + 6) + '" text-anchor="end">escala log</text>');
     // Secondary axis on top: robust z of the peers (0 = median of the funds).
@@ -1015,7 +1018,7 @@
     });
     if (!stats.length) return '<div class="tm-empty">Nenhum campo numérico do fundo em ' + esc(p) + ' tem ao menos ' + PEER_MIN +
       ' fundos ' + FAM + ' com valores distintos para comparar.</div>';
-    stats.sort(function (a, b) { return (b.rb.z == null ? -1 : Math.abs(b.rb.z)) - (a.rb.z == null ? -1 : Math.abs(a.rb.z)); });
+    // Charts keep the field order of the Ficha and the Série completa.
     function pct(v) { return v == null ? '—' : String(Math.round(v)); }
     var cells = stats.map(function (o) {
       var y = o.y, s = o.s, v = o.v, pr = pct(o.pc), rb = o.rb, fm = o.fmt, ra = o.ratio;
@@ -1036,8 +1039,8 @@
           (rb.tukey ? '; fora das cercas de Tukey (seria um ponto isolado num boxplot)' : '') + '.' : '') +
         (o.prev ? '\nNa competência anterior (' + pp + '): percentil ' + pct(o.prev.p) + ', z ' + zText(o.prev.z) +
           '; variação de ' + zText(o.pc - o.prev.p) + ' pontos percentuais.' : '') +
-        (s.scale == null ? '\nBarras = quantidade de fundos por faixa de valor; curva = normal com a mesma média e desvio-padrão dos fundos; tracejado = média dos fundos; laranja = este fundo.'
-          : '\nBarras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; tracejado = centro da curva; laranja = este fundo.') +
+        (s.scale == null ? '\nBarras = quantidade de fundos por faixa de valor; curva = normal com a mesma média e desvio-padrão dos fundos; tracejado = mediana dos fundos (0 da régua de z); laranja = este fundo.'
+          : '\nBarras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; tracejado = mediana dos fundos (0 da régua de z); laranja = este fundo.') +
         (s.rs != null ? '\n' + Z_EXPLAIN : '') +
         '\nFundos ' + FAM + ': P25 ' + fm(s.q[25]) + ' · mediana ' + fm(s.q[50]) + ' · P75 ' + fm(s.q[75]) + ' (metade dos fundos fica entre P25 e P75).' +
         '\nMédia ' + fm(s.mean) + ' · desvio-padrão ' + fm(s.sd) + ' · mínimo ' + fm(s.q[0]) + ' · máximo ' + fm(s.q[100]) + '.' +
@@ -1047,7 +1050,7 @@
         fm(scaleInv(s.hi, s.scale)) + ') aparecem nesses limites' + (s.outside ? ' (' + fmtInt(s.outside) + ' fundos)' : '') +
         '; média, desvio, percentis e posição usam os valores originais.' +
         (v < scaleInv(s.lo, s.scale) || v > scaleInv(s.hi, s.scale) ? '\nO fundo está entre os valores winsorizados: o ponto laranja fica na borda.' : '') +
-        scaleNote(s.scale, scaleInv(s.dmean, s.scale), fm) +
+        scaleNote(s.scale, s.q[50], fm, true) +
         (ra ? '\nUm valor por fundo: mediana das linhas do numerador sobre a mediana das linhas do denominador na mesma competência.'
           : '\nUm valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas.') +
         (idx.length > 1 ? '\nEste fundo tem ' + fmtInt(idx.length) + ' linhas nesta data.' : '') +
@@ -1063,7 +1066,8 @@
         (delta != null ? '<span class="tm-z-delta ' + (delta >= 0 ? 'tm-up' : 'tm-down') + '">' + (delta >= 0 ? '▲' : '▼') + Math.abs(delta) + '</span>' : '') +
         ' · fundo ' + fm(v) + ' · ' + fmtInt(s.n) + ' fundos</div></div>';
     });
-    var off = stats.filter(function (o) { return o.rb.level === 'atípico' || o.rb.level === 'extremo'; });
+    // Highlights: from the most to the least atypical (|robust z|).
+    var off = stats.filter(function (o) { return o.rb.level === 'atípico' || o.rb.level === 'extremo'; }).sort(function (a, b) { return (b.rb.z == null ? -1 : Math.abs(b.rb.z)) - (a.rb.z == null ? -1 : Math.abs(a.rb.z)); });
     var nExt = off.filter(function (o) { return o.rb.level === 'extremo'; }).length;
     var panelTip = 'Z robusto: distância do fundo à mediana dos fundos da família na mesma competência, em desvios robustos ' +
       '(MAD escalonado, na escala log). |z| de 2 a 3,5 = atípico; 3,5 ou mais = extremo (Iglewicz e Hoaglin, 1993). ' +
@@ -1079,12 +1083,12 @@
       }).join('') + '</ol>' : '<div class="tm-z-none">Todos os campos estão na faixa típica da família (|z| &lt; 2).</div>') + '</div>';
     var tip = 'Cada gráfico compara o fundo com os demais fundos ' + FAM + ' que publicaram o campo na mesma competência. ' +
       'O percentil diz quantos por cento desses fundos têm valor menor que o do fundo (percentil 90 = maior que 90% deles). ' +
-      'Os gráficos vêm do mais atípico para o mais típico (|z robusto|). Troque a competência no seletor de período da Ficha. ' +
+      'Os gráficos seguem a ordem dos campos da Ficha e da Série completa; os destaques, do mais ao menos atípico (|z robusto|). Troque a competência no seletor de período da Ficha. ' +
       'Passe o mouse em um gráfico para ver P25, mediana, P75, média, extremos e o histórico do próprio fundo.';
     var hasPlan = ratioPlan(x.n, x.f.map(function (y) { return y[1]; })).length > 0;
     return '<div class="tm-caption" data-tip="' + esc(tip) + '">Posição do fundo entre os ' + fmtInt(pd.funds) + ' fundos ' + FAM +
       ' na competência ' + esc(p) + ', campo a campo (' + (stats.length === 1 ? '1 campo numérico' : fmtInt(stats.length) + ' campos numéricos') +
-      ', do mais ao menos atípico): barras = fundos por faixa de valor; curva = normal ajustada; tracejado = centro; laranja = este fundo. ' +
+      ', na ordem da Ficha): barras = fundos por faixa de valor; curva = normal ajustada; tracejado = mediana; laranja = este fundo. ' +
       'Passe o mouse para a explicação.' +
       (mode === 'rel' && plan.length ? ' Valores relativos: cada item dividido pelo total da sua tabela, os totais pelo PL e razões analíticas ' +
         '(ex.: inadimplência sobre os direitos creditórios); campos sem regra aparecem como publicados.'

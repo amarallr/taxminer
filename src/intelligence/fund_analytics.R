@@ -420,6 +420,37 @@ fund_returns <- function(root, sources = fund_return_sources, family = NULL, cnp
 
 fund_return_min_months <- 6L
 
+# Every fund's monthly returns (fund_returns) cached as Parquet next to the
+# period metrics (metric_paths), rebuilt only when the processed return tables
+# or the reading functions change (same scheme as load_fund_metrics). The app
+# reads it once to place a fund among its family (fund_return_peer_box).
+fund_returns_paths <- function(root) {
+  base <- file.path(fund_processed_paths(root)$base, "metrics")
+  list(base = base, table = file.path(base, "fund_returns.parquet"), index = file.path(base, "fund_returns_index.rds"))
+}
+fund_returns_signature <- function(root, sources = fund_return_sources) {
+  index <- read_rds_recoverable(fund_processed_paths(root)$index, is.data.frame)
+  tables <- unique(vapply(sources, `[[`, "", "table"))
+  compute_signature_hash(list(
+    parts = sort(index$output_sha256[index$table_name %in% tables]),
+    functions = transformation_signature(list(fund_returns = fund_returns, read_return_rows = read_return_rows,
+                                              parse_return_number = parse_return_number, latest_version = latest_version)),
+    sources = sources))
+}
+load_fund_returns <- function(root, rebuild = FALSE) {
+  paths <- fund_returns_paths(root)
+  signature <- fund_returns_signature(root)
+  cached <- if (file.exists(paths$index)) tryCatch(read_rds_recoverable(paths$index, is.list), error = function(e) NULL) else NULL
+  if (!rebuild && file.exists(paths$table) && identical(cached$signature, signature))
+    return(as.data.frame(arrow::read_parquet(paths$table)))
+  out <- fund_returns(root)
+  dir.create(paths$base, recursive = TRUE, showWarnings = FALSE)
+  write_parquet_validated(out, paths$table)
+  write_validated_atomic(list(signature = signature, rows = nrow(out), built_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")),
+                         paths$index, format = "rds")
+  out
+}
+
 # Rows of one return table (read_metric_rows columns), optionally of one fund only
 # (filtered in the Parquet scan, so the app reads a few rows per click).
 read_return_rows <- function(root, family, table, columns, cnpj = NULL) {
@@ -468,7 +499,8 @@ fund_return_distribution <- function(values, months, class = "") {
   list(n = n, mean = m, sd = if (is.finite(s)) s else 0, min = min(values), max = max(values),
        scale = sc, dmean = dm, dsd = if (is.finite(ds)) ds else 0,
        lo = lo, hi = hi, counts = counts, outside = w$clamped, wlo = w$lo, whi = w$hi,
-       last = values[last], last_month = months[last], first_month = min(months), class = class)
+       last = values[last], last_month = months[last], first_month = min(months), class = class,
+       values = values)
 }
 
 # Winsorization of the values drawn in the distribution charts (developer
@@ -576,7 +608,9 @@ fund_distribution_svg <- function(d, width = 340, height = 128, fmt = format_ret
   }, character(1))
   curve <- if (ds > 0) sprintf('<path class="tm-rd-curve" d="M%s"/>',
                                paste(sprintf("%s,%s", f(sx(xs)), f(sy(dens(xs)))), collapse = " L")) else ""
-  mean_x <- f(sx(dm))
+  # Dashed line: the peers' median (z = 0) when known, else the curve centre.
+  cx <- if (!is.null(d$zmed) && !is.na(d$zmed)) d$zmed else dm
+  mean_x <- f(sx(cx))
   # A marked value outside the scale shows as a dot on the nearest edge.
   lt <- if (is.null(d$last) || is.na(d$last)) NA_real_ else fund_scale_fwd(d$last, sc)
   last <- if (is.na(lt)) "" else if (lt >= d$lo && lt <= d$hi)
@@ -586,10 +620,10 @@ fund_distribution_svg <- function(d, width = 340, height = 128, fmt = format_ret
   axis <- sprintf('<line class="tm-rd-axis" x1="%s" x2="%s" y1="%s" y2="%s"/>', ml, width - mr, mt + ph, mt + ph)
   # The middle label is dropped when it would run into the edge labels; on the
   # log scale it names the original value under the centre of the curve.
-  keep <- c(TRUE, min(sx(dm) - ml, width - mr - sx(dm)) >= 0.22 * pw, TRUE)
+  keep <- c(TRUE, min(sx(cx) - ml, width - mr - sx(cx)) >= 0.22 * pw, TRUE)
   tk <- if (ticks) paste(sprintf('<text class="tm-rd-tick" x="%s" y="%s" text-anchor="%s">%s</text>',
                                  c(ml, mean_x, width - mr)[keep], height - 4, c("start", "middle", "end")[keep],
-                                 htmltools::htmlEscape(fmt(fund_scale_inv(c(d$lo, dm, d$hi), sc))[keep])), collapse = "") else ""
+                                 htmltools::htmlEscape(fmt(fund_scale_inv(c(d$lo, cx, d$hi), sc))[keep])), collapse = "") else ""
   if (!is.na(sc)) tk <- paste0(tk, sprintf('<text class="tm-rd-tick tm-rd-log" x="%s" y="%s" text-anchor="end">escala log</text>',
                                            width - mr, mt + 6))
   # Secondary axis on top: robust z of the peers (0 = median of the funds).

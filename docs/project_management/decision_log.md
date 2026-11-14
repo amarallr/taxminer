@@ -840,3 +840,12 @@ Pedido explícito do desenvolvedor ("absorva como requisito do projeto. atualize
 - Novo prompt `prompts/common_p09_safe_publication.txt`, obrigatório para todo export, commit e push, a partir do `.claude/doit.txt` de 2026-11-13 (sem os dados de sessão).
 - `AGENTS.md` (camada imutável, `imm_0001`) ganha uma regra que remete ao Common P09; a linha de base é registrada por esta decisão.
 - Carimbo com fuso horário e manifesto `site/app/version.json` (`scripts/refresh_site_stamp.sh`), completado pelo workflow do GitHub Pages com o commit publicado.
+
+## decision_0059 — 2026-11-13T22:17:35-03:00 — Versão 1.0.4 declarada estável
+
+Pedido explícito do desenvolvedor ("considere essa versão v.1.0.4 como estável").
+
+- A `1.0.4` (arquivo `VERSION`, tag `v1.0.4`) passa a ser a versão estável de referência do app local e do
+  painel publicado: ponto de retorno em caso de regressão nas próximas entregas. A referência anterior é a tag `v1.0.3`.
+- A condição de estável vale para o commit marcado pela tag `v1.0.4`, depois da validação P09 e da
+  verificação do GitHub Pages; entregas posteriores ficam fora dela até nova declaração.

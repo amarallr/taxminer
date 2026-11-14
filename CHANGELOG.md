@@ -1,7 +1,24 @@
 # Changelog
 
-## Não incluído em versão — 2026-11-13
+## Versão 1.0.4 — 2026-11-13 (estável)
 
+Registra como `1.0.4` (arquivo `VERSION`, tag `v1.0.4`) as entregas posteriores à 1.0.3. Declarada versão
+estável de referência (`decision_0059`):
+
+- **Rentabilidade × fundos da família** (aba Fundos e fichas publicadas): ao lado da dispersão da
+  rentabilidade mensal do próprio fundo, um segundo gráfico com a metodologia das Distribuições. Ele
+  compara o último mês do fundo com os demais fundos da família no mesmo mês e mostra percentil, z robusto,
+  faixa (típico, atípico ou extremo) e a régua de z. A série de rentabilidades fica em cache local
+  (`metrics/fund_returns.parquet`), refeito quando as fontes mudam.
+- **Tracejado = mediana** nos gráficos comparados com os demais fundos (Distribuições e Rentabilidade ×
+  fundos). O tracejado coincide com o 0 da régua de z, e o rótulo central mostra a mediana em valores
+  originais. A curva continua sendo a normal ajustada, como referência visual.
+- **Rentabilidade mensal com régua de z e tracejado na mediana**, com a mesma metodologia do gráfico ao
+  lado: z = (mês − mediana dos meses do fundo) ÷ desvio robusto desses meses, na escala do gráfico. O
+  tooltip informa a mediana e o z do último mês. As legendas das duas caixas ficam alinhadas na mesma
+  altura (mesma largura de caixa, legenda no rodapé).
+- **Ordem das Distribuições**: os gráficos seguem a ordem dos campos da Ficha e da Série completa. O
+  painel Destaques estatísticos continua listando do mais ao menos atípico.
 - **Hints ao passar o mouse** (aba Fundos e painel publicado): Direitos políticos especiais e Direitos
   econ.-financeiros distintos funcionam como o de Entidade de investimento, em tooltip, sem o botão ⓘ
   (nas características, nos filtros e no cabeçalho da lista). A nota explicativa de Entidade de
@@ -149,8 +166,6 @@
   da Ficha (0 divergências), e a troca de tabela do FIP em 2024 foi comprovada pelo dicionário.
   ICVM 555 e FIF (I.2.c.5) ficam como métricas separadas: as descrições diferem. Ainda sem
   interface (ETAPA 03).
-
-## Não incluído em versão — 2026-11-12
 
 - **Ficha › Série completa** (app e painel publicado): rolagem horizontal; as colunas não encolhem e a
   coluna "Campo" fica fixa à esquerda.

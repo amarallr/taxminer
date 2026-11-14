@@ -263,13 +263,16 @@ write_static_fichas <- function(out_dir, root, data, tables = static_ficha_table
   for (fam in names(tables)) dir.create(file.path(dir, fam), showWarnings = FALSE)
   keys <- ls(parts)
   by_fund <- if (is.null(returns)) NULL else split(returns, paste(returns$family, returns$fund_cnpj, sep = "/"))
+  # Every fund's monthly returns, for the chart of the fund among its family (fund_return_peer_box).
+  peers <- if (is.null(returns)) NULL else fund_return_peer_index(returns)
   jr <- if (is.null(data$attributes)) NULL else data$attributes[data$attributes$attribute == "joint_rights", , drop = FALSE]
   joint <- if (is.null(jr) || !nrow(jr)) character() else
     stats::setNames(sprintf("[%s,%s]", json_string(jr$value), json_string(jr$period)), paste(jr$family, jr$fund_cnpj, sep = "/"))
   for (key in keys) {
     fam <- sub("/.*$", "", key); cnpj <- sub("^.*/", "", key)
     ret <- if (is.null(returns)) NULL else
-      as.character(fund_return_ui(root, fam, cnpj, returns = if (is.null(by_fund[[key]])) returns[0, ] else by_fund[[key]]))
+      as.character(fund_return_ui(root, fam, cnpj, returns = if (is.null(by_fund[[key]])) returns[0, ] else by_fund[[key]],
+                                  peers = peers))
     writeLines(enc2utf8(paste0("{\"t\":[", paste(parts[[key]], collapse = ","), "]",
                                if (!is.null(ret)) paste0(",\"r\":", json_string(ret)),
                                if (!is.na(joint[key])) paste0(",\"j\":", joint[key]), "}")),

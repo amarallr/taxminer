@@ -612,6 +612,21 @@ test_that("distributions are drawn on a log scale with original labels", {
   expect_equal(d$mean, mean(c(rep(1, 20), 1.1, 0.9, 1.2, 0.8, 300)))
 })
 
+test_that("the dashed line of a peer distribution is the median, aligned with z = 0", {
+  skew <- c(rep(c(0, 1, 2, 3, 5), 40), 1e6, 5e6, 2e7, 1e8)
+  s <- fund_peer_summary(skew)
+  expect_true(!is.null(s$rs) && s$rs > 0)
+  d <- c(s, list(last = 3, zmed = fund_scale_fwd(s$q[51], s$scale)))
+  svg <- fund_distribution_svg(d, 220, 62, format_compact_number, TRUE)
+  x_mean <- as.numeric(sub('.*class="tm-rd-mean" x1="([-0-9.]+)".*', "\\1", svg))
+  x_z0 <- as.numeric(sub('.*class="tm-rd-ztick tm-rd-z0" x1="([-0-9.]+)".*', "\\1", svg))
+  expect_equal(x_mean, x_z0)
+  expect_match(svg, ">2,00<")                  # middle label is the median in original values
+  # Without zmed (own monthly returns) the dashed line stays at the curve centre.
+  own <- fund_distribution_svg(c(s, list(last = 3)), 220, 62, format_compact_number, TRUE)
+  expect_false(grepl("tm-rd-z0", own))
+})
+
 test_that("distribution charts are winsorized at 2.5% on each side; statistics stay original", {
   v <- c(1:97, 1000, 2000, 5000)
   w <- fund_winsorize(v)

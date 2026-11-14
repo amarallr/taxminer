@@ -233,7 +233,7 @@ fund_joint_ui <- function(lines, period) {
 # the same mean and deviation, the mean (dashed) and the latest month (orange).
 # The full caption, legend and notes go to the tooltip. Read on demand for the
 # selected fund only (the published site gets this markup in the fund's file).
-fund_return_ui <- function(root, family, cnpj, returns = NULL) {
+fund_return_ui <- function(root, family, cnpj, returns = NULL, peers = NULL) {
   # Without the analytics layer (src/intelligence/fund_analytics.R) there is no chart.
   if (!exists("fund_return_sources", mode = "list")) return(NULL)
   src <- fund_return_sources[[family]]
@@ -243,6 +243,16 @@ fund_return_ui <- function(root, family, cnpj, returns = NULL) {
                                tip = sprintf("O informe da CVM de %s não publica rentabilidade.", toupper(family))))
   r <- if (is.null(returns)) tryCatch(fund_returns(root, family = family, cnpj = cnpj), error = function(e) NULL) else returns
   d <- fund_return_profile(r, family, cnpj)
+  # Robust z ruler on top: each month against the fund's own months (0 = their
+  # median), on the display scale, like the comparison with the funds beside it.
+  if (!is.null(d)) {
+    d$zmed <- fund_scale_fwd(stats::median(d$values), d$scale)
+    d$rs <- fund_peer_robust_scale(fund_scale_fwd(d$values, d$scale))
+    zl <- if (is.na(d$rs)) NA_real_ else (fund_scale_fwd(d$last, d$scale) - d$zmed) / d$rs
+  }
+  # Beside it: the latest month among the funds of the family (fund_return_peer_box).
+  if (!is.null(d) && is.null(peers)) peers <- fund_return_family_index(root, family)
+  peer <- if (is.null(d)) NULL else fund_return_peer_box(peers, family, cnpj, r, d, src)
   field <- sprintf("Campo CVM %s (tabela %s)%s.", src$column, src$table,
                    if (src$scale != 1) ", publicado como fração e exibido em %" else ", publicado em %")
   if (is.null(d)) return(box(shiny::div(class = "tm-rdm-cap", sprintf("menos de %d meses publicados", fund_return_min_months)),
@@ -254,24 +264,94 @@ fund_return_ui <- function(root, family, cnpj, returns = NULL) {
                      if (d$outside == 1) " (1 mês)" else if (d$outside > 1) sprintf(" (%s meses)", format_int(d$outside)) else "",
                      format_return_pct(d$min), format_return_pct(d$max)))
   tip <- paste(c(fund_return_caption(d),
-                 if (is.na(d$scale)) "Barras: meses; curva: normal com a mesma média e desvio; tracejado: média; laranja: último mês."
-                 else "Barras: meses; curva: normal ajustada na escala exibida; tracejado: centro da curva; laranja: último mês.",
-                 fund_scale_note(d$scale, fund_scale_inv(d$dmean, d$scale), format_return_pct),
+                 paste0(if (is.na(d$scale)) "Barras: meses; curva: normal com a mesma média e desvio; "
+                        else "Barras: meses; curva: normal ajustada na escala exibida; ",
+                        "tracejado: mediana dos meses", if (!is.na(d$rs)) " (0 da régua de z)", "; ",
+                        "laranja: último mês."),
+                 if (!is.na(d$rs)) sprintf(paste0("Mediana dos meses %s · último mês z %s (|z| < 2 típico; 2 a 3,5 atípico; 3,5 ou mais extremo). ",
+                                                  "Régua superior: z robusto de cada mês em relação aos meses do próprio fundo: ",
+                                                  "z = (mês − mediana dos meses) ÷ desvio robusto dos meses (MAD escalonado), na escala do gráfico."),
+                                           format_return_pct(stats::median(d$values)), fund_peer_z_text(zl)),
+                 fund_scale_note(d$scale, stats::median(d$values), format_return_pct, median = "dos meses"),
                  notes, field), collapse = "\n")
-  box(htmltools::HTML(fund_return_svg(d, width = 220, height = 62)),
+  own <- box(htmltools::HTML(fund_return_svg(d, width = 220, height = 62)),
       shiny::div(class = "tm-rdm-cap", sprintf("média %s · dp %s p.p. · %s meses%s", format_return_pct(d$mean),
                                                formatC(d$sd, format = "f", digits = 2, decimal.mark = ","), format_int(d$n),
                                                paste0(if (d$outside > 0) sprintf(" · %s fora", format_int(d$outside)) else "",
                                                       if (!is.na(d$scale)) " · escala log" else ""))),
       tip = tip)
+  if (is.null(peer)) own else shiny::div(class = "tm-rdm-pair", own, peer)
+}
+
+# Monthly returns of every fund of a family, indexed by "family|month" (one value
+# per fund: the class/series with most published months, latest report
+# version, as in fund_returns), with the peer summaries computed once.
+fund_return_peer_index <- function(returns) {
+  idx <- new.env(parent = emptyenv())
+  idx$values <- if (is.null(returns) || !nrow(returns)) list()
+                else split(returns$value, paste(returns$family, returns$month, sep = "|"))
+  idx$stats <- new.env(parent = emptyenv())
+  idx
+}
+fund_return_peer_stats <- function(idx, family, month) {
+  key <- paste(family, month, sep = "|")
+  if (!exists(key, envir = idx$stats, inherits = FALSE))
+    assign(key, fund_peer_summary(idx$values[[key]]), envir = idx$stats)
+  get(key, envir = idx$stats, inherits = FALSE)
+}
+# The app reads every fund's returns once (load_fund_returns: cached Parquet;
+# they do not change while it runs); without the cache layer, the family only.
+fund_return_family_memo <- new.env(parent = emptyenv())
+fund_return_family_index <- function(root, family) {
+  key <- if (exists("load_fund_returns", mode = "function")) "all" else family
+  if (!exists(key, envir = fund_return_family_memo, inherits = FALSE))
+    assign(key, tryCatch(fund_return_peer_index(if (key == "all") load_fund_returns(root) else fund_returns(root, family = family)),
+                         error = function(e) NULL), envir = fund_return_family_memo)
+  get(key, envir = fund_return_family_memo, inherits = FALSE)
+}
+
+# The fund's latest monthly return among the funds of its family in the same
+# month, with the method of the tab Distribuições: percentile, robust z (with
+# its ruler on top), winsorized chart on the display scale, position in the
+# previous month, and the same tooltip (fund_peer_tip).
+fund_return_peer_box <- function(peers, family, cnpj, r, d, src) {
+  if (is.null(peers)) return(NULL)
+  fam <- toupper(family); fmt <- function(x) format_return_pct(x, 2)
+  title <- shiny::div(class = "tm-rdm-title", paste("Rentabilidade × fundos", fam))
+  v <- d$last; month <- d$last_month
+  s <- fund_return_peer_stats(peers, family, month)
+  if (is.null(s)) return(shiny::div(class = "tm-rdm tm-rdm-peer tm-rdm-empty", title,
+    `data-tip` = sprintf("Menos de %d fundos %s com rentabilidade publicada em %s.", fund_peer_min_funds, fam, month_label(month)),
+    shiny::div(class = "tm-rdm-cap", sprintf("menos de %d fundos no mês", fund_peer_min_funds))))
+  p <- fund_peer_percentile(s, v); rb <- fund_peer_robust(s, v)
+  own <- r[r$family == family & r$fund_cnpj == cnpj, , drop = FALSE]
+  pm <- sort(unique(own$month[own$month < month]), decreasing = TRUE)[1]
+  prev <- if (!is.na(pm)) {
+    sp <- fund_return_peer_stats(peers, family, pm); vp <- own$value[own$month == pm][1]
+    if (!is.null(sp) && !is.na(vp)) list(period = pm, p = fund_peer_percentile(sp, vp), z = fund_peer_robust(sp, vp)$z)
+  }
+  tip <- fund_peer_tip(paste("Rentabilidade mensal entre os fundos", fam), src$column, s, v, p, family, month, 1L, NULL, rb, prev, fmt)
+  tip <- sub("Um valor por fundo: quando há várias linhas na data \\(classes, séries ou versões do informe\\), vale a mediana delas.",
+             "Um valor por fundo: a classe/série com mais meses publicados, na versão mais recente do informe (a mesma do gráfico ao lado).",
+             tip)
+  dd <- s; dd$last <- v; dd$zmed <- fund_scale_fwd(s$q[51], s$scale)
+  lv <- c(`típico` = "tm-z-typ", `atípico` = "tm-z-atp", extremo = "tm-z-ext")[rb$level]
+  shiny::div(class = paste("tm-rdm tm-rdm-peer", if (!is.na(lv)) lv), `data-tip` = tip, title,
+             htmltools::HTML(fund_distribution_svg(dd, 220, 62, fmt, TRUE, paste("Rentabilidade mensal entre os fundos", fam))),
+             shiny::div(class = "tm-rdm-cap", sprintf("%s · z %s %s · %s fundos · %s", fund_peer_text(p), fund_peer_z_text(rb$z),
+                                                     rb$level, format_int(s$n), month_label(month))))
 }
 
 # Hint line of a chart drawn on the log display scale (fund_display_scale);
 # NULL on the linear scale.
-fund_scale_note <- function(scale, centre, fmt = format_compact_number) {
+# median: FALSE (dashed line = curve centre), TRUE (median of the funds) or the
+# text naming whose median it is ("dos meses").
+fund_scale_note <- function(scale, centre, fmt = format_compact_number, median = FALSE) {
   if (is.null(scale) || is.na(scale)) return(NULL)
   sprintf(paste0("Escala logarítmica (asinh) só para exibição, para comparar valores de ordens de grandeza diferentes: o eixo e este ",
-                 "texto mostram valores originais; o tracejado marca o centro da curva nessa escala (%s), que não é a média."),
+                 "texto mostram valores originais; ",
+                 if (!isFALSE(median)) paste0("o tracejado marca a mediana ", if (isTRUE(median)) "dos fundos" else median, " (%s).")
+                 else "o tracejado marca o centro da curva nessa escala (%s), que não é a média."),
           fmt(centre))
 }
 
@@ -579,9 +659,9 @@ fund_peer_tip <- function(label, field, s, v, p, family, period, rows, history, 
                                 prev$period, fund_peer_text(prev$p), paste("z", fund_peer_z_text(prev$z)),
                                 fund_peer_z_text(p - prev$p)),
     if (is.na(s$scale)) paste0("Barras = quantidade de fundos por faixa de valor; curva = normal com a mesma média e desvio-padrão ",
-                               "dos fundos; tracejado = média dos fundos; laranja = este fundo.")
+                               "dos fundos; tracejado = mediana dos fundos (0 da régua de z); laranja = este fundo.")
     else paste0("Barras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; ",
-                "tracejado = centro da curva; laranja = este fundo."),
+                "tracejado = mediana dos fundos (0 da régua de z); laranja = este fundo."),
     if (!is.null(s$rs) && !is.na(s$rs))
       fund_z_explain,
     sprintf("Fundos %s: P25 %s · mediana %s · P75 %s (metade dos fundos fica entre P25 e P75).", fam,
@@ -597,7 +677,7 @@ fund_peer_tip <- function(label, field, s, v, p, family, period, rows, history, 
             if (s$outside > 0) sprintf(" (%s fundos)", format_int(s$outside)) else ""),
     if (v < fund_scale_inv(s$lo, s$scale) || v > fund_scale_inv(s$hi, s$scale))
       "O fundo está entre os valores winsorizados: o ponto laranja fica na borda.",
-    fund_scale_note(s$scale, fund_scale_inv(s$dmean, s$scale), fmt),
+    fund_scale_note(s$scale, s$q[51], fmt, median = TRUE),
     if (is.null(ratio)) "Um valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas."
     else "Um valor por fundo: mediana das linhas do numerador sobre a mediana das linhas do denominador na mesma competência.",
     if (rows > 1) sprintf("Este fundo tem %s linhas nesta data.", format_int(rows)),
@@ -617,8 +697,8 @@ fund_previous_period <- function(r, period) {
 # Matrix of the tab Distribuições: r = rows of the fund (all periods), period =
 # the competência of the Ficha, peers = fund_peer_summaries of that table and
 # period, family = the fund's family; prev_peers / prev_period = the same for the
-# fund's previous competência (trajectory), when known. Cells are ordered from
-# the most to the least atypical (|robust z|), and a panel lists the highlights.
+# fund's previous competência (trajectory), when known. Cells keep the field
+# order of the Ficha; a panel lists the highlights, most atypical first.
 fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NULL, period = NULL,
                                         peers = NULL, family = "", prev_peers = NULL, prev_period = NULL,
                                         mode = "rel", rows_of = NULL) {
@@ -689,7 +769,7 @@ fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NUL
               fmt = if (is.null(x$ratio)) format_compact_number else fund_ratio_pct))
   })
   az <- vapply(stat, function(x) if (is.na(x$rb$z)) -1 else abs(x$rb$z), numeric(1))
-  stat <- stat[order(-az)]
+  # Charts keep the field order of the Ficha and the Série completa.
   lab <- list(label = vapply(stat, `[[`, "", "label"), derived = vapply(stat, function(x) isTRUE(x$derived) || !is.null(x$ratio), logical(1)))
   fields <- vapply(stat, `[[`, "", "key")
   levels <- vapply(stat, function(x) x$rb$level, "")
@@ -712,7 +792,9 @@ fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NUL
                           sprintf(" · fundo %s · %s fundos", x$fmt(x$v), format_int(x$s$n))))
   })
   # Highlights: the most atypical fields, with direction and trajectory.
-  top <- which(levels %in% c("atípico", "extremo"))[seq_len(min(6L, sum(levels %in% c("atípico", "extremo"))))]
+  # Highlights: from the most to the least atypical (|robust z|).
+  off <- order(-az); off <- off[levels[off] %in% c("atípico", "extremo")]
+  top <- off[seq_len(min(6L, length(off)))]
   n_ext <- sum(levels == "extremo"); n_atp <- sum(levels == "atípico")
   highlights <- shiny::div(
     class = "tm-z-panel", `data-tip` = paste(
@@ -740,12 +822,12 @@ fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NUL
     shiny::div(class = "tm-caption", `data-tip` = paste0(
       "Cada gráfico compara o fundo com os demais fundos ", fam, " que publicaram o campo na mesma competência. ",
       "O percentil diz quantos por cento desses fundos têm valor menor que o do fundo (percentil 90 = maior que 90% deles). ",
-      "Os gráficos vêm do mais atípico para o mais típico (|z robusto|). Troque a competência no seletor de período da Ficha. ",
+      "Os gráficos seguem a ordem dos campos da Ficha e da Série completa; os destaques, do mais ao menos atípico (|z robusto|). Troque a competência no seletor de período da Ficha. ",
       "Passe o mouse em um gráfico para ver P25, mediana, P75, média, extremos e o histórico do próprio fundo."),
-      sprintf("Posição do fundo entre os %s fundos %s na competência %s, campo a campo (%s, do mais ao menos atípico): ",
+      sprintf("Posição do fundo entre os %s fundos %s na competência %s, campo a campo (%s, na ordem da Ficha): ",
               format_int(attr(peers, "funds")), fam, period,
               if (length(fields) == 1L) "1 campo numérico" else paste(format_int(length(fields)), "campos numéricos")),
-      "barras = fundos por faixa de valor; curva = normal ajustada; tracejado = centro; laranja = este fundo. ",
+      "barras = fundos por faixa de valor; curva = normal ajustada; tracejado = mediana; laranja = este fundo. ",
       "Passe o mouse para a explicação.",
       if (relative) paste0(" Valores relativos: cada item dividido pelo total da sua tabela, os totais pelo PL e razões analíticas ",
                            "(ex.: inadimplência sobre os direitos creditórios); campos sem regra aparecem como publicados.")

@@ -1275,3 +1275,12 @@ th .tm-info { width: 13px; height: 13px; font-size: 11px; }
 .tm-rd-ztick { stroke: #9aa6b5; stroke-width: .6; }
 .tm-rd-ztick.tm-rd-z0 { stroke: var(--tm-navy, #0b1f3a); stroke-width: .9; }
 .tm-rd-zlab { font-size: 5.5px; fill: var(--tm-muted, #5b6470); font-variant-numeric: tabular-nums; }
+
+/* Monthly return: the fund's own months and, beside them, the fund among its family (fund_return_peer_box). */
+.tm-rdm-pair { display: flex; gap: 8px; flex: 0 0 auto; align-items: stretch; }
+/* Same width in both boxes (the svg height follows it) and the caption at the bottom: captions line up. */
+.tm-rdm-pair .tm-rdm { flex: 0 0 262px; width: 262px; min-width: 0; display: flex; flex-direction: column; }
+.tm-rdm-pair .tm-rdm-cap { margin-top: auto; }
+.tm-rdm-peer.tm-z-atp { border-color: #e0a43a; }
+.tm-rdm-peer.tm-z-ext { border-color: #c0392b; }
+@media (max-width: 1200px) { .tm-rdm-pair { flex-wrap: wrap; } }

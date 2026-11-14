@@ -25,3 +25,9 @@ request_0023,2026-11-13T20:56:39-03:00,claude_code,claude_code,Aba Fundos: hints
 request_0024,2026-11-13T20:56:39-03:00,claude_code,claude_code,Aba FICHA com as subabas Perfil e Denominações da aba Fundos,ui_ux,,answered,2026-11-13T20:56:39-03:00
 request_0025,2026-11-13T20:56:39-03:00,claude_code,claude_code,Distribuições: régua de z robusto como eixo secundário e explicação do cálculo do z nos hints,analytics,,answered,2026-11-13T20:56:39-03:00
 request_0026,2026-11-13T20:56:39-03:00,claude_code,claude_code,Consolidar os prompts de .claude em um prompt único (implementado x pendente) e remover os originais,documentation,,answered,2026-11-13T20:56:39-03:00
+request_0027,2026-11-13T21:38:43-03:00,claude_code,claude_code,Aba Fundos: gráfico Rentabilidade × fundos da família ao lado da dispersão mensal; com a metodologia das Distribuições,analytics,,answered,2026-11-13T21:38:43-03:00
+request_0028,2026-11-13T21:38:43-03:00,claude_code,claude_code,Gráficos comparados com os fundos: tracejado na mediana; alinhado ao 0 da régua de z,analytics,,answered,2026-11-13T21:38:43-03:00
+request_0029,2026-11-13T21:38:43-03:00,claude_code,claude_code,Distribuições na mesma ordem de campos da Ficha e da Série completa,ui_ux,,answered,2026-11-13T21:38:43-03:00
+request_0030,2026-11-13T22:14:45-03:00,claude_code,claude_code,Registrar como v.1.0.4 (VERSION; tag v1.0.4; carimbo do site e do app local),documentation,,answered,2026-11-13T22:14:45-03:00
+request_0031,2026-11-13T22:14:45-03:00,claude_code,claude_code,Rentabilidade mensal: régua de z no topo e tracejado na mediana dos meses; legendas alinhadas com Rentabilidade × fundos,analytics,,answered,2026-11-13T22:14:45-03:00
+request_0032,2026-11-13T22:17:36-03:00,claude_code,claude_code,Considerar a v.1.0.4 como versão estável (decision_0059),documentation,,answered,2026-11-13T22:17:36-03:00

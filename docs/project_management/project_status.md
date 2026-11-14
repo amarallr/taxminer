@@ -35,6 +35,15 @@
 - Fase 05 aceita (`acc_0013`, `decision_0051`).
 - **Aguardando:** autorização da Fase 03; confirmações P9 (hook e leitura de tokens).
 
+## Versão 1.0.4 — 2026-11-13 (estável)
+
+- Declarada versão estável de referência (`decision_0059`); ponto de retorno: tag `v1.0.4`.
+
+- Lançada a `1.0.4` (`VERSION`, tag `v1.0.4`, carimbo do painel publicado e do app local): hints ao
+  passar o mouse, FICHA com Perfil e Denominações, régua de z robusto nas Distribuições, gráfico
+  Rentabilidade × fundos da família, tracejado na mediana e Distribuições na ordem da Ficha.
+  Detalhes no `CHANGELOG.md`.
+
 ## Versão 1.0.3 — 2026-11-12
 
 - Lançada a `1.0.3` (`VERSION`, tag `v1.0.3`, carimbo do painel publicado e do app local): nova
