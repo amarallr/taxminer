@@ -55,5 +55,10 @@ separately. Never infer approval or fabricate evidence.
 - No automatic commit, push, remote creation, history rewrite, destructive action,
   global installation or global configuration change. Obtain explicit authorization
   when needed; preserve previously granted authorization within its scope.
+- Every static export, commit and push follows prompts/common_p09_safe_publication.txt
+  (req_0023): confirm the export, diagnose, integrity, tests, blocking security scan
+  (counts only), stamp with timezone and site/app/version.json, explicit file
+  allowlist (never git add . / -A / --all), push only with authorization, then
+  validate the version served by GitHub Pages and report evidence.
 - Optional assistants are not pipeline dependencies. Do not run another assistant
   or delegate tasks unless explicitly requested by the user.

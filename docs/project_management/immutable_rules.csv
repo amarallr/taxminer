@@ -1,5 +1,5 @@
 rule_id,file,section,sha256,recorded_at,decision
-imm_0001,AGENTS.md,whole file,2a949f2a7514fb6b80c611d0712bdf57a23080a59d48281f25f38804389e6ff8,2026-11-12T17:48:18-03:00,decision_0047
+imm_0001,AGENTS.md,whole file,19ba4bde6e5a9b0bac2026161085738c236fa4cab8fb6d41a1b9225680d96115,2026-11-13T21:13:00-03:00,decision_0058
 imm_0002,CLAUDE.md,whole file,2fc5cdf5b8c047cfe404f706064965fc549595094b538c52f303d9c2f4df8d62,2026-11-12T17:48:18-03:00,decision_0047
 imm_0003,prompts/common_p01_lifecycle_management.txt,whole file,7ab4d17e10c5e8d93669f3df780ed2a6ea70c04641d2711f1450339121553338,2026-11-12T17:48:18-03:00,decision_0047
 imm_0004,prompts/common_p08_governance_master.txt,section 12,9bc5554ad68d0d0dedcdedb691b2dfea180faf1387d4f9e29654bce4860ff853,2026-11-12T17:48:18-03:00,decision_0047
