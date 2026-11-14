@@ -30,6 +30,13 @@ jobs:
         run: |
           sed -i "s|\(<div class=\"tm-version\"[^>]*>[^<]*\)</div>|\1 · ${GITHUB_SHA::7}</div>|" site/app/index.html
           grep -o '<div class="tm-version"[^>]*>[^<]*</div>' site/app/index.html
+          # Publication manifest (scripts/refresh_site_stamp.sh): deployed commit, time and state.
+          if [ -f site/app/version.json ]; then
+            sed -i -e "s|\"deployed_commit\":\"[^\"]*\"|\"deployed_commit\":\"${GITHUB_SHA::7}\"|" \
+                   -e "s|\"deployed_at\":\"[^\"]*\"|\"deployed_at\":\"$(TZ=America/Sao_Paulo date +'%Y-%m-%d %H:%M %:z')\"|" \
+                   -e "s|\"status\":\"[^\"]*\"|\"status\":\"publicado\"|" site/app/version.json
+            cat site/app/version.json
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

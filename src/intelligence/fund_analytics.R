@@ -533,9 +533,28 @@ format_compact_number <- function(x) {
 # Small SVG of a distribution (fund_return_distribution): histogram of the
 # periods (bars), the normal curve with the same mean and deviation (line), the
 # mean (dashed) and the latest period (marker). `fmt` formats the axis values;
-# ticks = FALSE leaves the axis without text (thumbnails).
+# ticks = FALSE leaves the axis without text (thumbnails). With the robust scale
+# of the peers (d$rs) and their median on the display scale (d$zmed), a
+# secondary axis on top marks the robust z (fund_peer_robust): z is linear on the
+# display scale, so its ticks fall at exact positions.
+fund_z_ticks <- function(lo, hi, zmed, rs, pw, min_px = 16) {
+  if (is.null(rs) || is.null(zmed) || is.na(rs) || is.na(zmed) || rs <= 0 || hi <= lo) return(NULL)
+  z0 <- (lo - zmed) / rs; z1 <- (hi - zmed) / rs
+  px <- pw * rs / (hi - lo)  # pixels per unit of z
+  steps <- as.vector(outer(c(1, 2, 5), 10^(0:8)))
+  ok <- steps * px >= min_px
+  if (!any(ok)) return(NULL)
+  step <- steps[ok][1]
+  if (floor(z1 / step) < ceiling(z0 / step)) return(NULL)
+  z <- seq(ceiling(z0 / step), floor(z1 / step)) * step
+  list(z = z, t = zmed + z * rs)
+}
+fund_z_label <- function(z) ifelse(z > 0, paste0("+", format(z, big.mark = ".", decimal.mark = ",", scientific = FALSE, trim = TRUE)),
+                                   ifelse(z < 0, paste0("\u2212", format(-z, big.mark = ".", decimal.mark = ",", scientific = FALSE, trim = TRUE)), "0"))
+
 fund_distribution_svg <- function(d, width = 340, height = 128, fmt = format_return_pct, ticks = TRUE, label = "") {
-  ml <- 4; mr <- 4; mt <- 6; mb <- if (ticks) 16 else 4
+  zt <- if (ticks) fund_z_ticks(d$lo, d$hi, d$zmed, d$rs, width - 8) else NULL
+  ml <- 4; mr <- 4; mt <- if (is.null(zt)) 6 else 13; mb <- if (ticks) 16 else 4
   pw <- width - ml - mr; ph <- height - mt - mb
   # lo, hi, counts, dmean and dsd are on the display scale (d$scale); the
   # marked value and the axis labels are original values.
@@ -573,6 +592,16 @@ fund_distribution_svg <- function(d, width = 340, height = 128, fmt = format_ret
                                  htmltools::htmlEscape(fmt(fund_scale_inv(c(d$lo, dm, d$hi), sc))[keep])), collapse = "") else ""
   if (!is.na(sc)) tk <- paste0(tk, sprintf('<text class="tm-rd-tick tm-rd-log" x="%s" y="%s" text-anchor="end">escala log</text>',
                                            width - mr, mt + 6))
+  # Secondary axis on top: robust z of the peers (0 = median of the funds).
+  if (!is.null(zt)) {
+    x <- sx(zt$t)
+    anchor <- ifelse(x - ml < 6, "start", ifelse(width - mr - x < 6, "end", "middle"))
+    tk <- paste0(tk, sprintf('<g class="tm-rd-z"><line class="tm-rd-zaxis" x1="%s" x2="%s" y1="%s" y2="%s"/>%s</g>',
+                             ml, width - mr, mt - 2, mt - 2,
+                             paste(sprintf('<line class="tm-rd-ztick%s" x1="%s" x2="%s" y1="%s" y2="%s"/><text class="tm-rd-zlab" x="%s" y="%s" text-anchor="%s">%s</text>',
+                                           ifelse(zt$z == 0, " tm-rd-z0", ""), f(x), f(x), mt - 4, mt, f(x), mt - 5, anchor,
+                                           fund_z_label(zt$z)), collapse = "")))
+  }
   sprintf(paste0('<svg class="tm-rd-svg" viewBox="0 0 %s %s" width="100%%" role="img" aria-label="%s">',
                  '%s%s%s<line class="tm-rd-mean" x1="%s" x2="%s" y1="%s" y2="%s"/>%s%s</svg>'),
           width, height, htmltools::htmlEscape(label), axis, paste(bars, collapse = ""), curve,

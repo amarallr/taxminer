@@ -195,3 +195,5 @@
 "work_0041","title","Hints de direitos especiais: fund_attribute_hints (fonte única); popover acessível tm_info_script; botões nos filtros, nas características da Ficha e nos cabeçalhos da lista (app e site); aviso conjunto fund_joint_rights por linha de classe"
 "acc_0027","criteria","Hints de direitos especiais: fund_attribute_hints (fonte única); popover acessível tm_info_script; botões nos filtros, nas características da Ficha e nos cabeçalhos da lista (app e site); aviso conjunto fund_joint_rights por linha de classe"
 "acc_0027","notes","Aprovação explícita do desenvolvedor (decision_0057)"
+"req_0023","description","Validação, versionamento e publicação segura do painel: procedimento obrigatório para todo export, commit e push (prompts/common_p09_safe_publication.txt)"
+"req_0023","acceptance_criteria","Export confirmado; testes aprovados; varredura de segurança sem achados; carimbo com fuso e version.json consistentes; commit por allowlist explícita; push só autorizado; versão servida pelo GitHub Pages conferida; relatório com evidências"

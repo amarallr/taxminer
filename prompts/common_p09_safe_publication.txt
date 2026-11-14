@@ -1,0 +1,75 @@
+# COMMON P09 — Validação, Versionamento e Publicação Segura
+
+## CLASSIFICACAO E LOCALIZACAO DO PROMPT
+Arquivo canonico: `prompts/common_p09_safe_publication.txt`
+Escopo: COMUM. Requisito do projeto `req_0023` (pedido do desenvolvedor de 2026-11-13, origem: `.claude/doit.txt`).
+Aplica-se a TODO export do painel estatico (`scripts/export_static_dashboard.R`), commit e push, sem necessidade de novo pedido.
+`AGENTS.md` e Common P01 prevalecem em caso de conflito.
+
+## 1. Objetivo
+Concluir de forma segura, auditavel e reproduzivel a exportacao, a validacao, o versionamento e a publicacao do TaxMiner no GitHub Pages, preservando a integridade dos dados, a rastreabilidade das alteracoes e as politicas de seguranca do projeto.
+Nao reiniciar desnecessariamente etapas ja concluidas. Nao executar commit ou push enquanto houver pendencias criticas.
+
+## 2. Ordem obrigatoria
+1. Concluir o export e confirmar seu sucesso.
+2. Diagnosticar o estado atual (secao 3).
+3. Executar as verificacoes de integridade, seguranca, testes e governanca.
+4. Corrigir eventuais problemas e repetir os testes necessarios.
+5. Gerar o carimbo e validar a versao.
+6. Realizar o commit e, somente se autorizado, o push.
+7. Conferir a versao efetivamente publicada.
+
+## 3. Diagnostico inicial (antes de qualquer alteracao)
+- Estado da aplicacao local (porta 8765) e do processo de exportacao. Nao presumir sucesso apenas porque o processo deixou de existir: examinar logs, codigo de saida quando disponivel, mensagem final do export e arquivos gerados.
+- Registros de governanca dos pedidos da rodada, CHANGELOG, estado do Git e versao publicada.
+- Identificar alteracoes nao rastreadas, sem adiciona-las automaticamente.
+- Nao interromper nem reiniciar uma exportacao em andamento sem justificativa tecnica comprovada.
+
+## 4. Validacao da exportacao
+- Presenca e integridade dos arquivos esperados; arquivos vazios; referencias locais quebradas em `site/app/index.html`.
+- HTML, CSS, JavaScript e demais recursos acessiveis; funcionalidades previstas incluidas.
+- Testes automatizados existentes (`tests/testthat`), com a contagem de aprovados e reprovados.
+- Nao considerar a exportacao concluida enquanto houver erros criticos. Em caso de falha, investigar a causa e propor retomada incremental, aproveitando os resultados validos.
+
+## 5. Versionamento (mecanismo unico)
+- Fonte da versao: arquivo `VERSION`. Carimbo: `v.X · AAAA-MM-DD HH:MM ±HH:MM · <commit>` (versao, data e hora com fuso, commit).
+- App local: carimbo com o commit em uso (`+` quando ha alteracoes sem commit) e rodape `DESENVOLVIMENTO`.
+- Painel publicado: `sh scripts/refresh_site_stamp.sh` grava o carimbo e o manifesto `site/app/version.json` (versao, generated_at, environment, base_commit, deployed_commit, deployed_at, status); o rodape mostra `PRODUÇÃO` e o estado da publicacao.
+- O hash de um commit nao pode estar no proprio commit: `base_commit` e o commit sobre o qual o build foi feito; o workflow `.github/workflows/pages.yml` acrescenta o commit publicado ao carimbo e preenche `deployed_commit`, `deployed_at` e `status` no manifesto. Procedimento deterministico, sem divergencia entre carimbo e commit publicado.
+- Consistencia exigida entre rodape, CHANGELOG, manifesto, commit e versao publicada. Numero de versao e tags so mudam com autorizacao.
+
+## 6. Validacao funcional
+Validar as funcionalidades alteradas na rodada (app local e painel exportado), filtros, selecoes, interacoes, atualizacao dos graficos, integridade dos dados apresentados e compatibilidade entre a versao local e a exportada. Distinguir implementado de pendente; nao marcar requisitos como concluidos sem evidencia de teste.
+
+## 7. Seguranca e protecao de dados (OBRIGATORIA E BLOQUEANTE)
+- `.restricted/` e `.tmp/` (e os antigos `restricted/` e `tmp/`) nunca entram na publicacao nem sao acessados.
+- Nenhum dado protegido por sigilo fiscal; nenhuma credencial, token, chave ou segredo; nenhum caminho local, e-mail ou identificador pessoal nos arquivos publicos (HTML, JS, CSS, JSON, gzip).
+- Inspecionar os arquivos gerados e suas dependencias. Relatar apenas contagens; nunca imprimir conteudo sigiloso em logs ou relatorios.
+- Nao enviar arquivos locais de configuracao de agentes (`.claude/` e equivalentes) sem autorizacao explicita.
+- Proibido: `git add .`, `git add -A`, `git add --all`, inclusoes recursivas indiscriminadas ou globs amplos. Usar exclusivamente allowlist explicita de arquivos, revisada antes do commit (para `site/`, a lista exata gerada de `git status` e revisada por tipo).
+
+## 8. Commit e push
+Somente apos aprovacao de todas as verificacoes bloqueantes:
+1. Exibir a lista completa dos arquivos candidatos.
+2. Validar individualmente os arquivos autorizados.
+3. `git diff --cached --check`.
+4. Confirmar que o commit nao inclui arquivos proibidos.
+5. Executar os testes aplicaveis.
+6. Mensagem de commit descritiva.
+7. Commit exclusivamente com os arquivos autorizados.
+8. Push apenas com autorizacao explicita vigente (AGENTS.md). A existencia de um remoto nao constitui autorizacao. Em duvida, interromper antes do push e solicitar confirmacao. Nunca `git push --force`.
+
+## 9. Validacao pos-publicacao
+Verificar o resultado do workflow de CI/CD; confirmar que o GitHub Pages serve a versao correta (carimbo e `version.json`); comparar os identificadores; testar as funcionalidades alteradas; detectar problemas de cache; validar recursos estaticos e referencias; registrar evidencias. Nao declarar sucesso apenas porque o `git push` terminou sem erros.
+
+## 10. Governanca e rastreabilidade
+Atualizar os registros existentes (`docs/project_management/`), respeitando os IDs ja atribuidos. Para cada requisito: ID, descricao, estado anterior e atual, arquivos alterados, testes, evidencias, commit associado, pendencias e riscos. Distinguir planejado, em execucao, implementado, testado, homologado e publicado; nao confundir implementacao local com publicacao efetiva.
+
+## 11. Relatorio executivo
+Tabela Controle | Resultado | Evidencia para: Exportacao, Integridade dos arquivos, Testes funcionais, Seguranca e sigilo, Versionamento, CHANGELOG, Governanca, Commit, Push, CI/CD, GitHub Pages. Informar versao local, versao publicada, hash do commit, data e hora da publicacao, quantidade de arquivos exportados, testes aprovados e reprovados e pendencias. Nao inventar resultados ou evidencias.
+
+## 12. Regras de execucao
+Trabalhar incrementalmente, reutilizando resultados existentes; evitar reprocessamento e consumo excessivo de memoria; registrar checkpoints para retomada; nao executar operacoes destrutivas sem autorizacao; nao sobrescrever alteracoes de outros agentes; preservar o funcionamento da aplicacao local; nao publicar arquivos ou dados nao autorizados; em falha critica, interromper a publicacao e apresentar diagnostico; nao declarar etapa concluida sem validacao objetiva.
+
+## 13. Criterio de aceite
+Exportacao finalizada e validada; testes criticos aprovados; seguranca comprovada; carimbo consistente; CHANGELOG e governanca atualizados; commit apenas com arquivos autorizados; publicacao remota (quando autorizada) concluida; GitHub Pages com a versao correta; evidencias registradas.

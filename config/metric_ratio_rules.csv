@@ -32,7 +32,7 @@ fidc,inf_mensal_fidc_tab_X_1_1,^TAB_X_NR_COTST_SENIOR_,inf_mensal_fidc_tab_X_1_1
 fidc,inf_mensal_fidc_tab_X_1_1,^TAB_X_NR_COTST_SUBORD_,inf_mensal_fidc_tab_X_1_1,sum(^TAB_X_NR_COTST_SUBORD_),share_of_total,{item} / Cotistas subordinados,
 fidc,inf_mensal_fidc_tab_X_2,^TAB_X_(VL|QT)_COTA$,,,keep,{item},Valor unitário e quantidade; subordinação é métrica analítica (ver proposta)
 fidc,inf_mensal_fidc_tab_X_3,^TAB_X_VL_RENTAB_MES$,,,keep,{item},Já é percentual
-fidc,inf_mensal_fidc_tab_X_4,^TAB_X_VL_TOTAL$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,{tipo de operação} / PL,Por TAB_X_TP_OPER
+fidc,inf_mensal_fidc_tab_X_4,^TAB_X_VL_TOTAL$,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,{item} / PL,Um valor por TAB_X_TP_OPER (captações; resgates; amortizações)
 fidc,inf_mensal_fidc_tab_X_5,^TAB_X_VL_LIQUIDEZ_,inf_mensal_fidc_tab_IV,TAB_IV_A_VL_PL,over_pl,{item} / PL,
 fidc,inf_mensal_fidc_tab_X_6,^TAB_X_PR_,,,keep,{item},Já é percentual
 fidc,inf_mensal_fidc_tab_X_7,^TAB_X_PR_GARANTIA_DIRCRED$,,,keep,{item},Já é percentual

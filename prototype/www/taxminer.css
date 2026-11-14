@@ -154,6 +154,8 @@ svg.tm-chart { width: 100%; height: auto; display: block; overflow: visible; }
 .tm-chart .tm-axis { fill: var(--tm-muted); font-size: 9.68px; font-variant-numeric: tabular-nums; }
 .tm-chart .tm-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .tm-chart .tm-area { opacity: .08; }
+.tm-chart .tm-area-part { opacity: .22; }
+.tm-chart .tm-line-part { stroke-width: 2; }
 .tm-chart .tm-end { stroke: #fff; stroke-width: 2; }
 .tm-chart .tm-hit rect { fill: transparent; }
 .tm-chart .tm-cross { stroke: var(--tm-ink); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0; }
@@ -721,6 +723,14 @@ table.tm-series th.tm-col-period a:hover { color: var(--tm-accent); text-decorat
 table.tm-series tbody tr:hover th.tm-field { background: #f7f9fc; }
 table.tm-timeline td:first-child, .tm-names-table td:first-child { font-weight: 500; color: var(--tm-ink); }
 /* Version under "Sobre": small, muted, tabular. */
+/* Permanent build footer (build_footer): bottom right of every tab, above the content. */
+.tm-build { position: fixed; right: 8px; bottom: 4px; z-index: 1500; padding: 1px 8px; border-radius: 999px;
+  font-size: .55rem; letter-spacing: .04em; font-variant-numeric: tabular-nums; color: #3d4652;
+  background: rgba(255, 255, 255, .92); border: 1px solid var(--tm-hair, #d9dee5); box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  cursor: help; white-space: nowrap; max-width: calc(100vw - 16px); overflow: hidden; text-overflow: ellipsis; }
+.tm-build-dev { border-color: #e2b25c; background: rgba(255, 248, 230, .95); color: #7a4f00; }
+.tm-build-prod { border-color: #9ccfb2; background: rgba(236, 248, 241, .95); color: #1d5e3a; }
+@media print { .tm-build { position: static; } }
 .tm-version { font-size: .5808rem; color: var(--tm-muted); letter-spacing: .06em; font-variant-numeric: tabular-nums; margin: 2px 0 4px; }
 /* Pager (Anterior / Página n de m / Próxima): small uppercase links, quiet
    page count, hairline rule above; same in the app and the published page. */
@@ -803,12 +813,14 @@ table.tm-series td.tm-num { max-width: none; }
 .tm-static-detail > .tm-detail-head { flex: none; }
 .tm-static-detail > .tm-detail-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .tm-detail-body > .tab-content:has(> [data-pane-body="serie"]:not([hidden])),
+.tm-detail-body > .tab-content:has(> [data-pane-body="dist"]:not([hidden])),
 .tm-detail-body .tab-content:has(> .tab-pane.active > .tm-tall) {
   display: flex; flex-direction: column; overflow: hidden !important; }
 .tm-detail-body .tab-content > .tab-pane.active:has(> .tm-tall) {
   flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .tm-detail-body .tab-content > .tab-pane.active:has(> .tm-tall) > * { flex: none; }
 .tm-detail-body .tab-content > .tab-pane.active > .tm-tall,
+.tm-detail-body > .tab-content > [data-pane-body="dist"],
 .tm-detail-body > .tab-content > [data-pane-body="serie"] {
   flex: 1 1 auto !important; min-height: 120px; max-height: none !important; overflow: auto !important; }
 
@@ -1158,6 +1170,25 @@ table.tm-results th.tm-sortable { white-space: nowrap; }
 .tm-dist .tm-rd-tick { font-size: 8px; }
 .tm-dist-cap { font-size: .5544rem; color: var(--tm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* FICHA tab: the whole matrix on one screen (fitDist in tm_info_script sets
+   the columns and the row height); one-line labels, charts scaled down. */
+.tm-dist-fit-box, .tm-detail-body .tab-content > .tab-pane.active > .tm-tall.tm-dist-fit-box,
+.tm-detail-body > .tab-content > [data-pane-body="dist"].tm-dist-fit-box { overflow: hidden !important; }
+.tm-dist-fit-box { scrollbar-gutter: stable; }
+.tm-dist-fit-box.tm-dist-fit-scroll, .tm-detail-body .tab-content > .tab-pane.active > .tm-tall.tm-dist-fit-box.tm-dist-fit-scroll,
+.tm-detail-body > .tab-content > [data-pane-body="dist"].tm-dist-fit-box.tm-dist-fit-scroll {
+  overflow-x: hidden !important; overflow-y: auto !important; }
+.tm-dist-fit-box .tm-caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Fixed height (head and up to two rows of highlights): the charts keep one size. */
+.tm-dist-fit-box .tm-z-panel { margin: 4px 0 6px; padding: 5px 10px; font-size: 11px; height: 62px; overflow: hidden; box-sizing: border-box; }
+.tm-dist-fit-box .tm-z-list { columns: 3 300px; margin-top: 3px; }
+.tm-dist-fit-box .tm-z-list li { margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tm-dist-grid.tm-dist-fit { padding: 0; }
+.tm-dist-fit .tm-dist { display: flex; flex-direction: column; overflow: hidden; padding: 2px 5px 1px; }
+.tm-dist-fit .tm-dist-label { flex: none; height: auto; font-size: .55rem; -webkit-line-clamp: 1; }
+.tm-dist-fit .tm-rd-svg { flex: 1 1 auto; min-height: 0; height: 100%; }
+.tm-dist-fit .tm-dist-cap { flex: none; font-size: .5rem; }
+
 /* Distribution drawn on the log display scale (fund_display_scale). */
 .tm-rd-log { font-style: italic; opacity: .75; }
 
@@ -1208,3 +1239,39 @@ th .tm-info { width: 13px; height: 13px; font-size: 11px; }
 /* Legible over the bars; the mini return chart says it in its caption instead. */
 .tm-rd-log { paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
 .tm-rdm .tm-rd-log { display: none; }
+
+/* Distribuições: Relativo | Absoluto beside the tab name. A segmented control in
+   the type of the tabs (uppercase, tracked, small): the active option is filled
+   with the navy of the navbar, the other stays muted; no radio dots. The app
+   renders a Shiny radio group (label.radio-inline > input + span), the published
+   panel two buttons (.tm-dist-mode-btn); both get the same look. */
+.tm-dist-tab { display: flex; align-items: center; }
+.tm-dist-mode { display: inline-flex; align-items: center; align-self: center; gap: 2px; padding: 2px;
+  margin-left: 6px; background: #eef1f6; border: 1px solid #d8dee8; border-radius: 999px; }
+.tm-dist-mode .shiny-input-container { margin: 0; width: auto; min-height: 0; }
+.tm-dist-mode .control-label { display: none; }
+.tm-dist-mode .shiny-options-group { display: inline-flex; gap: 2px; margin: 0; }
+.tm-dist-mode .radio-inline, .tm-dist-mode-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 52px;
+  margin: 0; padding: 2px 9px; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+  font-family: inherit; font-size: .4435rem; font-weight: 600; line-height: 1.35; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--tm-muted); white-space: nowrap; transition: background-color .15s, color .15s, box-shadow .15s; }
+.tm-dist-mode .radio-inline span { font: inherit; letter-spacing: inherit; }
+.tm-dist-mode input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0 !important; pointer-events: none; }
+.tm-dist-mode .radio-inline:hover, .tm-dist-mode-btn:hover { color: var(--tm-navy); background: rgba(255,255,255,.7); }
+.tm-dist-mode .radio-inline:has(input:checked), .tm-dist-mode-btn.active {
+  background: var(--tm-navy); color: #fff; box-shadow: 0 1px 2px rgba(11,31,58,.25); }
+.tm-dist-mode .radio-inline:has(input:focus-visible), .tm-dist-mode-btn:focus-visible {
+  outline: 2px solid var(--tm-accent); outline-offset: 1px; }
+
+/* Characteristic hints as hover tooltips (no ⓘ): the absent names with a hint
+   are underlined; a click on a new fund fades the old detail until the new one
+   arrives (it opens on Perfil). */
+.tm-hint-name { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
+.tm-detail.tm-refreshing { opacity: .45; pointer-events: none; transition: opacity .12s; }
+
+/* Robust z ruler on top of the distribution charts (fund_distribution_svg, distSvg). */
+.tm-rd-zaxis { stroke: #c9d1dc; stroke-width: .6; }
+.tm-rd-ztick { stroke: #9aa6b5; stroke-width: .6; }
+.tm-rd-ztick.tm-rd-z0 { stroke: var(--tm-navy, #0b1f3a); stroke-width: .9; }
+.tm-rd-zlab { font-size: 5.5px; fill: var(--tm-muted, #5b6470); font-variant-numeric: tabular-nums; }

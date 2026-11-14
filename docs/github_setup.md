@@ -6,6 +6,17 @@
 [README](../README.md) ·
 [Registro de decisões](project_management/decision_log.md)
 
+## Publicação segura do painel — 2026-11-13
+
+Todo export, commit e push do painel segue `prompts/common_p09_safe_publication.txt` (`req_0023`).
+Versão única: arquivo `VERSION`; carimbo `v.X · AAAA-MM-DD HH:MM ±HH:MM · commit`. No app local, o rodapé
+mostra DESENVOLVIMENTO; no painel publicado, mostra PRODUÇÃO e o estado da publicação. `sh scripts/refresh_site_stamp.sh` grava o carimbo e o
+manifesto `site/app/version.json` com o `base_commit` (o commit sobre o qual o build foi feito; um commit não
+contém o próprio hash). O workflow `.github/workflows/pages.yml` acrescenta o commit publicado ao carimbo e
+preenche `deployed_commit`, `deployed_at` e `status` no manifesto. O commit usa uma allowlist explícita de
+arquivos; o push exige autorização explícita; a publicação só conta como concluída depois de conferida a
+versão servida pelo GitHub Pages.
+
 ## Visibilidade atual — 2026-11-10
 
 O repositório `amarallr/taxminer` está público por solicitação explícita do

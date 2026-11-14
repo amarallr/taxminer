@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-13 — safe publication procedure (Common P09, req_0023)
+- Added `common_p09_safe_publication.txt`: validation, versioning and safe publication of the static panel, mandatory for every export, commit and push (developer request of 2026-11-13). Referenced from `AGENTS.md` and `prompts/README.md`.
+
 ## 2026-11-12 — governance master prompt 1.3 (prv_0004, decision_0048)
 - Common P08: prompt revisions go only through `propose-prompt` and `decide-prompt` (candidate and diff kept under `reports/governance/`); work item IDs follow the execution order of the phases. First revision applied through that flow.
 

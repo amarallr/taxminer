@@ -10,8 +10,12 @@
 
 fund_ratio_kinds <- c("share_of_total", "over_pl", "analytic", "keep")
 
-fund_ratio_rules <- function(path = file.path("config", "metric_ratio_rules.csv")) {
-  if (!file.exists(path)) return(NULL)
+# The app runs from prototype/ (shiny::runApp("prototype")), the export and the
+# tests from the project root: the first existing candidate wins.
+fund_ratio_rules <- function(path = c(file.path("config", "metric_ratio_rules.csv"),
+                                      file.path("..", "config", "metric_ratio_rules.csv"))) {
+  path <- path[file.exists(path)][1]
+  if (is.na(path)) return(NULL)
   r <- utils::read.csv(path, stringsAsFactors = FALSE, na.strings = character(), encoding = "UTF-8")
   stopifnot(all(r$kind %in% fund_ratio_kinds))
   r
@@ -38,7 +42,8 @@ fund_ratio_plan <- function(rules, table_name, fields) {
   if (!nrow(mine)) return(empty)
   out <- list()
   for (f in fields) {
-    hit <- mine[vapply(mine$numerator, function(p) grepl(p, f, perl = TRUE), logical(1)), , drop = FALSE]
+    # A virtual field "<field>|<type>" (fund_peer_split) follows the rules of its field.
+    hit <- mine[vapply(mine$numerator, function(p) grepl(p, sub("\\|.*$", "", f), perl = TRUE), logical(1)), , drop = FALSE]
     if (!nrow(hit)) next
     base <- hit[hit$kind != "analytic", , drop = FALSE]
     if (nrow(base) && base$kind[1] != "keep")

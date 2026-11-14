@@ -165,6 +165,45 @@
       list.scrollTop(0);
     }).fail(function () { list.html('<div class="tm-empty">Não foi possível carregar os fundos deste mês.</div>'); });
   });
+  // A fund picked in the list is drawn on the administrator's chart (same axis,
+  // family colour), from its values in the administrator's month file
+  // (admin_chart_ui in the app).
+  $(document).on('click', '.tm-admin-body .tm-fund-pick[data-fund-key]', function () {
+    var body = $(this).closest('.tm-admin-body'), file = body.attr('data-admin-file'), key = $(this).attr('data-fund-key');
+    var svg = body.find('svg.tm-chart-pick').get(0);
+    if (!file || !svg || !svg.getAttribute('data-geom')) return;
+    getJSON(file).done(function (a) {
+      var g = svg.getAttribute('data-geom').split(',').map(Number), x0 = g[0], x1 = g[1], ml = g[2], pw = g[3], mt = g[4], ph = g[5], ymax = g[6];
+      var fi = -1;
+      a.funds.forEach(function (f, i) { if (fi < 0 && f[1] + '|' + String(f[2]).replace(/\D/g, '') === key) fi = i; });
+      $(svg).find('.tm-part').remove();
+      body.find('.tm-part-key').remove();
+      if (fi < 0) return;
+      var color = ((window.TM_FUNDS_META || {}).colors || FAMILY_COLORS)[a.funds[fi][1]] || '#e07b39';
+      var pts = [], segs = [], cur = [];
+      a.months.forEach(function (m, i) {
+        var r = (a.rows[i] || []).filter(function (z) { return z[0] === fi; })[0];
+        var d = Date.UTC(+m.slice(0, 4), +m.slice(5, 7) - 1, 1) / 864e5;
+        if (!r || r[1] == null) { if (cur.length) segs.push(cur); cur = []; return; }
+        var p = [ml + (d - x0) / (x1 - x0) * pw, mt + ph - Math.max(r[1], 0) / ymax * ph];
+        cur.push(p); pts.push(p);
+      });
+      if (cur.length) segs.push(cur);
+      if (!pts.length) return;
+      var ns = 'http://www.w3.org/2000/svg', base = mt + ph, hit = $(svg).find('.tm-hit').first().get(0);
+      segs.forEach(function (s) {
+        var line = s.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L');
+        var area = document.createElementNS(ns, 'path');
+        area.setAttribute('class', 'tm-area tm-area-part tm-part'); area.setAttribute('fill', color);
+        area.setAttribute('d', 'M' + s[0][0].toFixed(1) + ',' + base + ' L' + line + ' L' + s[s.length - 1][0].toFixed(1) + ',' + base + ' Z');
+        var path = document.createElementNS(ns, 'path');
+        path.setAttribute('class', 'tm-line tm-line-part tm-part'); path.setAttribute('stroke', color); path.setAttribute('d', 'M' + line);
+        svg.insertBefore(area, hit); svg.insertBefore(path, hit);
+      });
+      body.find('.tm-admin-chart .tm-subhead').first().append('<span class="tm-chart-key tm-part-key"><span class="tm-key-line" style="border-top-color:#0b1f3a"></span>Administrador' +
+        '<span class="tm-key-line" style="border-top-color:' + color + '"></span>' + esc(a.funds[fi][0]) + '</span>');
+    });
+  });
   $(document).on('click', '.tm-admin-body .tm-month-reset', function (e) {
     e.preventDefault();
     var body = $(this).closest('.tm-admin-body'), list = body.find('.tm-admin-funds');
@@ -257,12 +296,13 @@
     return m.labels[a] + ' (' + cols.join('; ') + '), último informe que o preencheu. Com um valor escolhido, ficam só os fundos das ' +
       'famílias cujo informe tem o campo; "Não consta do informe" seleciona os das demais famílias.' + noteText(m.columns[first][a]);
   }
-  // ⓘ button of a characteristic with an explanatory hint (window.TM_INFO,
-  // fund_attribute_hints in R; popover in tm_info_script).
-  function infoBtn(a) {
-    var h = window.TM_INFO && window.TM_INFO[a];
-    return h ? '<button type="button" class="tm-info" data-info="' + a + '" aria-label="Sobre: ' + esc(h.title) +
-      '" aria-expanded="false">ⓘ</button>' : '';
+  // Hint of a characteristic (window.TM_INFO, fund_hint_tip_text in R) as text
+  // appended to its hover tooltip, like the note of Entidade de investimento.
+  function hintText(a) {
+    var h = window.TM_INFO && window.TM_INFO[a], l = [];
+    if (!h || !h.sections) return '';
+    h.sections.forEach(function (s) { s[1].forEach(function (p, i) { l.push(i ? p : s[0] + ': ' + p); }); });
+    return '\n\n' + h.title + '\n' + l.join('\n');
   }
   // Informative notice when one class has both special rights (fund_joint_ui in R).
   function jointHtml(j) {
@@ -286,7 +326,7 @@
         '" class="form-control tm-cf-num" data-range="' + id + '" data-bound="max">' + (unit ? '<span class="tm-cf-sep">' + unit + '</span>' : '') + '</div>');
     }
     var sel = displayAttrs(m, fams).filter(function (a) { return !isNumeric(m, a); }).map(function (a) {
-      return field(m.medium[a], attrTip(m, a, fams), '<select class="form-select tm-cf-attr" data-attr="' + a + '">' + attrOptions(d, m, a, fams) + '</select>', infoBtn(a));
+      return field(m.medium[a], attrTip(m, a, fams) + hintText(a), '<select class="form-select tm-cf-attr" data-attr="' + a + '">' + attrOptions(d, m, a, fams) + '</select>');
     }).join('');
     return '<details class="tm-cf-panel"><summary class="tm-cf-summary"><span class="tm-cf-title">Características</span>' +
       '<span class="tm-cf-active"></span><span class="tm-cf-hint">cotistas, condomínio, público-alvo, direitos e outras; clique para abrir</span></summary>' +
@@ -446,8 +486,7 @@
     var head = t.columns.map(function (c) {
       var on = s.by === c.by;
       return '<th class="tm-sortable' + (on ? ' tm-sorted' : '') + (c.num ? ' tm-num' : '') + '" data-sort="' + c.by +
-             '" title="' + esc(c.tip || 'Clique para ordenar; de novo para inverter') + '">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') +
-             (c.attr ? infoBtn(c.attr) : '') + '</th>';
+             '" title="' + esc((c.tip || 'Clique para ordenar; de novo para inverter') + (c.attr ? hintText(c.attr) : '')) + '">' + c.label + (on ? (s.dec ? ' ▼' : ' ▲') : '') + '</th>';
     }).join('');
     var body = slice.map(function (f, i) {
       var n = t.page * PAGE + i, sel = t.selected === f ? ' class="tm-selected"' : '';
@@ -491,7 +530,7 @@
       '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="ficha">Ficha</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li>' +
-      '<li class="nav-item"><a class="nav-link" href="#" data-pane="dist">Distribuições</a></li>' +
+      '<li class="nav-item tm-dist-tab"><a class="nav-link" href="#" data-pane="dist">Distribuições</a>' + modeBar('rel') + '</li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="nomes">Denominações (' + names.length + ')</a></li></ul>' +
       '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-perfil-main"><div class="tm-empty">Carregando série…</div></div></div>' +
       '<div data-pane-body="ficha" hidden><div class="tm-empty">Carregando ficha…</div></div>' +
@@ -751,14 +790,32 @@
   // Display scale (fund_display_scale in R): null = linear; c = asinh(v / c).
   function scaleFwd(v, c) { return c == null ? v : Math.asinh(v / c); }
   function scaleInv(t, c) { return c == null ? t : Math.sinh(t) * c; }
-  function scaleNote(c, centre) {
+  function scaleNote(c, centre, fmt) {
     return c == null ? '' : '\nEscala logarítmica (asinh) só para exibição, para comparar valores de ordens de grandeza diferentes: o eixo e este ' +
-      'texto mostram valores originais; o tracejado marca o centro da curva nessa escala (' + compact(centre) + '), que não é a média.';
+      'texto mostram valores originais; o tracejado marca o centro da curva nessa escala (' + (fmt || compact)(centre) + '), que não é a média.';
   }
   // lo, hi, counts, dmean and dsd are on the display scale (d.scale); the
   // marked value and the axis labels are original values.
-  function distSvg(d, w, h, label) {
-    var ml = 4, mr = 4, mt = 6, mb = 16, pw = w - ml - mr, ph = h - mt - mb, k = d.counts.length, bw = (d.hi - d.lo) / k;
+  // Secondary axis of robust z (fund_z_ticks in R): z is linear on the display
+  // scale; ticks every 1, 2, 5, 10... z, at least 16 px apart.
+  function zTicks(lo, hi, zmed, rs, pw) {
+    if (rs == null || zmed == null || !(rs > 0) || !(hi > lo)) return null;
+    var px = pw * rs / (hi - lo), step = 0, m, k, ks = [1, 2, 5], z = [];
+    for (m = 1; m <= 1e8 && !step; m *= 10) for (k = 0; k < 3; k++) if (ks[k] * m * px >= 16) { step = ks[k] * m; break; }
+    if (!step) return null;
+    for (var i = Math.ceil((lo - zmed) / rs / step); i <= Math.floor((hi - zmed) / rs / step); i++) z.push(i * step);
+    return z.length ? z.map(function (v) { return [v, zmed + v * rs]; }) : null;
+  }
+  // How the robust z is computed (fund_z_explain in R).
+  var Z_EXPLAIN = 'Régua superior: z robusto (0 = mediana dos fundos). Cálculo: z = (valor do fundo − mediana dos fundos) ÷ desvio robusto, ' +
+    'ambos na escala do gráfico (asinh quando a escala é log) e sobre os valores originais, sem winsorização. Desvio robusto = MAD ' +
+    'escalonado (1,4826 × mediana dos desvios absolutos em relação à mediana); se o MAD for zero (maioria dos fundos com o mesmo valor), ' +
+    '1,2533 × desvio absoluto médio; se ainda for zero, o desvio-padrão. Nas participações, o desvio robusto mínimo é de 1 ponto ' +
+    'percentual. |z| de 2 a 3,5 = atípico; 3,5 ou mais = extremo (Iglewicz e Hoaglin, 1993).';
+  function zLabel(z) { return z > 0 ? '+' + fmtInt(z) : z < 0 ? '\u2212' + fmtInt(-z) : '0'; }
+  function distSvg(d, w, h, label, fmt) {
+    var zt = zTicks(d.lo, d.hi, d.zmed, d.rs, w - 8);
+    var ml = 4, mr = 4, mt = zt ? 13 : 6, mb = 16, pw = w - ml - mr, ph = h - mt - mb, k = d.counts.length, bw = (d.hi - d.lo) / k;
     var sc = d.scale == null ? null : d.scale, dm = d.dmean == null ? d.mean : d.dmean, ds = d.dsd == null ? d.sd : d.dsd;
     function sx(v) { return ml + (v - d.lo) / (d.hi - d.lo) * pw; }
     function dens(v) { return ds > 0 ? Math.exp(-0.5 * Math.pow((v - dm) / ds, 2)) / (ds * Math.sqrt(2 * Math.PI)) * d.n * bw : 0; }
@@ -780,8 +837,15 @@
     // The mean label is dropped when it would run into the edge labels.
     var room = Math.min(sx(dm) - ml, w - mr - sx(dm)) >= 0.22 * pw;
     var ticks = [[ml, d.lo, 'start']].concat(room ? [[mx, dm, 'middle']] : []).concat([[w - mr, d.hi, 'end']]).map(function (t) {
-      return '<text class="tm-rd-tick" x="' + t[0] + '" y="' + (h - 4) + '" text-anchor="' + t[2] + '">' + esc(compact(scaleInv(t[1], sc))) + '</text>';
+      return '<text class="tm-rd-tick" x="' + t[0] + '" y="' + (h - 4) + '" text-anchor="' + t[2] + '">' + esc((fmt || compact)(scaleInv(t[1], sc))) + '</text>';
     }).join('') + (sc == null ? '' : '<text class="tm-rd-tick tm-rd-log" x="' + (w - mr) + '" y="' + (mt + 6) + '" text-anchor="end">escala log</text>');
+    // Secondary axis on top: robust z of the peers (0 = median of the funds).
+    if (zt) ticks += '<g class="tm-rd-z"><line class="tm-rd-zaxis" x1="' + ml + '" x2="' + (w - mr) + '" y1="' + (mt - 2) + '" y2="' + (mt - 2) + '"/>' +
+      zt.map(function (t) {
+        var x = sx(t[1]), a = x - ml < 6 ? 'start' : w - mr - x < 6 ? 'end' : 'middle';
+        return '<line class="tm-rd-ztick' + (t[0] === 0 ? ' tm-rd-z0' : '') + '" x1="' + f(x) + '" x2="' + f(x) + '" y1="' + (mt - 4) + '" y2="' + mt + '"/>' +
+          '<text class="tm-rd-zlab" x="' + f(x) + '" y="' + (mt - 5) + '" text-anchor="' + a + '">' + zLabel(t[0]) + '</text>';
+      }).join('') + '</g>';
     return '<svg class="tm-rd-svg" viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img" aria-label="' + esc(label) + '">' +
       '<line class="tm-rd-axis" x1="' + ml + '" x2="' + (w - mr) + '" y1="' + (mt + ph) + '" y2="' + (mt + ph) + '"/>' + bars + curve +
       '<line class="tm-rd-mean" x1="' + mx + '" x2="' + mx + '" y1="' + mt + '" y2="' + (mt + ph) + '"/>' + last + ticks + '</svg>';
@@ -813,7 +877,7 @@
   var Z_ATP = 2, Z_EXT = 3.5;
   function peerSummary(a) {
     return a ? {n: a[0], mean: a[1], sd: a[2], lo: a[3], hi: a[4], outside: a[5], counts: a[6], q: a[7],
-                scale: a[8] == null ? null : a[8], dmean: a[9], dsd: a[10], rs: a[11] == null ? null : a[11]} : null;
+                scale: a[8] == null ? null : a[8], dmean: a[9], dsd: a[10], rs: a[11] == null ? null : a[11], excluded: a[12] || 0} : null;
   }
   function robust(s, v) {
     var out = {z: null, level: '—', tukey: false};
@@ -830,59 +894,174 @@
     x.c.forEach(function (c, i) { if (c[0] !== p || y[3].charAt(i) !== '1') return; var v = parseShown(y[4][i]); if (v != null) own.push(v); });
     return own.length ? median(own) : null;
   }
-  function peerMatrix(x, p, pd, fam, prev, pp) {
+  // ---- Relative metrics (mode Relativo; src/intelligence/fund_ratios.R, rules in
+  // config/metric_ratio_rules.csv as window.TM_RATIOS): the same plan, the same
+  // per-fund ratio (median of the numerator rows over the median of the
+  // denominator rows at the same competência) and the same keys as the peer files.
+  var RATIO_RULES = (window.TM_RATIOS || []).map(function (r) {
+    return {tables: String(r[0]).split('|'), re: new RegExp(r[1]), dt: r[2], den: r[3], kind: r[4], label: r[5]};
+  });
+  function ratioPlan(tn, fields) {
+    var mine = RATIO_RULES.filter(function (r) { return r.tables.indexOf(tn) >= 0; }), out = [], seen = {};
+    fields.forEach(function (f) {
+      var hit = mine.filter(function (r) { return r.re.test(f.split('|')[0]); });  // "<field>|<type>" follows its field
+      if (!hit.length) return;
+      function add(key, r) {
+        if (seen[key]) return;
+        seen[key] = 1;
+        out.push({key: key, field: f, kind: r.kind, label: r.label, dt: r.dt === 'same_row' ? tn : r.dt, den: r.den});
+      }
+      var base = hit.filter(function (r) { return r.kind !== 'analytic'; });
+      if (base.length && base[0].kind !== 'keep') add('r:' + f, base[0]);
+      hit.filter(function (r) { return r.kind === 'analytic'; }).forEach(function (r) { add('a:' + f + '/' + r.den, r); });
+    });
+    return out;
+  }
+  function ratioTerms(den) { return den ? den.split('+') : []; }
+  function termFields(term, fields) {
+    if (term.indexOf('sum(') !== 0) return [term];
+    var re = new RegExp(term.slice(4, -1));
+    return fields.filter(function (f) { return re.test(f); });
+  }
+  function tableByName(tabs, n) { return tabs.filter(function (z) { return z.n === n && !z.lazy; })[0] || null; }
+  function fieldRow(x, f) { return x ? x.f.filter(function (y) { return y[1] === f; })[0] || null : null; }
+  function denFields(tabs, r) {
+    var x = tableByName(tabs, r.dt), codes = x ? x.f.map(function (y) { return y[1]; }) : [], out = [];
+    ratioTerms(r.den).forEach(function (t) { termFields(t, codes).forEach(function (f) { var y = fieldRow(x, f); if (y) out.push(y); }); });
+    return {x: x, rows: out};
+  }
+  // Denominator of the fund at period p: sum of its published terms; null when none.
+  function ownDenominator(tabs, r, p) {
+    var d = denFields(tabs, r), sum = 0, any = false;
+    d.rows.forEach(function (y) { var v = ownValue(d.x, y, p); if (v != null) { sum += v; any = true; } });
+    return any ? sum : null;
+  }
+  function ratioPct(v) {
+    if (v == null || isNaN(v)) return '—';
+    var q = 100 * v, a = Math.abs(q);
+    return num(q, a >= 100 ? 0 : a >= 1 ? 1 : 2) + '%';
+  }
+  function ratioLabel(label, item) { return label.split('{item}').join(item); }
+  function modeBar(mode) {
+    return '<div class="tm-dist-mode" role="group" aria-label="Valores das distribuições">' +
+      [['rel', 'Relativo', 'Cada item dividido pelo total da sua tabela, os totais pelo PL e razões analíticas'],
+       ['abs', 'Absoluto', 'Valores como publicados pela CVM']].map(function (m) {
+        return '<button type="button" data-mode="' + m[0] + '" aria-pressed="' + (mode === m[0]) + '" class="tm-dist-mode-btn' +
+          (mode === m[0] ? ' active' : '') + '" title="' + esc(m[2]) + '">' + m[1] + '</button>';
+      }).join('') + '</div>';
+  }
+  // Tables with one row per kind of value (FIDC X.4: TAB_X_TP_OPER, window.TM_SPLIT;
+  // fund_peer_split in R): each numeric field becomes one virtual field per type,
+  // "<field>|<type>", keeping only the rows of that type.
+  function splitTable(x) {
+    var sp = (window.TM_SPLIT || []), ys = x.f.filter(function (y) { return sp.indexOf(y[1]) >= 0; })[0];
+    if (!ys) return x;
+    var op = ys[4].map(function (t) { t = t == null ? '' : String(t).trim(); return t || null; });
+    var ops = op.filter(function (o, i) { return o != null && op.indexOf(o) === i; }).sort();
+    var f = [];
+    x.f.forEach(function (y) {
+      if (y === ys || y[3].indexOf('1') < 0) { f.push(y); return; }
+      ops.forEach(function (o) {
+        var m = '';
+        for (var i = 0; i < y[3].length; i++) m += y[3].charAt(i) === '1' && op[i] === o ? '1' : '0';
+        f.push([y[0] + ' · ' + o, y[1] + '|' + o, y[2], m, y[4]].concat(y.slice(5)));
+      });
+    });
+    var out = {}; for (var k in x) out[k] = x[k];
+    out.f = f;
+    return out;
+  }
+  function peerMatrix(x, p, pd, fam, prev, pp, mode, tabs) {
+    x = splitTable(x);
     var FAM = fam.toUpperCase(), idx = [], stats = [], noPeer = 0;
     x.c.forEach(function (c, i) { if (c[0] === p) idx.push(i); });
+    var plan = mode === 'rel' ? ratioPlan(x.n, x.f.map(function (y) { return y[1]; })) : [], byKey = {};
+    plan.forEach(function (r) { byKey[r.key] = r; });
+    function push(key, y, v, pv, ratio, label) {
+      var s = peerSummary(pd.f[key]);
+      if (!s) { noPeer++; return; }
+      var pc = peerPercentile(s.q, v), rb = robust(s, v), before = null;
+      if (prev && prev.f[key] && pv != null) {
+        var ps = peerSummary(prev.f[key]);
+        before = {p: peerPercentile(ps.q, pv), z: robust(ps, pv).z};
+      }
+      stats.push({y: y, key: key, label: label || y[0], s: s, v: v, pc: pc, rb: rb, prev: before, ratio: ratio || null,
+                  fmt: ratio ? ratioPct : compact});
+    }
+    function ratioOf(r, y, per) {
+      var nv = ownValue(x, y, per), dv = ownDenominator(tabs, r, per);
+      return nv == null || dv == null || !(dv > 0) ? null : {v: nv / dv, num: nv, den: dv};
+    }
+    function ratioInfo(r, y, o) {
+      var labs = denFields(tabs, r).rows.map(function (z) { return z[0]; });
+      return {num: o.num, den: o.den, numLabel: y[0], denLabel: labs.length ? labs.join(' + ') : r.den, dt: r.dt === x.n ? '' : r.dt};
+    }
+    function addRatio(r, y) {
+      var o = ratioOf(r, y, p);
+      if (!o) return;
+      var po = pp ? ratioOf(r, y, pp) : null;
+      push(r.key, y, o.v, po ? po.v : null, ratioInfo(r, y, o), ratioLabel(r.label, y[0]));
+    }
     x.f.forEach(function (y) {
       var v = ownValue(x, y, p);
       if (v == null) return;
-      var s = peerSummary(pd.f[y[1]]);
-      if (!s) { noPeer++; return; }
-      var pc = peerPercentile(s.q, v), rb = robust(s, v), before = null;
-      if (prev && prev.f[y[1]]) {
-        var ps = peerSummary(prev.f[y[1]]), pv = ownValue(x, y, pp);
-        if (pv != null) before = {p: peerPercentile(ps.q, pv), z: robust(ps, pv).z};
-      }
-      stats.push({y: y, s: s, v: v, pc: pc, rb: rb, prev: before});
+      var r = byKey['r:' + y[1]];
+      if (r) addRatio(r, y); else push(y[1], y, v, pp ? ownValue(x, y, pp) : null);
+    });
+    plan.forEach(function (r) {
+      if (r.kind !== 'analytic') return;
+      var y = fieldRow(x, r.field);
+      if (y) addRatio(r, y);
     });
     if (!stats.length) return '<div class="tm-empty">Nenhum campo numérico do fundo em ' + esc(p) + ' tem ao menos ' + PEER_MIN +
       ' fundos ' + FAM + ' com valores distintos para comparar.</div>';
     stats.sort(function (a, b) { return (b.rb.z == null ? -1 : Math.abs(b.rb.z)) - (a.rb.z == null ? -1 : Math.abs(a.rb.z)); });
     function pct(v) { return v == null ? '—' : String(Math.round(v)); }
     var cells = stats.map(function (o) {
-      var y = o.y, s = o.s, v = o.v, pr = pct(o.pc), rb = o.rb;
-      var vals = [], per = [];
-      y[4].forEach(function (t, i) { if (y[3].charAt(i) !== '1') return; var w = parseShown(t); if (w != null) { vals.push(w); per.push(x.c[i][0]); } });
-      var hist = vals.length >= MIN_VALUES ? distribution(vals, per) : null;
-      var tip = y[0] + '\nCampo CVM: ' + y[1] +
+      var y = o.y, s = o.s, v = o.v, pr = pct(o.pc), rb = o.rb, fm = o.fmt, ra = o.ratio;
+      var hist = null;
+      if (!ra) {
+        var vals = [], per = [];
+        y[4].forEach(function (t, i) { if (y[3].charAt(i) !== '1') return; var w = parseShown(t); if (w != null) { vals.push(w); per.push(x.c[i][0]); } });
+        hist = vals.length >= MIN_VALUES ? distribution(vals, per) : null;
+      }
+      var head = ra ? o.label + '\nValor relativo: ' + ra.numLabel + ', campo CVM ' + y[1].replace('|', ' · ') + ' (fundo: ' + compact(ra.num) + '), dividido por ' +
+          ra.denLabel + (ra.dt ? ', em ' + tableLabel(ra.dt) : '') + ' (fundo: ' + compact(ra.den) + ').'
+        : y[0] + '\nCampo CVM: ' + y[1].replace('|', ' · ');
+      var tip = head +
         '\nPosição do fundo entre os ' + fmtInt(s.n) + ' fundos ' + FAM + ' com este campo publicado na competência ' + p + ': percentil ' + pr +
-        ' (o valor do fundo, ' + compact(v) + ', é maior que o de ' + pr + '% deles).' +
+        ' (o valor do fundo, ' + fm(v) + ', é maior que o de ' + pr + '% deles).' +
         (rb.z != null ? '\nZ robusto ' + zText(rb.z) + ': ' + rb.level + ' (|z| < 2 típico; 2 a 3,5 atípico; 3,5 ou mais extremo). ' +
-          'Mede a distância à mediana em desvios robustos (MAD) na escala log' +
+          'Mede a distância à mediana em desvios robustos (MAD; desvio absoluto médio quando a maioria dos fundos tem o mesmo valor) na escala do gráfico' +
           (rb.tukey ? '; fora das cercas de Tukey (seria um ponto isolado num boxplot)' : '') + '.' : '') +
         (o.prev ? '\nNa competência anterior (' + pp + '): percentil ' + pct(o.prev.p) + ', z ' + zText(o.prev.z) +
           '; variação de ' + zText(o.pc - o.prev.p) + ' pontos percentuais.' : '') +
         (s.scale == null ? '\nBarras = quantidade de fundos por faixa de valor; curva = normal com a mesma média e desvio-padrão dos fundos; tracejado = média dos fundos; laranja = este fundo.'
           : '\nBarras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; tracejado = centro da curva; laranja = este fundo.') +
-        '\nFundos ' + FAM + ': P25 ' + compact(s.q[25]) + ' · mediana ' + compact(s.q[50]) + ' · P75 ' + compact(s.q[75]) + ' (metade dos fundos fica entre P25 e P75).' +
-        '\nMédia ' + compact(s.mean) + ' · desvio-padrão ' + compact(s.sd) + ' · mínimo ' + compact(s.q[0]) + ' · máximo ' + compact(s.q[100]) + '.' +
-        '\nGráfico winsorizado a 2,5% de cada lado: valores abaixo de P2,5 (' + compact(scaleInv(s.lo, s.scale)) + ') ou acima de P97,5 (' +
-        compact(scaleInv(s.hi, s.scale)) + ') aparecem nesses limites' + (s.outside ? ' (' + fmtInt(s.outside) + ' fundos)' : '') +
+        (s.rs != null ? '\n' + Z_EXPLAIN : '') +
+        '\nFundos ' + FAM + ': P25 ' + fm(s.q[25]) + ' · mediana ' + fm(s.q[50]) + ' · P75 ' + fm(s.q[75]) + ' (metade dos fundos fica entre P25 e P75).' +
+        '\nMédia ' + fm(s.mean) + ' · desvio-padrão ' + fm(s.sd) + ' · mínimo ' + fm(s.q[0]) + ' · máximo ' + fm(s.q[100]) + '.' +
+        (ra && s.excluded > 0 ? '\n' + fmtInt(s.excluded) + ' fundos com o campo ficaram fora desta comparação: denominador ausente, zero ou negativo (ex.: PL ≤ 0).' : '') +
+        (ra && s.scale == null ? '\nParticipação desenhada em escala linear (de 0 a 100%).' : '') +
+        '\nGráfico winsorizado a 2,5% de cada lado: valores abaixo de P2,5 (' + fm(scaleInv(s.lo, s.scale)) + ') ou acima de P97,5 (' +
+        fm(scaleInv(s.hi, s.scale)) + ') aparecem nesses limites' + (s.outside ? ' (' + fmtInt(s.outside) + ' fundos)' : '') +
         '; média, desvio, percentis e posição usam os valores originais.' +
         (v < scaleInv(s.lo, s.scale) || v > scaleInv(s.hi, s.scale) ? '\nO fundo está entre os valores winsorizados: o ponto laranja fica na borda.' : '') +
-        scaleNote(s.scale, scaleInv(s.dmean, s.scale)) +
-        '\nUm valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas.' +
+        scaleNote(s.scale, scaleInv(s.dmean, s.scale), fm) +
+        (ra ? '\nUm valor por fundo: mediana das linhas do numerador sobre a mediana das linhas do denominador na mesma competência.'
+          : '\nUm valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas.') +
         (idx.length > 1 ? '\nEste fundo tem ' + fmtInt(idx.length) + ' linhas nesta data.' : '') +
         (hist ? '\nHistórico do próprio fundo: média ' + compact(hist.mean) + ' · desvio-padrão ' + compact(hist.sd) + ' · ' + fmtInt(hist.n) +
-                ' valores (' + hist.firstPeriod + ' a ' + hist.lastPeriod + ').' : '') + noteText(y[1]);
-      var d = {n: s.n, mean: s.mean, sd: s.sd, lo: s.lo, hi: s.hi, counts: s.counts, last: v, scale: s.scale, dmean: s.dmean, dsd: s.dsd};
+                ' valores (' + hist.firstPeriod + ' a ' + hist.lastPeriod + ').' : '') + noteText(y[1].split('|')[0]);
+      var d = {n: s.n, mean: s.mean, sd: s.sd, lo: s.lo, hi: s.hi, counts: s.counts, last: v, scale: s.scale, dmean: s.dmean, dsd: s.dsd,
+               rs: s.rs, zmed: scaleFwd(s.q[50], s.scale)};
       var lv = {'típico': ' tm-z-typ', 'atípico': ' tm-z-atp', 'extremo': ' tm-z-ext'}[rb.level] || '';
       var delta = o.prev && o.prev.p != null ? Math.round(o.pc - o.prev.p) : null;
-      return '<div class="tm-dist' + lv + '" data-tip="' + esc(tip) + '"><div class="tm-dist-label' + (y[2] ? ' tm-derived' : '') + '">' + esc(y[0]) + '</div>' +
-        distSvg(d, 200, 64, y[0]) + '<div class="tm-dist-cap"><b class="tm-dist-pos">percentil ' + pr + '</b>' +
+      return '<div class="tm-dist' + lv + '" data-tip="' + esc(tip) + '"><div class="tm-dist-label' + (y[2] || ra ? ' tm-derived' : '') + '">' + esc(o.label) + '</div>' +
+        distSvg(d, 200, 64, o.label, fm) + '<div class="tm-dist-cap"><b class="tm-dist-pos">percentil ' + pr + '</b>' +
         (rb.z != null ? '<span class="tm-z-badge">z ' + zText(rb.z) + '</span>' : '') +
         (delta != null ? '<span class="tm-z-delta ' + (delta >= 0 ? 'tm-up' : 'tm-down') + '">' + (delta >= 0 ? '▲' : '▼') + Math.abs(delta) + '</span>' : '') +
-        ' · fundo ' + compact(v) + ' · ' + fmtInt(s.n) + ' fundos</div></div>';
+        ' · fundo ' + fm(v) + ' · ' + fmtInt(s.n) + ' fundos</div></div>';
     });
     var off = stats.filter(function (o) { return o.rb.level === 'atípico' || o.rb.level === 'extremo'; });
     var nExt = off.filter(function (o) { return o.rb.level === 'extremo'; }).length;
@@ -894,25 +1073,34 @@
       fmtInt(off.length) + ' de ' + fmtInt(stats.length) + ' campos fora do típico: ' + fmtInt(nExt) + ' extremos, ' + fmtInt(off.length - nExt) +
       ' atípicos' + (prev ? ' · comparação com ' + esc(pp) : '') + '.</div>' +
       (off.length ? '<ol class="tm-z-list">' + off.slice(0, 6).map(function (o) {
-        return '<li class="' + (o.rb.level === 'extremo' ? 'tm-z-ext' : 'tm-z-atp') + '"><span class="tm-z-name">' + esc(o.y[0]) + '</span> ' +
-          (o.rb.z > 0 ? 'acima' : 'abaixo') + ' da mediana · fundo ' + compact(o.v) + ', mediana ' + compact(o.s.q[50]) + ' · percentil ' + pct(o.pc) +
+        return '<li class="' + (o.rb.level === 'extremo' ? 'tm-z-ext' : 'tm-z-atp') + '"><span class="tm-z-name">' + esc(o.label) + '</span> ' +
+          (o.rb.z > 0 ? 'acima' : 'abaixo') + ' da mediana · fundo ' + o.fmt(o.v) + ', mediana ' + o.fmt(o.s.q[50]) + ' · percentil ' + pct(o.pc) +
           ' · z ' + zText(o.rb.z) + (o.prev ? ' · antes percentil ' + pct(o.prev.p) : '') + '</li>';
       }).join('') + '</ol>' : '<div class="tm-z-none">Todos os campos estão na faixa típica da família (|z| &lt; 2).</div>') + '</div>';
     var tip = 'Cada gráfico compara o fundo com os demais fundos ' + FAM + ' que publicaram o campo na mesma competência. ' +
       'O percentil diz quantos por cento desses fundos têm valor menor que o do fundo (percentil 90 = maior que 90% deles). ' +
       'Os gráficos vêm do mais atípico para o mais típico (|z robusto|). Troque a competência no seletor de período da Ficha. ' +
       'Passe o mouse em um gráfico para ver P25, mediana, P75, média, extremos e o histórico do próprio fundo.';
+    var hasPlan = ratioPlan(x.n, x.f.map(function (y) { return y[1]; })).length > 0;
     return '<div class="tm-caption" data-tip="' + esc(tip) + '">Posição do fundo entre os ' + fmtInt(pd.funds) + ' fundos ' + FAM +
       ' na competência ' + esc(p) + ', campo a campo (' + (stats.length === 1 ? '1 campo numérico' : fmtInt(stats.length) + ' campos numéricos') +
       ', do mais ao menos atípico): barras = fundos por faixa de valor; curva = normal ajustada; tracejado = centro; laranja = este fundo. ' +
       'Passe o mouse para a explicação.' +
+      (mode === 'rel' && plan.length ? ' Valores relativos: cada item dividido pelo total da sua tabela, os totais pelo PL e razões analíticas ' +
+        '(ex.: inadimplência sobre os direitos creditórios); campos sem regra aparecem como publicados.'
+        : hasPlan ? ' Valores absolutos, como publicados pela CVM.' : '') +
       (noPeer ? ' Fora da matriz: ' + (noPeer === 1 ? '1 campo' : fmtInt(noPeer) + ' campos') + ' sem ao menos ' + PEER_MIN + ' fundos com valores distintos.' : '') +
       '</div>' + panel + '<div class="tm-dist-grid">' + cells.join('') + '</div>';
   }
   FundTab.prototype.distPeriod = function (p) {
-    var t = this, f = t.selected, x = t.ficha.data.t[t.fichaIndex], fam = f[F.family], token = {};
+    var t = this, f = t.selected, data = t.ficha.data, x = data.t[t.fichaIndex], fam = f[F.family], token = {};
     var pane = t.el.find('.tm-static-detail [data-pane-body="dist"]');
     t.distToken = token;
+    if (!t.distMode) t.distMode = 'rel';
+    t.el.find('.tm-dist-mode-btn').each(function () {
+      var on = $(this).attr('data-mode') === t.distMode;
+      $(this).toggleClass('active', on).attr('aria-pressed', String(on));
+    });
     pane.html('<div class="tm-empty">Carregando os demais fundos ' + fam.toUpperCase() + ' em ' + esc(p) + '…</div>');
     // Previous competência of the fund (trajectory); optional.
     var periods = [];
@@ -921,9 +1109,41 @@
     var pp = periods.length ? periods[periods.length - 1] : null, base = 'data/peers/' + fam + '/' + x.n + '/';
     var prevReq = pp ? getGz(base + pp + '.json.gz').then(function (d) { return d; }, function () { return $.Deferred().resolve(null).promise(); })
                      : $.Deferred().resolve(null).promise();
+    // Denominator tables still to be read (e.g. FIDC Tabela IV for Ativo / PL):
+    // read the fund's file of other tables first, as loadExtraTable does.
+    var lazy = ratioPlan(x.n, x.f.map(function (y) { return y[1]; })).some(function (r) {
+      return data.t.some(function (z) { return z.n === r.dt && z.lazy; });
+    });
+    var extras = lazy ? getGz('data/fichas_x/' + fam + '/' + f[F.key] + '.json.gz').then(function (xd) {
+      data.t.forEach(function (y, i) {
+        if (!y.lazy) return;
+        var z = (xd.t || []).filter(function (w) { return w.n === y.n; })[0];
+        if (z) data.t[i] = z;
+      });
+      return true;
+    }, function () { return $.Deferred().resolve(false).promise(); }) : $.Deferred().resolve(true).promise();
+    t.distRender = function () {
+      var d = t.distData;
+      if (d) pane.html(peerMatrix(d.x, d.p, d.pd, d.fam, d.prev, d.pp, t.distMode, data.t));
+    };
+    t.el.off('click.tmmode').on('click.tmmode', '.tm-dist-mode-btn', function (e) {
+      e.preventDefault();
+      t.distMode = $(this).attr('data-mode');
+      t.el.find('.tm-dist-mode-btn').each(function () {
+        var on = $(this).attr('data-mode') === t.distMode;
+        $(this).toggleClass('active', on).attr('aria-pressed', String(on));
+      });
+      var link = t.el.find('.tm-static-detail a[data-pane="dist"]');
+      // The choice also opens the tab Distribuições (native click: the tab handler).
+      if (!link.hasClass('active') && link.length) link.get(0).click(); else t.distRender();
+    });
     getGz(base + p + '.json.gz').done(function (pd) {
       prevReq.always(function (prev) {
-        if (t.distToken === token) pane.html(peerMatrix(x, p, pd, fam, prev || null, prev ? pp : null));
+        extras.always(function () {
+          if (t.distToken !== token) return;
+          t.distData = {x: x, p: p, pd: pd, fam: fam, prev: prev || null, pp: prev ? pp : null};
+          t.distRender();
+        });
       });
     }).fail(function () {
       if (t.distToken !== token) return;
@@ -959,7 +1179,10 @@
       return '<div class="tm-tr' + (alert ? ' tm-tr-alert' : '') + '" data-tip="' + esc(tip) + '"><div class="tm-tr-label">' + esc(label) + (info || '') + '</div>' +
              '<div class="tm-tr-value' + (text === 'não informado' ? ' tm-muted' : '') + '">' + esc(text) + '</div></div>';
     }
-    var shown = displayAttrs(meta, [fam]), absent = shown.filter(function (a) { return !cols[a]; });
+    var shown = displayAttrs(meta, [fam]), hinted = meta.order.filter(function (a) {
+      return window.TM_INFO && window.TM_INFO[a] && shown.indexOf(a) < 0; });
+    // Hinted characteristics (FIP special rights) are named with their hover hint too.
+    var absent = shown.concat(hinted).filter(function (a) { return !cols[a]; });
     var out = [item('Cotistas', f[F.holdersLast] == null ? 'não informado' : fmtInt(f[F.holdersLast]),
                     f[F.holdersLast] == null ? 'Quantidade de cotistas não publicada nos informes.'
                       : 'Quantidade de cotistas · informe de ' + monthLabel(f[F.holdersMonth]))];
@@ -968,13 +1191,15 @@
       var v = traitOf(meta, f, a), label = meta.labels[a], text, tip;
       if (!v) { text = 'não informado'; tip = label + ' (' + cols[a] + ') · não preenchido nos informes'; }
       else { text = traitText(meta, a, v[0]); tip = label + ' (' + cols[a] + ') · informe de ' + v[1]; }
-      out.push(item(meta.medium[a], text, tip + noteText(cols[a]), v && isAlert(meta, a, v[0]), infoBtn(a)));
+      out.push(item(meta.medium[a], text, tip + noteText(cols[a]) + hintText(a), v && isAlert(meta, a, v[0])));
     });
     var miss = absent.length ? '<div class="tm-traits-absent" data-tip="Campos que o informe da CVM desta família não tem (não é falta de preenchimento).">' +
-      'Não constam do informe de ' + fam.toUpperCase() + ': ' + absent.map(function (a) { return meta.medium[a].toLowerCase(); }).join(', ') + '.</div>' : '';
-    // Explanatory notes of the fields this family publishes.
-    var notes = meta.order.map(function (a) { return cols[a] ? noteHtml(cols[a], meta.labels[a]) : ''; }).join('');
-    return '<div class="tm-traits-grid">' + out.join('') + '</div>' + miss + '<div class="tm-joint-slot"></div>' + notes;
+      'Não constam do informe de ' + fam.toUpperCase() + ': ' + absent.map(function (a) {
+        var name = esc(meta.medium[a].toLowerCase()), h = hintText(a);
+        return h ? '<span class="tm-hint-name" data-tip="' + esc(meta.labels[a] + h) + '">' + name + '</span>' : name; }).join(', ') + '.</div>' : '';
+    // The explanatory notes of the fields (Entidade de investimento) are in the
+    // hover tooltips only (noteText), not as a block below.
+    return '<div class="tm-traits-grid">' + out.join('') + '</div>' + miss + '<div class="tm-joint-slot"></div>';
   }
   function profile(f, s, color) {
     if (!s || f[F.pl] == null) return '<div class="tm-empty">Sem patrimônio publicado para este fundo.</div>';
@@ -1077,6 +1302,7 @@
     var t = this, box = t.el.find('.tm-static-detail');
     if (!f) return;
     t.selected = f; t.ficha = null;
+    var names = t.d.byEntity[f[F.entity]] || [];
     t.el.find('.tm-rq').val(f[F.cnpj] + ' — ' + f[F.name]);
     t.el.find('.tm-ficha-table').html('<option>Carregando informes…</option>').prop('disabled', true);
     t.el.find('.tm-ficha-period').html('').prop('disabled', true);
@@ -1084,12 +1310,24 @@
       '<div class="card-header tm-detail-head"><div class="tm-eyebrow">' + f[F.family].toUpperCase() + ' · ' + esc(f[F.cnpj]) + '</div>' +
       '<h2 class="tm-detail-title">' + esc(f[F.name]) + '</h2></div>' +
       '<div class="tm-detail-body"><div class="tm-caption tm-ficha-summary"></div>' +
-      '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="ficha">Ficha</a></li>' +
+      '<ul class="nav nav-underline"><li class="nav-item"><a class="nav-link active" href="#" data-pane="perfil">Perfil</a></li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="ficha">Ficha</a></li>' +
       '<li class="nav-item"><a class="nav-link" href="#" data-pane="serie">Série completa</a></li>' +
-      '<li class="nav-item"><a class="nav-link" href="#" data-pane="dist">Distribuições</a></li></ul>' +
-      '<div class="tab-content"><div data-pane-body="ficha"><div class="tm-empty">Carregando ficha…</div></div>' +
+      '<li class="nav-item tm-dist-tab"><a class="nav-link" href="#" data-pane="dist">Distribuições</a>' + modeBar('rel') + '</li>' +
+      '<li class="nav-item"><a class="nav-link" href="#" data-pane="nomes">Denominações (' + names.length + ')</a></li></ul>' +
+      '<div class="tab-content"><div data-pane-body="perfil"><div class="tm-perfil-main"><div class="tm-empty">Carregando série…</div></div></div>' +
+      '<div data-pane-body="ficha" hidden><div class="tm-empty">Carregando ficha…</div></div>' +
       '<div data-pane-body="serie" class="tm-table-wrap" hidden><div class="tm-empty">Carregando série completa…</div></div>' +
-      '<div data-pane-body="dist" class="tm-table-wrap" hidden><div class="tm-empty">Carregando distribuições…</div></div></div></div>');
+      '<div data-pane-body="dist" class="tm-table-wrap" hidden><div class="tm-empty">Carregando distribuições…</div></div>' +
+      '<div data-pane-body="nomes" hidden>' + namesTable(names) + '</div></div></div>');
+    // Perfil: the same series file and panel as the fund tabs.
+    var key = f[F.key], color = t.d.meta.colors[f[F.family]] || '#2a78d6';
+    getJSON('data/panorama/series/' + f[F.family] + '_' + key.charAt(0).toLowerCase() + '.json').done(function (s) {
+      if (t.selected !== f) return;
+      box.find('[data-pane-body="perfil"] .tm-perfil-main').html(profile(f, s[key], color));
+    }).fail(function () {
+      box.find('[data-pane-body="perfil"] .tm-perfil-main').html('<div class="tm-empty">Não foi possível carregar a série deste fundo.</div>');
+    });
     loadFicha(f).done(function (fd, urls) {
       if (t.selected !== f) return;
       var sel = t.el.find('.tm-ficha-table');

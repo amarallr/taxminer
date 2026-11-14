@@ -17,7 +17,7 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
+            "src/intelligence/fund_analytics.R", "src/intelligence/fund_ratios.R", "src/intelligence/panorama_data.R",
             "src/intelligence/cedente_data.R", "src/collect/download_fund_reports.R",
             "src/collect/collect_cvm_registries.R", "src/data/cvm_registry_names.R",
             "src/collect/collect_rfb_cnpj.R", "src/data/rfb_company_names.R", "prototype/charts.R",
@@ -108,7 +108,7 @@ page <- bslib::page_navbar(
   title = tm_brand(), window_title = "TaxMiner · Painel de fundos",
   fillable = c("Panorama", "Administradores", "Fundos", "Ficha"), fluid = TRUE,
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
-  theme = tm_theme(),
+  theme = tm_theme(), footer = build_footer("PRODUÇÃO"),
   header = shiny::tags$head(
     shiny::tags$meta(name = "description",
                      content = "Panorama de FII, FIDC, FIP e FIAGRO a partir dos informes públicos da CVM."),

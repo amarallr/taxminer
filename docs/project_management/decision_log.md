@@ -832,3 +832,11 @@ Aceite explícito do desenvolvedor ("Aceite work_0041 OK!").
   informativo quando uma mesma linha de classe tem os dois campos = S. Referências normativas conferidas
   nos textos oficiais (Res. CVM 175, Anexo IV; Lei 14.754/2023, art. 23).
 - Não cobre liberação nem nova versão.
+
+## decision_0058 — 2026-11-13T19:45:30-03:00 — Publicação segura incorporada como requisito do projeto (req_0023)
+
+Pedido explícito do desenvolvedor ("absorva como requisito do projeto. atualize os prompts, documentação etc"; "sempre aplique essas instruções de Validação, Versionamento e Publicação Segura").
+
+- Novo prompt `prompts/common_p09_safe_publication.txt`, obrigatório para todo export, commit e push, a partir do `.claude/doit.txt` de 2026-11-13 (sem os dados de sessão).
+- `AGENTS.md` (camada imutável, `imm_0001`) ganha uma regra que remete ao Common P09; a linha de base é registrada por esta decisão.
+- Carimbo com fuso horário e manifesto `site/app/version.json` (`scripts/refresh_site_stamp.sh`), completado pelo workflow do GitHub Pages com o commit publicado.

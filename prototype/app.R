@@ -9,7 +9,7 @@ for (f in c("src/common/signatures.R", "src/common/safe_io.R", "src/common/parqu
             "src/common/data_layout.R", "src/data/consolidate_fund_reports.R",
             "src/data/build_fund_metrics.R", "src/intelligence/search_fund_reports.R",
             "src/data/entity_resolution.R",
-            "src/intelligence/fund_analytics.R", "src/intelligence/panorama_data.R",
+            "src/intelligence/fund_analytics.R", "src/intelligence/fund_ratios.R", "src/intelligence/panorama_data.R",
             "src/intelligence/cedente_data.R", "src/collect/download_fund_reports.R",
             "src/collect/collect_cvm_registries.R", "src/data/cvm_registry_names.R",
             "src/collect/collect_rfb_cnpj.R", "src/data/rfb_company_names.R", "prototype/charts.R",
@@ -60,7 +60,7 @@ unavailable <- function(text) {
 ui <- bslib::page_navbar(
   id = "nav", title = tm_brand(), window_title = "TaxMiner", fillable = c("Panorama", "Administradores", "Fundos", "Ficha", "Governança"), fluid = TRUE, lang = "pt-BR",
   navbar_options = bslib::navbar_options(bg = "#0b1f3a", theme = "dark"),
-  theme = theme,
+  theme = theme, footer = build_footer("DESENVOLVIMENTO"),
   header = shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "taxminer.css"), app_script,
                            shiny::tags$script(src = "loadbar.js", defer = NA),
                            shiny::tags$script(src = "panorama.js", defer = NA),
@@ -122,7 +122,11 @@ server <- function(input, output, session) {
       current(value)
       session$sendCustomMessage("tm-current", value)
     }
-    shiny::observeEvent(input$current_fund, current(input$current_fund))
+    shiny::observeEvent(input$current_fund, {
+      current(input$current_fund)
+      # A fund picked in the Administradores list is drawn on its chart.
+      if (identical(input$nav, "Administradores")) admin$fund(input$current_fund)
+    })
     lapply(names(tabs), function(t) shiny::observeEvent(tabs[[t]]$chosen(), set_current(tabs[[t]]$chosen())))
     shiny::observeEvent(record$fund(), if (identical(input$nav, "Ficha")) set_current(record$fund()))
     # Visible area: the top tab, or inside Fundos the sub tab ("Todos" is the

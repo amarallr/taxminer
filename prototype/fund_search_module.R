@@ -174,7 +174,10 @@ fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
   # Fields of this family's report in the grid; the core ones it lacks in one
   # muted line ("Não constam do informe de FII: ...").
   shown <- fund_display_attributes(family)
-  absent <- Filter(function(a) !family %in% fund_attribute_families(a), shown)
+  # The characteristics with a hint (FIP special rights) are named there too, with
+  # their hover hint, so it is reachable in every family (filters unchanged).
+  absent <- Filter(function(a) !family %in% fund_attribute_families(a),
+                   union(shown, intersect(fund_attribute_order, names(fund_attribute_hints))))
   items <- lapply(setdiff(shown, absent), function(a) {
     x <- fund_attribute_text(attributes, family, cnpj, a)
     spec <- fund_attribute_specs[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family, , drop = FALSE]
@@ -183,23 +186,11 @@ fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
                                if (is.na(x$period)) " · não preenchido nos informes" else paste0(" · informe de ", x$period)),
                        fund_field_note_text(spec$column[1]))
     raw <- attributes$value[attributes$family == family & attributes$fund_cnpj == cnpj & attributes$attribute == a][1]
-    trait(fund_attribute_medium[[a]], x$text, tip, alert = fund_attribute_alert(a, raw), info = fund_info_for(a))
+    trait(fund_attribute_medium[[a]], x$text, paste0(tip, fund_hint_tip_text(a)), alert = fund_attribute_alert(a, raw))
   })
   joint <- attributes[attributes$family == family & attributes$fund_cnpj == cnpj & attributes$attribute == "joint_rights", , drop = FALSE]
-  # Explanatory notes of the fields this family publishes, below the characteristics.
-  notes <- lapply(shown, function(a) {
-    col <- fund_attribute_specs$column[fund_attribute_specs$attribute == a & fund_attribute_specs$family == family][1]
-    n <- if (is.na(col)) NULL else fund_field_notes[[col]]
-    if (is.null(n)) return(NULL)
-    # Each paragraph opens with its period ("Até 2023 (ICVM 578/579):") in bold.
-    para <- function(l) {
-      m <- regmatches(l, regexec("^([^:]{3,80}):\\s+(.*)$", l))[[1]]
-      if (length(m) == 3L) shiny::tags$p(shiny::span(class = "tm-note-lead", paste0(m[2], ":")), " ", m[3])
-      else shiny::tags$p(l)
-    }
-    shiny::tags$details(class = "tm-note", shiny::tags$summary(n[1]),
-                        shiny::div(class = "tm-note-body", lapply(n[-1], para)))
-  })
+  # The explanatory notes of the fields (Entidade de investimento) are in the
+  # hover tooltips only (fund_field_note_text), not as a block below.
   shiny::tagList(
     shiny::div(class = "tm-traits-grid",
                trait("Cotistas", if (is.null(holders)) "não informado" else format_int(holders$quotaholders),
@@ -208,17 +199,19 @@ fund_traits_ui <- function(attributes, family, cnpj, profile = NULL) {
                items),
     if (length(absent)) shiny::div(class = "tm-traits-absent",
       `data-tip` = "Campos que o informe da CVM desta família não tem (não é falta de preenchimento).",
-      sprintf("Não constam do informe de %s: %s.", toupper(family),
-              paste(tolower(unname(fund_attribute_medium[absent])), collapse = ", "))),
-    if (nrow(joint)) fund_joint_ui(joint$value[1], joint$period[1]),
-    notes)
+      sprintf("Não constam do informe de %s: ", toupper(family)),
+      lapply(seq_along(absent), function(i)
+        shiny::tagList(if (i > 1) ", ", fund_hint_name(absent[i]))), "."),
+    if (nrow(joint)) fund_joint_ui(joint$value[1], joint$period[1]))
 }
 
-# ⓘ button of a characteristic with an explanatory hint (fund_attribute_hints).
-fund_info_for <- function(attribute) {
-  h <- fund_attribute_hints[[attribute]]
-  # Without prototype/charts.R (module tests) there is no popover script either.
-  if (is.null(h) || !exists("tm_info_button", mode = "function")) NULL else tm_info_button(attribute, h$title)
+# Name of an absent characteristic; with a hint (FIP special rights), a span
+# whose hover tooltip shows it, like the tooltip of Entidade de investimento.
+fund_hint_name <- function(attribute) {
+  name <- tolower(fund_attribute_medium[[attribute]])
+  hint <- fund_hint_tip_text(attribute)
+  if (!nzchar(hint)) name
+  else shiny::span(class = "tm-hint-name", `data-tip` = paste0(fund_attribute_labels[[attribute]], hint), name)
 }
 
 # Informative notice when one class has both special rights (fund_joint_rights):
@@ -322,6 +315,32 @@ fund_distribution_fields <- function(names) {
                    "fund_cnpj_original", fund_report_columns))
 }
 
+# Tables whose rows mix kinds of value in the same columns: FIDC X.4 has one row
+# per operation type (TAB_X_TP_OPER: captações, resgates, resgates solicitados,
+# amortizações), so a median over all its rows would mix them. Each numeric field
+# is split into one virtual field per type, "<field>|<type>", with the values of
+# the rows of that type (rows without a type are left out). The same split in the
+# app, the export (write_static_peers) and the published panel (splitTable, from
+# window.TM_SPLIT).
+fund_peer_split_columns <- c("TAB_X_TP_OPER")
+
+fund_peer_split <- function(r) {
+  sc <- intersect(fund_peer_split_columns, names(r))
+  if (!length(sc) || !nrow(r)) return(r)
+  op <- trimws(as.character(r[[sc[1]]]))
+  op[!is.na(op) & !nzchar(op)] <- NA
+  ops <- sort(unique(op[!is.na(op)]))
+  for (f in setdiff(fund_distribution_fields(names(r)), sc)) {
+    if (all(is.na(fund_numeric_values(r[[f]], f)))) next
+    for (o in ops) r[[paste0(f, "|", o)]] <- ifelse(!is.na(op) & op == o, r[[f]], NA)
+    r[[f]] <- NULL
+  }
+  r
+}
+
+# CVM code of a field as shown in the tips ("TAB_X_VL_TOTAL · Captações no Mês").
+fund_peer_field_code <- function(f) sub("|", " · ", f, fixed = TRUE)
+
 # Numeric values of a field as in the Ficha (display_values: codes and
 # identifiers are not numbers), NA elsewhere.
 # Same rules as display_values, without building the text (fast enough for
@@ -361,16 +380,16 @@ fund_peer_values <- function(r) {
   out
 }
 
-fund_peer_summary <- function(values) {
+fund_peer_summary <- function(values, linear = FALSE) {
   values <- values[!is.na(values)]
   n <- length(values)
   if (n < fund_peer_min_funds || length(unique(values)) < 2L) return(NULL)
   q <- stats::quantile(values, seq(0, 1, 0.01), names = FALSE, type = 7)
   m <- mean(values); s <- stats::sd(values)
   # Chart only: winsorized at 2.5% on each side (fund_winsorize) and drawn on the
-  # display scale (fund_display_scale); q, mean and sd stay original.
+  # display scale (fund_display_scale; linear for bounded shares); q, mean and sd stay original.
   w <- fund_winsorize(values)
-  sc <- fund_display_scale(w$values)
+  sc <- if (linear) NA_real_ else fund_display_scale(w$values)
   tv <- fund_scale_fwd(w$values, sc)
   tv0 <- fund_scale_fwd(values, sc)  # not winsorized: robust z (fund_peer_robust)
   dm <- mean(tv); ds <- stats::sd(tv)
@@ -381,7 +400,7 @@ fund_peer_summary <- function(values) {
   counts <- as.integer(table(cut(tv[inside], breaks, include.lowest = TRUE)))
   list(n = n, mean = m, sd = if (is.finite(s)) s else 0, min = q[1], max = q[101], lo = lo, hi = hi,
        counts = counts, outside = w$clamped, q = q, scale = sc, dmean = dm, dsd = if (is.finite(ds)) ds else 0,
-       rs = fund_peer_robust_scale(tv0))
+       rs = fund_peer_robust_scale(tv0, if (linear) fund_peer_share_floor else 0))
 }
 
 # Field summaries of the rows of one family, table and period; attribute funds
@@ -390,6 +409,50 @@ fund_peer_summaries <- function(r) {
   v <- fund_peer_values(r)
   out <- Filter(Negate(is.null), lapply(v, fund_peer_summary))
   structure(out, funds = length(unique(r$fund_cnpj_normalized[!is.na(r$fund_cnpj_normalized)])))
+}
+
+# --- Relative metrics (mode Relativo; src/intelligence/fund_ratios.R) --------
+# Competência as shown in the Ficha (YYYY-MM for dates): the key that joins a
+# table with the table of its denominator (e.g. FIDC Tabela I with Tabela IV).
+fund_shown_period <- function(p) ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", p), substr(p, 1, 7), p)
+
+fund_ratio_pct <- function(x) {
+  vapply(x, function(v) {
+    if (is.na(v)) return("—")
+    p <- 100 * v
+    paste0(formatC(p, format = "f", digits = if (abs(p) >= 100) 0 else if (abs(p) >= 1) 1 else 2,
+                   big.mark = ".", decimal.mark = ","), "%")
+  }, character(1))
+}
+
+# Summaries of the ratios of one table and period; vals = list(table ->
+# fund_peer_values of that table at the period). Each summary keeps the number of
+# funds left out for a missing, zero or negative denominator.
+fund_peer_ratio_summaries <- function(plan, table_name, vals) {
+  if (is.null(plan) || !nrow(plan)) return(list())
+  rv <- fund_ratio_values(plan, table_name, vals)
+  out <- list()
+  for (k in names(rv$values)) {
+    s <- fund_peer_summary(rv$values[[k]], linear = fund_ratio_linear(plan$kind[plan$key == k][1]))
+    if (is.null(s)) next
+    s$excluded <- unname(rv$excluded[[k]])
+    out[[k]] <- s
+  }
+  out
+}
+
+# Fund values of the table and of its denominator tables at period: rows_of(table,
+# shown period) gives the rows of each denominator table at that competência.
+fund_ratio_inputs <- function(plan, table_name, period, rows, rows_of) {
+  vals <- list()
+  vals[[table_name]] <- fund_peer_values(rows[row_periods(rows) == period, , drop = FALSE])
+  sp <- fund_shown_period(period)
+  for (dt in fund_ratio_tables(plan, table_name)) {
+    d <- tryCatch(rows_of(dt, sp), error = function(e) NULL)
+    if (is.null(d) || !nrow(d)) next
+    vals[[dt]] <- fund_peer_values(d)
+  }
+  vals
 }
 
 # Percentile of value v among the funds (0-100): the share of funds below it,
@@ -407,22 +470,34 @@ fund_peer_percentile <- function(s, v) {
 
 # Reads each table once (the last `size` tables stay in memory) and keeps the
 # summaries already computed; the processed data does not change while the app runs.
-fund_peer_cache <- function(root, size = 3L) {
+fund_peer_cache <- function(root, size = 3L, rules = if (exists("fund_ratio_rules")) fund_ratio_rules() else NULL) {
   tables <- new.env(parent = emptyenv())
   results <- new.env(parent = emptyenv())
   order <- character()
-  function(family, table_name, period) {
-    key <- paste(family, table_name, period, sep = "|")
-    if (!is.null(results[[key]])) return(results[[key]])
+  load <- function(family, table_name) {
     tkey <- paste(family, table_name, sep = "/")
     if (is.null(tables[[tkey]])) {
-      r <- as.data.frame(open_fund_table(root, family, table_name))
+      r <- fund_peer_split(as.data.frame(open_fund_table(root, family, table_name)))
       assign(tkey, list(r = r, p = row_periods(r)), envir = tables)
       order <<- c(setdiff(order, tkey), tkey)
       if (length(order) > size) { rm(list = order[1L], envir = tables); order <<- order[-1L] }
     }
-    t <- tables[[tkey]]
-    s <- fund_peer_summaries(t$r[t$p == period, , drop = FALSE])
+    tables[[tkey]]
+  }
+  function(family, table_name, period) {
+    key <- paste(family, table_name, period, sep = "|")
+    if (!is.null(results[[key]])) return(results[[key]])
+    t <- load(family, table_name)
+    rows <- t$r[t$p == period, , drop = FALSE]
+    s <- fund_peer_summaries(rows)
+    plan <- if (exists("fund_ratio_plan")) fund_ratio_plan(rules, table_name, fund_distribution_fields(names(t$r))) else NULL
+    if (!is.null(plan) && nrow(plan)) {
+      vals <- fund_ratio_inputs(plan, table_name, period, rows, function(dt, sp) {
+        d <- load(family, dt)
+        d$r[fund_shown_period(d$p) == sp, , drop = FALSE]
+      })
+      s <- structure(c(s, fund_peer_ratio_summaries(plan, table_name, vals)), funds = attr(s, "funds"), plan = plan)
+    }
     assign(key, s, envir = results)
     s
   }
@@ -444,16 +519,24 @@ fund_peer_text <- function(p) {
 # the value would be drawn as an outlier in a box plot. All of it is
 # descriptive: a position among peers, never a judgement about the fund.
 fund_peer_z_atypical <- 2
+# How the robust z is computed (tooltip of each distribution chart and of its z ruler).
+fund_z_explain <- paste("Régua superior: z robusto (0 = mediana dos fundos). Cálculo: z = (valor do fundo − mediana dos fundos) ÷ desvio robusto, ambos na escala do gráfico (asinh quando a escala é log) e sobre os valores originais, sem winsorização. Desvio robusto = MAD escalonado (1,4826 × mediana dos desvios absolutos em relação à mediana); se o MAD for zero (maioria dos fundos com o mesmo valor), 1,2533 × desvio absoluto médio; se ainda for zero, o desvio-padrão. Nas participações, o desvio robusto mínimo é de 1 ponto percentual. |z| de 2 a 3,5 = atípico; 3,5 ou mais = extremo (Iglewicz e Hoaglin, 1993).")
 fund_peer_z_extreme <- 3.5
 
 # Robust scale of the peers on the display scale: scaled MAD; when more than
-# half of the funds share one value (MAD = 0), IQR / 1.349; then the standard
-# deviation; NA when all of them are zero.
-fund_peer_robust_scale <- function(tv) {
+# half of the funds share one value (MAD = 0, e.g. shares where most funds hold
+# 0%), the mean absolute deviation from the median x 1.253314 (the fallback of
+# the modified z-score; the IQR there is nearly zero and blew z up to hundreds);
+# then the standard deviation; NA when all of them are zero. floor = minimum
+# scale (1 percentage point for shares, fund_peer_share_floor).
+fund_peer_share_floor <- 0.01
+
+fund_peer_robust_scale <- function(tv, floor = 0) {
   r <- stats::mad(tv)
-  if (!is.finite(r) || r <= 0) r <- stats::IQR(tv) / 1.349
+  if (!is.finite(r) || r <= 0) r <- 1.253314 * mean(abs(tv - stats::median(tv)))
   if (!is.finite(r) || r <= 0) r <- stats::sd(tv)
-  if (!is.finite(r) || r <= 0) NA_real_ else r
+  if (!is.finite(r) || r <= 0) return(if (floor > 0) floor else NA_real_)
+  max(r, floor)
 }
 
 # Robust z of value v among the peers (summary s), its class and Tukey's fences.
@@ -476,16 +559,20 @@ fund_peer_z_text <- function(z) {
 
 # Hint of one chart: what it shows and how to read the position.
 fund_peer_tip <- function(label, field, s, v, p, family, period, rows, history, rb = fund_peer_robust(s, v),
-                          prev = NULL) {
+                          prev = NULL, fmt = format_compact_number, ratio = NULL) {
   fam <- toupper(family)
   paste(c(
-    sprintf("%s\nCampo CVM: %s", label, field),
+    if (is.null(ratio)) sprintf("%s\nCampo CVM: %s", label, fund_peer_field_code(field))
+    else sprintf("%s\nValor relativo: %s, campo CVM %s (fundo: %s), dividido por %s%s (fundo: %s).",
+                 label, ratio$num_label, fund_peer_field_code(field), format_compact_number(ratio$num), ratio$den_label,
+                 if (nzchar(ratio$den_table)) paste0(", em ", fund_table_label(ratio$den_table)) else "",
+                 format_compact_number(ratio$den)),
     sprintf(paste0("Posição do fundo entre os %s fundos %s com este campo publicado na competência %s: %s ",
                    "(o valor do fundo, %s, é maior que o de %s%% deles)."),
-            format_int(s$n), fam, period, fund_peer_text(p), format_compact_number(v),
+            format_int(s$n), fam, period, fund_peer_text(p), fmt(v),
             formatC(round(p), format = "d")),
     if (!is.na(rb$z)) sprintf(paste0("Z robusto %s: %s (|z| < 2 típico; 2 a 3,5 atípico; 3,5 ou mais extremo). ",
-                                     "Mede a distância à mediana em desvios robustos (MAD) na escala log%s."),
+                                     "Mede a distância à mediana em desvios robustos (MAD; desvio absoluto médio quando a maioria dos fundos tem o mesmo valor) na escala do gráfico%s."),
                               fund_peer_z_text(rb$z), rb$level,
                               if (isTRUE(rb$tukey)) "; fora das cercas de Tukey (seria um ponto isolado num boxplot)" else ""),
     if (!is.null(prev)) sprintf("Na competência anterior (%s): %s, %s; variação de %s pontos percentuais.",
@@ -495,24 +582,29 @@ fund_peer_tip <- function(label, field, s, v, p, family, period, rows, history, 
                                "dos fundos; tracejado = média dos fundos; laranja = este fundo.")
     else paste0("Barras = quantidade de fundos por faixa de valor; curva = normal ajustada na escala exibida; ",
                 "tracejado = centro da curva; laranja = este fundo."),
+    if (!is.null(s$rs) && !is.na(s$rs))
+      fund_z_explain,
     sprintf("Fundos %s: P25 %s · mediana %s · P75 %s (metade dos fundos fica entre P25 e P75).", fam,
-            format_compact_number(s$q[26]), format_compact_number(s$q[51]), format_compact_number(s$q[76])),
-    sprintf("Média %s · desvio-padrão %s · mínimo %s · máximo %s.",
-            format_compact_number(s$mean), format_compact_number(s$sd),
-            format_compact_number(s$min), format_compact_number(s$max)),
+            fmt(s$q[26]), fmt(s$q[51]), fmt(s$q[76])),
+    sprintf("Média %s · desvio-padrão %s · mínimo %s · máximo %s.", fmt(s$mean), fmt(s$sd), fmt(s$min), fmt(s$max)),
+    if (!is.null(ratio) && isTRUE(s$excluded > 0))
+      sprintf("%s fundos com o campo ficaram fora desta comparação: denominador ausente, zero ou negativo (ex.: PL ≤ 0).",
+              format_int(s$excluded)),
+    if (!is.null(ratio) && is.na(s$scale)) "Participação desenhada em escala linear (de 0 a 100%).",
     sprintf(paste0("Gráfico winsorizado a 2,5%% de cada lado: valores abaixo de P2,5 (%s) ou acima de P97,5 (%s) ",
                    "aparecem nesses limites%s; média, desvio, percentis e posição usam os valores originais."),
-            format_compact_number(fund_scale_inv(s$lo, s$scale)), format_compact_number(fund_scale_inv(s$hi, s$scale)),
+            fmt(fund_scale_inv(s$lo, s$scale)), fmt(fund_scale_inv(s$hi, s$scale)),
             if (s$outside > 0) sprintf(" (%s fundos)", format_int(s$outside)) else ""),
     if (v < fund_scale_inv(s$lo, s$scale) || v > fund_scale_inv(s$hi, s$scale))
       "O fundo está entre os valores winsorizados: o ponto laranja fica na borda.",
-    fund_scale_note(s$scale, fund_scale_inv(s$dmean, s$scale)),
-    "Um valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas.",
+    fund_scale_note(s$scale, fund_scale_inv(s$dmean, s$scale), fmt),
+    if (is.null(ratio)) "Um valor por fundo: quando há várias linhas na data (classes, séries ou versões do informe), vale a mediana delas."
+    else "Um valor por fundo: mediana das linhas do numerador sobre a mediana das linhas do denominador na mesma competência.",
     if (rows > 1) sprintf("Este fundo tem %s linhas nesta data.", format_int(rows)),
     if (!is.null(history)) sprintf("Histórico do próprio fundo: média %s · desvio-padrão %s · %s valores (%s a %s).",
                                    format_compact_number(history$mean), format_compact_number(history$sd),
                                    format_int(history$n), history$first_month, history$last_month),
-    fund_field_note_text(field)), collapse = "\n")
+    fund_field_note_text(sub("\\|.*$", "", field))), collapse = "\n")
 }
 
 # Competência before `period` among the fund's rows (NULL when none).
@@ -528,47 +620,96 @@ fund_previous_period <- function(r, period) {
 # fund's previous competência (trajectory), when known. Cells are ordered from
 # the most to the least atypical (|robust z|), and a panel lists the highlights.
 fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NULL, period = NULL,
-                                        peers = NULL, family = "", prev_peers = NULL, prev_period = NULL) {
+                                        peers = NULL, family = "", prev_peers = NULL, prev_period = NULL,
+                                        mode = "rel", rows_of = NULL) {
   if (!nrow(r)) return(shiny::div(class = "tm-empty", "Sem linhas nesta tabela para o fundo."))
   if (is.null(period) || !nzchar(period)) return(shiny::div(class = "tm-empty", "Escolha a competência."))
   if (!is.null(attr(peers, "error"))) return(shiny::div(class = "tm-empty", paste("Erro ao ler os demais fundos:", attr(peers, "error"))))
+  r <- fund_peer_split(r)
   at <- r[row_periods(r) == period, , drop = FALSE]
   own <- fund_peer_values(at)
   before <- if (is.null(prev_period) || is.null(prev_peers)) list() else fund_peer_values(r[row_periods(r) == prev_period, , drop = FALSE])
   history <- fund_field_distributions(r)
-  fields <- intersect(names(own), names(peers))
-  no_peer <- length(setdiff(names(own), names(peers)))
   fam <- toupper(family)
-  if (!length(fields)) return(shiny::div(class = "tm-empty", sprintf(
+  # Items of the matrix: in mode Relativo each field with a base ratio is shown
+  # as that ratio, the others as published, plus the analytic ratios.
+  plan <- attr(peers, "plan")
+  relative <- identical(mode, "rel") && !is.null(plan) && nrow(plan) > 0 && !is.null(rows_of)
+  base_lab <- field_labels(names(own), descriptions, table_name)
+  item <- function(key, field, v, s, prev_v, ratio = NULL, label = NULL) {
+    i <- match(field, names(own))
+    list(key = key, field = field, s = s, v = v, label = if (is.null(label)) base_lab$label[i] else label,
+         derived = isTRUE(base_lab$derived[i]), ratio = ratio, prev_v = prev_v)
+  }
+  items <- list()
+  if (relative) {
+    rows_at <- function(dt, sp) { d <- rows_of(dt); if (is.null(d) || !nrow(d)) NULL else d[fund_shown_period(row_periods(d)) == sp, , drop = FALSE] }
+    ov <- fund_ratio_inputs(plan, table_name, period, r, rows_at)
+    orv <- fund_ratio_values(plan, table_name, ov)$values
+    prv <- if (!is.null(prev_period) && !is.null(prev_peers))
+      fund_ratio_values(plan, table_name, fund_ratio_inputs(plan, table_name, prev_period, r, rows_at))$values else list()
+    for (fld in names(own)) {
+      k <- paste0("r:", fld)
+      if (!(k %in% plan$key)) { items[[length(items) + 1L]] <- item(fld, fld, unname(own[[fld]][1]), peers[[fld]],
+                                                                    if (fld %in% names(before)) unname(before[[fld]][1])); next }
+      if (is.null(orv[[k]])) next
+      items[[length(items) + 1L]] <- item(k, fld, unname(orv[[k]][1]), peers[[k]], if (!is.null(prv[[k]])) unname(prv[[k]][1]))
+    }
+    for (k in plan$key[plan$kind == "analytic"]) {
+      if (is.null(orv[[k]])) next
+      items[[length(items) + 1L]] <- item(k, plan$field[plan$key == k], unname(orv[[k]][1]), peers[[k]],
+                                          if (!is.null(prv[[k]])) unname(prv[[k]][1]))
+    }
+    items <- lapply(items, function(x) {
+      if (!startsWith(x$key, "r:") && !startsWith(x$key, "a:")) return(x)
+      pl <- plan[plan$key == x$key, , drop = FALSE]
+      den <- fund_ratio_denominator(pl$den, pl$den_table, ov)
+      dt <- if (pl$den_table == table_name) "" else pl$den_table
+      den_fields <- unlist(lapply(fund_ratio_terms(pl$den), function(t) fund_ratio_term_fields(t, names(ov[[pl$den_table]]))))
+      den_lab <- if (length(den_fields)) paste(field_labels(den_fields, descriptions, pl$den_table)$label, collapse = " + ") else pl$den
+      x$ratio <- list(num_label = x$label, num = unname(own[[x$field]][1]), den = unname(den[1]), den_label = den_lab,
+                      den_table = dt, kind = pl$kind)
+      x$label <- fund_ratio_label(pl$label, x$label)
+      x
+    })
+  } else {
+    items <- lapply(names(own), function(fld) item(fld, fld, unname(own[[fld]][1]), peers[[fld]],
+                                                   if (fld %in% names(before)) unname(before[[fld]][1])))
+  }
+  no_peer <- sum(vapply(items, function(x) is.null(x$s), logical(1)))
+  items <- Filter(function(x) !is.null(x$s), items)
+  if (!length(items)) return(shiny::div(class = "tm-empty", sprintf(
     "Nenhum campo numérico do fundo em %s tem ao menos %d fundos %s com valores distintos para comparar.",
     period, fund_peer_min_funds, fam)))
-  stat <- lapply(fields, function(fld) {
-    s <- peers[[fld]]; v <- unname(own[[fld]][1])
-    pv <- if (fld %in% names(before) && !is.null(prev_peers[[fld]])) {
-      x <- unname(before[[fld]][1])
-      list(period = prev_period, p = fund_peer_percentile(prev_peers[[fld]], x), z = fund_peer_robust(prev_peers[[fld]], x)$z)
-    }
-    list(field = fld, s = s, v = v, p = fund_peer_percentile(s, v), rb = fund_peer_robust(s, v), prev = pv)
+  stat <- lapply(items, function(x) {
+    ps <- prev_peers[[x$key]]
+    pv <- if (!is.null(x$prev_v) && !is.null(ps))
+      list(period = prev_period, p = fund_peer_percentile(ps, x$prev_v), z = fund_peer_robust(ps, x$prev_v)$z)
+    c(x, list(p = fund_peer_percentile(x$s, x$v), rb = fund_peer_robust(x$s, x$v), prev = pv,
+              fmt = if (is.null(x$ratio)) format_compact_number else fund_ratio_pct))
   })
   az <- vapply(stat, function(x) if (is.na(x$rb$z)) -1 else abs(x$rb$z), numeric(1))
   stat <- stat[order(-az)]
-  fields <- vapply(stat, `[[`, "", "field")
-  lab <- field_labels(fields, descriptions, table_name)
+  lab <- list(label = vapply(stat, `[[`, "", "label"), derived = vapply(stat, function(x) isTRUE(x$derived) || !is.null(x$ratio), logical(1)))
+  fields <- vapply(stat, `[[`, "", "key")
   levels <- vapply(stat, function(x) x$rb$level, "")
   cells <- lapply(seq_along(stat), function(i) {
     x <- stat[[i]]; d <- x$s; d$last <- x$v
-    tip <- fund_peer_tip(lab$label[i], x$field, x$s, x$v, x$p, family, period, nrow(at), history[[x$field]], x$rb, x$prev)
+    # Robust z axis on top (fund_distribution_svg): median of the peers on the display scale.
+    d$zmed <- fund_scale_fwd(x$s$q[51], x$s$scale)
+    tip <- fund_peer_tip(lab$label[i], x$field, x$s, x$v, x$p, family, period, nrow(at),
+                         if (is.null(x$ratio)) history[[x$field]], x$rb, x$prev, x$fmt, x$ratio)
     lv <- c(`típico` = "tm-z-typ", `atípico` = "tm-z-atp", extremo = "tm-z-ext")[x$rb$level]
     shiny::div(class = paste("tm-dist", if (!is.na(lv)) lv), `data-tip` = trimws(tip),
                shiny::div(class = if (lab$derived[i]) "tm-dist-label tm-derived" else "tm-dist-label", lab$label[i]),
-               htmltools::HTML(fund_distribution_svg(d, 200, 64, format_compact_number, TRUE, lab$label[i])),
+               htmltools::HTML(fund_distribution_svg(d, 200, 64, x$fmt, TRUE, lab$label[i])),
                shiny::div(class = "tm-dist-cap",
                           shiny::tags$b(class = "tm-dist-pos", fund_peer_text(x$p)),
                           if (!is.na(x$rb$z)) shiny::span(class = "tm-z-badge", paste("z", fund_peer_z_text(x$rb$z))),
                           if (!is.null(x$prev) && !is.na(x$prev$p)) shiny::span(
                             class = paste("tm-z-delta", if (x$p - x$prev$p >= 0) "tm-up" else "tm-down"),
                             paste0(if (x$p - x$prev$p >= 0) "▲" else "▼", formatC(abs(round(x$p - x$prev$p)), format = "d"))),
-                          sprintf(" · fundo %s · %s fundos", format_compact_number(x$v), format_int(x$s$n))))
+                          sprintf(" · fundo %s · %s fundos", x$fmt(x$v), format_int(x$s$n))))
   })
   # Highlights: the most atypical fields, with direction and trajectory.
   top <- which(levels %in% c("atípico", "extremo"))[seq_len(min(6L, sum(levels %in% c("atípico", "extremo"))))]
@@ -589,7 +730,7 @@ fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NUL
       shiny::tags$li(class = if (x$rb$level == "extremo") "tm-z-ext" else "tm-z-atp",
                      shiny::span(class = "tm-z-name", lab$label[i]),
                      sprintf(" %s da mediana · fundo %s, mediana %s · %s · z %s%s",
-                             if (x$rb$z > 0) "acima" else "abaixo", format_compact_number(x$v), format_compact_number(x$s$q[51]),
+                             if (x$rb$z > 0) "acima" else "abaixo", x$fmt(x$v), x$fmt(x$s$q[51]),
                              fund_peer_text(x$p), fund_peer_z_text(x$rb$z),
                              if (!is.null(x$prev) && !is.na(x$prev$p)) sprintf(" · antes %s", fund_peer_text(x$prev$p)) else ""))
     })) else shiny::div(class = "tm-z-none", "Todos os campos estão na faixa típica da família (|z| < 2)."))
@@ -606,6 +747,9 @@ fund_distribution_matrix_ui <- function(r, descriptions = NULL, table_name = NUL
               if (length(fields) == 1L) "1 campo numérico" else paste(format_int(length(fields)), "campos numéricos")),
       "barras = fundos por faixa de valor; curva = normal ajustada; tracejado = centro; laranja = este fundo. ",
       "Passe o mouse para a explicação.",
+      if (relative) paste0(" Valores relativos: cada item dividido pelo total da sua tabela, os totais pelo PL e razões analíticas ",
+                           "(ex.: inadimplência sobre os direitos creditórios); campos sem regra aparecem como publicados.")
+      else if (!is.null(plan) && nrow(plan)) " Valores absolutos, como publicados pela CVM.",
       if (length(skipped)) paste0(" Fora da matriz: ", skipped, ".") else ""),
     highlights,
     shiny::div(class = "tm-dist-grid", cells))
@@ -754,8 +898,8 @@ results_table <- function(r, input_id, selected = NULL, sort_input = NULL, sort 
     num <- col$by %in% c("count", "pl", "share", "holders") || sub("^attr_", "", col$by) %in% fund_attribute_numeric
     shiny::tags$th(class = paste("tm-sortable", if (active) "tm-sorted", if (num) "tm-num",
                                  if (startsWith(col$by, "attr_")) "tm-attr"),
-                   `data-sort` = col$by, title = fund_column_tip(col$by),
-                   paste0(col$label, arrow), fund_info_for(sub("^attr_", "", col$by)))
+                   `data-sort` = col$by, title = paste0(fund_column_tip(col$by), fund_hint_tip_text(sub("^attr_", "", col$by))),
+                   paste0(col$label, arrow))
   })
   shiny::tags$table(
     class = paste("tm-results", if (length(attrs) || holders) "tm-results-wide"),
@@ -789,10 +933,15 @@ humanize_field <- function(field) {
 
 # Field labels: the META description when published, else the humanized code
 # (marked `derived`). The code itself goes to the tooltip.
+# Virtual fields "<field>|<type>" (fund_peer_split) take the label of the field
+# followed by the type ("Valor total · Captações no Mês").
 field_labels <- function(fields, descriptions = NULL, table_name = NULL) {
+  base <- sub("\\|.*$", "", fields)
+  op <- ifelse(grepl("|", fields, fixed = TRUE), sub("^[^|]*\\|", "", fields), NA_character_)
   desc <- if (is.null(descriptions) || is.null(table_name)) rep(NA_character_, length(fields))
-          else describe_fields(descriptions, table_name, fields)
-  data.frame(field = fields, label = ifelse(is.na(desc), humanize_field(fields), desc),
+          else describe_fields(descriptions, table_name, base)
+  label <- ifelse(is.na(desc), humanize_field(base), desc)
+  data.frame(field = fields, label = ifelse(is.na(op), label, paste0(label, " · ", op)),
              derived = is.na(desc), stringsAsFactors = FALSE)
 }
 
@@ -909,9 +1058,8 @@ fund_attribute_filters_ui <- function(ns, families) {
            else paste0(fund_attribute_labels[[a]], " (", paste(unique(paste(toupper(sp$family), sp$column)), collapse = "; "),
                        "), último informe que o preencheu. Com um valor escolhido, ficam só os fundos das famílias cujo informe tem o campo; ",
                        "\"Não consta do informe\" seleciona os das demais famílias.", fund_field_note_text(sp$column[1]))
-    field(fund_attribute_medium[[a]], tip,
-          shiny::selectInput(ns(paste0("attr_", a)), NULL, width = "100%", selectize = FALSE, choices = c(Todos = "")),
-          info = fund_info_for(a))
+    field(fund_attribute_medium[[a]], paste0(tip, fund_hint_tip_text(a)),
+          shiny::selectInput(ns(paste0("attr_", a)), NULL, width = "100%", selectize = FALSE, choices = c(Todos = "")))
   })
   shiny::tags$details(
     class = "tm-cf-panel",
@@ -942,6 +1090,12 @@ fund_search_ui <- function(id, family = NULL) {
            var t = $(this).closest('table');
            t.find('tr.tm-selected').removeClass('tm-selected');
            $(this).addClass('tm-selected');
+           // The detail of the new fund opens on Perfil; the old one fades until it arrives.
+           var d = $(this).closest('.tm-page').find('.tm-detail');
+           if (String($(this).data('key')) !== String(d.attr('data-fund'))) {
+             d.addClass('tm-refreshing');
+             d.find('.nav-link[data-value=\"Perfil\"]').tab('show');
+           }
            Shiny.setInputValue(t.data('input'), $(this).data('key'), {priority: 'event'});
          });
          $(document).on('click', 'table.tm-results th[data-sort]', function() {
@@ -1205,7 +1359,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
       admin_ids <- unique(stats::na.omit(s$info$administrator_entity[order(s$info$last_period, decreasing = TRUE)]))
       admins <- ifelse(is.na(match(admin_ids, e$entity_id)), admin_ids, e$display_name[match(admin_ids, e$entity_id)])
       bslib::card(
-        class = "tm-section tm-detail tm-pane",
+        class = "tm-section tm-detail tm-pane", `data-fund` = paste(s$family, s$cnpj, sep = "|"),
         bslib::card_header(
           class = "tm-detail-head",
           # Name and identification on the left, the return curve beside it.
@@ -1243,6 +1397,7 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
                              shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))),
             bslib::nav_panel("Distribuições",
                              shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("dists")))),
+            bslib::nav_item(shiny::div(class = "tm-dist-mode", title = "Valores das distribuições: relativos (itens / total da tabela, totais / PL, razões analíticas) ou absolutos, como publicados", shiny::radioButtons(ns("dist_mode"), NULL, c(Relativo = "rel", Absoluto = "abs"), "rel", inline = TRUE))),
             bslib::nav_panel("Denominações", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("names")))))))
     })
 
@@ -1256,7 +1411,9 @@ fund_search_server <- function(id, root, analytics = NULL, data = NULL, families
       p <- tryCatch(peers(s$family, input$table, input$period), error = function(e) structure(list(), error = conditionMessage(e)))
       pp <- fund_previous_period(r, input$period)
       prev <- if (!is.null(pp)) tryCatch(peers(s$family, input$table, pp), error = function(e) NULL)
-      fund_distribution_matrix_ui(r, descriptions, input$table, input$period, p, s$family, prev, if (!is.null(prev)) pp)
+      fund_distribution_matrix_ui(r, descriptions, input$table, input$period, p, s$family, prev, if (!is.null(prev)) pp,
+                                  mode = if (is.null(input$dist_mode)) "rel" else input$dist_mode,
+                                  rows_of = function(tn) tryCatch(report_rows(s$family, tn, s$cnpj), error = function(e) NULL))
     })
 
     output$profile <- shiny::renderUI({

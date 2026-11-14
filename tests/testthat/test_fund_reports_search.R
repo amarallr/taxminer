@@ -493,16 +493,47 @@ test_that("special-rights hints come from one source and the joint notice needs 
   source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"), encoding = "UTF-8")
   h <- jsonlite::fromJSON(fund_hint_json(), simplifyVector = FALSE)
   expect_setequal(names(h), c("political_rights", "economic_rights", "joint"))
-  heads <- vapply(h$political_rights$sections, function(s) s[[1]], "")
-  expect_equal(heads, c("Fonte (CVM)", "Descrição", "Interpretação", "Relevância tributária (interpretação analítica)",
-                        "Atenção", "Referências normativas"))
-  interp <- unlist(h$economic_rights$sections[[3]][[2]])
-  expect_true(all(vapply(c("Sim:", "Não:", "Não informado:"), function(p) any(startsWith(interp, p)), TRUE)))
-  expect_match(h$political_rights$sections[[1]][[2]][[1]], "DIREITO_POLIT_CLASSE")
+  sec <- function(k, head) unlist(Filter(function(s) s[[1]] == head, h[[k]]$sections)[[1]][[2]])
+  for (k in c("political_rights", "economic_rights")) {
+    heads <- vapply(h[[k]]$sections, function(s) s[[1]], "")
+    # .claude/hints.txt: Descrição, Relevância para análise and Atenção first; then the declared data.
+    expect_equal(heads, c("Descrição", "Relevância para análise", "Atenção", "Informação declarada (CVM)",
+                          "Referências normativas"))
+    # Level 1: Sim / Não / Não informado as published; an empty field is never "não".
+    decl <- sec(k, "Informação declarada (CVM)")
+    expect_true(all(vapply(c("Sim:", "Não:", "Não informado:"), function(p) any(startsWith(decl, p)), TRUE)))
+    expect_match(paste(decl, collapse = " "), "não equivale a “não”", fixed = TRUE)
+    # Levels 2 and 3: evidence and hypotheses, the hypotheses named as such.
+    rel <- sec(k, "Relevância para análise")
+    expect_true(any(startsWith(rel, "Evidência para investigação:")))
+    expect_match(paste(rel, collapse = " "), "nunca fato comprovado", fixed = TRUE)
+    expect_true(all(grepl("possíve|necessidade", strsplit(sub("^[^)]*[)]: ", "", rel[startsWith(rel, "Hipóteses")]), "; ")[[1]])))
+    # Level 4: no automatic tax conclusion.
+    att <- paste(sec(k, "Atenção"), collapse = " ")
+    for (w in c("Sem conclusão automática", "desenquadramento como entidade de investimento", "come-cotas",
+                "planejamento tributário abusivo", "fraude", "Lei nº 14.754/2023", "Resolução CVM nº 175",
+                "sem presumir que todos os fundos estejam sujeitos às mesmas regras"))
+      expect_match(att, w, fixed = TRUE)
+  }
+  # Verbatim texts of .claude/hints.txt.
+  expect_true(any(grepl("^Esses direitos podem envolver prerrogativas específicas de voto, aprovação ou veto",
+                        sec("political_rights", "Descrição"))))
+  expect_match(paste(sec("political_rights", "Atenção"), collapse = " "),
+               "A indicação “Sim” não comprova, isoladamente, controle efetivo", fixed = TRUE)
+  expect_match(paste(sec("economic_rights", "Relevância para análise"), collapse = " "),
+               "possíveis relações econômicas entre cotistas, cedentes e outras partes vinculadas", fixed = TRUE)
+  expect_match(paste(sec("economic_rights", "Atenção"), collapse = " "),
+               "não caracteriza, isoladamente, artificialidade econômica", fixed = TRUE)
+  expect_match(sec("political_rights", "Informação declarada (CVM)")[1], "DIREITO_POLIT_CLASSE")
+  expect_match(sec("economic_rights", "Informação declarada (CVM)")[1], "DIREITO_ECON_CLASSE")
+  # Hover hint like Entidade de investimento: no ⓘ, the sections in the tooltip.
+  hp <- fund_hint_tip_text("political_rights")
+  expect_match(hp, "^\n\nDireitos políticos especiais\nDescrição: Indica se determinada classe")
+  expect_match(hp, "\nRelevância para análise: Evidência para investigação:", fixed = TRUE)
+  expect_match(hp, "\nAtenção: A indicação “Sim” não comprova", fixed = TRUE)
+  expect_match(hp, "\nReferências normativas: Resolução CVM nº 175/2022", fixed = TRUE)
+  expect_identical(fund_hint_tip_text("condominium"), "")
   expect_match(as.character(tm_app_script()), "window.TM_INFO = ", fixed = TRUE)
-  expect_match(as.character(fund_info_for("political_rights")), 'data-info="political_rights"')
-  expect_match(as.character(fund_info_for("political_rights")), 'aria-label="Sobre: Direitos políticos especiais"')
-  expect_null(fund_info_for("condominium"))
   # Joint: only a line (class) with both S in the latest period; empty = not informed, never "não".
   rows <- data.frame(fund_cnpj_normalized = c("1", "1", "2", "2", "3", "3", "4"),
                      DIREITO_POLIT_CLASSE = c("S", "N", "S", "N", "S", "S", ""),
@@ -518,6 +549,31 @@ test_that("special-rights hints come from one source and the joint notice needs 
   ui <- as.character(fund_traits_ui(a, "fip", "1"))
   expect_match(ui, "Análise conjunta de direitos especiais")
   expect_match(ui, "1 linha com DIREITO_POLIT_CLASSE = S e DIREITO_ECON_CLASSE = S")
-  expect_match(ui, 'data-info="economic_rights"')
+  expect_false(grepl("tm-info|ⓘ", ui))
+  expect_match(ui, "Direitos econômico-financeiros distintos&#10;Descrição:", fixed = TRUE)
+  # The explanatory note is only in the tooltips, not as a block.
+  expect_false(grepl("tm-note", ui))
   expect_false(grepl("Análise conjunta", as.character(fund_traits_ui(a[a$attribute != "joint_rights", ], "fip", "1"))))
+  # FIDC, FII and FIAGRO do not publish the fields: the absence line keeps the hints.
+  fidc <- as.character(fund_traits_ui(data.frame(family = "fidc", fund_cnpj = "1", attribute = "condominium",
+                                                 value = "Aberto", period = "2025-08"), "fidc", "1"))
+  expect_match(fidc, "Não constam do informe de FIDC", fixed = TRUE)
+  expect_match(fidc, 'direitos políticos especiais&#10;&#10;Direitos políticos especiais&#10;Descrição:', fixed = TRUE)
+  expect_match(fidc, '&#10;&#10;Direitos econômico-financeiros distintos&#10;Descrição:', fixed = TRUE)
+  expect_false(grepl("tm-info", fidc))
+})
+
+test_that("special-rights indicators feed no score and no automatic tax conclusion", {
+  # Only the search/display code reads them (explicit list of code folders).
+  files <- c(list.files(testthat::test_path("..", "..", "src", c("intelligence", "data", "common", "collect")),
+                        "[.]R$", full.names = TRUE),
+             list.files(testthat::test_path("..", "..", "prototype"), "[.]R$", full.names = TRUE))
+  uses <- basename(files[vapply(files, function(f)
+    any(grepl("political_rights|economic_rights|DIREITO_POLIT_CLASSE|DIREITO_ECON_CLASSE",
+              readLines(f, warn = FALSE, encoding = "UTF-8"))), TRUE)])
+  expect_setequal(uses, c("search_fund_reports.R", "fund_search_module.R"))
+  # Values stay as published: "S" / "N" / empty, never an empty turned into "N".
+  rows <- data.frame(fund_cnpj_normalized = "9", DIREITO_POLIT_CLASSE = "", DIREITO_ECON_CLASSE = "",
+                     DT_COMPTC = "2025-08-31", Data_Referencia = NA_character_, stringsAsFactors = FALSE)
+  expect_equal(nrow(fund_joint_from_rows(rows)), 0L)
 })

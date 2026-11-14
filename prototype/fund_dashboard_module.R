@@ -59,10 +59,53 @@ version_label <- function(repo = ".", generated = Sys.time(), commit = "") {
   f <- file.path(repo, "VERSION")
   v <- if (file.exists(f)) trimws(readLines(f, n = 1L, warn = FALSE, encoding = "UTF-8")) else ""
   if (!length(v) || !nzchar(v)) return(NULL)
-  when <- if (inherits(generated, "POSIXt")) format(generated, "%Y-%m-%d %H:%M") else as.character(generated)
+  # Generation time with its UTC offset ("2026-11-13 19:40 -03:00").
+  when <- if (inherits(generated, "POSIXt"))
+    paste(format(generated, "%Y-%m-%d %H:%M"), sub("([0-9]{2})$", ":\\1", format(generated, "%z")))
+  else as.character(generated)
   hash <- if (length(commit) && !is.na(commit[1]) && nzchar(commit[1])) paste0(" · ", commit[1]) else ""
   shiny::div(class = "tm-version", title = "Versão, data/hora de geração e commit desta página",
              paste0("v.", v, " · ", when, hash))
+}
+
+# Permanent footer of every tab: version, commit, build time and environment
+# (DESENVOLVIMENTO = local app from the source files; PRODUÇÃO = exported page).
+# The text is read in the browser from the stamp under "Sobre" (version_label),
+# so the deploy step and scripts/refresh_site_stamp.sh keep a single stamp.
+build_footer <- function(env = c("DESENVOLVIMENTO", "PRODUÇÃO")) {
+  env <- match.arg(env)
+  shiny::tagList(
+    shiny::div(class = paste("tm-build", if (env == "PRODUÇÃO") "tm-build-prod" else "tm-build-dev"),
+               `data-env` = env, role = "contentinfo", `aria-label` = "Versão em uso", env),
+    shiny::tags$script(shiny::HTML(r"---(
+(function() {
+  function fill() {
+    var f = document.querySelector('.tm-build'), v = document.querySelector('.tm-version');
+    if (!f) return;
+    var env = f.getAttribute('data-env'), p = v ? v.textContent.trim().split(' · ') : [];
+    var ver = p[0] || 'versão não registrada', when = p[1] || '—', hash = p[2] || '';
+    var dirty = hash.slice(-1) === '+';
+    f.textContent = 'TaxMiner ' + ver + ' · commit ' + (hash ? hash : 'não registrado') + ' · build ' + when + ' · ' + env;
+    f.title = (env === 'PRODUÇÃO' ? 'Página publicada (export estático).' : 'App local, lido dos arquivos-fonte ao iniciar.') +
+      ' Build = data/hora de geração' + (env === 'PRODUÇÃO' ? ' do export.' : ' (início do app).') +
+      (dirty ? ' "+" = havia alterações locais ainda sem commit.' : '') +
+      (hash ? '' : ' Commit acrescentado só na publicação pelo GitHub Pages.');
+  }
+  // Published page: version.json (scripts/refresh_site_stamp.sh, completed by
+  // .github/workflows/pages.yml) says whether this build was deployed.
+  function state() {
+    var f = document.querySelector('.tm-build');
+    if (!f || f.getAttribute('data-env') !== 'PRODUÇÃO' || !window.fetch) return;
+    fetch('version.json', {cache: 'no-store'}).then(function(r) { return r.ok ? r.json() : null; }).then(function(m) {
+      if (!m || !m.status) return;
+      f.textContent += ' · ' + m.status;
+      if (m.deployed_at) f.title += ' Publicado em ' + m.deployed_at + '.';
+    }).catch(function() {});
+  }
+  function start() { fill(); state(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+)---")))
 }
 
 # Short hash of the checked-out commit, with "+" when tracked files have
@@ -154,7 +197,13 @@ fund_admin_server <- function(id, ctx) {
       r <- ranking()
       shiny::req(picked(), picked() %in% r$key)
       admin_detail_ui(ctx, r, picked(), families(), month_input = ns("month"),
-                      funds = shiny::uiOutput(ns("funds")))
+                      funds = shiny::uiOutput(ns("funds")), chart = shiny::uiOutput(ns("chart")))
+    })
+
+    output$chart <- shiny::renderUI({
+      r <- ranking()
+      shiny::req(picked(), picked() %in% r$key)
+      admin_chart_ui(ctx, picked(), families(), fund = fund_sel())
     })
 
     output$funds <- shiny::renderUI({
@@ -165,7 +214,7 @@ fund_admin_server <- function(id, ctx) {
 
     # Current fund of the app ("family|CNPJ"): its administrator and the fund in the list.
     fund_sel <- shiny::reactiveVal(NULL)
-    list(show = function(value) {
+    list(fund = function(value) fund_sel(value), show = function(value) {
       p <- strsplit(value, "|", fixed = TRUE)[[1]]
       s <- if (is.null(ctx$admin_idx)) NULL else ctx$admin_idx$snapshot
       if (length(p) != 2L || is.null(s)) return(invisible())
@@ -250,7 +299,48 @@ admin_funds_ui <- function(ctx, r, key, families, month = NULL, reset = NULL, to
 # reference month on the static page); `month_input` names the Shiny input
 # that receives a month clicked on the chart; `data_file` is the static page's
 # per-month fund file (prototype/static_funds.R).
-admin_detail_ui <- function(ctx, r, key, families, month_input = NULL, funds = NULL, data_file = NULL, top = NULL) {
+# Chart of the administrator's monthly net assets. fund ("family|CNPJ"), when it
+# is one of the administrator's current funds, adds the net assets of that fund
+# on the same axis, in its family colour (the line answers the fund list).
+admin_chart_ui <- function(ctx, key, families, fund = NULL) {
+  idx <- ctx$admin_idx
+  admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
+  s <- if (is.null(idx)) administrator_series(ctx$m, admins, key, ctx$complete)
+       else admin_series(ctx$m, idx, families, key, ctx$complete)
+  sf <- if (is.null(idx)) snapshot_funds(ctx$snapshot, admins, families, administrator = key)
+        else admin_snapshot_funds(idx, families, key)
+  p <- if (is.null(fund)) character() else strsplit(fund, "|", fixed = TRUE)[[1]]
+  part <- NULL; fname <- NULL; fcolor <- NULL
+  if (length(p) == 2L && any(sf$family == p[1] & sf$fund_cnpj == p[2])) {
+    # The fund's monthly values as they enter the administrator's total.
+    sel <- ctx$m$family == p[1] & ctx$m$fund_cnpj == p[2] & !is.na(ctx$m$net_assets)
+    if (any(sel)) {
+      v <- tapply(ctx$m$net_assets[sel], ctx$m$month[sel], sum)
+      part <- unname(v[as.character(s$month)])
+      fname <- display_name(sf$fund_name[sf$family == p[1] & sf$fund_cnpj == p[2]][1])
+      fcolor <- unname(fund_family_colors[[p[1]]])
+    }
+  }
+  tips <- sprintf("%s\nPL %s\n%s fundos%s\nClique para listar os fundos", month_label(s$month),
+                  format_brl(s$net_assets), format_int(s$funds),
+                  if (is.null(part)) "" else ifelse(is.na(part), paste0("\n", fname, ": sem informe"),
+                                                   sprintf("\n%s: %s (%s do total)", fname, format_brl(part),
+                                                           format_pct(part / s$net_assets, sign = FALSE))))
+  shiny::tagList(
+    shiny::div(class = "tm-subhead tm-subhead-key", "Patrimônio dos fundos atuais, mês a mês ",
+               shiny::span(class = "tm-head-note", "carteira atual retroagida · clique em um mês"),
+               if (!is.null(part)) shiny::div(class = "tm-chart-key",
+                 shiny::span(class = "tm-key-line", style = "border-top-color:#0b1f3a"), "Administrador",
+                 shiny::span(class = "tm-key-line", style = sprintf("border-top-color:%s", fcolor)), fname)),
+    svg_line_chart(s$month, s$net_assets, "#0b1f3a", tips = tips,
+                   label = if (is.null(part)) "Patrimônio administrado por mês"
+                           else paste("Patrimônio administrado por mês e do fundo", fname),
+                   width = 760, height = 120, pick = TRUE, part = part,
+                   part_color = if (is.null(fcolor)) "#e07b39" else fcolor))
+}
+
+admin_detail_ui <- function(ctx, r, key, families, month_input = NULL, funds = NULL, data_file = NULL, top = NULL,
+                            chart = NULL) {
   a <- r[r$key == key, ]
   admins <- ctx$admins[ctx$admins$family %in% families, , drop = FALSE]
   idx <- ctx$admin_idx
@@ -258,9 +348,8 @@ admin_detail_ui <- function(ctx, r, key, families, month_input = NULL, funds = N
         else admin_snapshot_funds(idx, families, a$key)
   by_family <- tapply(sf$net_assets, factor(sf$family, levels = fund_family_order), sum, na.rm = TRUE)
   by_family <- by_family[!is.na(by_family) & by_family > 0]
-  s <- if (is.null(idx)) administrator_series(ctx$m, admins, a$key, ctx$complete)
-       else admin_series(ctx$m, idx, families, a$key, ctx$complete)
   if (is.null(funds)) funds <- admin_funds_ui(ctx, r, key, families, top = top)
+  if (is.null(chart)) chart <- admin_chart_ui(ctx, a$key, families)
   bslib::card(
     class = "tm-section tm-detail tm-pane tm-admin-detail",
     bslib::card_header(
@@ -280,12 +369,7 @@ admin_detail_ui <- function(ctx, r, key, families, month_input = NULL, funds = N
         if (length(by_family)) share_bar(as.numeric(by_family), fund_family_colors[names(by_family)],
                                          paste(toupper(names(by_family)), "·", fund_family_names[names(by_family)]),
                                          format_brl(as.numeric(by_family))),
-        shiny::div(class = "tm-subhead", "Patrimônio dos fundos atuais, mês a mês ",
-                   shiny::span(class = "tm-head-note", "carteira atual retroagida · clique em um mês")),
-        svg_line_chart(s$month, s$net_assets, "#0b1f3a",
-                       tips = sprintf("%s\nPL %s\n%s fundos\nClique para listar os fundos", month_label(s$month),
-                                      format_brl(s$net_assets), format_int(s$funds)),
-                       label = "Patrimônio administrado por mês", width = 760, height = 120, pick = TRUE)),
+        shiny::div(class = "tm-admin-chart", chart)),
       shiny::div(class = "tm-admin-funds", funds)))
 }
 

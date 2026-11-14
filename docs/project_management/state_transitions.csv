@@ -80,3 +80,16 @@ trn_0078,work_0041,test_status,not_run,passed,2026-11-13T14:36:22-03:00,claude_c
 trn_0079,request_0015,status,,linked,2026-11-13T14:36:22-03:00,claude_code,request_register.csv
 trn_0080,work_0041,acceptance_status,pending,approved,2026-11-13T14:43:03-03:00,developer,acc_0027
 trn_0081,request_0016,status,,captured,2026-11-13T15:16:29-03:00,claude_code,request_register.csv
+trn_0082,request_0016,status,captured,answered,2026-11-13T18:38:34-03:00,claude_code,Implementado: src/intelligence/fund_ratios.R; config/metric_ratio_rules.csv; tests/testthat/test_fund_ratios.R
+trn_0083,request_0017,status,,answered,2026-11-13T18:38:34-03:00,claude_code,request_register.csv
+trn_0084,request_0018,status,,answered,2026-11-13T18:38:34-03:00,claude_code,request_register.csv
+trn_0085,request_0019,status,,answered,2026-11-13T18:38:35-03:00,claude_code,request_register.csv
+trn_0086,request_0020,status,,answered,2026-11-13T18:38:35-03:00,claude_code,request_register.csv
+trn_0087,request_0021,status,,answered,2026-11-13T18:38:35-03:00,claude_code,request_register.csv
+trn_0088,req_0023,status,,accepted,2026-11-13T19:42:56-03:00,developer,requirements_register.csv
+trn_0089,request_0022,status,,linked,2026-11-13T19:42:56-03:00,claude_code,request_register.csv
+trn_0090,req_0022,status,in_progress,tested,2026-11-13T19:43:05-03:00,claude_code,tests/testthat/test_fund_reports_search.R (hints em quatro níveis; ausência de conclusão automática); export 2026-11-13 19:28
+trn_0091,request_0023,status,,answered,2026-11-13T20:56:39-03:00,claude_code,request_register.csv
+trn_0092,request_0024,status,,answered,2026-11-13T20:56:39-03:00,claude_code,request_register.csv
+trn_0093,request_0025,status,,answered,2026-11-13T20:56:39-03:00,claude_code,request_register.csv
+trn_0094,request_0026,status,,answered,2026-11-13T20:56:39-03:00,claude_code,request_register.csv

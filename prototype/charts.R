@@ -51,10 +51,14 @@ svg_segments <- function(px, py, template, close_at = NULL) {
 svg_line_chart <- function(months, values, color = "#2a78d6", format_value = axis_brl,
                            format_tip = format_brl, tips = NULL, label = "",
                            width = 560, height = 190, area = TRUE,
-                           values2 = NULL, format_value2 = axis_int, color2 = "#5b6573", pick = FALSE) {
+                           values2 = NULL, format_value2 = axis_int, color2 = "#5b6573", pick = FALSE,
+                           part = NULL, part_color = "#e07b39") {
+  # part: values of a part of the series (e.g. one fund of an administrator), on
+  # the same axis, drawn as a second line with its own area.
   ok <- !is.na(months)
   months <- months[ok]; values <- values[ok]; if (!is.null(tips)) tips <- tips[ok]
   if (!is.null(values2)) values2 <- values2[ok]
+  if (!is.null(part)) part <- part[ok]
   if (!length(values) || all(is.na(values))) {
     return(htmltools::HTML('<div class="tm-chart-empty">Sem dados para o gráfico.</div>'))
   }
@@ -96,6 +100,11 @@ svg_line_chart <- function(months, values, color = "#2a78d6", format_value = axi
     sx(year_d[i]), sx(year_d[i]), mt + ph, mt + ph + 4, sx(year_d[i]), height - 6, years[i]), character(1))
 
   lines <- svg_segments(px, py, sprintf('<path class="tm-line" d="M%%s" stroke="%s"/>', color))
+  pyp <- if (is.null(part)) rep(NA_real_, length(px)) else ifelse(is.na(part), NA, sy(pmax(part, 0)))
+  part_svg <- if (is.null(part) || all(is.na(pyp))) character() else c(
+    svg_segments(px, pyp, sprintf('<path class="tm-area tm-area-part" d="M%%.1f,%%.1f L%%s L%%.1f,%%.1f Z" fill="%s"/>', part_color),
+                 close_at = sy(0)),
+    svg_segments(px, pyp, sprintf('<path class="tm-line tm-line-part" d="M%%s" stroke="%s"/>', part_color)))
   fills <- if (area) svg_segments(px, py, sprintf('<path class="tm-area" d="M%%.1f,%%.1f L%%s L%%.1f,%%.1f Z" fill="%s"/>', color),
                                   close_at = sy(0)) else character()
   last <- max(which(!is.na(py)))
@@ -109,15 +118,20 @@ svg_line_chart <- function(months, values, color = "#2a78d6", format_value = axi
                                              px[i], py[i], color)
     dot2 <- if (is.na(py2[i])) "" else sprintf('<circle class="tm-dot" cx="%.1f" cy="%.1f" r="4" fill="%s"/>',
                                                px[i], py2[i], color2)
+    if (!is.na(pyp[i])) dot2 <- paste0(dot2, sprintf('<circle class="tm-dot" cx="%.1f" cy="%.1f" r="4" fill="%s"/>',
+                                                     px[i], pyp[i], part_color))
     sprintf('<g class="tm-hit"%s data-tip="%s"><rect x="%.1f" y="%.1f" width="%.1f" height="%.1f"/><line class="tm-cross" x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f"/>%s%s</g>',
             if (pick) sprintf(' data-month="%s"', months[i]) else "", html_attr(tips[i]), edges[i], mt, max(1, edges[i + 1] - edges[i]), ph, px[i], px[i], mt, mt + ph, dot, dot2)
   }, character(1))
 
   htmltools::HTML(sprintf(
-    '<svg class="tm-chart%s" viewBox="0 0 %d %d" role="img" aria-label="%s">%s%s%s%s%s%s%s%s</svg>',
-    if (pick) " tm-chart-pick" else "", width, height, html_attr(label), paste(grid, collapse = ""), paste(right, collapse = ""),
+    '<svg class="tm-chart%s" viewBox="0 0 %d %d" role="img" aria-label="%s"%s>%s%s%s%s%s%s%s%s</svg>',
+    if (pick) " tm-chart-pick" else "", width, height, html_attr(label),
+    # Geometry of the axes, for a series drawn in the browser (admin chart of the site).
+    if (pick) sprintf(' data-geom="%s"', paste(c(x0, x1, ml, pw, mt, ph, ymax), collapse = ",")) else "",
+    paste(grid, collapse = ""), paste(right, collapse = ""),
     paste(xaxis, collapse = ""), paste(fills, collapse = ""), paste(lines2, collapse = ""),
-    paste(lines, collapse = ""), end, paste(hits, collapse = "")))
+    paste(c(lines, part_svg), collapse = ""), end, paste(hits, collapse = "")))
 }
 
 # Key for a dual chart: solid colour line = left axis, dashed = right axis.
@@ -240,11 +254,17 @@ $(function() {
   }
   $(document).on('mouseenter', '[data-tip]', function() { fill($(this).attr('data-tip')); tip.show(); })
     .on('mousemove', '[data-tip]', function(e) {
-      var w = tip.outerWidth(), x = e.pageX + 14;
+      var w = tip.outerWidth(), x = e.pageX + 14, h = tip.outerHeight(), y = e.pageY + 14, top = $(window).scrollTop();
       if (x + w > $(window).scrollLeft() + $(window).width() - 8) x = e.pageX - w - 14;
-      tip.css({left: x, top: e.pageY + 14});
+      // Long tips (hints, notes) stay inside the window.
+      if (y + h > top + $(window).height() - 8) y = Math.max(top + 8, top + $(window).height() - h - 8);
+      tip.css({left: x, top: y});
     })
-    .on('mouseleave', '[data-tip]', function() { tip.hide(); })
+    // Leaving a tipped element inside another one shows the outer tip again.
+    .on('mouseleave', '[data-tip]', function(e) {
+      var up = $(e.relatedTarget).closest('[data-tip]');
+      if (up.length && $.contains(up.get(0), this)) fill(up.attr('data-tip')); else tip.hide();
+    })
     .on('click', '.tm-goto[data-tab]', function(e) {
       e.preventDefault();
       window.tmShowTab($(this).attr('data-tab'));
@@ -324,19 +344,18 @@ $(function() {
 });")), tm_info_script())
 }
 
-# Explanatory popovers (ⓘ, fund_attribute_hints): a button .tm-info[data-info]
-# beside the name of an indicator opens a panel with the sections; click,
-# Enter, Space or touch open and close it, Esc and a click outside close it,
-# and focus returns to the button. The texts come from one place
-# (fund_hint_json) as window.TM_INFO, in the app and in the published panel.
-tm_info_button <- function(key, label) {
-  shiny::tags$button(type = "button", class = "tm-info", `data-info` = key,
-                     `aria-label` = paste("Sobre:", label), `aria-expanded` = "false", "ⓘ")
-}
+# Explanatory popovers of a button .tm-info[data-info] (no characteristic uses
+# one now: their hints are hover tooltips, fund_hint_tip_text). The texts come
+# from one place (fund_hint_json) as window.TM_INFO, in the app and in the
+# published panel, where hintText builds the tooltips from them.
 
 tm_info_script <- function() {
   json <- if (exists("fund_hint_json", mode = "function")) fund_hint_json() else "{}"
-  shiny::tags$script(shiny::HTML(paste0("window.TM_INFO = ", json, ";\n", r"---(
+  # Relative metrics rules (config/metric_ratio_rules.csv) for the published panel.
+  ratios <- if (exists("fund_ratio_rules_json", mode = "function")) fund_ratio_rules_json() else "[]"
+  split <- if (exists("fund_peer_split_columns")) jsonlite::toJSON(fund_peer_split_columns) else "[]"
+  shiny::tags$script(shiny::HTML(paste0("window.TM_INFO = ", json, ";\nwindow.TM_RATIOS = ", ratios,
+                                        ";\nwindow.TM_SPLIT = ", split, ";\n", r"---(
 $(function() {
   var pop = null, owner = null;
   function close(back) {
@@ -384,6 +403,59 @@ $(function() {
     // A button inside a sortable header or a summary must not sort or toggle.
     .on('keydown', '.tm-info', function(e) { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); });
   $(window).on('resize scroll', function() { close(false); });
+  // FICHA tab, Distribuições: every chart on one screen, no scrollbar. The grid
+  // takes the number of columns that gives the largest chart (viewBox 200 x 64)
+  // in the room left below the caption and the highlights; recomputed when the
+  // matrix is drawn, the tab is shown and the window is resized (app and site).
+  function scrollBox(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowY;
+      if (o === 'auto' || o === 'scroll' || p.classList.contains('tm-dist-fit-box')) return p;
+    }
+    return null;
+  }
+  var FIT_MAX = 54;
+  function fitDist(grid) {
+    // One cell size for any number of charts: the grid is laid out for FIT_MAX
+    // charts; more than that scroll vertically, with the same size.
+    var box = scrollBox(grid), n = grid.children.length, N = FIT_MAX;
+    if (!box || !n || !box.offsetHeight || !grid.offsetParent) return;
+    box.classList.add('tm-dist-fit-box'); grid.classList.add('tm-dist-fit');
+    box.classList.toggle('tm-dist-fit-scroll', n > N);
+    box.scrollTop = 0;
+    var gap = 6, chrome = 26, W = grid.clientWidth,
+        H = box.getBoundingClientRect().bottom - grid.getBoundingClientRect().top - 4, best = null;
+    for (var c = 1; c <= 24; c++) {
+      var rows = Math.ceil(N / c), w = (W - gap * (c - 1)) / c, h = (H - gap * (rows - 1)) / rows;
+      var k = Math.min((w - 10) / 200, (h - chrome) / 64);
+      if (!best || k > best.k) best = {k: k, c: c, h: h};
+    }
+    grid.style.gridTemplateColumns = 'repeat(' + best.c + ', minmax(0, 1fr))';
+    grid.style.gridAutoRows = Math.max(chrome + 12, Math.floor(best.h)) + 'px';
+    grid.style.gap = gap + 'px';
+  }
+  var fitQueued = false;
+  function fitAll() {
+    if (fitQueued) return;
+    fitQueued = true;
+    setTimeout(function() {
+      fitQueued = false;
+      document.querySelectorAll('.tm-dist-fit-box').forEach(function(b) { var g = b.querySelector('.tm-dist-grid'); if (!g || !g.offsetParent) b.classList.remove('tm-dist-fit-box'); });
+      document.querySelectorAll('.tm-record .tm-dist-grid, .tm-static-record .tm-dist-grid').forEach(fitDist);
+    }, 60);
+  }
+  window.tmFitDist = fitAll;
+  new MutationObserver(function() {
+    if (document.querySelector('.tm-record .tm-dist-grid, .tm-static-record .tm-dist-grid')) fitAll();
+  }).observe(document.body, {childList: true, subtree: true});
+  $(window).on('resize', fitAll);
+  $(document).on('shown.bs.tab click', '.tm-record .nav-link, .tm-static-record .nav-link, .tm-record a, .tm-static-record a', fitAll);
+  // Relativo / Absoluto beside the tab Distribuições: choosing either one also
+  // selects and shows that tab (native click on its link, the bslib handler).
+  $(document).on('click', '.tm-dist-mode .radio-inline, .tm-dist-mode input[type=radio]', function() {
+    var a = $(this).closest('.nav').find('a[data-value="Distribuições"]');
+    if (a.length && !a.hasClass('active')) a.get(0).click();
+  });
 });
 )---")))
 }

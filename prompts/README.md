@@ -23,6 +23,8 @@
 7. **New data sources (addendum):** `common_p07_new_data_sources.txt` covers the shared reliability primitives in `src/common/` and the acceptance-evidence pattern (`decision_0023`). The fund report family itself is Phase 1.3. Each stage needs its own authorization.
 8. **Governance (addendum, 2026-11-12):** `common_p08_governance_master.txt` is the developer's master prompt for TaxMiner Governance (requests, requirements, executions, evidence, executive dashboard and prompt evolution over Common P01). Phase 01 (discovery) produced `docs/governance_plan.md`; every later phase, and any revision of this prompt, needs explicit approval. `AGENTS.md` and Common P01 prevail on conflict.
 
+9. **Safe publication (addendum, 2026-11-13, `req_0023`):** `common_p09_safe_publication.txt` is the mandatory procedure for every static export, commit and push: confirm the export, diagnose the current state, integrity checks, tests, blocking security scan, timezone stamp and publication manifest (`site/app/version.json`), explicit-allowlist commit, push only with authorization and validation of the version served by GitHub Pages.
+
 ## Naming and version labels
 - File names are canonical: `group_pNN_objective.txt`. Internal titles repeat the module and number (for example `# COMMON P03`).
 - "Prompt Pack 1.0" / "TAXMINER 1.0" is the current pack version. "CONTRATO TRANSVERSAL TAXMINER V5" and "TaxMiner 3.0" inside Common P02 are historical labels of embedded template text, not separate versions.

@@ -2,6 +2,50 @@
 
 ## Não incluído em versão — 2026-11-13
 
+- **Hints ao passar o mouse** (aba Fundos e painel publicado): Direitos políticos especiais e Direitos
+  econ.-financeiros distintos funcionam como o de Entidade de investimento, em tooltip, sem o botão ⓘ
+  (nas características, nos filtros e no cabeçalho da lista). A nota explicativa de Entidade de
+  investimento fica só no tooltip, para liberar espaço.
+- **Troca de fundo**: ao clicar em outro fundo, o detalhe abre em Perfil e o anterior fica esmaecido até
+  os dados novos chegarem.
+- **RELATIVO / ABSOLUTO** com fonte 30% menor (abas Fundos e FICHA).
+- **FICHA com Perfil e Denominações**: as mesmas subabas da aba Fundos (app e painel publicado).
+- **Régua de z robusto nas Distribuições**: eixo secundário no topo de cada gráfico, com 0 na mediana dos
+  fundos e marcas a cada 1, 2, 5, 10... z (pelo menos 16 px entre elas). O eixo de baixo continua em valores
+  originais. O tooltip explica o cálculo: z = (valor do fundo − mediana) ÷ desvio robusto, na escala do
+  gráfico, sem winsorização. O desvio robusto é o MAD escalonado; com MAD zero, usa 1,2533 × desvio
+  absoluto médio e, depois, o desvio-padrão. Nas participações, o piso é de 1 p.p. Faixas: 2 a 3,5 é
+  atípico; 3,5 ou mais é extremo.
+- **Métricas relativas na aba Distribuições** (app e painel publicado): seletor RELATIVO / ABSOLUTO ao
+  lado do nome da aba; escolher qualquer um dos dois abre a aba. No modo Relativo, cada item aparece
+  dividido pelo total da sua tabela, os totais divididos pelo PL, e há razões analíticas, conforme as
+  75 regras de `config/metric_ratio_rules.csv`. Cada fundo tem um valor: a mediana das linhas do
+  numerador sobre a mediana das linhas do denominador, na mesma competência. Os fundos com denominador
+  ausente, zero ou negativo ficam de fora, e o hint informa quantos. As participações são desenhadas em
+  escala linear (0 a 100%).
+- **Piso do z robusto**: quando a maioria dos fundos tem o mesmo valor (MAD = 0), usa-se o desvio
+  absoluto médio escalonado. Para participações, há um piso de 1 ponto percentual.
+- **FIDC X.4 por tipo de operação**: cada campo vira um gráfico por tipo (`TAB_X_TP_OPER`: captações,
+  resgates, resgates solicitados, amortizações), em vez de uma mediana que misturava os tipos.
+- **FICHA › Distribuições em uma tela**: a grade é dimensionada para até 54 gráficos, todos do mesmo
+  tamanho; acima disso, há rolagem vertical.
+- **Hints dos direitos especiais** (`.claude/hints.txt`): textos integrais de Descrição, Relevância para
+  análise e Atenção, mais a Informação declarada (CVM). Separam o dado declarado (Sim / Não / Não
+  informado; o campo vazio nunca vira "não"), a evidência, as hipóteses (marcadas como hipótese) e a
+  ausência de conclusão tributária automática (Lei nº 14.754/2023 e Resolução CVM nº 175, sem presumir
+  as mesmas regras para todos os fundos). O ⓘ abre por clique e por teclado e tem dica ao passar o
+  mouse. Em FIDC, FII e FIAGRO, que não publicam esses campos, o ⓘ aparece na linha "Não constam do
+  informe". Nenhum score ou motor tributário usa esses indicadores (há teste para isso).
+- **Administradores**: o fundo escolhido na lista é desenhado no gráfico do administrador, na mesma
+  escala e na cor do tipo, com o valor e a participação no total na dica de cada mês.
+- **Publicação segura** (`prompts/common_p09_safe_publication.txt`, `req_0023`): procedimento obrigatório para
+  todo export, commit e push. O carimbo passa a ter fuso horário (`v.X · AAAA-MM-DD HH:MM -03:00 · commit`).
+  O manifesto `site/app/version.json` registra versão, geração, ambiente, commit-base e, preenchidos pelo
+  workflow do GitHub Pages, o commit publicado, a data/hora e o estado da publicação. O rodapé PRODUÇÃO
+  mostra esse estado.
+- **Rodapé de versão** em todas as abas: versão, commit, data/hora do build e ambiente
+  (DESENVOLVIMENTO no app local, PRODUÇÃO no painel publicado).
+
 - **Características dos fundos** (app e painel publicado): novos campos Público-alvo (FII, FIP,
   FIAGRO), classe de cotas com direitos políticos especiais, com direitos econômico-financeiros
   distintos e percentual total das cotas subscritas (FIP), além de cotistas, condomínio, fundo

@@ -1,6 +1,6 @@
 # Métricas relativizadas na aba Distribuições — proposta
 
-Situação: **proposta**, não implementada. Origem: pedido do usuário de 2026-11-13, executado pelo prompt
+Situação: **implementada** em 2026-11-13 (modo Relativo da aba Distribuições, app e painel publicado; regras em `config/metric_ratio_rules.csv`, cálculo em `src/intelligence/fund_ratios.R`). A seção 5 registra o plano aprovado. Origem: pedido do usuário de 2026-11-13, executado pelo prompt
 `.claude/sugestao_metricas_relativas.txt`. As regras legíveis por máquina estão em
 `config/metric_ratio_rules.csv`.
 

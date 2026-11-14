@@ -1,5 +1,6 @@
 # FICHA tab: the report records of one fund (any type) on the whole width:
-# Ficha (one period) and Série completa (every period). Same data and
+# Perfil (as in the fund tabs), Ficha (one period), Série completa (every
+# period), Distribuições and Denominações. Same data and
 # rendering as the detail of the fund tabs (report_card, wide_table and the
 # rows cache in prototype/fund_search_module.R); here the fund is chosen in a
 # single search box (CNPJ or name), largest funds first.
@@ -47,9 +48,12 @@ fund_record_ui <- function(id) {
         shiny::div(class = "tm-caption", shiny::textOutput(ns("summary"))),
         bslib::navset_underline(
           id = ns("view"),
+          bslib::nav_panel("Perfil", shiny::uiOutput(ns("profile"))),
           bslib::nav_panel("Ficha", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("card")))),
           bslib::nav_panel("Série completa", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("rows")))),
-          bslib::nav_panel("Distribuições", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("dists"))))))))
+          bslib::nav_panel("Distribuições", shiny::div(class = "tm-table-wrap tm-tall", shiny::uiOutput(ns("dists")))),
+          bslib::nav_item(shiny::div(class = "tm-dist-mode", title = "Valores das distribuições: relativos (itens / total da tabela, totais / PL, razões analíticas) ou absolutos, como publicados", shiny::radioButtons(ns("dist_mode"), NULL, c(Relativo = "rel", Absoluto = "abs"), "rel", inline = TRUE))),
+          bslib::nav_panel("Denominações", shiny::div(class = "tm-table-wrap", shiny::uiOutput(ns("names"))))))))
   htmltools::bindFillRole(page, container = TRUE, item = TRUE)
 }
 
@@ -97,6 +101,20 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
                      shiny::h2(class = "tm-detail-title", paste(parts[-1], collapse = " — ")))
     })
 
+    # Perfil and Denominações: the same panels as the fund tabs (fund_profile_ui,
+    # name_timeline_ui); without the analytics layer Perfil says so.
+    output$profile <- shiny::renderUI({
+      f <- fund()
+      if (is.null(ctx$m)) return(shiny::div(class = "tm-empty", "Perfil indisponível sem a camada analítica."))
+      fund_profile_ui(ctx, f$family, f$cnpj)
+    })
+    output$names <- shiny::renderUI({
+      f <- fund()
+      d <- data$directory
+      entity <- d$fund_entity[d$family == f$family & d$fund_cnpj == f$cnpj][1]
+      name_timeline_ui(data$master, entity)
+    })
+
     output$summary <- shiny::renderText({
       r <- rows()
       if (!is.null(attr(r, "error"))) return(paste("Erro:", attr(r, "error")))
@@ -128,7 +146,9 @@ fund_record_server <- function(id, root, data, ctx = NULL) {
       p <- tryCatch(peers(f$family, input$table, input$period), error = function(e) structure(list(), error = conditionMessage(e)))
       pp <- fund_previous_period(r, input$period)
       prev <- if (!is.null(pp)) tryCatch(peers(f$family, input$table, pp), error = function(e) NULL)
-      fund_distribution_matrix_ui(r, data$descriptions, input$table, input$period, p, f$family, prev, if (!is.null(prev)) pp)
+      fund_distribution_matrix_ui(r, data$descriptions, input$table, input$period, p, f$family, prev, if (!is.null(prev)) pp,
+                                  mode = if (is.null(input$dist_mode)) "rel" else input$dist_mode,
+                                  rows_of = function(tn) tryCatch(report_rows(f$family, tn, f$cnpj), error = function(e) NULL))
     })
 
     output$rows <- shiny::renderUI({

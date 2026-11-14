@@ -341,9 +341,11 @@ static_peer_tables <- function() {
 # when that period is chosen: {"funds": funds with rows, "f": {field: [n, mean,
 # sd, lo, hi, outside, [counts], [101 percentiles], display scale (null =
 # linear, else c of asinh(v / c)), display mean, display sd, robust scale (scaled
-# MAD of the display values, fund_peer_robust_scale)]}}; lo, hi and the
-# counts are on the display scale. Same tables as the
-# Ficha; numbers with 7 significant digits.
+# MAD of the display values, fund_peer_robust_scale), funds left out for an
+# invalid ratio denominator]}}; lo, hi and the counts are on the display scale.
+# Fields "r:<field>" and "a:<field>/<den>" are the relative metrics (mode
+# Relativo; rules in window.TM_RATIOS). Same tables as the Ficha; numbers with 7
+# significant digits.
 static_peer_number <- function(x) {
   out <- sprintf("%.7g", x)
   out[!is.finite(x)] <- "null"
@@ -351,26 +353,88 @@ static_peer_number <- function(x) {
 }
 
 static_peer_json <- function(s) {
-  sprintf("[%d,%s,%s,%s,%s,%d,[%s],[%s],%s,%s,%s,%s]", s$n, static_peer_number(s$mean), static_peer_number(s$sd),
+  sprintf("[%d,%s,%s,%s,%s,%d,[%s],[%s],%s,%s,%s,%s,%d]", s$n, static_peer_number(s$mean), static_peer_number(s$sd),
           static_peer_number(s$lo), static_peer_number(s$hi), s$outside, paste(s$counts, collapse = ","),
           paste(static_peer_number(s$q), collapse = ","), static_peer_number(s$scale),
-          static_peer_number(s$dmean), static_peer_number(s$dsd), static_peer_number(s$rs))
+          static_peer_number(s$dmean), static_peer_number(s$dsd), static_peer_number(s$rs),
+          if (is.null(s$excluded)) 0L else as.integer(s$excluded))
 }
 
-write_static_peers <- function(out_dir, root, tables = static_peer_tables()) {
+# Fund values per competência of some fields: field -> median of the rows of each
+# fund, named "<shown period>\r<fund>" (the key shared by every table of a family).
+static_keyed_values <- function(r, shown, fields) {
+  out <- list()
+  for (fld in intersect(fields, names(r))) {
+    num <- fund_numeric_values(r[[fld]], fld)
+    ok <- !is.na(num)
+    if (any(ok)) out[[fld]] <- fund_median_by(num[ok], paste(shown[ok], r$fund_cnpj_normalized[ok], sep = "\r"))
+  }
+  out
+}
+
+static_shown_period <- function(r) {
+  period <- row_periods(r)
+  ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+}
+
+# Ratio entries (mode Relativo, src/intelligence/fund_ratios.R) of one numerator
+# field: summaries by shown period, keyed "r:<field>" / "a:<field>/<den>".
+static_ratio_entries <- function(plan, tn, fld, med, den_vals) {
+  rows <- plan[plan$field == fld, , drop = FALSE]
+  if (!nrow(rows)) return(list())
+  vals <- den_vals
+  vals[[tn]][[fld]] <- med
+  rv <- fund_ratio_values(rows, tn, vals)
+  out <- list()
+  for (k in names(rv$values)) {
+    v <- rv$values[[k]]
+    lost <- setdiff(names(med), names(v))
+    lost_by <- table(sub("\r.*$", "", lost))
+    by_period <- split(unname(v), sub("\r.*$", "", names(v)))
+    linear <- fund_ratio_linear(rows$kind[rows$key == k][1])
+    for (p in names(by_period)) {
+      s <- fund_peer_summary(by_period[[p]], linear = linear)
+      if (is.null(s)) next
+      s$excluded <- if (p %in% names(lost_by)) lost_by[[p]] else 0L
+      out[[p]] <- c(out[[p]], paste0(json_string(k), ":", static_peer_json(s)))
+    }
+  }
+  out
+}
+
+write_static_peers <- function(out_dir, root, tables = static_peer_tables(),
+                               rules = if (exists("fund_ratio_rules")) fund_ratio_rules() else NULL) {
   dir <- file.path(out_dir, "data", "peers")
   unlink(dir, recursive = TRUE)
   base <- fund_processed_paths(root)$base
   files <- 0L
-  for (fam in names(tables)) for (tn in tables[[fam]]) {
+  for (fam in names(tables)) {
+   den_cache <- list()  # denominator fields of other tables, read once per family
+   for (tn in tables[[fam]]) {
     if (!dir.exists(file.path(base, fam, tn))) next
     r <- as.data.frame(open_fund_table(root, fam, tn))
-    r <- r[!is.na(r$fund_cnpj_normalized), , drop = FALSE]
-    period <- row_periods(r)
-    shown <- ifelse(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", period), substr(period, 1, 7), period)
+    r <- fund_peer_split(r[!is.na(r$fund_cnpj_normalized), , drop = FALSE])  # X.4 by operation type
+    shown <- static_shown_period(r)
     funds <- tapply(r$fund_cnpj_normalized, shown, function(v) length(unique(v)))
+    fields <- fund_distribution_fields(names(r))
+    plan <- if (exists("fund_ratio_plan")) fund_ratio_plan(rules, tn, fields) else NULL
+    den_vals <- list()
+    if (!is.null(plan) && nrow(plan)) for (dt in unique(plan$den_table)) {
+      cols <- if (dt == tn) names(r) else if (dir.exists(file.path(base, fam, dt))) names(open_fund_table(root, fam, dt)) else character()
+      need <- unique(unlist(lapply(plan$den[plan$den_table == dt], function(d)
+        unlist(lapply(fund_ratio_terms(d), function(t) fund_ratio_term_fields(t, cols))))))
+      if (dt == tn) { den_vals[[dt]] <- static_keyed_values(r, shown, need); next }
+      miss <- setdiff(need, names(den_cache[[dt]]))
+      if (length(miss) && length(cols)) {
+        d <- as.data.frame(open_fund_table(root, fam, dt))
+        d <- d[!is.na(d$fund_cnpj_normalized), , drop = FALSE]
+        den_cache[[dt]] <- c(den_cache[[dt]], static_keyed_values(d, static_shown_period(d), miss))
+        rm(d)
+      }
+      den_vals[[dt]] <- den_cache[[dt]][intersect(need, names(den_cache[[dt]]))]
+    }
     out <- list()
-    for (fld in fund_distribution_fields(names(r))) {
+    for (fld in fields) {
       num <- fund_numeric_values(r[[fld]], fld)
       ok <- !is.na(num)
       if (!any(ok)) next
@@ -379,6 +443,10 @@ write_static_peers <- function(out_dir, root, tables = static_peer_tables()) {
       for (p in names(by_period)) {
         s <- fund_peer_summary(by_period[[p]])
         if (!is.null(s)) out[[p]] <- c(out[[p]], paste0(json_string(fld), ":", static_peer_json(s)))
+      }
+      if (!is.null(plan) && nrow(plan)) {
+        ratio <- static_ratio_entries(plan, tn, fld, med, den_vals)
+        for (p in names(ratio)) out[[p]] <- c(out[[p]], ratio[[p]])
       }
     }
     if (!length(out)) next
@@ -390,6 +458,8 @@ write_static_peers <- function(out_dir, root, tables = static_peer_tables()) {
       files <- files + 1L
     }
     rm(r); invisible(gc())
+   }
+   rm(den_cache); invisible(gc())
   }
   invisible(list(files = files))
 }

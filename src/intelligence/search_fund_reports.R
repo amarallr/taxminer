@@ -201,9 +201,9 @@ fund_field_notes <- list(ENTID_INVEST = c(
 # Explanatory hints (ⓘ popover) of characteristics, the single source of the
 # texts for the app and the published panel (fund_hint_json, read by
 # tm_app_script). Each one: title and sections (heading, paragraphs); a
-# paragraph "Sim: ..." shows its lead in bold. "Fonte (CVM)" holds facts of
-# the CVM data dictionary and data; "Relevância tributária" holds analytical
-# interpretation, never conclusions. Texts of the developer (.claude/doit.txt),
+# paragraph "Sim: ..." shows its lead in bold. "Informação declarada (CVM)" holds
+# facts of the CVM data dictionary and data; "Relevância para análise" holds
+# evidence and hypotheses, "Atenção" what the indicator never concludes alone. Texts of the developer (.claude/doit.txt),
 # references checked against the official texts (Planalto; CVM Res. 175, Anexo IV).
 fund_hint_reference <- c(
   cvm175 = paste("Resolução CVM nº 175/2022, Anexo Normativo IV (FIP): o regulamento pode atribuir a subclasses",
@@ -218,42 +218,75 @@ fund_hint_source <- function(column, definition) {
     paste("Informado por classe de cotas, na competência do informe: classes do mesmo fundo podem ter valores",
           "diferentes, e todos aparecem (“não / sim”). FIDC, FII e FIAGRO não publicam este campo."))
 }
+# Texts of .claude/hints.txt (2026-11-13). The sections keep the four levels of
+# analysis apart: what the CVM published (Informação declarada), evidence and
+# hypotheses (Relevância para análise, leads in bold) and the conclusions the
+# indicator alone never supports (Atenção, "Sem conclusão automática").
+fund_hint_declared <- function(what) {
+  c(paste0("Sim: a classe informou ", what, "."),
+    paste0("Não: a classe informou que não há ", what, "."),
+    paste("Não informado: campo vazio no informe; não equivale a “não”. Os valores são reproduzidos como a CVM",
+          "publicou, sem alteração."))
+}
+fund_hint_no_conclusion <- c(
+  paste("Sem conclusão automática: este indicador, isoladamente, não determina desenquadramento como entidade de",
+        "investimento, incidência de come-cotas, perda de tratamento tributário específico, planejamento tributário",
+        "abusivo nem presunção de fraude, simulação ou irregularidade."),
+  paste("Qualquer conclusão jurídico-tributária depende da análise conjunta dos requisitos legais e regulamentares",
+        "aplicáveis, da competência, da modalidade e da classe do fundo e das evidências documentais. Considerar,",
+        "quando aplicáveis, a Lei nº 14.754/2023 e a Resolução CVM nº 175, sem presumir que todos os fundos estejam",
+        "sujeitos às mesmas regras."))
 fund_attribute_hints <- list(
   political_rights = list(title = "Direitos políticos especiais", sections = list(
-    list("Fonte (CVM)", fund_hint_source("DIREITO_POLIT_CLASSE", "Indica se a classe de cotas possui direitos políticos especiais")),
-    list("Descrição", paste("Indica se determinada classe de cotas possui direitos políticos diferenciados, como voto",
-                            "especial, poder de veto ou participação em decisões específicas do fundo.")),
-    list("Interpretação", c(
-      "Sim: a classe possui prerrogativas políticas especiais previstas nos documentos constitutivos do fundo.",
-      "Não: não há indicação de direitos políticos especiais no campo informado.",
-      paste("Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo",
-            "vazio no informe; não equivale a “não”)."))),
-    list("Relevância tributária (interpretação analítica)", c(
-      paste("Esses direitos podem ser relevantes para avaliar a influência dos cotistas sobre a gestão, especialmente",
-            "a efetiva discricionariedade do gestor e o enquadramento como entidade de investimento, quando esse",
-            "conceito for aplicável ao regime tributário analisado."),
-      paste("Recomenda-se verificar se os direitos permitem aos cotistas interferir efetivamente nas decisões de",
-            "investimento, restringindo a autonomia do gestor."))),
-    list("Atenção", paste("A existência de direitos políticos especiais não implica, isoladamente, controle do gestor",
-                          "pelos cotistas, irregularidade ou desenquadramento tributário.")),
+    list("Descrição", c(
+      paste("Indica se determinada classe de cotas possui direitos políticos diferenciados em relação às demais",
+            "classes do fundo, conforme o regulamento e a regulamentação aplicável."),
+      paste("Esses direitos podem envolver prerrogativas específicas de voto, aprovação ou veto em determinadas",
+            "deliberações, indicação de representantes ou participação diferenciada em decisões relevantes sobre o",
+            "funcionamento, a administração e a gestão do fundo."))),
+    list("Relevância para análise", c(
+      paste("Evidência para investigação: a existência desses direitos pode indicar mecanismos diferenciados de",
+            "governança, influência ou controle sobre decisões relevantes do fundo."),
+      paste("Em análises tributárias e de caracterização como entidade de investimento, essa informação pode",
+            "constituir um indício para investigar a autonomia decisória, a discricionariedade da gestão e a",
+            "influência exercida pelos cotistas."),
+      paste("Hipóteses a investigar (inferência analítica; nunca fato comprovado, depende de evidências adicionais):",
+            "possível concentração de influência decisória; possível influência dos cotistas sobre decisões de",
+            "investimento; necessidade de examinar a discricionariedade efetiva do gestor."))),
+    list("Atenção", c(
+      paste("A indicação “Sim” não comprova, isoladamente, controle efetivo, ausência de discricionariedade do",
+            "gestor, irregularidade ou desenquadramento tributário."),
+      "É necessário examinar o regulamento, as deliberações e os demais documentos pertinentes.",
+      fund_hint_no_conclusion)),
+    list("Informação declarada (CVM)", c(
+      fund_hint_source("DIREITO_POLIT_CLASSE", "Indica se a classe de cotas possui direitos políticos especiais"),
+      fund_hint_declared("direitos políticos especiais"))),
     list("Referências normativas", unname(fund_hint_reference[c("cvm175", "lei14754")])))),
   economic_rights = list(title = "Direitos econômico-financeiros distintos", sections = list(
-    list("Fonte (CVM)", fund_hint_source("DIREITO_ECON_CLASSE", "Indica se a classe de cotas possui distintos direitos econômico-financeiros")),
-    list("Descrição", paste("Indica se determinada classe de cotas possui direitos econômico-financeiros diferenciados,",
-                            "relacionados à distribuição de rendimentos, amortizações, resgates ou participação em perdas,",
-                            "conforme a estrutura e o regulamento do fundo.")),
-    list("Interpretação", c(
-      "Sim: existem direitos econômicos diferenciados atribuídos às cotas, conforme os documentos aplicáveis.",
-      "Não: não há indicação desses direitos diferenciados no campo informado.",
-      paste("Não informado: a informação não está disponível ou não foi identificada na fonte consultada (campo",
-            "vazio no informe; não equivale a “não”)."))),
-    list("Relevância tributária (interpretação analítica)", c(
-      "Pode indicar assimetria na distribuição de riscos e retornos entre investidores.",
-      paste("Recomenda-se examinar se a estrutura reflete efetiva exposição econômica dos cotistas ou relações que",
-            "mereçam investigação adicional, especialmente quando houver concentração de cotas, vínculos societários",
-            "ou participação de empresas de um mesmo grupo econômico."))),
-    list("Atenção", paste("Direitos econômicos diferenciados são admitidos em determinadas estruturas de fundos e não",
-                          "constituem, isoladamente, indício de planejamento tributário abusivo ou irregularidade.")),
+    list("Descrição", c(
+      paste("Indica se determinada classe de cotas possui direitos econômicos ou financeiros diferenciados em",
+            "relação às demais classes do fundo."),
+      paste("Essas diferenças podem envolver critérios de distribuição de resultados, prioridade no recebimento de",
+            "rendimentos ou amortizações, participação em perdas, exposição a riscos e outras condições patrimoniais",
+            "previstas no regulamento."))),
+    list("Relevância para análise", c(
+      paste("Evidência para investigação: a existência desses direitos pode revelar uma distribuição assimétrica",
+            "dos riscos e benefícios econômicos entre diferentes classes de cotistas."),
+      paste("Essa característica é relevante para compreender a estrutura de financiamento do fundo, identificar",
+            "quem efetivamente suporta os riscos e recebe os benefícios das operações e avaliar possíveis relações",
+            "econômicas entre cotistas, cedentes e outras partes vinculadas."),
+      paste("Hipóteses a investigar (inferência analítica; nunca fato comprovado, depende de evidências adicionais):",
+            "possível assimetria na distribuição de riscos e benefícios; possíveis relações econômicas entre",
+            "cotistas, cedentes e partes vinculadas que mereçam exame."))),
+    list("Atenção", c(
+      paste("A indicação “Sim” não caracteriza, isoladamente, artificialidade econômica, planejamento tributário",
+            "abusivo ou irregularidade."),
+      paste("A análise exige o exame dos direitos efetivos, dos fluxos financeiros, do regulamento e das demais",
+            "evidências disponíveis."),
+      fund_hint_no_conclusion)),
+    list("Informação declarada (CVM)", c(
+      fund_hint_source("DIREITO_ECON_CLASSE", "Indica se a classe de cotas possui distintos direitos econômico-financeiros"),
+      fund_hint_declared("direitos econômico-financeiros distintos"))),
     list("Referências normativas", unname(fund_hint_reference[c("cvm175", "lei14754")])))))
 
 # Joint notice: shown only when one class of quotas has both indicators = sim
@@ -282,6 +315,17 @@ fund_field_note_text <- function(fields) {
     n <- if (is.na(f)) NULL else fund_field_notes[[f]]
     if (is.null(n)) "" else paste0("\n\n", paste(n, collapse = "\n"))
   }, character(1), USE.NAMES = FALSE)
+}
+
+# Hint of a characteristic (fund_attribute_hints) as text appended to its hover
+# tooltip, the same way as the field notes (Entidade de investimento): a blank
+# line, the title, then the paragraphs, each section opening with its heading in
+# bold ("Descrição: ..."). "" for characteristics without a hint.
+fund_hint_tip_text <- function(attribute) {
+  h <- fund_attribute_hints[[attribute]]
+  if (is.null(h)) return("")
+  lines <- unlist(lapply(h$sections, function(s) c(paste0(s[[1]], ": ", s[[2]][1]), s[[2]][-1])))
+  paste0("\n\n", h$title, "\n", paste(lines, collapse = "\n"))
 }
 
 # Families whose report has each field (the rest show "não consta do informe").

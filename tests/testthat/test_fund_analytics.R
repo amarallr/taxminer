@@ -11,6 +11,7 @@ source(testthat::test_path("..", "..", "src", "data", "build_fund_metrics.R"))
 source(testthat::test_path("..", "..", "src", "intelligence", "search_fund_reports.R"))
 source(testthat::test_path("..", "..", "src", "data", "entity_resolution.R"))
 source(testthat::test_path("..", "..", "src", "intelligence", "fund_analytics.R"))
+source(testthat::test_path("..", "..", "src", "intelligence", "fund_ratios.R"))
 source(testthat::test_path("..", "..", "prototype", "charts.R"))
 source(testthat::test_path("..", "..", "prototype", "fund_search_module.R"))
 source(testthat::test_path("..", "..", "prototype", "fund_dashboard_module.R"))
@@ -254,7 +255,15 @@ test_that("the Administradores area ranks, filters by family and shows the picke
     expect_match(output$kpis$html, "R\\$ 450")
     session$setInputs(pick = entity_key("administrator", "11111111000111"))
     expect_match(output$detail$html, "ADM UM")
-    expect_match(output$detail$html, "data-month=\"2025-06\"")
+    expect_match(output$chart$html, "data-month=\"2025-06\"")
+    expect_false(grepl("tm-line-part", output$chart$html))
+    # A fund picked in the list is drawn on the chart, on the same axis.
+    k <- regmatches(output$funds$html, regexpr("data-fund-key=\"[^\"]+\"", output$funds$html))
+    fund_sel(sub("^data-fund-key=\"([^\"]+)\"$", "\\1", k)); session$flushReact()
+    expect_match(output$chart$html, "tm-line-part")
+    expect_match(output$chart$html, "do total")
+    fund_sel("fii|00000000000000"); session$flushReact()  # not a fund of this administrator: no line
+    expect_false(grepl("tm-line-part", output$chart$html))
     expect_match(output$funds$html, "FIDC E")
     expect_match(output$funds$html, "· 33,3%", fixed = TRUE)
     expect_match(output$funds$html, "mês de referência")
@@ -392,7 +401,7 @@ test_that("the Sobre tab shows the version from the VERSION file", {
   expect_null(version_label(dir))
   writeLines("1.2.3", file.path(dir, "VERSION"))
   at <- as.POSIXct("2026-11-11 15:42:59", tz = "UTC")
-  expect_match(as.character(version_label(dir, at)), ">v.1.2.3 · 2026-11-11 15:42</div>", fixed = TRUE)
+  expect_match(as.character(version_label(dir, at)), ">v.1.2.3 · 2026-11-11 15:42 +00:00</div>", fixed = TRUE)
   expect_match(as.character(version_label(dir, "2026-01-02 03:04")), ">v.1.2.3 · 2026-01-02 03:04<", fixed = TRUE)
   expect_match(as.character(version_label(dir, "2026-01-02 03:04", commit = "3cbb696+")),
                ">v.1.2.3 · 2026-01-02 03:04 · 3cbb696+<", fixed = TRUE)
@@ -638,4 +647,70 @@ test_that("robust z places the fund among its peers without being pulled by extr
   expect_match(ui, "comparação com 2026-01-31")
   expect_lt(regexpr("VL_A", ui), regexpr("VL_B", ui))   # the atypical field comes first
   expect_match(ui, "tm-z-delta")
+})
+
+test_that("Distribuições in mode Relativo show shares, ratios over another table and the left-out funds", {
+  rules <- data.frame(family = "fidc", table_name = c("tA", "tA", "tA"),
+                      numerator = c("^VL_TOTAL$", "^VL_ITEM_", "^VL_ITEM_B$"),
+                      denominator_table = c("tPL", "tA", "tA"), denominator = c("VL_PL", "VL_TOTAL", "VL_ITEM_A+VL_ITEM_B"),
+                      kind = c("over_pl", "share_of_total", "analytic"),
+                      label_pt = c("Total / PL", "{item} / Total", "B / (A + B)"), note = "", stringsAsFactors = FALSE)
+  n <- 10
+  a <- data.frame(fund_cnpj_normalized = as.character(1:n), DT_COMPTC = "2026-02-28",
+                  VL_TOTAL = as.character(seq(100, 1000, 100)), VL_ITEM_A = as.character(seq(100, 1000, 100) * c(0.6, 0.5, 0.7, 0.6, 0.55, 0.65, 0.6, 0.62, 0.58, 0.9)),
+                  VL_ITEM_B = as.character(seq(100, 1000, 100) * c(0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.1)),
+                  VL_OTHER = as.character(1:n), stringsAsFactors = FALSE)
+  pl <- data.frame(fund_cnpj_normalized = as.character(1:n), DT_COMPTC = "2026-02-28",
+                   VL_PL = as.character(c(80, 150, 240, 300, 520, 700, 650, 900, 1000, -5)), stringsAsFactors = FALSE)
+  plan <- fund_ratio_plan(rules, "tA", fund_distribution_fields(names(a)))
+  vals <- fund_ratio_inputs(plan, "tA", "2026-02-28", a, function(dt, sp) pl)
+  peers <- fund_peer_summaries(a)
+  peers <- structure(c(peers, fund_peer_ratio_summaries(plan, "tA", vals)), funds = n, plan = plan)
+  expect_equal(peers[["r:VL_TOTAL"]]$n, 9L)            # fund 10 has PL < 0
+  expect_equal(peers[["r:VL_TOTAL"]]$excluded, 1L)
+  expect_true(is.na(peers[["r:VL_ITEM_A"]]$scale))      # shares on a linear scale
+  rows_of <- function(tn) if (tn == "tPL") pl[1, ] else NULL
+  ui <- as.character(fund_distribution_matrix_ui(a[1, ], NULL, "tA", "2026-02-28", peers, "fidc", mode = "rel", rows_of = rows_of))
+  expect_match(ui, "Total / PL")
+  expect_match(ui, "Valor relativo")
+  expect_match(ui, "60,0%")                              # VL_ITEM_A / VL_TOTAL of fund 1
+  expect_match(ui, "1 fundos com o campo ficaram fora")
+  expect_match(ui, "Valores relativos")
+  ua <- as.character(fund_distribution_matrix_ui(a[1, ], NULL, "tA", "2026-02-28", peers, "fidc", mode = "abs", rows_of = rows_of))
+  expect_false(grepl("Valor relativo", ua))
+  expect_match(ua, "Valores absolutos")
+  expect_equal(fund_ratio_pct(c(0.123, 1.5, 0.0004, NA)), c("12,3%", "150%", "0,04%", "—"))
+})
+
+test_that("robust z stays readable when most funds share one value (shares at 0%)", {
+  v <- c(rep(0, 95), 0.2, 0.4, 0.5, 0.6, 0.98)
+  s <- fund_peer_summary(v, linear = TRUE)
+  expect_equal(stats::mad(v), 0)
+  expect_equal(s$rs, max(1.253314 * mean(abs(v - stats::median(v))), fund_peer_share_floor))
+  z <- fund_peer_robust(s, 0.98)$z
+  expect_true(z > 3.5 && z < 50)                       # extreme, not hundreds
+  expect_equal(fund_peer_robust_scale(rep(0, 10), floor = 0.01), 0.01)
+  expect_true(is.na(fund_peer_robust_scale(rep(0, 10))))
+})
+
+test_that("FIDC X.4 distributions break by operation type (TAB_X_TP_OPER)", {
+  r <- data.frame(fund_cnpj_normalized = rep(c("1", "2"), each = 3),
+                  TAB_X_TP_OPER = rep(c("Captações no Mês", "Resgates no Mês", ""), 2),
+                  TAB_X_VL_TOTAL = c("100", "5", "7", "200", "9", "8"), stringsAsFactors = FALSE)
+  s <- fund_peer_split(r)
+  expect_setequal(grep("^TAB_X_VL_TOTAL", names(s), value = TRUE),
+                  c("TAB_X_VL_TOTAL|Captações no Mês", "TAB_X_VL_TOTAL|Resgates no Mês"))
+  v <- fund_peer_values(s)
+  # One value per fund and type; never a median that mixes captações and resgates.
+  expect_equal(unname(v[["TAB_X_VL_TOTAL|Captações no Mês"]][c("1", "2")]), c(100, 200))
+  expect_equal(unname(v[["TAB_X_VL_TOTAL|Resgates no Mês"]][c("1", "2")]), c(5, 9))
+  expect_equal(field_labels("TAB_X_VL_TOTAL|Resgates no Mês")$label, "Tab x vl total · Resgates no Mês")
+  # The over-PL rule of the field applies to each type.
+  rules <- data.frame(family = "fidc", table_name = "inf_mensal_fidc_tab_X_4", numerator = "^TAB_X_VL_TOTAL$",
+                      denominator_table = "inf_mensal_fidc_tab_IV", denominator = "TAB_IV_A_VL_PL", kind = "over_pl",
+                      label_pt = "{item} / PL", note = "", stringsAsFactors = FALSE)
+  plan <- fund_ratio_plan(rules, "inf_mensal_fidc_tab_X_4", names(v))
+  expect_setequal(plan$key, c("r:TAB_X_VL_TOTAL|Captações no Mês", "r:TAB_X_VL_TOTAL|Resgates no Mês"))
+  # Tables without the type column are unchanged.
+  expect_identical(fund_peer_split(r[, -2]), r[, -2])
 })
